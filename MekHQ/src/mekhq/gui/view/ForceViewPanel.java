@@ -563,9 +563,9 @@ public class ForceViewPanel extends JScrollablePanel {
             }
             toReturn += "</i>";
         }
-        if (unit.hasTransportShipAssignment()) {
+        if (unit.hasTransportAssignment()) {
             toReturn += "<br><i>" + "Transported by: ";
-            toReturn += unit.getTransportShipAssignment().getTransportShip().getName();
+            toReturn += unit.getTransportAssignment().getTransport().getName();
             toReturn += "</i>";
         }
         // If this is a transport ship, tell us what bay capacity is at

@@ -108,7 +108,7 @@ public class Unit implements ITechnology {
     private UUID id;
     private String fluffName;
     // This is the large craft assigned to transport this unit
-    private TransportShipAssignment transportShipAssignment;
+    private TransportAssignment transportAssignment;
     // If this unit is a transport, list all other units assigned to it
     private Set<Unit> transportedUnits = new HashSet<>();
     private double aeroCapacity = 0.0;
@@ -343,18 +343,18 @@ public class Unit implements ITechnology {
 
     /**
      * Gets a value indicating whether or not this unit is assigned
-     * to a transport ship.
+     * to a transport.
      */
-    public boolean hasTransportShipAssignment() {
-        return (transportShipAssignment != null);
+    public boolean hasTransportAssignment() {
+        return (transportAssignment != null);
     }
 
     /**
      * Gets the transport ship assignment for this unit,
      * or null if this unit is not being transported.
      */
-    public @Nullable TransportShipAssignment getTransportShipAssignment() {
-        return transportShipAssignment;
+    public @Nullable TransportAssignment getTransportAssignment() {
+        return transportAssignment;
     }
 
     /**
@@ -363,8 +363,8 @@ public class Unit implements ITechnology {
      * @param assignment The transport ship assignment, or null if this unit
      *                   is not being transported.
      */
-    public void setTransportShipAssignment(@Nullable TransportShipAssignment assignment) {
-        transportShipAssignment = assignment;
+    public void setTransportAssignment(@Nullable TransportAssignment assignment) {
+        transportAssignment = assignment;
     }
 
     /**
@@ -400,7 +400,7 @@ public class Unit implements ITechnology {
     public void addTransportedUnit(Unit unit, int bayNumber) {
         Objects.requireNonNull(unit);
 
-        unit.setTransportShipAssignment(new TransportShipAssignment(this, bayNumber));
+        unit.setTransportAssignment(new TransportAssignment(this, bayNumber));
         addTransportedUnit(unit);
     }
 
@@ -1777,8 +1777,8 @@ public class Unit implements ITechnology {
         // And if the unit is being transported by us,
         // then update its transport ship assignment (provided the
         // assignment is actually to us!).
-        if (u.hasTransportShipAssignment()
-                && u.getTransportShipAssignment().getTransportShip().equals(this)) {
+        if (u.hasTransportAssignment()
+                && u.getTransportAssignment().getTransport().equals(this)) {
             double unitWeight;
             if (u.getEntity().getUnitType() == UnitType.INFANTRY) {
                 unitWeight = calcInfantryBayWeight(u.getEntity());
@@ -1787,9 +1787,9 @@ public class Unit implements ITechnology {
             }
 
             updateBayCapacity(u.getEntity().getUnitType(), unitWeight,
-                    true, u.getTransportShipAssignment().getBayNumber());
+                    true, u.getTransportAssignment().getBayNumber());
 
-            u.setTransportShipAssignment(null);
+            u.setTransportAssignment(null);
         }
     }
 
@@ -1803,9 +1803,9 @@ public class Unit implements ITechnology {
 
         // And now reset the Transported values for all the units we just booted
         campaign.getHangar().forEachUnit(u -> {
-            if (u.hasTransportShipAssignment()
-                    && Objects.equals(this, u.getTransportShipAssignment().getTransportShip())) {
-                u.setTransportShipAssignment(null);
+            if (u.hasTransportAssignment()
+                    && Objects.equals(this, u.getTransportAssignment().getTransport())) {
+                u.setTransportAssignment(null);
             }
         });
     }
@@ -1908,10 +1908,10 @@ public class Unit implements ITechnology {
         }
 
         // If this entity is assigned to a transport, write that
-        if (hasTransportShipAssignment()) {
-            pw.println(MHQXMLUtility.indentStr(indent) + "<transportShip id=\""
-                    + getTransportShipAssignment().getTransportShip().getId()
-                    + "\" baynumber=\"" + getTransportShipAssignment().getBayNumber() + "\"/>");
+        if (hasTransportAssignment()) {
+            pw.println(MHQXMLUtility.indentStr(indent) + "<transport id=\""
+                    + getTransportAssignment().getTransport().getId()
+                    + "\" baynumber=\"" + getTransportAssignment().getBayNumber() + "\"/>");
         }
 
         for (Unit unit : getTransportedUnits()) {
@@ -2079,11 +2079,16 @@ public class Unit implements ITechnology {
                     if (!wn2.getTextContent().equals("null")) {
                         retVal.tech = new UnitPersonRef(UUID.fromString(wn2.getTextContent()));
                     }
-                } else if (wn2.getNodeName().equalsIgnoreCase("transportShip")) {
+                } else if (wn2.getNodeName().equalsIgnoreCase("transportShip")) { //Legacy, renamed to transportUnit
                     NamedNodeMap attributes = wn2.getAttributes();
                     UUID id = UUID.fromString(attributes.getNamedItem("id").getTextContent());
                     int bay = Integer.parseInt(attributes.getNamedItem("baynumber").getTextContent());
-                    retVal.setTransportShipAssignment(new TransportShipAssignment(new UnitRef(id), bay));
+                    retVal.setTransportAssignment(new TransportAssignment(new UnitRef(id), bay));
+                } else if (wn2.getNodeName().equalsIgnoreCase("transport")) {
+                    NamedNodeMap attributes = wn2.getAttributes();
+                    UUID id = UUID.fromString(attributes.getNamedItem("id").getTextContent());
+                    int bay = Integer.parseInt(attributes.getNamedItem("baynumber").getTextContent());
+                    retVal.setTransportAssignment(new TransportAssignment(new UnitRef(id), bay));
                 } else if (wn2.getNodeName().equalsIgnoreCase("transportedUnitId")) {
                     retVal.addTransportedUnit(new UnitRef(UUID.fromString(wn2.getTextContent())));
                 } else if (wn2.getNodeName().equalsIgnoreCase("asfCapacity")) {
@@ -5949,18 +5954,18 @@ public class Unit implements ITechnology {
             mothballInfo.fixReferences(campaign);
         }
 
-        if ((transportShipAssignment != null)
-                && (transportShipAssignment.getTransportShip() instanceof UnitRef)) {
-            Unit transportShip = campaign.getHangar().getUnit(transportShipAssignment.getTransportShip().getId());
-            if (transportShip != null) {
-                transportShipAssignment = new TransportShipAssignment(transportShip,
-                        transportShipAssignment.getBayNumber());
+        if ((transportAssignment != null)
+                && (transportAssignment.getTransport() instanceof UnitRef)) {
+            Unit transport = campaign.getHangar().getUnit(transportAssignment.getTransport().getId());
+            if (transport != null) {
+                transportAssignment = new TransportAssignment(transport,
+                        transportAssignment.getBayNumber());
             } else {
                 logger.error(
-                        String.format("Unit %s ('%s') references missing transport ship %s",
-                                getId(), getName(), transportShipAssignment.getTransportShip().getId()));
+                        String.format("Unit %s ('%s') references missing transport %s",
+                                getId(), getName(), transportAssignment.getTransport().getId()));
 
-                transportShipAssignment = null;
+                transportAssignment = null;
             }
         }
 

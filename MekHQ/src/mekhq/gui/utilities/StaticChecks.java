@@ -67,7 +67,7 @@ public class StaticChecks {
      * @return false if any unit in the passed-in Vector has not been assigned to a Transport ship
      */
     public static boolean areAllUnitsTransported(Vector<Unit> units) {
-        return units.stream().allMatch(Unit::hasTransportShipAssignment);
+        return units.stream().allMatch(Unit::hasTransportAssignment);
     }
 
     /**

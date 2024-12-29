@@ -297,10 +297,10 @@ public class AtBGameThread extends GameThread {
                 // linkage,
                 // but only if the transport itself is in the game too.
                 for (Unit unit : units) {
-                    if (unit.hasTransportShipAssignment()) {
-                        Unit transportShip = unit.getTransportShipAssignment().getTransportShip();
-                        if (scenario.getPlayerTransportLinkages().containsKey(transportShip.getId())) {
-                            scenario.addPlayerTransportRelationship(transportShip.getId(), unit.getId());
+                    if (unit.hasTransportAssignment()) {
+                        Unit transport = unit.getTransportAssignment().getTransport();
+                        if (scenario.getPlayerTransportLinkages().containsKey(transport.getId())) {
+                            scenario.addPlayerTransportRelationship(transport.getId(), unit.getId());
                         }
                     }
                 }

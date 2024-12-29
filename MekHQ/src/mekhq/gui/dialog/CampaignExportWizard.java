@@ -515,7 +515,7 @@ public class CampaignExportWizard extends JDialog {
 
             // Reset any transport assignments, as the export may not contain all transports
             // and cargo units
-            unit.setTransportShipAssignment(null);
+            unit.setTransportAssignment(null);
 
             if (unit.hasTransportedUnits()) {
                 unit.unloadTransportShip();

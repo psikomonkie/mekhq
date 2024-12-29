@@ -180,10 +180,10 @@ public class Campaign implements ITechManager {
     // we will use the same basic system (borrowed from MegaMek) for tracking
     // all three
     // OK now we have more, parts, personnel, forces, missions, and scenarios.
-    // and more still - we're tracking DropShips and WarShips in a separate set so
+    // and more still - we're tracking transport-capable units in a separate set so
     // that we can assign units to transports
     private final Hangar units = new Hangar();
-    private final Set<Unit> transportShips = new HashSet<>();
+    private final Set<Unit> transportUnits = new HashSet<>();
     private final Map<UUID, Person> personnel = new LinkedHashMap<>();
     private Warehouse parts = new Warehouse();
     private final TreeMap<Integer, Force> forceIds = new TreeMap<>();
@@ -1316,7 +1316,7 @@ public class Campaign implements ITechManager {
 
         // If this is a ship, add it to the list of potential transports
         if ((u.getEntity() instanceof Dropship) || (u.getEntity() instanceof Jumpship)) {
-            addTransportShip(u);
+            addTransportUnit(u);
         }
 
         // Assign an entity ID to our new unit
@@ -1328,27 +1328,27 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * Adds an entry to the list of transit-capable transport ships. We'll use this
-     * to look for empty bays that ground units can be assigned to
+     * Adds an entry to the list of transit-capable transports. We'll use this
+     * to look for empty space that ground units can be assigned to
      *
-     * @param unit - The ship we want to add to this Set
+     * @param unit - The unit we want to add to this Set
      */
-    public void addTransportShip(Unit unit) {
-        logger.debug("Adding DropShip/WarShip: {}", unit.getId());
-        transportShips.add(Objects.requireNonNull(unit));
+    public void addTransportUnit(Unit unit) {
+        logger.debug("Adding Transport: {}", unit.getId());
+        transportUnits.add(Objects.requireNonNull(unit));
     }
 
     /**
-     * Deletes an entry from the list of transit-capable transport ships. This gets
+     * Deletes an entry from the list of transit-capable transports. This gets
      * updated when
-     * the ship is removed from the campaign for one reason or another
+     * the unit is removed from the campaign for one reason or another
      *
-     * @param unit - The ship we want to remove from this Set
+     * @param unit - The unit  we want to remove from this Set
      */
-    public void removeTransportShip(Unit unit) {
+    public void removeTransportUnit(Unit unit) {
         // If we remove a transport ship from the campaign,
         // we need to remove any transported units from it
-        if (transportShips.remove(unit) && unit.hasTransportedUnits()) {
+        if (transportUnits.remove(unit) && unit.hasTransportedUnits()) {
             List<Unit> transportedUnits = new ArrayList<>(unit.getTransportedUnits());
             for (Unit transportedUnit : transportedUnits) {
                 unit.removeTransportedUnit(transportedUnit);
@@ -1442,7 +1442,7 @@ public class Campaign implements ITechManager {
 
         // If this is a ship, add it to the list of potential transports
         if ((unit.getEntity() instanceof Dropship) || (unit.getEntity() instanceof Jumpship)) {
-            addTransportShip(unit);
+            addTransportUnit(unit);
         }
 
         unit.initializeParts(true);
@@ -5001,12 +5001,12 @@ public class Campaign implements ITechManager {
         removeUnitFromForce(unit);
 
         // If this is a ship, remove it from the list of potential transports
-        removeTransportShip(unit);
+        removeTransportUnit(unit);
 
         // If this unit was assigned to a transport ship, remove it from the transport
-        if (unit.hasTransportShipAssignment()) {
-            unit.getTransportShipAssignment()
-                    .getTransportShip()
+        if (unit.hasTransportAssignment()) {
+            unit.getTransportAssignment()
+                    .getTransport()
                     .unloadFromTransportShip(unit);
         }
 
@@ -8021,8 +8021,8 @@ public class Campaign implements ITechManager {
      *
      * @return
      */
-    public Set<Unit> getTransportShips() {
-        return Collections.unmodifiableSet(transportShips);
+    public Set<Unit> getTransportUnits() {
+        return Collections.unmodifiableSet(transportUnits);
     }
 
     public void doMaintenance(Unit u) {

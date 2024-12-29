@@ -314,8 +314,8 @@ public class TOEMouseAdapter extends JPopupMenuAdapter {
                 } else {
                     // First, remove the units from any other Transport they might be on
                     for (Unit u : units) {
-                        if (u.hasTransportShipAssignment()) {
-                            Unit oldShip = u.getTransportShipAssignment().getTransportShip();
+                        if (u.hasTransportAssignment()) {
+                            Unit oldShip = u.getTransportAssignment().getTransport();
                             oldShip.unloadFromTransportShip(u);
                             MekHQ.triggerEvent(new UnitChangedEvent(oldShip));
                         }
@@ -328,8 +328,8 @@ public class TOEMouseAdapter extends JPopupMenuAdapter {
             }
         } else if (command.contains(UNASSIGN_FROM_SHIP)) {
             for (Unit u : units) {
-                if (u.hasTransportShipAssignment()) {
-                    Unit oldShip = u.getTransportShipAssignment().getTransportShip();
+                if (u.hasTransportAssignment()) {
+                    Unit oldShip = u.getTransportAssignment().getTransport();
                     oldShip.unloadFromTransportShip(u);
                     MekHQ.triggerEvent(new UnitChangedEvent(oldShip));
                 }
@@ -1196,8 +1196,8 @@ public class TOEMouseAdapter extends JPopupMenuAdapter {
                 // Only display the Assign to Ship command if your command has at least 1 valid
                 // transport
                 // and if your selection does not include a transport
-                if (!gui.getCampaign().getTransportShips().isEmpty()) {
-                    for (Unit ship : gui.getCampaign().getTransportShips()) {
+                if (!gui.getCampaign().getTransportUnits().isEmpty()) {
+                    for (Unit ship : gui.getCampaign().getTransportUnits()) {
                         if (ship.isSalvage() || (ship.getCommander() == null)) {
                             continue;
                         }
@@ -1536,13 +1536,13 @@ public class TOEMouseAdapter extends JPopupMenuAdapter {
                     }
                 }
 
-                if (!gui.getCampaign().getTransportShips().isEmpty()) {
+                if (!gui.getCampaign().getTransportUnits().isEmpty()) {
                     // Attempt to Assign unit to a transport ship. This checks to see if the ship
                     // is in a basic state that can accept units. Capacity gets checked once the
                     // action
                     // is submitted.
                     menu = new JMenu("Assign Unit to Transport Ship");
-                    for (Unit ship : gui.getCampaign().getTransportShips()) {
+                    for (Unit ship : gui.getCampaign().getTransportUnits()) {
                         if (ship.isSalvage() || (ship.getCommander() == null)) {
                             continue;
                         }
@@ -1726,9 +1726,9 @@ public class TOEMouseAdapter extends JPopupMenuAdapter {
      */
     private void clearTransportAssignment(@Nullable Unit currentUnit) {
         if (currentUnit != null) {
-            if (currentUnit.hasTransportShipAssignment()) {
-                currentUnit.getTransportShipAssignment()
-                        .getTransportShip()
+            if (currentUnit.hasTransportAssignment()) {
+                currentUnit.getTransportAssignment()
+                        .getTransport()
                         .unloadFromTransportShip(currentUnit);
             }
             // If the unit IS a transport, unassign all units from it

@@ -123,9 +123,9 @@ public class ForceRenderer extends DefaultTreeCellRenderer {
                 c3network = "<br><i>" + c3network + "</i>";
             }
 
-            if (unit.hasTransportShipAssignment()) {
+            if (unit.hasTransportAssignment()) {
                 transport.append("<br>Transported by: ")
-                        .append(unit.getTransportShipAssignment().getTransportShip().getName());
+                        .append(unit.getTransportAssignment().getTransport().getName());
             }
             String text = name + ", " + unitName + c3network + transport;
 

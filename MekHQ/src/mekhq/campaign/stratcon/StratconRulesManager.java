@@ -806,8 +806,8 @@ public class StratconRulesManager {
                     Force force = campaign.getForce(explicitForceID);
                     for (UUID unitID : force.getUnits()) {
                         Unit unit = campaign.getUnit(unitID);
-                        if (unit.getTransportShipAssignment() != null) {
-                            potentialUnits.add(unit.getTransportShipAssignment().getTransportShip());
+                        if (unit.getTransportAssignment() != null) {
+                            potentialUnits.add(unit.getTransportAssignment().getTransport());
                         }
                     }
                 }

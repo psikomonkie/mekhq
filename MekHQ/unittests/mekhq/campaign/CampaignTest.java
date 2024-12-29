@@ -154,7 +154,7 @@ public class CampaignTest {
         Campaign campaign = spy(new Campaign());
 
         // New campaigns have no transports
-        assertTrue(campaign.getTransportShips().isEmpty());
+        assertTrue(campaign.getTransportUnits().isEmpty());
 
         // Create a mock transport
         Dropship mockTransport = mock(Dropship.class);
@@ -164,24 +164,24 @@ public class CampaignTest {
         when(mockUnit.getEntity()).thenReturn(mockTransport);
 
         // Add our mock transport
-        campaign.addTransportShip(mockUnit);
+        campaign.addTransportUnit(mockUnit);
 
         // Ensure our mock transport exists
-        assertEquals(1, campaign.getTransportShips().size());
-        assertTrue(campaign.getTransportShips().contains(mockUnit));
+        assertEquals(1, campaign.getTransportUnits().size());
+        assertTrue(campaign.getTransportUnits().contains(mockUnit));
 
         // Add our mock transport a second time
-        campaign.addTransportShip(mockUnit);
+        campaign.addTransportUnit(mockUnit);
 
         // Ensure our mock transport exists only once
-        assertEquals(1, campaign.getTransportShips().size());
-        assertTrue(campaign.getTransportShips().contains(mockUnit));
+        assertEquals(1, campaign.getTransportUnits().size());
+        assertTrue(campaign.getTransportUnits().contains(mockUnit));
 
         // Remove the mock transport
-        campaign.removeTransportShip(mockUnit);
+        campaign.removeTransportUnit(mockUnit);
 
         // Ensure it was removed
-        assertTrue(campaign.getTransportShips().isEmpty());
+        assertTrue(campaign.getTransportUnits().isEmpty());
     }
 
     @Test

@@ -174,13 +174,13 @@ public class UnitTransportTest {
         Unit transport = spy(new Unit());
 
         Unit randomUnit = mock(Unit.class);
-        when(randomUnit.hasTransportShipAssignment()).thenReturn(false);
+        when(randomUnit.hasTransportAssignment()).thenReturn(false);
 
         // Try removing a ship that's not on our transport.
         transport.removeTransportedUnit(randomUnit);
 
         // The unit should NOT have its assignment changed.
-        verify(randomUnit, times(0)).setTransportShipAssignment(eq(null));
+        verify(randomUnit, times(0)).setTransportAssignment(eq(null));
 
         // And we should not have had our bay space recalculated.
         verify(transport, times(0)).updateBayCapacity(anyInt(), anyDouble(),
@@ -193,14 +193,14 @@ public class UnitTransportTest {
 
         Unit transport1 = mock(Unit.class);
         Unit randomUnit = mock(Unit.class);
-        when(randomUnit.hasTransportShipAssignment()).thenReturn(true);
-        when(randomUnit.getTransportShipAssignment()).thenReturn(new TransportShipAssignment(transport1, 0));
+        when(randomUnit.hasTransportAssignment()).thenReturn(true);
+        when(randomUnit.getTransportAssignment()).thenReturn(new TransportAssignment(transport1, 0));
 
         // Try removing a ship that's on somebody else's transport
         transport0.removeTransportedUnit(randomUnit);
 
         // The unit should NOT have its assignment changed.
-        verify(randomUnit, times(0)).setTransportShipAssignment(eq(null));
+        verify(randomUnit, times(0)).setTransportAssignment(eq(null));
 
         // And we should not have had our bay space recalculated.
         verify(transport0, times(0)).updateBayCapacity(anyInt(), anyDouble(),

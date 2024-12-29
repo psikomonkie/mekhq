@@ -1,5 +1,5 @@
 /*
- * TransportShipAssignment.java
+ * TransportAssignment.java
  *
  * Copyright (c) 2020 The Megamek Team. All rights reserved.
  *
@@ -24,31 +24,31 @@ package mekhq.campaign.unit;
 import java.util.Objects;
 
 /**
- * Represents an assignment to a specific bay on a transport ship.
+ * Represents an assignment to a specific bay on a transport.
  */
-public class TransportShipAssignment {
-    private final Unit transportShip;
+public class TransportAssignment {
+    private final Unit transport;
     private final int bayNumber;
 
     /**
-     * Initializes a new instance of the TransportShipAssignment class.
-     * @param transportShip The transport ship.
-     * @param bayNumber The bay number on the transport ship.
+     * Initializes a new instance of the TransportAssignment class.
+     * @param transport The transport.
+     * @param bayNumber The bay number on the transport.
      */
-    public TransportShipAssignment(Unit transportShip, int bayNumber) {
-        this.transportShip = Objects.requireNonNull(transportShip);
+    public TransportAssignment(Unit transport, int bayNumber) {
+        this.transport = Objects.requireNonNull(transport);
         this.bayNumber = bayNumber;
     }
 
     /**
-     * Gets the transport ship for this assignment.
+     * Gets the transport for this assignment.
      */
-    public Unit getTransportShip() {
-        return transportShip;
+    public Unit getTransport() {
+        return transport;
     }
 
     /**
-     * Gets the bay number for the transport ship.
+     * Gets the bay number for the transport.
      */
     public int getBayNumber() {
         return bayNumber;
@@ -61,14 +61,14 @@ public class TransportShipAssignment {
         } else if (getClass() != o.getClass()) {
             return false;
         } else {
-            TransportShipAssignment other = (TransportShipAssignment) o;
-            return Objects.equals(getTransportShip(), other.getTransportShip())
+            TransportAssignment other = (TransportAssignment) o;
+            return Objects.equals(getTransport(), other.getTransport())
                     && (getBayNumber() == other.getBayNumber());
         }
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTransportShip(), getBayNumber());
+        return Objects.hash(getTransport(), getBayNumber());
     }
 }
