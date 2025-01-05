@@ -1310,8 +1310,8 @@ public class TOEMouseAdapter extends JPopupMenuAdapter {
                     menuItem.addActionListener(evt -> {
                         Set<Unit> transportsToUpdate = new HashSet<>();
                         for (Unit transportedUnit : units) {
-                            transportsToUpdate.add(transportedUnit.getTransportAssignment().getTransport());
-                            transportedUnit.getTransportAssignment().getTransport().unloadFromTransport(transportedUnit);
+                            transportsToUpdate.add(transportedUnit.getTacticalTransportAssignment().getTransport());
+                            transportedUnit.getTacticalTransportAssignment().getTransport().unloadFromTransport(transportedUnit);
                         }
 
                         for (Unit transportToUpdate : transportsToUpdate) {
@@ -1685,8 +1685,8 @@ public class TOEMouseAdapter extends JPopupMenuAdapter {
                 menuItem.addActionListener(evt -> {
                     Set<Unit> transportsToUpdate = new HashSet<>();
                     for (Unit transportedUnit : units) {
-                        transportsToUpdate.add(transportedUnit.getTransportAssignment().getTransport());
-                        transportedUnit.getTransportAssignment().getTransport().unloadFromTransport(transportedUnit);
+                        transportsToUpdate.add(transportedUnit.getTacticalTransportAssignment().getTransport());
+                        transportedUnit.getTacticalTransportAssignment().getTransport().unloadFromTransport(transportedUnit);
                     }
 
                     for (Unit transportToUpdate : transportsToUpdate) {
