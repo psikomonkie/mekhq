@@ -50,7 +50,9 @@ include "hq_boring/ThemeHQDesert.tileinc"
 
 include "StandardIncludes/StandardThemes.tileinc"
 
-include "StandardIncludes/StandardSpace.tileinc"
+include "StandardIncludes/StandardSpace.tileinc".
+
+include "StandardIncludes/StandardHazardousLiquid.tileinc"
 
 super * "water:0" "" "transparent/anim_water_1.gif"
 
