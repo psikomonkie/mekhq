@@ -353,6 +353,7 @@ public enum PersonalityQuirk {
         String objectPronounLowerCase = HIM_HER_THEM.getDescriptor(gender);
         String possessivePronoun = HIS_HER_THEIR.getDescriptorCapitalized(gender);
         String possessivePronounLowerCase = HIS_HER_THEIR.getDescriptor(gender);
+        int subjectPronounPlurality = gender.ordinal();
 
         String formationKey;
         if (primaryRole == SOLDIER || primaryRole == BATTLE_ARMOUR) {
@@ -374,9 +375,11 @@ public enum PersonalityQuirk {
         String lanceLabelUppercase  = getFormattedTextAt(RESOURCE_BUNDLE,
             formationKey + '.' + factionKey + ".uppercase");
 
+
+
         return getFormattedTextAt(RESOURCE_BUNDLE, RESOURCE_KEY, givenName, subjectPronoun,
             subjectPronounLowerCase, objectPronoun, objectPronounLowerCase, possessivePronoun,
-            possessivePronounLowerCase, lanceLabelUppercase, lanceLabelLowercase);
+            possessivePronounLowerCase, lanceLabelUppercase, lanceLabelLowercase, subjectPronounPlurality);
     }
     // endregion Getters
 
