@@ -663,7 +663,7 @@ public class AdvancedReplacementLimbDialog extends JDialog {
                 }
             }
 
-            if (!selected.isAvailableInCurrentLocation(campaign.getLocation(), campaign.getLocalDate())) {
+            if (!selected.isAvailableInCurrentLocation(campaign.getCurrentLocation(), campaign.getLocalDate())) {
                 tooltip += getFormattedTextAt(RESOURCE_BUNDLE,
                       "AdvancedReplacementLimbDialog.exclusions.tech", warningColor, CLOSING_SPAN_TAG);
             }

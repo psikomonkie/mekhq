@@ -341,11 +341,11 @@ public class InterstellarMapPanel extends JPanel {
                      */
 
                     item = new JMenuItem("Recharge Jumpdrive");
-                    item.setEnabled(InterstellarMapPanel.this.campaign.getLocation()
+                    item.setEnabled(InterstellarMapPanel.this.campaign.getCurrentLocation()
                                           .isRecharging(InterstellarMapPanel.this.campaign) &&
                                           InterstellarMapPanel.this.campaign.isGM());
                     item.addActionListener(evt -> {
-                        InterstellarMapPanel.this.campaign.getLocation()
+                        InterstellarMapPanel.this.campaign.getCurrentLocation()
                               .setRecharged(InterstellarMapPanel.this.campaign);
                         InterstellarMapPanel.this.campaign.addReport(GENERAL, "GM: Jumpship drives fully charged");
                         hqView.refreshLocation();

@@ -108,6 +108,8 @@ import megamek.common.equipment.BombLoadout;
 import megamek.common.equipment.BombMounted;
 import megamek.common.equipment.EquipmentTypeLookup;
 import megamek.common.equipment.Mounted;
+import megamek.common.event.EventBus;
+import megamek.common.event.Subscribe;
 import megamek.common.game.Game;
 import megamek.common.icons.Camouflage;
 import megamek.common.icons.Portrait;
@@ -143,6 +145,7 @@ import mekhq.campaign.enums.DragoonRating;
 import mekhq.campaign.events.*;
 import mekhq.campaign.events.loans.LoanNewEvent;
 import mekhq.campaign.events.loans.LoanPaidEvent;
+import mekhq.campaign.events.locations.LocationNewDayEvent;
 import mekhq.campaign.events.missions.MissionNewEvent;
 import mekhq.campaign.events.missions.MissionRemovedEvent;
 import mekhq.campaign.events.parts.PartChangedEvent;
@@ -277,7 +280,7 @@ import mekhq.utilities.ReportingUtilities;
  *
  * @author Taharqa
  */
-public class Campaign implements ITechManager {
+public class Campaign implements ITechManager, ILocatable {
     private static final MMLogger LOGGER = MMLogger.create(Campaign.class);
 
     public static final String REPORT_LINEBREAK = "<br/><br/>";
@@ -414,7 +417,7 @@ public class Campaign implements ITechManager {
     private Finances finances;
 
     private Systems systemsInstance;
-    private CurrentLocation location;
+    private ILocation location;
     private boolean isAvoidingEmptySystems;
     private boolean isOverridingCommandCircuitRequirements;
 
@@ -481,6 +484,8 @@ public class Campaign implements ITechManager {
     private boolean ignoreMothballed;
     private boolean topUpWeekly;
     private PartQuality ignoreSparesUnderQuality;
+
+    private transient EventBus locationEventBus = new EventBus();
 
     // Libraries
     // We deliberately don't write this data to the save file as we want it rebuilt
@@ -692,6 +697,7 @@ public class Campaign implements ITechManager {
         this.newPersonnelMarket.setCampaign(this);
         this.randomDeath.setCampaign(this);
         this.campaignSummary.setCampaign(this);
+        this.location.registerLocationHandler(this);
     }
 
     public IAutosaveService getAutosaveService() {
@@ -789,10 +795,6 @@ public class Campaign implements ITechManager {
 
     public void setCampaignStartDate(LocalDate campaignStartDate) {
         this.campaignStartDate = campaignStartDate;
-    }
-
-    public PlanetarySystem getCurrentSystem() {
-        return location.getCurrentSystem();
     }
 
     public boolean isAvoidingEmptySystems() {
@@ -1830,8 +1832,13 @@ public class Campaign implements ITechManager {
         return scenarios.values().stream().filter(s -> s.getStatus().isCurrent()).toList();
     }
 
-    public void setLocation(CurrentLocation l) {
+    @Override
+    public void setLocation(ILocation l) {
+        if (!Objects.equals(location, l)) {
+            location.unregisterLocationHandler(this);
+        }
         location = l;
+        location.registerLocationHandler(this);
     }
 
     /**
@@ -1851,7 +1858,7 @@ public class Campaign implements ITechManager {
      */
     public void moveToPlanetarySystem(PlanetarySystem planetarySystem) {
         setLocation(new CurrentLocation(planetarySystem, 0.0));
-        MekHQ.triggerEvent(new LocationChangedEvent(getLocation(), false));
+        MekHQ.triggerEvent(new LocationChangedEvent(getCurrentLocation(), false));
 
         if (getAutomatedMothballUnits().isEmpty()) {
             performAutomatedActivation(this);
@@ -1862,7 +1869,8 @@ public class Campaign implements ITechManager {
         }
     }
 
-    public CurrentLocation getLocation() {
+    @Override
+    public ILocation getLocation() {
         return location;
     }
 
@@ -6688,7 +6696,7 @@ public class Campaign implements ITechManager {
         forces.writeToXML(writer, indent);
         MHQXMLUtility.writeSimpleXMLCloseTag(writer, --indent, "forces");
         finances.writeToXML(writer, indent);
-        location.writeToXML(writer, indent);
+        location.writeLocationToXML(writer, indent);
         MHQXMLUtility.writeSimpleXMLTag(writer, indent, "isAvoidingEmptySystems", isAvoidingEmptySystems);
         MHQXMLUtility.writeSimpleXMLTag(writer,
               indent,
@@ -10161,5 +10169,15 @@ public class Campaign implements ITechManager {
      */
     public void setSystemsInstance(Systems systemsInstance) {
         this.systemsInstance = systemsInstance;
+    }
+
+    @Override
+    public EventBus getLocationEventBus() {
+        return locationEventBus;
+    }
+
+    @Subscribe
+    public void handleLocationNewDayEvent(LocationNewDayEvent ev) {
+        // Do stuff based on ev.location()
     }
 }

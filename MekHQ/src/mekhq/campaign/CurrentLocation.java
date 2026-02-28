@@ -48,17 +48,24 @@ import static mekhq.utilities.MHQInternationalization.getFormattedTextAt;
 import static mekhq.utilities.MHQInternationalization.getTextAt;
 
 import java.io.PrintWriter;
+import java.lang.ref.WeakReference;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import megamek.common.event.EventBus;
+import megamek.common.event.MMEvent;
+import megamek.common.event.Subscribe;
 import megamek.logging.MMLogger;
 import mekhq.MekHQ;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.events.LocationChangedEvent;
+import mekhq.campaign.events.NewDayTransitEvent;
 import mekhq.campaign.events.TransitCompleteEvent;
+import mekhq.campaign.events.locations.LocationNewDayEvent;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.mission.Contract;
 import mekhq.campaign.mission.TransportCostCalculations;
@@ -86,10 +93,40 @@ import org.w3c.dom.NodeList;
  *
  * @author Jay Lawson (jaylawson39 at yahoo.com)
  */
-public class CurrentLocation {
+public class CurrentLocation implements ILocation {
     private static final MMLogger logger = MMLogger.create(CurrentLocation.class);
 
     private static final String RESOURCE_BUNDLE = "mekhq.resources.CurrentLocation";
+
+    private static final LocationEventDispatcher DISPATCHER = new LocationEventDispatcher();
+
+    private final EventBus EVENT_BUS = new EventBus();
+
+    public static class LocationEventDispatcher {
+        private final CopyOnWriteArrayList<WeakReference<CurrentLocation>> locations =
+              new CopyOnWriteArrayList<>();
+
+        private LocationEventDispatcher() {
+            MekHQ.registerHandler(this);
+        }
+
+        private void register(CurrentLocation location) {
+            locations.add(new WeakReference<>(location));
+        }
+
+        @Subscribe
+        public void handleNewTransitDayEvent(NewDayTransitEvent ev) {
+            locations.removeIf(ref -> {
+                CurrentLocation loc = ref.get();
+                if (loc == null) {
+                    return true;
+                }
+                loc.newDay(ev.getCampaign());
+                loc.triggerLocationEvent(new LocationNewDayEvent(loc));
+                return false;
+            });
+        }
+    }
 
     private PlanetarySystem currentSystem;
     // keep track of jump path
@@ -109,28 +146,60 @@ public class CurrentLocation {
         this.transitTime = time;
         this.rechargeTime = 0d;
         this.jumpZenith = true;
+        DISPATCHER.register(this);
     }
 
+    @Override
+    public ILocation getLocation() {
+        return null; // CurrentLocation has no parent location, it should be the root
+    }
+
+    /**
+     * Get the current location of this location.
+     *
+     * @return {@link CurrentLocation}
+     */
+    @Override
+    public CurrentLocation getCurrentLocation() {
+        return this;
+    }
+
+    /**
+     * Check if this location has an actual location {@link CurrentLocation}.
+     *
+     * @return {@code true} if this location has a location, otherwise {@code false}
+     */
+    @Override
+    public boolean hasCurrentLocation() {
+        return true;
+    }
+
+    @Override
     public void setTransitTime(double time) {
         transitTime = time;
     }
 
+    @Override
     public boolean isOnPlanet() {
         return transitTime <= 0;
     }
 
+    @Override
     public boolean isAtJumpPoint() {
         return transitTime >= currentSystem.getTimeToJumpPoint(1.0);
     }
 
+    @Override
     public double getPercentageTransit() {
         return 1 - transitTime / currentSystem.getTimeToJumpPoint(1.0);
     }
 
+    @Override
     public boolean isInTransit() {
         return !isOnPlanet() && !isAtJumpPoint();
     }
 
+    @Override
     public PlanetarySystem getCurrentSystem() {
         return currentSystem;
     }
@@ -139,10 +208,12 @@ public class CurrentLocation {
      * @return the current planet location. This is currently the primary planet of the system, but in the future this
      *       will not be the case.
      */
+    @Override
     public Planet getPlanet() {
         return getCurrentSystem().getPrimaryPlanet();
     }
 
+    @Override
     public double getTransitTime() {
         return transitTime;
     }
@@ -150,6 +221,7 @@ public class CurrentLocation {
     /**
      * @return a <code>boolean</code> indicating whether the JumpShip is at the zenith or not (nadir if false).
      */
+    @Override
     public boolean isJumpZenith() {
         return jumpZenith;
     }
@@ -259,10 +331,12 @@ public class CurrentLocation {
         return report.toString();
     }
 
+    @Override
     public JumpPath getJumpPath() {
         return jumpPath;
     }
 
+    @Override
     public void setJumpPath(JumpPath path) {
         jumpPath = path;
     }
@@ -573,7 +647,8 @@ public class CurrentLocation {
         }
     }
 
-    public void writeToXML(final PrintWriter pw, int indent) {
+    @Override
+    public void writeLocationToXML(final PrintWriter pw, int indent) {
         MHQXMLUtility.writeSimpleXMLOpenTag(pw, indent++, "location");
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "currentSystemId", currentSystem.getId());
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "transitTime", transitTime);
@@ -623,5 +698,10 @@ public class CurrentLocation {
         }
 
         return retVal;
+    }
+
+    @Override
+    public EventBus getLocationEventBus() {
+        return EVENT_BUS;
     }
 }

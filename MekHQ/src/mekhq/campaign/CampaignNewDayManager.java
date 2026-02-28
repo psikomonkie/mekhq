@@ -111,6 +111,7 @@ import mekhq.campaign.enums.DailyReportType;
 import mekhq.campaign.events.DayEndingEvent;
 import mekhq.campaign.events.DeploymentChangedEvent;
 import mekhq.campaign.events.NewDayEvent;
+import mekhq.campaign.events.NewDayTransitEvent;
 import mekhq.campaign.events.persons.PersonChangedEvent;
 import mekhq.campaign.finances.Finances;
 import mekhq.campaign.finances.Money;
@@ -231,7 +232,7 @@ public class CampaignNewDayManager {
     /**
      * @return <code>true</code> if the new day arrived
      */
-    public boolean newDay() {
+    public synchronized boolean newDay() {
         // Clear previous daily report nags (we want this up top so that we can make sure no messages have been
         // posted prior to this point).
         CommandCenterTab commandCenter = campaign.getApp().getCampaigngui().getCommandCenterTab();
@@ -378,8 +379,9 @@ public class CampaignNewDayManager {
 
         campaign.readNews();
 
-        campaign.getLocation().newDay(campaign);
-        updatedLocation = campaign.getLocation();
+        //TODO: Make this an event
+        MekHQ.triggerEvent(new NewDayTransitEvent(campaign));
+        updatedLocation = campaign.getCurrentLocation();
 
         updateFacilities();
 
