@@ -33,17 +33,25 @@
  */
 package mekhq.campaign;
 
-import megamek.common.event.EventBus;
-import megamek.common.event.MMEvent;
+import megamek.logging.MMLogger;
+import mekhq.MekHQ;
+import mekhq.campaign.parts.Part;
+import mekhq.campaign.personnel.Person;
+import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.Planet;
 import mekhq.campaign.universe.PlanetarySystem;
 
 import java.io.PrintWriter;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *
  */
 public interface ILocation {
+
+    MMLogger LOGGER = MMLogger.create(ILocation.class);
 
     default void writeLocationToXML(final PrintWriter pw, int indent) {
         if (hasLocation()) {
@@ -218,36 +226,45 @@ public interface ILocation {
         }
     }
 
+    Set<ILocation> getLocations();
 
-    /*
-     * Access methods for event bus.
-     */
-
-    /**
-     * @return {@link EventBus} used for {@link ILocation} events
-     */
-    EventBus getLocationEventBus();
-
-    /**
-     * Register a handler to the event bus for this location.
-     * @param handler Object that should listen for events
-     */
-    default void registerLocationHandler(Object handler) {
-        getLocationEventBus().register(handler);
+    default Set<ILocation> getLocationsUnmodifiable() {
+        return new HashSet<>(getLocations());
     }
 
-    /**
-     * @return {@code true} if the event was cancelled.
-     */
-    default boolean triggerLocationEvent(MMEvent event) {
-        return getLocationEventBus().trigger(event);
+    default void addLocation(ILocation locatable) {
+        if (this.equals(locatable)) {
+            LOGGER.warn("Cannot add location to itself. Parent: {}, Child: {}", this, locatable);
+            return;
+        }
+
+        getLocations().add(locatable);
     }
 
-    /**
-     * Unregister a handler from the event bus for this location.
-     * @param handler Object that will no longer listen for events
-     */
-    default void unregisterLocationHandler(Object handler) {
-        getLocationEventBus().unregister(handler);
+    default void removeLocation(ILocation locatable) {
+        getLocations().remove(locatable);
+
+        // If nothing is located at this location anymore, let's unregister from MekHQ
+        if (getLocations().isEmpty()) {
+            MekHQ.unregisterHandler(this);
+        }
+    }
+
+    default Set<Person> getPersonnelAtLocation() {
+        return getLocations().stream()
+            .flatMap(loc -> loc.getPersonnelAtLocation().stream())
+            .collect(Collectors.toSet());
+    }
+
+    default Set<Unit> getUnitsAtLocation() {
+        return getLocations().stream()
+            .flatMap(loc -> loc.getUnitsAtLocation().stream())
+            .collect(Collectors.toSet());
+    }
+
+    default Set<Part> getPartsAtLocation() {
+        return getLocations().stream()
+            .flatMap(loc -> loc.getPartsAtLocation().stream())
+            .collect(Collectors.toSet());
     }
 }

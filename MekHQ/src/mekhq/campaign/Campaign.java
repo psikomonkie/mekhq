@@ -145,7 +145,6 @@ import mekhq.campaign.enums.DragoonRating;
 import mekhq.campaign.events.*;
 import mekhq.campaign.events.loans.LoanNewEvent;
 import mekhq.campaign.events.loans.LoanPaidEvent;
-import mekhq.campaign.events.locations.LocationNewDayEvent;
 import mekhq.campaign.events.missions.MissionNewEvent;
 import mekhq.campaign.events.missions.MissionRemovedEvent;
 import mekhq.campaign.events.parts.PartChangedEvent;
@@ -480,6 +479,8 @@ public class Campaign implements ITechManager, ILocatable {
     private int temporaryPrisonerCapacity;
     private boolean processProcurement;
 
+    private Set<ILocation> locations = new HashSet<>();
+
     // options relating to parts in use and restock
     private boolean ignoreMothballed;
     private boolean topUpWeekly;
@@ -697,7 +698,7 @@ public class Campaign implements ITechManager, ILocatable {
         this.newPersonnelMarket.setCampaign(this);
         this.randomDeath.setCampaign(this);
         this.campaignSummary.setCampaign(this);
-        this.location.registerLocationHandler(this);
+        this.location.addLocation(this);
     }
 
     public IAutosaveService getAutosaveService() {
@@ -1834,11 +1835,9 @@ public class Campaign implements ITechManager, ILocatable {
 
     @Override
     public void setLocation(ILocation l) {
-        if (!Objects.equals(location, l)) {
-            location.unregisterLocationHandler(this);
-        }
+        location.removeLocation(this);
         location = l;
-        location.registerLocationHandler(this);
+        location.addLocation(this);
     }
 
     /**
@@ -1872,6 +1871,11 @@ public class Campaign implements ITechManager, ILocatable {
     @Override
     public ILocation getLocation() {
         return location;
+    }
+
+    @Override
+    public Set<ILocation> getLocations() {
+        return locations;
     }
 
     public boolean isOnContractAndPlanetside() {
@@ -3069,6 +3073,24 @@ public class Campaign implements ITechManager, ILocatable {
                      .filter(person -> !person.getStatus().isDepartedUnit())
                      .filter(person -> !person.getStatus().isAbsent())
                      .collect(Collectors.toList());
+    }
+
+    @Override
+    public Set<Person> getPersonnelAtLocation() {
+        // TODO: This should only return Personnel at the "Main" campaign location
+        return new HashSet<>(getPersonnel());
+    }
+
+    @Override
+    public Set<Unit> getUnitsAtLocation() {
+        // TODO: Hangar should be a `ILocatable` located at the Campaign
+        return new HashSet<>(getHangar().getUnits());
+    }
+
+    @Override
+    public Set<Part> getPartsAtLocation() {
+        // TODO: Warehouse should be a `ILocatable` located at the Campaign
+        return new HashSet<>(getWarehouse().getParts());
     }
 
     /**
@@ -10169,15 +10191,5 @@ public class Campaign implements ITechManager, ILocatable {
      */
     public void setSystemsInstance(Systems systemsInstance) {
         this.systemsInstance = systemsInstance;
-    }
-
-    @Override
-    public EventBus getLocationEventBus() {
-        return locationEventBus;
-    }
-
-    @Subscribe
-    public void handleLocationNewDayEvent(LocationNewDayEvent ev) {
-        // Do stuff based on ev.location()
     }
 }

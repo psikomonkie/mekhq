@@ -36,8 +36,7 @@ package mekhq.campaign;
 public interface ILocatable extends ILocation {
 
     /**
-     * Set the location of a {@link ILocatable}. Always unregister the old location and register the new location in
-     * implementations!
+     * Set the location of a {@link ILocatable}.
      *
      * @param location {@link ILocation} that should become this object's location.
      */

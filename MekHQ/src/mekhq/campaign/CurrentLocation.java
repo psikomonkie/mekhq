@@ -48,16 +48,14 @@ import static mekhq.utilities.MHQInternationalization.getFormattedTextAt;
 import static mekhq.utilities.MHQInternationalization.getTextAt;
 
 import java.io.PrintWriter;
-import java.lang.ref.WeakReference;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import megamek.common.event.EventBus;
-import megamek.common.event.MMEvent;
+
 import megamek.common.event.Subscribe;
 import megamek.logging.MMLogger;
 import mekhq.MekHQ;
@@ -65,7 +63,6 @@ import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.events.LocationChangedEvent;
 import mekhq.campaign.events.NewDayTransitEvent;
 import mekhq.campaign.events.TransitCompleteEvent;
-import mekhq.campaign.events.locations.LocationNewDayEvent;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.mission.Contract;
 import mekhq.campaign.mission.TransportCostCalculations;
@@ -98,36 +95,6 @@ public class CurrentLocation implements ILocation {
 
     private static final String RESOURCE_BUNDLE = "mekhq.resources.CurrentLocation";
 
-    private static final LocationEventDispatcher DISPATCHER = new LocationEventDispatcher();
-
-    private final EventBus EVENT_BUS = new EventBus();
-
-    public static class LocationEventDispatcher {
-        private final CopyOnWriteArrayList<WeakReference<CurrentLocation>> locations =
-              new CopyOnWriteArrayList<>();
-
-        private LocationEventDispatcher() {
-            MekHQ.registerHandler(this);
-        }
-
-        private void register(CurrentLocation location) {
-            locations.add(new WeakReference<>(location));
-        }
-
-        @Subscribe
-        public void handleNewTransitDayEvent(NewDayTransitEvent ev) {
-            locations.removeIf(ref -> {
-                CurrentLocation loc = ref.get();
-                if (loc == null) {
-                    return true;
-                }
-                loc.newDay(ev.getCampaign());
-                loc.triggerLocationEvent(new LocationNewDayEvent(loc));
-                return false;
-            });
-        }
-    }
-
     private PlanetarySystem currentSystem;
     // keep track of jump path
     private JumpPath jumpPath;
@@ -136,6 +103,8 @@ public class CurrentLocation implements ILocation {
     private double transitTime;
     // JumpShip at nadir or zenith
     private boolean jumpZenith;
+
+    private final Set<ILocation> locations = new HashSet<>();
 
     public CurrentLocation() {
         this(null, 0d);
@@ -146,7 +115,7 @@ public class CurrentLocation implements ILocation {
         this.transitTime = time;
         this.rechargeTime = 0d;
         this.jumpZenith = true;
-        DISPATCHER.register(this);
+        MekHQ.registerHandler(this);
     }
 
     @Override
@@ -339,6 +308,11 @@ public class CurrentLocation implements ILocation {
     @Override
     public void setJumpPath(JumpPath path) {
         jumpPath = path;
+    }
+
+    @Override
+    public Set<ILocation> getLocations() {
+        return locations;
     }
 
     /**
@@ -700,8 +674,8 @@ public class CurrentLocation implements ILocation {
         return retVal;
     }
 
-    @Override
-    public EventBus getLocationEventBus() {
-        return EVENT_BUS;
+    @Subscribe
+    public void handleNewTransitDayEvent(NewDayTransitEvent ev) {
+        newDay(ev.getCampaign());
     }
 }
