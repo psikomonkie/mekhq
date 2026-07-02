@@ -200,6 +200,7 @@ public final class LocationUtils {
      * @return journey length in whole days, always at least 2
      */
     public static int computeJourneyDays(JumpPath path, LocalDate date, double startTransit) {
-        return Math.max(2, (int) Math.ceil(path.getTotalTime(date, startTransit, false)));
+        int journeyDays = (int) Math.ceil(path.getTotalTime(date, startTransit, false));
+        return Math.max(2, journeyDays);
     }
 }
