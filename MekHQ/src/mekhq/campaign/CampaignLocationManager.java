@@ -42,6 +42,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import jakarta.annotation.Nonnull;
 import megamek.common.annotations.Nullable;
@@ -126,6 +127,16 @@ public class CampaignLocationManager {
     @Nonnull
     public Set<PlayerBase> getPlayerBases() {
         return Collections.unmodifiableSet(playerBases);
+    }
+
+    /** Returns the player base with the given id, or {@code null} if none matches. */
+    public @Nullable PlayerBase getPlayerBaseById(UUID id) {
+        for (PlayerBase base : playerBases) {
+            if (id.equals(base.getId())) {
+                return base;
+            }
+        }
+        return null;
     }
 
     /**
@@ -392,8 +403,7 @@ public class CampaignLocationManager {
      * Serializes queued-but-undrained travel. Only the destination and the travelers are written; the origin is
      * recomputed from each traveler's location when the saved travel is re-queued on load (see
      * {@code CampaignXmlParser}). Each destination serializes itself via
-     * {@link ILocation#writePendingTravelDestinationToXML}; a destination type without serialization support is logged
-     * and skipped.
+     * {@link ILocation#writeReferenceToXML}; a destination type that is not referable is logged and skipped.
      */
     private void writePendingTravelToXML(PrintWriter pw, int indent) {
         if (pendingTravel.isEmpty()) {
@@ -403,7 +413,7 @@ public class CampaignLocationManager {
         for (Map.Entry<TravelRoute, List<ILocation>> entry : pendingTravel.entrySet()) {
             ILocation destination = entry.getKey().destination();
             MHQXMLUtility.writeSimpleXMLOpenTag(pw, indent++, "route");
-            if (destination != null && destination.writePendingTravelDestinationToXML(pw, indent)) {
+            if (destination != null && destination.writeReferenceToXML(pw, indent)) {
                 for (ILocation traveler : entry.getValue()) {
                     switch (traveler) {
                         case Person person ->

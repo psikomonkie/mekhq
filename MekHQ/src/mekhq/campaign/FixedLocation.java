@@ -34,6 +34,7 @@ package mekhq.campaign;
 
 import java.io.PrintWriter;
 
+import megamek.common.annotations.Nullable;
 import megamek.logging.MMLogger;
 import mekhq.campaign.location.AcademyCampusLocation;
 import mekhq.campaign.location.ILocation;
@@ -75,11 +76,26 @@ public class FixedLocation extends AbstractLocation {
         MHQXMLUtility.writeSimpleXMLCloseTag(pw, --indent, "fixedLocation");
     }
 
+    /** Discriminator identifying a fixed planetary-system location as a serialized {@link ILocation} reference. */
+    public static final String LOCATION_REFERENCE_TYPE = "fixed";
+
+    private static final String TAG_SYSTEM_ID = "referenceSystemId";
+
     @Override
-    public boolean writePendingTravelDestinationToXML(PrintWriter pw, int indent) {
-        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "destinationType", "fixed");
-        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "destinationSystemId", currentSystem.getId());
-        return true;
+    public String locationReferenceType() {
+        return LOCATION_REFERENCE_TYPE;
+    }
+
+    @Override
+    public void writeReferenceIdentity(PrintWriter pw, int indent) {
+        MHQXMLUtility.writeSimpleXMLTag(pw, indent, TAG_SYSTEM_ID, currentSystem.getId());
+    }
+
+    /** Resolves a {@code "fixed"} reference back to the fixed location for its planetary system. */
+    public static @Nullable ILocation resolveReference(Campaign campaign, Node node) {
+        String systemId = ILocation.referenceChildText(node, TAG_SYSTEM_ID);
+        return systemId == null ? null : campaign.getCampaignLocationManager().getOrCreateFixedLocation(campaign,
+              systemId);
     }
 
     public static FixedLocation generateInstanceFromXML(Node wn, Campaign campaign) {

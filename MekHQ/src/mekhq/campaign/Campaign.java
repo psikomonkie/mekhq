@@ -8812,10 +8812,12 @@ public class Campaign implements ITechManager, IPlace {
         this.partsInUseRequestedStockMap.clear();
     }
 
+    /** Discriminator identifying the main campaign as a serialized {@link ILocation} reference. */
+    public static final String LOCATION_REFERENCE_TYPE = "campaign";
+
     @Override
-    public boolean writePendingTravelDestinationToXML(PrintWriter pw, int indent) {
-        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "destinationType", "campaign");
-        return true;
+    public String locationReferenceType() {
+        return LOCATION_REFERENCE_TYPE;
     }
 
     /**

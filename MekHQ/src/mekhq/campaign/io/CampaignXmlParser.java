@@ -1868,7 +1868,7 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
             if (routeNode.getNodeType() != Node.ELEMENT_NODE || !routeNode.getNodeName().equalsIgnoreCase("route")) {
                 continue;
             }
-            ILocation destination = resolvePendingDestination(campaign, routeNode);
+            ILocation destination = ILocation.resolveReferenceFromXML(campaign, routeNode);
             if (destination == null) {
                 LOGGER.warn("processPendingTravel: could not resolve destination for a queued route — skipping");
                 continue;
@@ -1878,60 +1878,6 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
                 campaign.getCampaignLocationManager().queueTravel(travelers, destination);
             }
         }
-    }
-
-    private static @Nullable ILocation resolvePendingDestination(Campaign campaign, Node routeNode) {
-        String type = getChildText(routeNode, "destinationType");
-        if (type == null) {
-            return null;
-        }
-        return switch (type) {
-            case "campaign" -> campaign;
-            case "base" -> {
-                String baseId = getChildText(routeNode, "destinationBaseId");
-                yield baseId == null ? null : findPlayerBaseById(campaign, baseId);
-            }
-            case "campus" -> {
-                String set = getChildText(routeNode, "destinationCampusSet");
-                String name = getChildText(routeNode, "destinationCampusName");
-                String systemId = getChildText(routeNode, "destinationCampusSystemId");
-                yield (set == null || name == null || systemId == null)
-                            ? null
-                            : campaign.getCampaignLocationManager().getOrCreateCampusLocation(campaign, set, name,
-                      systemId);
-            }
-            case "localCampus" -> {
-                String set = getChildText(routeNode, "destinationCampusSet");
-                String name = getChildText(routeNode, "destinationCampusName");
-                yield (set == null || name == null)
-                            ? null
-                            : campaign.getCampaignLocationManager().getOrCreateLocalCampusLocation(campaign, set, name);
-            }
-            case "fixed" -> {
-                String systemId = getChildText(routeNode, "destinationSystemId");
-                yield systemId == null
-                            ? null
-                            : campaign.getCampaignLocationManager().getOrCreateFixedLocation(campaign, systemId);
-            }
-            default -> {
-                LOGGER.error("processPendingTravel: unrecognized destination type '{}' in a queued route — skipping",
-                      type);
-                yield null;
-            }
-        };
-    }
-
-    private static @Nullable PlayerBase findPlayerBaseById(Campaign campaign, String baseId) {
-        UUID id = parseUuidOrNull(baseId);
-        if (id == null) {
-            return null;
-        }
-        for (PlayerBase base : campaign.getCampaignLocationManager().getPlayerBases()) {
-            if (id.equals(base.getId())) {
-                return base;
-            }
-        }
-        return null;
     }
 
     private static List<ILocation> resolvePendingTravelers(Campaign campaign, Node routeNode) {
@@ -1988,18 +1934,6 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
         } catch (NumberFormatException ex) {
             return null;
         }
-    }
-
-    /** Returns the trimmed text of the first direct child element named {@code childName}, or {@code null}. */
-    private static @Nullable String getChildText(Node parent, String childName) {
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE && child.getNodeName().equalsIgnoreCase(childName)) {
-                return child.getTextContent().trim();
-            }
-        }
-        return null;
     }
 
     /**
