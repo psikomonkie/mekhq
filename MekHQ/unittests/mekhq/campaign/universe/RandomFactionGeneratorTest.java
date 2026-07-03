@@ -32,9 +32,11 @@
  */
 package mekhq.campaign.universe;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
@@ -45,14 +47,18 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import mekhq.campaign.location.ILocation;
 import mekhq.campaign.universe.factionHints.FactionHints;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class RandomFactionGeneratorTest {
+
+    private static final LocalDate TEST_DATE = LocalDate.of(3025, 1, 1);
 
     private Faction isFaction;
     private Faction clanFaction;
@@ -125,6 +131,35 @@ public class RandomFactionGeneratorTest {
         return new RandomFactionGenerator(borderTracker, createTestHints());
     }
 
+    /**
+     * Builds a border tracker with a single planetary system controlled by the given faction, so that region-wide
+     * employer selection ({@link RandomFactionGenerator#getEmployerFaction}) can be compared directly against
+     * location-based selection ({@link RandomFactionGenerator#getRandomEmployerFaction}) for the same faction
+     * presence.
+     */
+    private FactionBorderTracker createSingleFactionBorderTracker(final Faction faction) {
+        List<PlanetarySystem> systems = Collections.singletonList(createTestSystem(0, 0, faction));
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        return tracker;
+    }
+
+    /**
+     * Builds a mock {@link ILocation} whose current system is controlled solely by the given faction.
+     */
+    private ILocation createTestLocation(final Faction controllingFaction) {
+        PlanetarySystem system = mock(PlanetarySystem.class);
+        when(system.getFactionSet(any())).thenReturn(Collections.singleton(controllingFaction));
+        ILocation location = mock(ILocation.class);
+        when(location.getCurrentSystem()).thenReturn(system);
+        return location;
+    }
+
     @Test
     public void testCurrentFactions() {
         RandomFactionGenerator rfg = createTestRFG();
@@ -152,7 +187,7 @@ public class RandomFactionGeneratorTest {
     public void testGetEmployer() {
         RandomFactionGenerator rfg = createTestRFG();
 
-        assertNotNull(rfg.getEmployer());
+        assertNotNull(rfg.getEmployerFaction(null));
     }
 
     @Test
@@ -317,7 +352,7 @@ public class RandomFactionGeneratorTest {
         RandomFactionGenerator rfg = createTestRFG();
 
         for (int i = 0; i < 500; i++) {
-            Faction chosen = rfg.getEmployerFaction();
+            Faction chosen = rfg.getEmployerFaction(null);
             assertNotNull(chosen, "Employer faction should not be null");
             assertNotEquals(isFaction.getShortName(), chosen.getShortName(),
                   "Extinct faction must never be chosen as an employer");
@@ -336,7 +371,7 @@ public class RandomFactionGeneratorTest {
 
         boolean innerSeen = false;
         for (int i = 0; i < 500; i++) {
-            Faction chosen = rfg.getEmployerFaction();
+            Faction chosen = rfg.getEmployerFaction(null);
             assertNotNull(chosen, "Employer faction should not be null");
             if (innerISFaction.getShortName().equals(chosen.getShortName())) {
                 innerSeen = true;
@@ -345,5 +380,130 @@ public class RandomFactionGeneratorTest {
         }
         assertTrue(innerSeen,
               "Contained faction should be selectable by getEmployerFaction()");
+    }
+
+    /**
+     * Regression test: {@code addAnyContainedFactions} previously re-checked the host faction's eligibility instead
+     * of the contained faction's, so a Clan contained faction could slip past the Clan filter and be chosen as an
+     * employer. Marking the contained faction (not the host) as a Clan must exclude it.
+     */
+    @Test
+    public void testClanContainedFactionExcludedFromEmployers() {
+        when(innerISFaction.isClan()).thenReturn(true);
+        RandomFactionGenerator rfg = createTestRFG();
+
+        for (int i = 0; i < 500; i++) {
+            Faction chosen = rfg.getEmployerFaction(null);
+            assertNotNull(chosen, "Employer faction should not be null");
+            assertNotEquals(innerISFaction.getShortName(), chosen.getShortName(),
+                  "Clan contained faction must never be chosen as an employer");
+        }
+    }
+
+    @Test
+    public void testRandomEmployerFactionReturnsControllingFaction() {
+        RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(peripheryFaction);
+
+        Faction chosen = rfg.getRandomEmployerFaction(location, TEST_DATE, null);
+
+        assertNotNull(chosen, "Employer faction should not be null");
+        assertEquals(peripheryFaction.getShortName(), chosen.getShortName());
+    }
+
+    @Test
+    public void testRandomEmployerFactionNullWhenLocationHasNoSystem() {
+        RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = mock(ILocation.class);
+        when(location.getCurrentSystem()).thenReturn(null);
+
+        assertNull(rfg.getRandomEmployerFaction(location, TEST_DATE, null));
+    }
+
+    @Test
+    public void testRandomEmployerFactionExcludesClanController() {
+        RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(clanFaction);
+
+        assertNull(rfg.getRandomEmployerFaction(location, TEST_DATE, null),
+              "A Clan-controlled location with no eligible contained faction should have no employer");
+    }
+
+    @Test
+    public void testRandomEmployerFactionExtinctControllerExcluded() {
+        when(isFaction.validIn(any(LocalDate.class))).thenReturn(false);
+        when(isFaction.validIn(anyInt())).thenReturn(false);
+        RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
+
+        assertNull(rfg.getRandomEmployerFaction(location, TEST_DATE, null),
+              "Extinct controlling faction should not be chosen, nor unlock its contained faction");
+    }
+
+    @Test
+    public void testContainedFactionReachableViaRandomEmployerFaction() {
+        RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
+
+        boolean innerSeen = false;
+        for (int i = 0; i < 500; i++) {
+            Faction chosen = rfg.getRandomEmployerFaction(location, TEST_DATE, null);
+            assertNotNull(chosen, "Employer faction should not be null");
+            if (innerISFaction.getShortName().equals(chosen.getShortName())) {
+                innerSeen = true;
+                break;
+            }
+        }
+        assertTrue(innerSeen, "Contained faction should be selectable by getRandomEmployerFaction()");
+    }
+
+    /**
+     * Same regression as {@link #testClanContainedFactionExcludedFromEmployers}, verified against the new
+     * location-based selection method.
+     */
+    @Test
+    public void testRandomEmployerFactionExcludesClanContainedFaction() {
+        when(innerISFaction.isClan()).thenReturn(true);
+        RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
+
+        for (int i = 0; i < 500; i++) {
+            Faction chosen = rfg.getRandomEmployerFaction(location, TEST_DATE, null);
+            assertNotNull(chosen, "Employer faction should not be null");
+            assertNotEquals(innerISFaction.getShortName(), chosen.getShortName(),
+                  "Clan contained faction must never be chosen as an employer");
+        }
+    }
+
+    /**
+     * Parity test: for a region containing a single system controlled by one faction with one contained
+     * (fallback) faction, the region-wide {@link RandomFactionGenerator#getEmployerFaction} and the location-based
+     * {@link RandomFactionGenerator#getRandomEmployerFaction} must draw from the same candidate pool. This pins down
+     * that neither the pre-existing bug fixes to contained-faction weighting/eligibility, nor the new method, changed
+     * which factions are reachable as an employer for equivalent faction presence.
+     */
+    @Test
+    public void testOldAndNewEmployerSelectionAgreeForSingleSystemLocation() {
+        FactionHints hints = createTestHints();
+        RandomFactionGenerator rfg = new RandomFactionGenerator(createSingleFactionBorderTracker(isFaction), hints);
+        ILocation location = createTestLocation(isFaction);
+
+        Set<String> oldCandidates = new HashSet<>();
+        Set<String> newCandidates = new HashSet<>();
+        for (int i = 0; i < 500; i++) {
+            Faction oldChoice = rfg.getEmployerFaction(null);
+            assertNotNull(oldChoice, "Old employer selection should not be null");
+            oldCandidates.add(oldChoice.getShortName());
+
+            Faction newChoice = rfg.getRandomEmployerFaction(location, TEST_DATE, null);
+            assertNotNull(newChoice, "New employer selection should not be null");
+            newCandidates.add(newChoice.getShortName());
+        }
+
+        Set<String> expectedCandidates = Set.of(isFaction.getShortName(), innerISFaction.getShortName());
+        assertEquals(expectedCandidates, oldCandidates,
+              "Old region-wide employer selection should draw only from the host and its contained faction");
+        assertEquals(expectedCandidates, newCandidates,
+              "New location-based employer selection should draw from the same candidate set as the old method");
     }
 }

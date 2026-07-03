@@ -174,7 +174,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());
@@ -279,7 +278,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());
@@ -387,7 +385,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());
@@ -495,7 +492,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());
@@ -616,8 +612,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        // Return "MERC" the first time to coerce a retry
-        when(rfg.getEmployer()).thenReturn("MERC").thenReturn(employer);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());
 
@@ -673,8 +667,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        // Return "MERC" every time
-        when(rfg.getEmployer()).thenReturn("MERC");
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
 
         AtbMonthlyContractMarket market = new AtbMonthlyContractMarket();
@@ -764,7 +756,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         // Don't find the mission target and force a retry
@@ -872,7 +863,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         // Don't ever find the mission target and force a retry failure
@@ -972,7 +962,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());
@@ -1080,7 +1069,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());
@@ -1183,7 +1171,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());
@@ -1291,7 +1278,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());
@@ -1399,7 +1385,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());
@@ -1614,7 +1599,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());
@@ -1723,7 +1707,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());
@@ -1831,7 +1814,6 @@ public class ContractMarketAtBGenerationTests {
 
         RandomFactionGenerator rfg = mock(RandomFactionGenerator.class);
         RandomFactionGenerator.setInstance(rfg);
-        when(rfg.getEmployer()).thenReturn(employer);
         when(rfg.getEmployerFaction()).thenReturn(employerFaction);
         doReturn(enemy).when(rfg).getEnemy(eq(employer), anyBoolean());
         doReturn(missionTarget).when(rfg).getMissionTarget(anyString(), anyString());

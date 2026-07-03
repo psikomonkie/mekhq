@@ -65,8 +65,8 @@ import mekhq.campaign.universe.factionHints.FactionHints;
  *       <p>
  *       Uses Factions and Planets to weighted lists of potential employers and enemies for contract generation. Also
  *       finds a suitable planet for the action.
- *                                                                                                                   TODO : Account for the de facto alliance of the invading Clans and the
- *                                                                                                                   TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
+ *                                                                                                                               TODO : Account for the de facto alliance of the invading Clans and the
+ *                                                                                                                               TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
  */
 public class RandomFactionGenerator {
     private static final MMLogger LOGGER = MMLogger.create(RandomFactionGenerator.class);
@@ -208,7 +208,7 @@ public class RandomFactionGenerator {
         int currentYear = currentDate.getYear();
 
         for (Faction containedFaction : factionHints.getContainedFactions(faction, currentDate)) {
-            if (checkForEarlyExit(faction, currentDate, currentYear, employerType)) {
+            if (checkForEarlyExit(containedFaction, currentDate, currentYear, employerType)) {
                 continue;
             }
 
@@ -218,7 +218,7 @@ public class RandomFactionGenerator {
     }
 
     private int getWeightForContainedFaction(Faction faction, LocalDate currentDate, Faction containedFaction) {
-        int numberOfBorderSystems = borderTracker.getBorders(containedFaction).getSystems().size();
+        int numberOfBorderSystems = borderTracker.getBorders(faction).getSystems().size();
         double altLocationFraction = factionHints.getAltLocationFraction(faction, containedFaction, currentDate);
         return (int) Math.floor(numberOfBorderSystems * altLocationFraction + 0.5);
     }
@@ -266,6 +266,7 @@ public class RandomFactionGenerator {
         }
 
         boolean include = switch (employerType) {
+            // We're using INDEPENDENT as a catch-all so nobody is missed
             case INDEPENDENT -> !faction.isMinorPower() && !faction.isMajorOrSuperPower();
             case MINOR_POWER -> faction.isMinorPower();
             case MAJOR_POWER -> faction.isMajorPower();
@@ -300,6 +301,16 @@ public class RandomFactionGenerator {
     }
 
     /**
+     * Selects a Faction from those with a presence in the region weighted by the number of systems controlled, with no
+     * employer-type filtering.
+     *
+     * @return A Faction to use as the employer for a contract.
+     */
+    public @Nullable Faction getEmployerFaction() {
+        return getEmployerFaction(null);
+    }
+
+    /**
      * Selects a random employer faction from those controlling (or hosted by a controller of) the system at the given
      * location. Candidates are filtered using the same eligibility rules as {@link #getEmployerFaction}: the mercenary
      * faction itself is excluded, Clans are excluded (aside from the CW/CSF mercenary-use exceptions), ROS is excluded
@@ -329,7 +340,7 @@ public class RandomFactionGenerator {
 
             candidates.add(faction);
             for (Faction containedFaction : factionHints.getContainedFactions(faction, date)) {
-                if (containedFaction != null) {
+                if (!checkForEarlyExit(containedFaction, date, currentYear, employerType)) {
                     candidates.add(containedFaction);
                 }
             }
