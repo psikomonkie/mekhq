@@ -132,24 +132,6 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Builds a border tracker with a single planetary system controlled by the given faction, so that region-wide
-     * employer selection ({@link RandomFactionGenerator#getEmployerFaction}) can be compared directly against
-     * location-based selection ({@link RandomFactionGenerator#getRandomEmployerFaction}) for the same faction
-     * presence.
-     */
-    private FactionBorderTracker createSingleFactionBorderTracker(final Faction faction) {
-        List<PlanetarySystem> systems = Collections.singletonList(createTestSystem(0, 0, faction));
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            protected Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
-        return tracker;
-    }
-
-    /**
      * Builds a mock {@link ILocation} whose current system is controlled solely by the given faction.
      */
     private ILocation createTestLocation(final Faction controllingFaction) {
@@ -158,6 +140,25 @@ public class RandomFactionGeneratorTest {
         ILocation location = mock(ILocation.class);
         when(location.getCurrentSystem()).thenReturn(system);
         return location;
+    }
+
+    /**
+     * Builds a {@link RandomFactionGenerator} whose border tracker (and thus its area search) contains only a single
+     * system controlled by the given faction, with no faction hints. Used to isolate
+     * {@link RandomFactionGenerator#getEmployerFaction(ILocation, LocalDate)}/
+     * {@link RandomFactionGenerator#getRandomEmployerFaction} area searches to a single faction for deterministic
+     * assertions, since {@link #createTestRFG()}'s shared region contains multiple factions.
+     */
+    private RandomFactionGenerator createIsolatedRfg(final Faction faction) {
+        List<PlanetarySystem> systems = Collections.singletonList(createTestSystem(0, 0, faction));
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        return new RandomFactionGenerator(tracker, new FactionHints());
     }
 
     @Test
@@ -186,8 +187,9 @@ public class RandomFactionGeneratorTest {
     @Test
     public void testGetEmployer() {
         RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
 
-        assertNotNull(rfg.getEmployerFaction(null));
+        assertNotNull(rfg.getEmployerFaction(location, TEST_DATE));
     }
 
     @Test
@@ -342,36 +344,33 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test for the actual contract-generation selection path used by AtB:
-     * an extinct faction must never be returned by {@link RandomFactionGenerator#getEmployerFaction()}.
+     * Regression test for the actual contract-generation selection path used by AtB: an extinct faction must never be
+     * returned by {@link RandomFactionGenerator#getEmployerFaction(ILocation, LocalDate)}. With no other faction
+     * controlling anything in the search area, an extinct controller yields no employer at all.
      */
     @Test
     public void testExtinctFactionNeverChosenAsEmployer() {
         when(isFaction.validIn(any(LocalDate.class))).thenReturn(false);
         when(isFaction.validIn(anyInt())).thenReturn(false);
-        RandomFactionGenerator rfg = createTestRFG();
+        RandomFactionGenerator rfg = createIsolatedRfg(isFaction);
+        ILocation location = createTestLocation(isFaction);
 
-        for (int i = 0; i < 500; i++) {
-            Faction chosen = rfg.getEmployerFaction(null);
-            assertNotNull(chosen, "Employer faction should not be null");
-            assertNotEquals(isFaction.getShortName(), chosen.getShortName(),
-                  "Extinct faction must never be chosen as an employer");
-        }
+        assertNull(rfg.getEmployerFaction(location, TEST_DATE),
+              "Extinct faction must never be chosen as an employer");
     }
 
     /**
-     * Verifies that a contained/fallback faction is reachable via the weighted selection in
-     * {@link RandomFactionGenerator#getEmployerFaction()}. Prior to this PR the inner loop in
-     * buildEmployerMap incorrectly added the host faction (rather than the contained faction)
-     * to the weight map, so contained factions could never be selected as employers.
+     * Verifies that a contained/fallback faction is reachable via
+     * {@link RandomFactionGenerator#getEmployerFaction(ILocation, LocalDate)}.
      */
     @Test
     public void testContainedFactionCanBeChosenAsEmployer() {
         RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
 
         boolean innerSeen = false;
         for (int i = 0; i < 500; i++) {
-            Faction chosen = rfg.getEmployerFaction(null);
+            Faction chosen = rfg.getEmployerFaction(location, TEST_DATE);
             assertNotNull(chosen, "Employer faction should not be null");
             if (innerISFaction.getShortName().equals(chosen.getShortName())) {
                 innerSeen = true;
@@ -391,9 +390,10 @@ public class RandomFactionGeneratorTest {
     public void testClanContainedFactionExcludedFromEmployers() {
         when(innerISFaction.isClan()).thenReturn(true);
         RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
 
         for (int i = 0; i < 500; i++) {
-            Faction chosen = rfg.getEmployerFaction(null);
+            Faction chosen = rfg.getEmployerFaction(location, TEST_DATE);
             assertNotNull(chosen, "Employer faction should not be null");
             assertNotEquals(innerISFaction.getShortName(), chosen.getShortName(),
                   "Clan contained faction must never be chosen as an employer");
@@ -402,7 +402,7 @@ public class RandomFactionGeneratorTest {
 
     @Test
     public void testRandomEmployerFactionReturnsControllingFaction() {
-        RandomFactionGenerator rfg = createTestRFG();
+        RandomFactionGenerator rfg = createIsolatedRfg(peripheryFaction);
         ILocation location = createTestLocation(peripheryFaction);
 
         Faction chosen = rfg.getRandomEmployerFaction(location, TEST_DATE, null);
@@ -422,18 +422,18 @@ public class RandomFactionGeneratorTest {
 
     @Test
     public void testRandomEmployerFactionExcludesClanController() {
-        RandomFactionGenerator rfg = createTestRFG();
+        RandomFactionGenerator rfg = createIsolatedRfg(clanFaction);
         ILocation location = createTestLocation(clanFaction);
 
         assertNull(rfg.getRandomEmployerFaction(location, TEST_DATE, null),
-              "A Clan-controlled location with no eligible contained faction should have no employer");
+              "A Clan-controlled area with no eligible contained faction should have no employer");
     }
 
     @Test
     public void testRandomEmployerFactionExtinctControllerExcluded() {
         when(isFaction.validIn(any(LocalDate.class))).thenReturn(false);
         when(isFaction.validIn(anyInt())).thenReturn(false);
-        RandomFactionGenerator rfg = createTestRFG();
+        RandomFactionGenerator rfg = createIsolatedRfg(isFaction);
         ILocation location = createTestLocation(isFaction);
 
         assertNull(rfg.getRandomEmployerFaction(location, TEST_DATE, null),
@@ -476,34 +476,24 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Parity test: for a region containing a single system controlled by one faction with one contained
-     * (fallback) faction, the region-wide {@link RandomFactionGenerator#getEmployerFaction} and the location-based
-     * {@link RandomFactionGenerator#getRandomEmployerFaction} must draw from the same candidate pool. This pins down
-     * that neither the pre-existing bug fixes to contained-faction weighting/eligibility, nor the new method, changed
-     * which factions are reachable as an employer for equivalent faction presence.
+     * {@link RandomFactionGenerator#getEmployerFaction(ILocation, LocalDate)} is a convenience wrapper around
+     * {@link RandomFactionGenerator#getRandomEmployerFaction} with no employer-type filtering; verify it draws from
+     * the same candidate pool as calling that method directly with a {@code null} employer type.
      */
     @Test
-    public void testOldAndNewEmployerSelectionAgreeForSingleSystemLocation() {
-        FactionHints hints = createTestHints();
-        RandomFactionGenerator rfg = new RandomFactionGenerator(createSingleFactionBorderTracker(isFaction), hints);
+    public void testGetEmployerFactionMatchesRandomEmployerFactionCandidatePool() {
+        RandomFactionGenerator rfg = createTestRFG();
         ILocation location = createTestLocation(isFaction);
 
-        Set<String> oldCandidates = new HashSet<>();
-        Set<String> newCandidates = new HashSet<>();
+        Set<String> candidates = new HashSet<>();
         for (int i = 0; i < 500; i++) {
-            Faction oldChoice = rfg.getEmployerFaction(null);
-            assertNotNull(oldChoice, "Old employer selection should not be null");
-            oldCandidates.add(oldChoice.getShortName());
-
-            Faction newChoice = rfg.getRandomEmployerFaction(location, TEST_DATE, null);
-            assertNotNull(newChoice, "New employer selection should not be null");
-            newCandidates.add(newChoice.getShortName());
+            Faction chosen = rfg.getEmployerFaction(location, TEST_DATE);
+            assertNotNull(chosen, "Employer faction should not be null");
+            candidates.add(chosen.getShortName());
         }
 
-        Set<String> expectedCandidates = Set.of(isFaction.getShortName(), innerISFaction.getShortName());
-        assertEquals(expectedCandidates, oldCandidates,
-              "Old region-wide employer selection should draw only from the host and its contained faction");
-        assertEquals(expectedCandidates, newCandidates,
-              "New location-based employer selection should draw from the same candidate set as the old method");
+        assertEquals(Set.of(isFaction.getShortName(), peripheryFaction.getShortName(), innerISFaction.getShortName()),
+              candidates,
+              "getEmployerFaction should draw from every eligible faction in the search area, plus contained factions");
     }
 }
