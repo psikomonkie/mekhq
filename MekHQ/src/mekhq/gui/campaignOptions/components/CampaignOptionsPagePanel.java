@@ -102,11 +102,13 @@ public class CampaignOptionsPagePanel extends JPanel {
     private final boolean showDetailsPanel;
     private final String sectionSearchText;
     private final List<SearchableSection> searchableSections;
+    private final String resourceBundleName;
 
     private CampaignOptionsPagePanel(Builder builder) {
         super(null);
         setName("pnl" + builder.name + "Page");
         showDetailsPanel = builder.showDetailsPanel;
+        resourceBundleName = builder.resourceBundleName;
 
         pageBody = new JPanel(new BorderLayout());
         pageBody.setName("pnl" + builder.name + "PageBody");
@@ -217,16 +219,16 @@ public class CampaignOptionsPagePanel extends JPanel {
     private record SearchableSection(MHQCollapsiblePanel panel, String searchText) {
     }
 
-    private static void appendSectionSearchText(StringBuilder builder, Section section) {
+    private void appendSectionSearchText(StringBuilder builder, Section section) {
         appendResolvedText(builder, section.titleKey(), section.literal());
         appendResolvedText(builder, section.summaryKey(), section.literal());
     }
 
-    private static void appendResolvedText(StringBuilder builder, @Nullable String key, boolean literal) {
+    private void appendResolvedText(StringBuilder builder, @Nullable String key, boolean literal) {
         if (key == null) {
             return;
         }
-        String text = literal ? key : getTextAt(getCampaignOptionsResourceBundle(), key);
+        String text = literal ? key : getTextAt(resourceBundleName, key);
         if (text != null && !text.isBlank()) {
             builder.append(' ').append(text);
         }
@@ -262,7 +264,8 @@ public class CampaignOptionsPagePanel extends JPanel {
                     builder.imageAddress,
                     builder.includeHeaderBodyText,
                     builder.headerImageSize,
-                    builder.tintHeaderImage);
+                    builder.tintHeaderImage,
+                    builder.resourceBundleName);
 
         JPanel panel = new CampaignOptionsStandardPanel(builder.name);
         GridBagConstraints layout = new CampaignOptionsGridBagConstraints(panel);
@@ -347,7 +350,7 @@ public class CampaignOptionsPagePanel extends JPanel {
             introPanel.add(builder.introComponent, BorderLayout.CENTER);
         } else {
             introPanel = new CampaignOptionsIntroPanel(builder.name + "Intro",
-                getTextAt(getCampaignOptionsResourceBundle(), builder.introTextKey),
+                getTextAt(resourceBundleName, builder.introTextKey),
                 textWidth - (introHorizontalPadding * 2));
         }
         introPanel.setBorder(BorderFactory.createEmptyBorder(0,
@@ -380,7 +383,7 @@ public class CampaignOptionsPagePanel extends JPanel {
 
     private String getSectionTitle(Section sectionDefinition) {
         String title = sectionDefinition.literal ? sectionDefinition.titleKey
-              : getTextAt(getCampaignOptionsResourceBundle(), sectionDefinition.titleKey);
+              : getTextAt(resourceBundleName, sectionDefinition.titleKey);
         String badges = formatBadges(sectionDefinition.metadata);
         if (badges.isBlank()) {
             return title;
@@ -396,7 +399,7 @@ public class CampaignOptionsPagePanel extends JPanel {
             return "";
         }
         return sectionDefinition.literal ? sectionDefinition.summaryKey
-              : getTextAt(getCampaignOptionsResourceBundle(), sectionDefinition.summaryKey);
+              : getTextAt(resourceBundleName, sectionDefinition.summaryKey);
     }
 
     private int getPreferredSectionWidth(List<MHQCollapsiblePanel> sections) {
@@ -440,7 +443,7 @@ public class CampaignOptionsPagePanel extends JPanel {
     }
 
     private JButton createSectionActionButton(String resourceKey, int iconCodePoint, int iconSizeBoost) {
-        JButton button = new JButton(getTextAt(getCampaignOptionsResourceBundle(), resourceKey));
+        JButton button = new JButton(getTextAt(resourceBundleName, resourceKey));
         setSmallSizeVariant(button);
         button.setIcon(symbolIcon(iconCodePoint, button.getFont().getSize() + iconSizeBoost,
               button.getForeground()));
@@ -454,7 +457,7 @@ public class CampaignOptionsPagePanel extends JPanel {
     }
 
     private @Nullable JComponent createQuotePanel(@Nullable String quoteResourceName, int contentWidth) {
-        if (quoteResourceName == null || !ResourceBundle.getBundle(getCampaignOptionsResourceBundle())
+        if (quoteResourceName == null || !ResourceBundle.getBundle(resourceBundleName)
                                            .containsKey(quoteResourceName + ".border")) {
             return null;
         }
@@ -471,7 +474,7 @@ public class CampaignOptionsPagePanel extends JPanel {
               quoteHorizontalPadding));
 
         JEditorPane quote = new JEditorPane("text/html",
-              formatQuoteText(getTextAt(getCampaignOptionsResourceBundle(), quoteResourceName + ".border")));
+              formatQuoteText(getTextAt(resourceBundleName, quoteResourceName + ".border")));
         quote.setName("txt" + quoteResourceName + "Quote");
         quote.setEditable(false);
         quote.setFocusable(false);
@@ -520,6 +523,7 @@ public class CampaignOptionsPagePanel extends JPanel {
         private boolean tintHeaderImage = true;
         private boolean sectionsExpandedByDefault;
         private boolean showDetailsPanel = true;
+        private String resourceBundleName = getCampaignOptionsResourceBundle();
 
         private Builder(String name, String headerResourceName, String imageAddress) {
             this.name = name;
@@ -544,6 +548,16 @@ public class CampaignOptionsPagePanel extends JPanel {
 
         public Builder header(CampaignOptionsHeaderPanel headerPanel) {
             this.headerPanel = headerPanel;
+            return this;
+        }
+
+        /**
+         * Sets the resource bundle used to resolve this page's header, intro, section, quote, and control text.
+         * Defaults to the Campaign Options bundle; another consumer (such as the MekHQ Options dialog) passes its own
+         * bundle so the same page shell can be reused.
+         */
+        public Builder resourceBundle(String resourceBundleName) {
+            this.resourceBundleName = resourceBundleName;
             return this;
         }
 

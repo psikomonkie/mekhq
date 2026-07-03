@@ -224,7 +224,12 @@ public class CampaignOptionsUtilities {
     }
 
     static Component createContentWithQuote(Component content, @Nullable String quoteResourceName) {
-        if (quoteResourceName == null || !ResourceBundle.getBundle(RESOURCE_BUNDLE)
+        return createContentWithQuote(content, quoteResourceName, RESOURCE_BUNDLE);
+    }
+
+    static Component createContentWithQuote(Component content, @Nullable String quoteResourceName,
+          String resourceBundleName) {
+        if (quoteResourceName == null || !ResourceBundle.getBundle(resourceBundleName)
                                                  .containsKey(quoteResourceName + ".border")) {
             return content;
         }
@@ -236,7 +241,7 @@ public class CampaignOptionsUtilities {
         JLabel quote = new JLabel(String.format(
               "<html><div style='width: %spx; text-align:center;'>%s</div></html>",
               quoteWidth,
-              getTextAt(RESOURCE_BUNDLE, quoteResourceName + ".border")));
+              getTextAt(resourceBundleName, quoteResourceName + ".border")));
 
         GridBagConstraints quoteConstraints = new GridBagConstraints();
         quoteConstraints.gridx = GridBagConstraints.RELATIVE;

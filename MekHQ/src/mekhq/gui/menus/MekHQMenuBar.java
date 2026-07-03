@@ -249,6 +249,11 @@ public class MekHQMenuBar extends JMenuBar {
         miMHQOptions.setToolTipText(getTextAt("miMHQOptions.toolTipText"));
         menuFile.add(miMHQOptions);
 
+        JMenuItem miMHQOptionsPreview = createMenuItem("miMHQOptionsPreview.text", KeyEvent.VK_UNDEFINED,
+              evt -> new MHQOptionsTreeDialog(getFrame()).setVisible(true));
+        miMHQOptionsPreview.setToolTipText(getTextAt("miMHQOptionsPreview.toolTipText"));
+        menuFile.add(miMHQOptionsPreview);
+
         final JMenuItem miGameOptions = createMenuItem("miGameOptions.text", KeyEvent.VK_M, evt -> {
             final GameOptionsDialog god = new GameOptionsDialog(getFrame(), getCampaign().getGameOptions(), false);
             god.setEditable(true);
