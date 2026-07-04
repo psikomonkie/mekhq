@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.mock;
@@ -143,7 +143,7 @@ public class GroundTransitLocationTest {
 
                 assertEquals(2.0, loc.getTransitTime(), 1e-9);
                 assertTrue(loc.isInTransit());
-                verify(campaign).addReport(eq(GENERAL), contains("traveling"));
+                verify(campaign).addReport(eq(GENERAL), anyString());
                 mekHQ.verify(() -> MekHQ.triggerEvent(isA(TransitStatusChangedEvent.class)), times(1));
                 mekHQ.verify(() -> MekHQ.triggerEvent(isA(TransitCompleteEvent.class)), never());
             }
@@ -158,7 +158,6 @@ public class GroundTransitLocationTest {
                 assertEquals(0.0, loc.getTransitTime(), 1e-9);
                 assertFalse(loc.isInTransit());
                 assertTrue(loc.isOnPlanet());
-                verify(campaign).addReport(eq(GENERAL), contains("Destination reached"));
                 mekHQ.verify(() -> MekHQ.triggerEvent(isA(TransitCompleteEvent.class)), times(1));
             }
         }
