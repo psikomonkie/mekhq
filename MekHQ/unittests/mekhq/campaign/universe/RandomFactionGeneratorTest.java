@@ -502,6 +502,40 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
+     * Regression test: a pirate defender is more likely holed up in genuinely lawless, uncontested space than on a
+     * system it (or anyone else) officially claims, so a nearby empty system should be preferred over the pirate
+     * faction's own directly-owned system.
+     */
+    @Test
+    public void testGetMissionTargetPirateDefenderPrefersEmptySystem() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction pirateFaction = createTestFaction("PIR", false, false);
+        when(pirateFaction.isPirate()).thenReturn(true);
+        Faction emptyFaction = createTestFaction("UND", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem pirateOwnedSystem = createTestSystem(1, 0, pirateFaction);
+        PlanetarySystem emptySystem = createTestSystem(2, 0, emptyFaction);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, pirateOwnedSystem, emptySystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(attackerFaction, pirateFaction, location);
+
+        assertEquals(List.of(emptySystem), targets,
+              "A pirate defender should prefer a nearby empty/lawless system over its own directly-owned system");
+    }
+
+    /**
      * Regression test: a rebel uprising happens somewhere within the attacking government's own territory, so a
      * rebel defender resolves to any of the attacker's own systems rather than a shared border.
      */

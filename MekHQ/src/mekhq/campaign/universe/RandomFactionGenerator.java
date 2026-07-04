@@ -771,6 +771,16 @@ public class RandomFactionGenerator {
             return Collections.emptyList();
         }
 
+        // A pirate defender is more likely holed up in genuinely lawless, uncontested space than on a system some
+        // real faction officially claims; prefer such a system nearby if one exists, before falling back to the
+        // usual border-based logic below.
+        if (defender.getShortName().equals(PIRATE_FACTION_CODE)) {
+            List<PlanetarySystem> emptySystems = findEmptySystems(location, radius, currentDate);
+            if (!emptySystems.isEmpty()) {
+                return emptySystems;
+            }
+        }
+
         // Certain attackers (pirates, mercenaries, ComStar/WoB) can strike anywhere the defender holds.
         if (isSpecialAttacker(attacker)) {
             return systemsOf(borderTracker.getBorders(defender, location, radius));
@@ -864,6 +874,37 @@ public class RandomFactionGenerator {
             }
         }
         return closestSystem;
+    }
+
+    /**
+     * Finds systems within {@code radius} light years of {@code location}'s current system whose only controlling
+     * faction is an empty/placeholder faction (see {@link FactionHints#isEmptyFaction(Faction)}) &mdash; that is,
+     * genuinely lawless, uncontested space, as opposed to a system some real faction happens to also claim.
+     *
+     * @param location the location to center the search on
+     * @param radius   the search radius in light years from {@code location}'s current system; a negative radius
+     *                 includes every system returned by {@link FactionBorderTracker#getSystemList()}
+     * @param date     the date to check faction control against
+     *
+     * @return a list of matching empty systems, or an empty list if {@code location} has no current system or none
+     *       are found in range
+     */
+    private List<PlanetarySystem> findEmptySystems(ILocation location, double radius, LocalDate date) {
+        PlanetarySystem origin = location.getCurrentSystem();
+        if (origin == null) {
+            return Collections.emptyList();
+        }
+
+        List<PlanetarySystem> emptySystems = new ArrayList<>();
+        for (PlanetarySystem system : borderTracker.getSystemList()) {
+            if ((radius < 0) || (system.getDistanceTo(origin) <= radius)) {
+                Set<Faction> factions = system.getFactionSet(date);
+                if (factions.size() == 1 && FactionHints.isEmptyFaction(factions.iterator().next())) {
+                    emptySystems.add(system);
+                }
+            }
+        }
+        return emptySystems;
     }
 
     /**
