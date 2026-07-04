@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import javax.swing.*;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import megamek.common.event.Subscribe;
@@ -86,6 +88,9 @@ import mekhq.gui.view.UnitViewPanel;
  * Display organization tree (TO&amp;E) and force/unit summary
  */
 public final class TOETab extends CampaignGuiTab {
+    private static final int UNIT_CREW_TAB_INDEX = 0;
+    private static final int UNIT_STATS_TAB_INDEX_WITH_CREW = 1;
+
     private JTree orgTree;
     private JPanel panForceView;
     private JTabbedPane tabUnit;
@@ -335,13 +340,58 @@ public final class TOETab extends CampaignGuiTab {
             // We can ignore here because if the selected index is out of bounds, we're just going
             // to not select the unit in the TO&E.
         } else if (node instanceof Formation) {
-            final JScrollPane scrollForce = new FastJScrollPane(new ForceViewPanel((Formation) node, getCampaign()));
+            final JScrollPane scrollForce = new FastJScrollPane(new ForceViewPanel((Formation) node, getCampaign(),
+                this::selectUnitFromForceView, this::selectFormationFromForceView));
             scrollForce.setBorder(null);
             panForceView.add(scrollForce, BorderLayout.CENTER);
             panForceView.setBorder(null);
             SwingUtilities.invokeLater(() -> scrollForce.getVerticalScrollBar().setValue(0));
         }
         panForceView.updateUI();
+    }
+
+    private void selectUnitFromForceView(Unit unit, ForceViewPanel.UnitSelectionType selectionType) {
+        tabUnitLastSelectedIndex = switch (selectionType) {
+            case CREW -> UNIT_CREW_TAB_INDEX;
+            case UNIT -> unit.getCrew().isEmpty() ? UNIT_CREW_TAB_INDEX : UNIT_STATS_TAB_INDEX_WITH_CREW;
+        };
+
+        selectNodeFromForceView(unit);
+    }
+
+    private void selectFormationFromForceView(Formation formation) {
+        selectNodeFromForceView(formation);
+    }
+
+    private void selectNodeFromForceView(Object node) {
+        TreePath path = getTreePathFor(node);
+        if (path != null) {
+            orgTree.setSelectionPath(path);
+            orgTree.scrollPathToVisible(path);
+        }
+    }
+
+    private TreePath getTreePathFor(Object target) {
+        TreeModel model = orgTree.getModel();
+        Object root = model.getRoot();
+        return getTreePathFor(model, root, target, new TreePath(root));
+    }
+
+    private TreePath getTreePathFor(TreeModel model, Object node, Object target, TreePath path) {
+        if (node == target || node.equals(target)) {
+            return path;
+        }
+
+        int childCount = model.getChildCount(node);
+        for (int childIndex = 0; childIndex < childCount; childIndex++) {
+            Object child = model.getChild(node, childIndex);
+            TreePath childPath = getTreePathFor(model, child, target, path.pathByAddingChild(child));
+            if (childPath != null) {
+                return childPath;
+            }
+        }
+
+        return null;
     }
 
     private JList<Person> getCrewList(CrewListModel model, JScrollPane scrollPerson) {
