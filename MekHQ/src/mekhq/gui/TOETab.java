@@ -397,17 +397,15 @@ public final class TOETab extends CampaignGuiTab {
         }
 
         List<Formation> parents = formation.getAllParents();
-        if (parents.stream().noneMatch(parent -> parent == rootFormation || parent.equals(rootFormation))) {
+        int rootIndex = parents.indexOf(rootFormation);
+        if (rootIndex < 0) {
             return null;
         }
 
         List<Object> pathComponents = new ArrayList<>();
         pathComponents.add(root);
-        for (int parentIndex = parents.size() - 1; parentIndex >= 0; parentIndex--) {
-            Formation parent = parents.get(parentIndex);
-            if (parent != rootFormation && !parent.equals(rootFormation)) {
-                pathComponents.add(parent);
-            }
+        for (int parentIndex = rootIndex - 1; parentIndex >= 0; parentIndex--) {
+            pathComponents.add(parents.get(parentIndex));
         }
         pathComponents.add(formation);
 
