@@ -53,6 +53,7 @@ import java.util.Set;
 
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.universe.factionHints.FactionHints;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -66,9 +67,21 @@ public class RandomFactionGeneratorTest {
     private Faction innerISFaction;
     private FactionBorderTracker borderTracker;
 
+    /**
+     * Backs the mocked {@link Factions#getInstance()} roster; {@link RandomFactionGenerator#buildEnemyMap} consults
+     * it to find war partners with no presence in the immediate search area. Tests that introduce additional ad hoc
+     * factions (e.g. a distant belligerent) must add them here too.
+     */
+    private List<Faction> allFactions;
+
     @BeforeEach
     public void init() {
         borderTracker = createTestBorderTracker();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        Factions.setInstance(null);
     }
 
     private FactionBorderTracker createTestBorderTracker() {
@@ -76,6 +89,11 @@ public class RandomFactionGeneratorTest {
         clanFaction = createTestFaction("Clan", false, true);
         peripheryFaction = createTestFaction("Periphery", true, false);
         innerISFaction = createTestFaction("IS2", false, false);
+
+        allFactions = new ArrayList<>(List.of(isFaction, clanFaction, peripheryFaction, innerISFaction));
+        Factions factions = mock(Factions.class);
+        when(factions.getFactions()).thenReturn(allFactions);
+        Factions.setInstance(factions);
 
         List<PlanetarySystem> systems = new ArrayList<>();
         for (int x = -2; x < 3; x++) {
@@ -200,10 +218,10 @@ public class RandomFactionGeneratorTest {
         RandomFactionGenerator rfg = createTestRFG();
         ILocation location = createTestLocation(isFaction);
 
-        String enemy = rfg.getEnemy(location, TEST_DATE, isFaction, false);
+        Faction enemy = rfg.getEnemy(false, location, TEST_DATE, isFaction);
 
-        assertNotEquals("PIR", enemy);
-        assertNotEquals(isFaction.getShortName(), enemy);
+        assertNotEquals("PIR", enemy.getShortName());
+        assertNotEquals(isFaction.getShortName(), enemy.getShortName());
     }
 
     /**
@@ -217,8 +235,8 @@ public class RandomFactionGeneratorTest {
         ILocation location = createTestLocation(isFaction);
 
         for (int i = 0; i < 500; i++) {
-            String enemy = rfg.getEnemy(location, TEST_DATE, isFaction, false);
-            assertNotEquals(peripheryFaction.getShortName(), enemy,
+            Faction enemy = rfg.getEnemy(false, location, TEST_DATE, isFaction);
+            assertNotEquals(peripheryFaction.getShortName(), enemy.getShortName(),
                   "Allied faction must never be chosen as an enemy");
         }
     }
@@ -231,6 +249,7 @@ public class RandomFactionGeneratorTest {
     @Test
     public void testGetEnemyGuaranteesAtWarFactionOutsideSearchRadius() {
         Faction warFaction = createTestFaction("WAR", false, false);
+        allFactions.add(warFaction);
 
         PlanetarySystem nearSystem = createTestSystem(0, 0, isFaction);
         PlanetarySystem farSystem = mock(PlanetarySystem.class);
@@ -254,8 +273,8 @@ public class RandomFactionGeneratorTest {
 
         boolean warFactionSeen = false;
         for (int i = 0; i < 200; i++) {
-            String enemy = rfg.getEnemy(location, TEST_DATE, isFaction, false);
-            if (warFaction.getShortName().equals(enemy)) {
+            Faction enemy = rfg.getEnemy(false, location, TEST_DATE, isFaction);
+            if (warFaction.getShortName().equals(enemy.getShortName())) {
                 warFactionSeen = true;
                 break;
             }

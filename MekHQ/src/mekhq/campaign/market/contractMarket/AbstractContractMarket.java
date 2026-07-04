@@ -556,10 +556,10 @@ public abstract class AbstractContractMarket {
             // the original enemy faction is set as the mercenary's employer, while the enemy faction is set to
             // Mercenaries.
             if (!enemyFaction.isClan() && !enemyFaction.isAggregate() && randomInt(5) == 0) {
-                contract.setEnemyMercenaryEmployerCode(enemyFactionCode);
+                contract.setEnemyMercenaryEmployerCode(enemyFaction.getShortName());
                 contract.setEnemyCode(MERCENARY_FACTION_CODE);
             } else {
-                contract.setEnemyCode(enemyFactionCode);
+                contract.setEnemyCode(enemyFaction.getShortName());
             }
         }
     }

@@ -75,6 +75,9 @@ import mekhq.campaign.universe.factionHints.FactionHints;
 public class RandomFactionGenerator {
     private static final MMLogger LOGGER = MMLogger.create(RandomFactionGenerator.class);
 
+    /** Inner Sphere factions that fought the Clans during the invasion; see {@link #adjustEnemyWeight}. */
+    private static final List<String> INNER_SPHERE_CLAN_WAR_COMBATANTS = List.of("FC", "FRR", "DC");
+
     private static RandomFactionGenerator randomFactionGenerator = null;
 
     private FactionBorderTracker borderTracker;
@@ -392,8 +395,7 @@ public class RandomFactionGenerator {
 
     public Faction getEnemy(boolean isCovert, ILocation location, LocalDate date, @Nullable Faction employer) {
         if (employer == null) {
-            LOGGER.warn("No employer supplied or faction does not exist. Returning INDEPENDENT");
-            return Factions.getInstance().getFaction(INDEPENDENT_FACTION_CODE);
+            return independentFallback("No employer supplied or faction does not exist. Returning INDEPENDENT");
         }
 
         WeightedIntMap<Faction> enemyMap = buildEnemyMap(isCovert, location, date, employer);
@@ -402,8 +404,21 @@ public class RandomFactionGenerator {
             return enemy;
         }
 
-        LOGGER.warn("Could not find enemy for employerName {}. Returning INDEPENDENT", employer.getShortName());
+        return independentFallback("Could not find enemy for employerName {}. Returning INDEPENDENT",
+              employer.getShortName());
+    }
 
+    /**
+     * Logs the given warning and returns the INDEPENDENT faction, used as {@link #getEnemy}'s fallback when no
+     * employer is supplied or no valid enemy candidate could be found.
+     *
+     * @param message the warning message (may contain {@code {}} placeholders)
+     * @param args    arguments for the message's placeholders
+     *
+     * @return the INDEPENDENT faction
+     */
+    private Faction independentFallback(String message, Object... args) {
+        LOGGER.warn(message, args);
         return Factions.getInstance().getFaction(INDEPENDENT_FACTION_CODE);
     }
 
@@ -417,30 +432,37 @@ public class RandomFactionGenerator {
 
         double radius = borderTracker.getRadius();
         Map<Faction, Integer> counts = new HashMap<>();
-        Set<Faction> knownFactions = new HashSet<>();
         for (PlanetarySystem nearbySystem : borderTracker.getSystemList()) {
-            Set<Faction> controllers = nearbySystem.getFactionSet(date);
-            knownFactions.addAll(controllers);
             if ((radius < 0) || (nearbySystem.getDistanceTo(system) <= radius)) {
-                for (Faction faction : controllers) {
+                for (Faction faction : nearbySystem.getFactionSet(date)) {
                     counts.merge(faction, 1, Integer::sum);
                 }
             }
         }
 
         String employerShortName = employer.getShortName();
-        boolean unfiltered = employerShortName.equals(PIRATE_FACTION_CODE);
+        boolean isPirateEmployer = employerShortName.equals(PIRATE_FACTION_CODE);
 
         // A faction at war with the employer is always a valid target, even one with no systems in the search
-        // area
+        // area, as long as it controls territory somewhere on the map. War relationships are sparse, so check who
+        // the employer is at war with first (cheap, over the whole faction roster) before scanning for territory
+        // (only for the handful of actual war partners, not every faction on the map).
         Set<Faction> candidates = new HashSet<>(counts.keySet());
-        if (!unfiltered) {
-            for (Faction faction : knownFactions) {
-                if (factionHints.isAtWarWith(employer, faction, date)) {
+        if (!isPirateEmployer) {
+            for (Faction faction : Factions.getInstance().getFactions()) {
+                if (!candidates.contains(faction) &&
+                          factionHints.isAtWarWith(employer, faction, date) &&
+                          controlsAnySystem(faction, date)) {
                     candidates.add(faction);
                 }
             }
         }
+
+        // These only depend on the date, not on any individual candidate, so compute them once per call rather
+        // than once per candidate in adjustEnemyWeight.
+        boolean isDuringClanInvasionHeight = date.isAfter(MHQConstants.CLAN_INVASION_FIRST_WAVE_BEGINS) &&
+                                                    date.isBefore(MHQConstants.BATTLE_OF_TUKAYYID);
+        boolean isDuringJihad = date.isAfter(MHQConstants.JIHAD_START) && date.isBefore(MHQConstants.NOMINAL_JIHAD_END);
 
         for (Faction enemy : candidates) {
             if (FactionHints.isEmptyFaction(enemy)) {
@@ -451,7 +473,7 @@ public class RandomFactionGenerator {
                 continue;
             }
 
-            if (unfiltered) {
+            if (isPirateEmployer) {
                 enemyMap.add(1, enemy);
                 continue;
             }
@@ -471,13 +493,38 @@ public class RandomFactionGenerator {
                 continue;
             }
 
-            double weight = adjustEnemyWeight(counts.getOrDefault(enemy, 0), employer, enemy, date);
+            double weight = adjustEnemyWeight(counts.getOrDefault(enemy, 0),
+                  employer,
+                  enemy,
+                  date,
+                  isDuringClanInvasionHeight,
+                  isDuringJihad);
             if (weight > 0) {
-                enemyMap.add((int) Math.floor(weight + 0.5), enemy);
+                enemyMap.add((int) Math.round(weight), enemy);
             }
         }
 
         return enemyMap;
+    }
+
+    /**
+     * Checks whether the given faction controls at least one system anywhere the border tracker knows about,
+     * stopping at the first match. Only called for the rare case of a war partner with no presence in the
+     * immediate search area, so this deliberately isn't cached alongside {@code counts} in
+     * {@link #buildEnemyMap(boolean, ILocation, LocalDate, Faction)} &mdash; most calls never reach it.
+     *
+     * @param faction the faction to check
+     * @param date    the date to check faction control against
+     *
+     * @return {@code true} if the faction controls at least one known system on the given date
+     */
+    private boolean controlsAnySystem(Faction faction, LocalDate date) {
+        for (PlanetarySystem system : borderTracker.getSystemList()) {
+            if (system.getFactionSet(date).contains(faction)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -590,29 +637,30 @@ public class RandomFactionGenerator {
      * a weight of at least 1 before doubling, so a belligerent with no systems in the search area is still a valid,
      * pickable target.
      *
-     * @param count    The candidate's base weight (number of systems it controls in the search area)
-     * @param employer The attacking faction
-     * @param enemy    The defending faction
-     * @param date     The date to check diplomatic relations against
+     * @param count                       The candidate's base weight (number of systems it controls in the search
+     *                                    area)
+     * @param employer                    The attacking faction
+     * @param enemy                       The defending faction
+     * @param date                        The date to check diplomatic relations against
+     * @param isDuringClanInvasionHeight  Whether {@code date} falls between the Clan invasion's first wave and the
+     *                                    Battle of Tukayyid
+     * @param isDuringJihad               Whether {@code date} falls within the Jihad
      *
      * @return The adjusted weight
      */
-    protected double adjustEnemyWeight(int count, Faction employer, Faction enemy, LocalDate date) {
-        boolean isDuringClanInvasionHeight = date.isAfter(MHQConstants.CLAN_INVASION_FIRST_WAVE_BEGINS) &&
-                                                   date.isBefore(MHQConstants.BATTLE_OF_TUKAYYID);
-        boolean isDuringJihad = date.isAfter(MHQConstants.JIHAD_START) && date.isBefore(MHQConstants.NOMINAL_JIHAD_END);
-        List<String> innerSphereClanWarCombatants = List.of("FC", "FRR", "DC");
-
+    protected double adjustEnemyWeight(int count, Faction employer, Faction enemy, LocalDate date,
+          boolean isDuringClanInvasionHeight, boolean isDuringJihad) {
         double weight = count;
         if (factionHints.isAtWarWith(employer, enemy, date)) {
-            weight = Math.max(weight, 1.0) * 2.0;
+            weight = Math.max(weight, 1.0);
+            weight *= 2.0;
         }
 
         if (factionHints.isRivalOf(employer, enemy, date)) {
             weight *= 2.0;
         }
 
-        if (innerSphereClanWarCombatants.contains(employer.getShortName()) &&
+        if (INNER_SPHERE_CLAN_WAR_COMBATANTS.contains(employer.getShortName()) &&
                   enemy.isClan() &&
                   isDuringClanInvasionHeight) {
             weight *= 2.0;
