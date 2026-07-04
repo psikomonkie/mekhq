@@ -68,8 +68,8 @@ import mekhq.campaign.universe.factionHints.FactionHints;
  *       <p>
  *       Uses Factions and Planets to weighted lists of potential employers and enemies for contract generation. Also
  *       finds a suitable planet for the action.
- *                                                                                                                               TODO : Account for the de facto alliance of the invading Clans and the
- *                                                                                                                               TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
+ *                                                                                                                                     TODO : Account for the de facto alliance of the invading Clans and the
+ *                                                                                                                                     TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
  */
 public class RandomFactionGenerator {
     private static final MMLogger LOGGER = MMLogger.create(RandomFactionGenerator.class);
@@ -93,8 +93,7 @@ public class RandomFactionGenerator {
      * @param borderTracker the border tracker to use, or {@code null} to create a default one
      * @param factionHints  the faction hints to use, or {@code null} to use {@link FactionHints#getInstance()}
      */
-    public RandomFactionGenerator(FactionBorderTracker borderTracker,
-          FactionHints factionHints) {
+    public RandomFactionGenerator(FactionBorderTracker borderTracker, FactionHints factionHints) {
         this.borderTracker = borderTracker;
         this.factionHints = factionHints;
         if (null == borderTracker) {
@@ -307,6 +306,7 @@ public class RandomFactionGenerator {
      * @return a random eligible employer faction for the area, or {@code null} if the location has no system, or no
      *       eligible faction currently controls anything in the area
      */
+    @Deprecated(since = "0.51.01")
     public @Nullable Faction getEmployerFaction(ILocation location, LocalDate date) {
         return getRandomEmployerFaction(location, date, null, true);
     }
@@ -635,6 +635,7 @@ public class RandomFactionGenerator {
     /**
      * @return A set of keys for all current factions in the space that are potential employers.
      */
+    @Deprecated(since = "0.51.01")
     public Set<String> getEmployerSet() {
         Set<String> set = new HashSet<>();
         LocalDate currentDate = getCurrentDate();
