@@ -319,6 +319,73 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
+     * Regression test: two factions with no direct alliance record, but each individually allied with the same third
+     * faction (e.g. two member states of a superpower), should inherit that shared ally's protection and never be
+     * chosen as each other's enemy.
+     */
+    @Test
+    public void testGetEnemyExcludesFactionAlliedThroughSharedSuperpower() {
+        Faction superpower = createTestFaction("SUPER", false, false);
+        FactionHints hints = new FactionHints();
+        RandomFactionGenerator rfg = new RandomFactionGenerator(createTestBorderTracker(), hints);
+        // Two separate two-party alliances - isFaction and peripheryFaction are never listed together.
+        hints.addAlliance("", null, null, superpower, isFaction);
+        hints.addAlliance("", null, null, superpower, peripheryFaction);
+        ILocation location = createTestLocation(isFaction);
+
+        for (int i = 0; i < 500; i++) {
+            Faction enemy = rfg.getEnemy(false, location, TEST_DATE, isFaction);
+            assertNotEquals(peripheryFaction.getShortName(), enemy.getShortName(),
+                  "A faction allied with the same superpower should never be chosen as an enemy, even without a "
+                        + "direct alliance record");
+        }
+    }
+
+    /**
+     * Regression test: the shared-ally inheritance in {@link #testGetEnemyExcludesFactionAlliedThroughSharedSuperpower}
+     * must not apply when factionHints directly contradicts it with an explicit war record between the two factions.
+     */
+    @Test
+    public void testGetEnemyAtWarOverridesSharedSuperpowerAlliance() {
+        Faction superpower = createTestFaction("SUPER", false, false);
+        Faction warFaction = createTestFaction("WAR", false, false);
+        allFactions.add(warFaction);
+
+        PlanetarySystem nearSystem = createTestSystem(0, 0, isFaction);
+        PlanetarySystem farSystem = mock(PlanetarySystem.class);
+        when(farSystem.getFactionSet(any())).thenReturn(Collections.singleton(warFaction));
+        when(farSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(1000.0);
+        when(nearSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(0.0);
+
+        List<PlanetarySystem> systems = List.of(nearSystem, farSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, 5) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+
+        FactionHints hints = new FactionHints();
+        hints.addAlliance("", null, null, superpower, isFaction);
+        hints.addAlliance("", null, null, superpower, warFaction);
+        hints.addWar("", null, null, isFaction, warFaction);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, hints);
+        ILocation location = mock(ILocation.class);
+        when(location.getCurrentSystem()).thenReturn(nearSystem);
+
+        boolean warFactionSeen = false;
+        for (int i = 0; i < 200; i++) {
+            Faction enemy = rfg.getEnemy(false, location, TEST_DATE, isFaction);
+            if (warFaction.getShortName().equals(enemy.getShortName())) {
+                warFactionSeen = true;
+                break;
+            }
+        }
+        assertTrue(warFactionSeen,
+              "A direct war record should override the inherited shared-superpower alliance");
+    }
+
+    /**
      * Regression test: a pirate employer bypasses all diplomatic checks (neutral, allied, etc.) and can target any
      * valid faction with a presence in the area.
      */

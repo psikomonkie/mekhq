@@ -211,6 +211,38 @@ public class FactionHints {
     }
 
     /**
+     * Checks whether two factions should be treated as allies because they share a common ally, rather than because of
+     * a direct alliance record between the two. This covers member states of the same superpower that are each
+     * individually recorded as allied with that superpower (but not with each other directly) &mdash; without this,
+     * such member states would incorrectly be valid targets against each other.
+     * <p>
+     * Only a single degree of separation is considered (a third faction directly allied with both {@code f1} and
+     * {@code f2}); this does not recurse through chains of shared allies.
+     *
+     * @param f1   Faction One
+     * @param f2   Faction Two
+     * @param date The campaign date
+     *
+     * @return {@code true} if some other faction is allied with both {@code f1} and {@code f2} on the given date
+     */
+    public boolean isAlliedThroughSharedAlly(Faction f1, Faction f2, LocalDate date) {
+        Set<Faction> knownFactions = new HashSet<>(alliances.keySet());
+        for (Map<Faction, List<FactionHint>> nested : alliances.values()) {
+            knownFactions.addAll(nested.keySet());
+        }
+
+        for (Faction sharedAlly : knownFactions) {
+            if (!sharedAlly.equals(f1) &&
+                      !sharedAlly.equals(f2) &&
+                      isAlliedWith(sharedAlly, f1, date) &&
+                      isAlliedWith(sharedAlly, f2, date)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @param f1 Faction One
      * @param f2 Faction Two
      *

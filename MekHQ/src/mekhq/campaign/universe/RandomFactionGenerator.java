@@ -69,8 +69,8 @@ import mekhq.campaign.universe.factionHints.FactionHints;
  *       <p>
  *       Uses Factions and Planets to weighted lists of potential employers and enemies for contract generation. Also
  *       finds a suitable planet for the action.
- *                                                                                                                                                                   TODO : Account for the de facto alliance of the invading Clans and the
- *                                                                                                                                                                   TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
+ *                                                                                                                                                                         TODO : Account for the de facto alliance of the invading Clans and the
+ *                                                                                                                                                                         TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
  */
 public class RandomFactionGenerator {
     private static final MMLogger LOGGER = MMLogger.create(RandomFactionGenerator.class);
@@ -482,8 +482,12 @@ public class RandomFactionGenerator {
                 continue;
             }
 
+            // Factions that don't have a direct alliance record but share a common ally (e.g. two member states of
+            // the same superpower, each individually allied with it but not with each other) should still be treated
+            // as allies, unless factionHints directly contradicts that by recording them as at war with each other.
+            boolean isAlly = performIsAllyCheck(date, employer, enemy);
+
             // During covert operations, allies may sometimes attack each other. However, this is a very low chance
-            boolean isAlly = factionHints.isAlliedWith(employer, enemy, date);
             if (isCovert && isAlly) {
                 enemyMap.add(1, enemy);
                 continue;
@@ -505,6 +509,12 @@ public class RandomFactionGenerator {
         }
 
         return enemyMap;
+    }
+
+    private boolean performIsAllyCheck(LocalDate date, Faction employer, Faction enemy) {
+        return factionHints.isAlliedWith(employer, enemy, date) ||
+                     (!factionHints.isAtWarWith(employer, enemy, date) &&
+                            factionHints.isAlliedThroughSharedAlly(employer, enemy, date));
     }
 
     /**
@@ -715,8 +725,8 @@ public class RandomFactionGenerator {
      *
      * @param attackerKey The attacking faction's shortName
      * @param defenderKey The defending faction's shortName
-     * @param location    the location to center the search on, scoped by this generator's configured search radius
-     *                    (see {@link #getMissionTargetList(Faction, Faction, ILocation)})
+     * @param location    the location to center the search on, scoped by this generator's configured search radius (see
+     *                    {@link #getMissionTargetList(Faction, Faction, ILocation)})
      *
      * @return A list of potential mission targets
      */
@@ -822,8 +832,8 @@ public class RandomFactionGenerator {
     }
 
     /**
-     * Finds the system controlled by the defender that is physically closest to any system controlled by the
-     * attacker, both restricted to {@code radius} light years of {@code location}. Used as the final fallback in
+     * Finds the system controlled by the defender that is physically closest to any system controlled by the attacker,
+     * both restricted to {@code radius} light years of {@code location}. Used as the final fallback in
      * {@link #getMissionTargetList(Faction, Faction, ILocation)} when neither a direct border nor a contained-faction
      * proxy border could be found.
      *
