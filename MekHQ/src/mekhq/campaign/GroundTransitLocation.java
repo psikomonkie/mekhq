@@ -46,6 +46,7 @@ import mekhq.campaign.parts.Part;
 import mekhq.campaign.personnel.Person;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.PlanetarySystem;
+import mekhq.utilities.MHQInternationalization;
 import mekhq.utilities.MHQXMLUtility;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -97,16 +98,16 @@ public class GroundTransitLocation extends AbstractMobileLocation {
 
         double daysTravelled = Math.min(1.0, transitTime);
         transitTime -= daysTravelled;
+
         if (!isSilentProcessing) {
-            campaign.addReport(GENERAL, "Convoy spent " +
-                                              (Math.round(100.0 * 24.0 * daysTravelled) / 100.0) +
-                                              " hours travelling overland");
+            campaign.addReport(GENERAL, MHQInternationalization.getFormattedText("getReport.newDay.timeTraveling",
+                  (Math.round(100.0 * 24.0 * daysTravelled) / 100.0)));
         }
 
         if (transitTime <= 0) {
             transitTime = 0;
             if (!isSilentProcessing) {
-                campaign.addReport(GENERAL, "Destination reached.");
+                campaign.addReport(GENERAL, MHQInternationalization.getText("getReport.newDay.destination"));
             }
             MekHQ.triggerEvent(new TransitCompleteEvent(this));
             notifyChildrenArrived(campaign, isSilentProcessing);
@@ -116,60 +117,60 @@ public class GroundTransitLocation extends AbstractMobileLocation {
     }
 
     @Override
-    public void writeToXML(final PrintWriter pw, int indent) {
-        MHQXMLUtility.writeSimpleXMLOpenTag(pw, indent++, "groundTransitLocation");
-        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "currentSystemId", currentSystem.getId());
-        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "transitTime", transitTime);
-        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "totalTransitTime", totalTransitTime);
+    public void writeToXML(final PrintWriter printWriter, int indent) {
+        MHQXMLUtility.writeSimpleXMLOpenTag(printWriter, indent++, "groundTransitLocation");
+        MHQXMLUtility.writeSimpleXMLTag(printWriter, indent, "currentSystemId", currentSystem.getId());
+        MHQXMLUtility.writeSimpleXMLTag(printWriter, indent, "transitTime", transitTime);
+        MHQXMLUtility.writeSimpleXMLTag(printWriter, indent, "totalTransitTime", totalTransitTime);
         for (ILocation child : getChildLocations()) {
             if (child instanceof Person person) {
-                MHQXMLUtility.writeSimpleXMLTag(pw, indent, "personId", person.getId().toString());
+                MHQXMLUtility.writeSimpleXMLTag(printWriter, indent, "personId", person.getId().toString());
             } else if (child instanceof Unit unit) {
-                MHQXMLUtility.writeSimpleXMLTag(pw, indent, "unitId", unit.getId().toString());
+                MHQXMLUtility.writeSimpleXMLTag(printWriter, indent, "unitId", unit.getId().toString());
             } else if (child instanceof Part part) {
-                MHQXMLUtility.writeSimpleXMLTag(pw, indent, "partId", String.valueOf(part.getId()));
+                MHQXMLUtility.writeSimpleXMLTag(printWriter, indent, "partId", String.valueOf(part.getId()));
             }
         }
-        MHQXMLUtility.writeSimpleXMLCloseTag(pw, --indent, "groundTransitLocation");
+        MHQXMLUtility.writeSimpleXMLCloseTag(printWriter, --indent, "groundTransitLocation");
     }
 
-    public static GroundTransitLocation generateInstanceFromXML(Node wn, Campaign c) {
-        GroundTransitLocation retVal = null;
+    public static GroundTransitLocation generateInstanceFromXML(Node workingNode, Campaign campaign) {
+        GroundTransitLocation returnValue = null;
 
         try {
-            retVal = new GroundTransitLocation();
-            NodeList nl = wn.getChildNodes();
+            returnValue = new GroundTransitLocation();
+            NodeList nodeList = workingNode.getChildNodes();
 
-            for (int x = 0; x < nl.getLength(); x++) {
-                Node wn2 = nl.item(x);
-                if (wn2.getNodeName().equalsIgnoreCase("currentSystemId")) {
-                    PlanetarySystem p = c.getSystemById(wn2.getTextContent());
-                    if (null == p) {
+            for (int x = 0; x < nodeList.getLength(); x++) {
+                Node workingNode2 = nodeList.item(x);
+                if (workingNode2.getNodeName().equalsIgnoreCase("currentSystemId")) {
+                    PlanetarySystem planetarySystem = campaign.getSystemById(workingNode2.getTextContent());
+                    if (null == planetarySystem) {
                         // Whoops, we can't find your planet man, back to Earth
-                        logger.error("Couldn't find planet named {}", wn2.getTextContent());
-                        p = c.getSystemByName("Terra");
-                        if (null == p) {
+                        logger.error("Couldn't find planet named {}", workingNode2.getTextContent());
+                        planetarySystem = campaign.getSystemByName("Terra");
+                        if (null == planetarySystem) {
                             // If that doesn't work then give the first planet we have
-                            p = c.getSystems().getFirst();
+                            planetarySystem = campaign.getSystems().getFirst();
                         }
                     }
-                    retVal.currentSystem = p;
-                } else if (wn2.getNodeName().equalsIgnoreCase("transitTime")) {
-                    retVal.transitTime = Double.parseDouble(wn2.getTextContent());
-                } else if (wn2.getNodeName().equalsIgnoreCase("totalTransitTime")) {
-                    retVal.totalTransitTime = Double.parseDouble(wn2.getTextContent());
-                } else if (wn2.getNodeName().equalsIgnoreCase("personId")) {
-                    retVal.pendingPersonIds.add(UUID.fromString(wn2.getTextContent().trim()));
-                } else if (wn2.getNodeName().equalsIgnoreCase("unitId")) {
-                    retVal.pendingUnitIds.add(UUID.fromString(wn2.getTextContent().trim()));
-                } else if (wn2.getNodeName().equalsIgnoreCase("partId")) {
-                    retVal.pendingPartIds.add(Integer.parseInt(wn2.getTextContent().trim()));
+                    returnValue.currentSystem = planetarySystem;
+                } else if (workingNode2.getNodeName().equalsIgnoreCase("transitTime")) {
+                    returnValue.transitTime = Double.parseDouble(workingNode2.getTextContent());
+                } else if (workingNode2.getNodeName().equalsIgnoreCase("totalTransitTime")) {
+                    returnValue.totalTransitTime = Double.parseDouble(workingNode2.getTextContent());
+                } else if (workingNode2.getNodeName().equalsIgnoreCase("personId")) {
+                    returnValue.pendingPersonIds.add(UUID.fromString(workingNode2.getTextContent().trim()));
+                } else if (workingNode2.getNodeName().equalsIgnoreCase("unitId")) {
+                    returnValue.pendingUnitIds.add(UUID.fromString(workingNode2.getTextContent().trim()));
+                } else if (workingNode2.getNodeName().equalsIgnoreCase("partId")) {
+                    returnValue.pendingPartIds.add(Integer.parseInt(workingNode2.getTextContent().trim()));
                 }
             }
         } catch (Exception ex) {
             logger.error("", ex);
         }
 
-        return retVal;
+        return returnValue;
     }
 }

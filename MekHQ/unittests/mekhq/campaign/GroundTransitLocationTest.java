@@ -143,7 +143,7 @@ public class GroundTransitLocationTest {
 
                 assertEquals(2.0, loc.getTransitTime(), 1e-9);
                 assertTrue(loc.isInTransit());
-                verify(campaign).addReport(eq(GENERAL), contains("travelling overland"));
+                verify(campaign).addReport(eq(GENERAL), contains("traveling"));
                 mekHQ.verify(() -> MekHQ.triggerEvent(isA(TransitStatusChangedEvent.class)), times(1));
                 mekHQ.verify(() -> MekHQ.triggerEvent(isA(TransitCompleteEvent.class)), never());
             }
