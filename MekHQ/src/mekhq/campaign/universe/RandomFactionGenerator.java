@@ -69,8 +69,8 @@ import mekhq.campaign.universe.factionHints.FactionHints;
  *       <p>
  *       Uses Factions and Planets to weighted lists of potential employers and enemies for contract generation. Also
  *       finds a suitable planet for the action.
- *                                                                                                                                                             TODO : Account for the de facto alliance of the invading Clans and the
- *                                                                                                                                                             TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
+ *                                                                                                                                                                   TODO : Account for the de facto alliance of the invading Clans and the
+ *                                                                                                                                                                   TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
  */
 public class RandomFactionGenerator {
     private static final MMLogger LOGGER = MMLogger.create(RandomFactionGenerator.class);
@@ -409,8 +409,8 @@ public class RandomFactionGenerator {
     }
 
     /**
-     * Logs the given warning and returns the INDEPENDENT faction, used as {@link #getEnemy}'s fallback when no
-     * employer is supplied or no valid enemy candidate could be found.
+     * Logs the given warning and returns the INDEPENDENT faction, used as {@link #getEnemy}'s fallback when no employer
+     * is supplied or no valid enemy candidate could be found.
      *
      * @param message the warning message (may contain {@code {}} placeholders)
      * @param args    arguments for the message's placeholders
@@ -461,7 +461,7 @@ public class RandomFactionGenerator {
         // These only depend on the date, not on any individual candidate, so compute them once per call rather
         // than once per candidate in adjustEnemyWeight.
         boolean isDuringClanInvasionHeight = date.isAfter(MHQConstants.CLAN_INVASION_FIRST_WAVE_BEGINS) &&
-                                                    date.isBefore(MHQConstants.BATTLE_OF_TUKAYYID);
+                                                   date.isBefore(MHQConstants.BATTLE_OF_TUKAYYID);
         boolean isDuringJihad = date.isAfter(MHQConstants.JIHAD_START) && date.isBefore(MHQConstants.NOMINAL_JIHAD_END);
 
         for (Faction enemy : candidates) {
@@ -508,9 +508,9 @@ public class RandomFactionGenerator {
     }
 
     /**
-     * Checks whether the given faction controls at least one system anywhere the border tracker knows about,
-     * stopping at the first match. Only called for the rare case of a war partner with no presence in the
-     * immediate search area, so this deliberately isn't cached alongside {@code counts} in
+     * Checks whether the given faction controls at least one system anywhere the border tracker knows about, stopping
+     * at the first match. Only called for the rare case of a war partner with no presence in the immediate search area,
+     * so this deliberately isn't cached alongside {@code counts} in
      * {@link #buildEnemyMap(boolean, ILocation, LocalDate, Faction)} &mdash; most calls never reach it.
      *
      * @param faction the faction to check
@@ -595,7 +595,7 @@ public class RandomFactionGenerator {
                     continue;
                 }
             }
-            
+
             // Skip extinct factions; stale planet ownership data can otherwise leak them into the enemy list.
             if (!enemy.validIn(currentDate)) {
                 continue;
@@ -637,14 +637,13 @@ public class RandomFactionGenerator {
      * a weight of at least 1 before doubling, so a belligerent with no systems in the search area is still a valid,
      * pickable target.
      *
-     * @param count                       The candidate's base weight (number of systems it controls in the search
-     *                                    area)
-     * @param employer                    The attacking faction
-     * @param enemy                       The defending faction
-     * @param date                        The date to check diplomatic relations against
-     * @param isDuringClanInvasionHeight  Whether {@code date} falls between the Clan invasion's first wave and the
-     *                                    Battle of Tukayyid
-     * @param isDuringJihad               Whether {@code date} falls within the Jihad
+     * @param count                      The candidate's base weight (number of systems it controls in the search area)
+     * @param employer                   The attacking faction
+     * @param enemy                      The defending faction
+     * @param date                       The date to check diplomatic relations against
+     * @param isDuringClanInvasionHeight Whether {@code date} falls between the Clan invasion's first wave and the
+     *                                   Battle of Tukayyid
+     * @param isDuringJihad              Whether {@code date} falls within the Jihad
      *
      * @return The adjusted weight
      */
@@ -742,70 +741,137 @@ public class RandomFactionGenerator {
      * @return A list of potential mission targets
      */
     public List<PlanetarySystem> getMissionTargetList(Faction attacker, Faction defender) {
-        boolean attackerIsPirate = attacker.isPirate();
-        boolean attackerIsMerc = attacker.isMercenary();
-        boolean attackerIsComStar = attacker.isComStarOrWoB();
-        boolean attackerHasNoPlanets = !borderTracker.getFactionsInRegion().contains(attacker);
-
-        boolean defenderIsPirate = defender.isPirate();
-        boolean defenderIsMerc = defender.isMercenary();
-        boolean defenderIsComStar = defender.isComStarOrWoB();
-        boolean defenderHasNoPlanets = !borderTracker.getFactionsInRegion().contains(defender);
-
-        // Faction host logic
-        if (attackerHasNoPlanets && !attackerIsPirate && !attackerIsMerc && !attackerIsComStar) {
-            attacker = factionHints.getContainedFactionHost(attacker, getCurrentDate());
-        }
-        if (defenderHasNoPlanets && !defender.isRebelOrPirate() && !defender.isMercenary() && !defenderIsComStar) {
-            defender = factionHints.getContainedFactionHost(defender, getCurrentDate());
-        }
-
+        LocalDate currentDate = getCurrentDate();
+        attacker = resolveTerritorialHost(attacker, currentDate);
+        defender = resolveTerritorialHost(defender, currentDate);
         if (attacker == null || defender == null) {
             return Collections.emptyList();
         }
 
-        // Special cases for pirates, mercenaries, and ComStar
-        if (attackerIsPirate || attackerIsMerc || attackerIsComStar) {
-            FactionBorders defenderBorders = borderTracker.getBorders(defender);
-            return (defenderBorders == null) ? Collections.emptyList() : new ArrayList<>(defenderBorders.getSystems());
-        }
-        if (defender.isRebel()) {
-            FactionBorders attackerBorders = borderTracker.getBorders(attacker);
-            return (attackerBorders == null) ? Collections.emptyList() : new ArrayList<>(attackerBorders.getSystems());
+        // Certain attackers (pirates, mercenaries, ComStar/WoB) can strike anywhere the defender holds.
+        if (isSpecialAttacker(attacker)) {
+            return systemsOf(borderTracker.getBorders(defender));
         }
 
-        // Main border calculation
+        // A rebel uprising happens somewhere within the attacking government's own territory, not on a border.
+        if (defender.isRebel()) {
+            return systemsOf(borderTracker.getBorders(attacker));
+        }
+
+        // Both sides hold territory: target the shared border between them.
         Set<PlanetarySystem> planetSet = new HashSet<>(borderTracker.getBorderSystems(attacker, defender));
-        // For mercenaries, we don't care if they own planets, as generally they're a proxy force. For pirates and
-        // ComStar if they own any planets, we want to target those planets.
-        if (defenderIsMerc || ((defenderIsPirate || defenderIsComStar) && defenderHasNoPlanets)) {
-            for (Faction regionalFaction : borderTracker.getFactionsInRegion()) {
+
+        // If the defender has no systems, widen the search to the attacker's frontier with every neighboring faction.
+        boolean widenForLandlessDefender = !borderTracker.getFactionsInRegion().contains(defender);
+
+        // If neither side directly borders the other, fall back to whichever regional faction hosts a "contained"
+        // opponent relationship between the two sides. Collected alongside the frontier-widening above in a single
+        // pass over the region instead of a second one, since both need the same regional-faction list; only
+        // merged in below if nothing else found a target.
+        Set<PlanetarySystem> containedFactionFallback = new HashSet<>();
+        for (Faction regionalFaction : borderTracker.getFactionsInRegion()) {
+            if (widenForLandlessDefender) {
                 planetSet.addAll(borderTracker.getBorderSystems(regionalFaction, attacker));
                 planetSet.addAll(borderTracker.getBorderSystems(attacker, regionalFaction));
             }
-        }
 
-        // Check contained factions if nothing found
-        if (planetSet.isEmpty()) {
-            for (Faction regionalFaction : borderTracker.getFactionsInRegion()) {
-                for (Faction hintFaction : factionHints.getContainedFactions(regionalFaction, getCurrentDate())) {
-                    if (hintFaction.equals(attacker) &&
-                              factionHints.isContainedFactionOpponent(regionalFaction,
-                                    hintFaction,
-                                    defender,
-                                    getCurrentDate())) {
-                        planetSet.addAll(borderTracker.getBorderSystems(regionalFaction, defender));
-                    } else if (hintFaction.equals(defender) &&
-                                     factionHints.isContainedFactionOpponent(regionalFaction,
-                                           hintFaction,
-                                           attacker,
-                                           getCurrentDate())) {
-                        planetSet.addAll(borderTracker.getBorderSystems(attacker, regionalFaction));
-                    }
+            for (Faction hintFaction : factionHints.getContainedFactions(regionalFaction, currentDate)) {
+                if (hintFaction.equals(attacker) &&
+                          factionHints.isContainedFactionOpponent(regionalFaction, hintFaction, defender,
+                                currentDate)) {
+                    containedFactionFallback.addAll(borderTracker.getBorderSystems(regionalFaction, defender));
+                } else if (hintFaction.equals(defender) &&
+                                 factionHints.isContainedFactionOpponent(regionalFaction, hintFaction, attacker,
+                                       currentDate)) {
+                    containedFactionFallback.addAll(borderTracker.getBorderSystems(attacker, regionalFaction));
                 }
             }
         }
 
+        if (planetSet.isEmpty()) {
+            planetSet.addAll(containedFactionFallback);
+        }
+
+        // Last resort: neither a direct border nor a contained-faction proxy border exists. Target whichever of
+        // the defender's systems is physically closest to any of the attacker's, rather than giving up entirely.
+        if (planetSet.isEmpty()) {
+            PlanetarySystem closestSystem = findClosestDefenderSystem(attacker, defender);
+            if (closestSystem != null) {
+                planetSet.add(closestSystem);
+            }
+        }
+
         return new ArrayList<>(planetSet);
+    }
+
+    /**
+     * Finds the system controlled by the defender that is physically closest to any system controlled by the
+     * attacker. Used as the final fallback in {@link #getMissionTargetList(Faction, Faction)} when neither a
+     * direct border nor a contained-faction proxy border could be found.
+     *
+     * @param attacker the attacking faction
+     * @param defender the defending faction
+     *
+     * @return the closest defender-controlled system, or {@code null} if either faction controls no systems
+     */
+    private @Nullable PlanetarySystem findClosestDefenderSystem(Faction attacker, Faction defender) {
+        FactionBorders attackerBorders = borderTracker.getBorders(attacker);
+        FactionBorders defenderBorders = borderTracker.getBorders(defender);
+        if (attackerBorders == null || defenderBorders == null) {
+            return null;
+        }
+
+        PlanetarySystem closestSystem = null;
+        double closestDistance = Double.MAX_VALUE;
+        for (PlanetarySystem defenderSystem : defenderBorders.getSystems()) {
+            for (PlanetarySystem attackerSystem : attackerBorders.getSystems()) {
+                double distance = defenderSystem.getDistanceTo(attackerSystem);
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestSystem = defenderSystem;
+                }
+            }
+        }
+        return closestSystem;
+    }
+
+    /**
+     * @param faction the faction to check
+     *
+     * @return {@code true} if the faction is inherently landless: pirates, mercenaries, and ComStar/WoB don't hold
+     *       fixed territory of their own
+     */
+    private static boolean isSpecialAttacker(Faction faction) {
+        return faction.isPirate() || faction.isMercenary() || faction.isComStarOrWoB();
+    }
+
+    /**
+     * Resolves a faction with no directly-controlled systems in the region to its contained-faction host, if one is
+     * configured, so mission targeting has something with real territory to work with. Inherently landless factions
+     * (pirates, mercenaries, ComStar/WoB) and rebels are never contained by anyone, so this is a no-op for them;
+     * {@link #getMissionTargetList(Faction, Faction)} handles their lack of territory separately.
+     *
+     * @param faction the faction to resolve
+     * @param date    the date to check the contained-faction relationship against
+     *
+     * @return the resolved faction (its host if one was found and needed, otherwise the faction unchanged), or
+     *       {@code null} if the faction has no systems of its own and no host could be found
+     */
+    private @Nullable Faction resolveTerritorialHost(Faction faction, LocalDate date) {
+        if (borderTracker.getFactionsInRegion().contains(faction) ||
+                  isSpecialAttacker(faction) ||
+                  faction.isRebel()) {
+            return faction;
+        }
+        return factionHints.getContainedFactionHost(faction, date);
+    }
+
+    /**
+     * @param borders a faction's borders, or {@code null} if it controls no systems in the region
+     *
+     * @return the border's systems as a list, or an empty list if {@code borders} is {@code null}
+     */
+    private static List<PlanetarySystem> systemsOf(@Nullable FactionBorders borders) {
+        return (borders == null) ? Collections.emptyList() : new ArrayList<>(borders.getSystems());
     }
 }

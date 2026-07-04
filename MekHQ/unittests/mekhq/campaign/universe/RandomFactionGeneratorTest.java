@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -65,6 +66,7 @@ public class RandomFactionGeneratorTest {
     private Faction clanFaction;
     private Faction peripheryFaction;
     private Faction innerISFaction;
+    private Faction independentFaction;
     private FactionBorderTracker borderTracker;
 
     /**
@@ -89,10 +91,20 @@ public class RandomFactionGeneratorTest {
         clanFaction = createTestFaction("Clan", false, true);
         peripheryFaction = createTestFaction("Periphery", true, false);
         innerISFaction = createTestFaction("IS2", false, false);
+        independentFaction = createTestFaction(Faction.INDEPENDENT_FACTION_CODE, false, false);
 
         allFactions = new ArrayList<>(List.of(isFaction, clanFaction, peripheryFaction, innerISFaction));
         Factions factions = mock(Factions.class);
         when(factions.getFactions()).thenReturn(allFactions);
+        // Resolves by short name against allFactions, plus the synthetic INDEPENDENT fallback faction used by
+        // RandomFactionGenerator#getEnemy when no employer is supplied or no valid enemy candidate is found.
+        when(factions.getFaction(anyString())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            if (Faction.INDEPENDENT_FACTION_CODE.equals(code)) {
+                return independentFaction;
+            }
+            return allFactions.stream().filter(f -> f.getShortName().equals(code)).findFirst().orElse(null);
+        });
         Factions.setInstance(factions);
 
         List<PlanetarySystem> systems = new ArrayList<>();
@@ -282,6 +294,68 @@ public class RandomFactionGeneratorTest {
         assertTrue(warFactionSeen, "At-war faction with no systems in the search radius should still be a valid target");
     }
 
+    /**
+     * Regression test: during covert operations, an allied faction is a rare-but-possible enemy target, unlike
+     * normal operations where allies are always excluded with no exceptions (see
+     * {@link #testGetEnemyExcludesAlliedFaction}).
+     */
+    @Test
+    public void testGetEnemyCovertOpsCanTargetAllies() {
+        FactionHints hints = new FactionHints();
+        RandomFactionGenerator rfg = new RandomFactionGenerator(createTestBorderTracker(), hints);
+        hints.addAlliance("", null, null, isFaction, peripheryFaction);
+        ILocation location = createTestLocation(isFaction);
+
+        boolean allySeen = false;
+        for (int i = 0; i < 2000; i++) {
+            Faction enemy = rfg.getEnemy(true, location, TEST_DATE, isFaction);
+            if (peripheryFaction.getShortName().equals(enemy.getShortName())) {
+                allySeen = true;
+                break;
+            }
+        }
+        assertTrue(allySeen, "Covert operations should occasionally be able to target an allied faction");
+    }
+
+    /**
+     * Regression test: a pirate employer bypasses all diplomatic checks (neutral, allied, etc.) and can target any
+     * valid faction with a presence in the area.
+     */
+    @Test
+    public void testGetEnemyPirateEmployerIgnoresNeutralStatus() {
+        Faction pirateFaction = createTestFaction("PIR", false, false);
+        when(pirateFaction.isPirate()).thenReturn(true);
+
+        FactionHints hints = new FactionHints();
+        hints.addNeutralFaction(peripheryFaction);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(createTestBorderTracker(), hints);
+        ILocation location = createTestLocation(isFaction);
+
+        boolean neutralSeen = false;
+        for (int i = 0; i < 500; i++) {
+            Faction enemy = rfg.getEnemy(false, location, TEST_DATE, pirateFaction);
+            if (peripheryFaction.getShortName().equals(enemy.getShortName())) {
+                neutralSeen = true;
+                break;
+            }
+        }
+        assertTrue(neutralSeen, "A pirate employer should be able to target even a neutral faction");
+    }
+
+    /**
+     * Regression test: {@link RandomFactionGenerator#getEnemy} falls back to the INDEPENDENT faction rather than
+     * returning {@code null} when no employer is supplied.
+     */
+    @Test
+    public void testGetEnemyIndependentFallbackForNullEmployer() {
+        RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
+
+        Faction enemy = rfg.getEnemy(false, location, TEST_DATE, null);
+
+        assertEquals(independentFaction, enemy, "A null employer should fall back to the INDEPENDENT faction");
+    }
+
     @Test
     public void testGetEnemyList() {
         RandomFactionGenerator rfg = createTestRFG();
@@ -301,6 +375,179 @@ public class RandomFactionGeneratorTest {
         assertFalse(rfg.getMissionTargetList(peripheryFaction, isFaction).isEmpty());
         assertFalse(rfg.getMissionTargetList(peripheryFaction, innerISFaction).isEmpty());
         assertFalse(rfg.getMissionTargetList(innerISFaction, peripheryFaction).isEmpty());
+    }
+
+    /**
+     * Regression test: when neither a direct border nor a contained-faction proxy border exists between the two
+     * factions, getMissionTargetList should fall back to the defender's system physically closest to the attacker
+     * instead of returning nothing.
+     */
+    @Test
+    public void testGetMissionTargetFallsBackToClosestDefenderSystem() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        // Placed far apart in x/y so the geometric border-adjacency check excludes them before ever consulting
+        // getDistanceTo(), and no contained-faction relationship is configured (fresh FactionHints below).
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem nearDefenderSystem = createTestSystem(1000, 1000, defenderFaction);
+        PlanetarySystem farDefenderSystem = createTestSystem(2000, 2000, defenderFaction);
+
+        when(nearDefenderSystem.getDistanceTo(attackerSystem)).thenReturn(50.0);
+        when(farDefenderSystem.getDistanceTo(attackerSystem)).thenReturn(500.0);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, nearDefenderSystem, farDefenderSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, new FactionHints());
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(attackerFaction, defenderFaction);
+
+        assertEquals(List.of(nearDefenderSystem), targets,
+              "With no border or contained-faction relationship, the closest defender system should be the sole target");
+    }
+
+    /**
+     * Regression test: a pirate attacker has no fixed territory of its own, so it can target any system the
+     * defender controls, not just systems on a shared border.
+     */
+    @Test
+    public void testGetMissionTargetPirateAttackerTargetsAllDefenderSystems() {
+        Faction pirateFaction = createTestFaction("PIR", false, false);
+        when(pirateFaction.isPirate()).thenReturn(true);
+        RandomFactionGenerator rfg = createTestRFG();
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(pirateFaction, isFaction);
+
+        Set<PlanetarySystem> expected = new HashSet<>(borderTracker.getBorders(isFaction).getSystems());
+        assertEquals(expected, new HashSet<>(targets),
+              "A pirate attacker should be able to target any system the defender controls, not just border systems");
+    }
+
+    /**
+     * Regression test: a rebel uprising happens somewhere within the attacking government's own territory, so a
+     * rebel defender resolves to any of the attacker's own systems rather than a shared border.
+     */
+    @Test
+    public void testGetMissionTargetRebelDefenderTargetsAllAttackerSystems() {
+        Faction rebelFaction = createTestFaction("REB", false, false);
+        when(rebelFaction.isRebel()).thenReturn(true);
+        RandomFactionGenerator rfg = createTestRFG();
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(isFaction, rebelFaction);
+
+        Set<PlanetarySystem> expected = new HashSet<>(borderTracker.getBorders(isFaction).getSystems());
+        assertEquals(expected, new HashSet<>(targets),
+              "A rebel uprising should be targetable anywhere within the attacker's own territory");
+    }
+
+    /**
+     * Regression test: a defender with no territory of its own (and no configured host) isn't tied to a specific
+     * border, so the search widens to the attacker's frontier with every neighboring faction instead of coming up
+     * empty.
+     */
+    @Test
+    public void testGetMissionTargetWidensSearchForLandlessDefender() {
+        Faction mercDefender = createTestFaction("MERC_DEF", false, false);
+        when(mercDefender.isMercenary()).thenReturn(true);
+        RandomFactionGenerator rfg = createTestRFG();
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(isFaction, mercDefender);
+
+        assertFalse(targets.isEmpty(),
+              "A landless defender with no direct border should fall back to the attacker's general frontier");
+        // getBorderSystems(a, b) returns b's systems near a, so the widened search returns a mix of the attacker's
+        // own frontier systems and neighboring factions' systems near that frontier - not exclusively systems the
+        // attacker itself controls. Every result should still belong to one of the region's known factions.
+        Set<PlanetarySystem> allKnownSystems = new HashSet<>();
+        allKnownSystems.addAll(borderTracker.getBorders(isFaction).getSystems());
+        allKnownSystems.addAll(borderTracker.getBorders(clanFaction).getSystems());
+        allKnownSystems.addAll(borderTracker.getBorders(peripheryFaction).getSystems());
+        assertTrue(allKnownSystems.containsAll(targets),
+              "Frontier-widening should only return systems controlled by a known regional faction");
+    }
+
+    /**
+     * Regression test: when the attacker and defender don't directly border each other, but the attacker is a
+     * "contained" faction of some other regional faction with the defender listed as its opponent, that regional
+     * faction's own border with the defender should be used as a proxy target.
+     */
+    @Test
+    public void testGetMissionTargetContainedFactionOpponentFallback() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+        Faction hostFaction = createTestFaction("HOST", false, false);
+
+        // The attacker and defender are far apart (no direct border); the host is placed right next to the
+        // defender so its own border can serve as a proxy.
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem defenderSystem = createTestSystem(1000, 1000, defenderFaction);
+        PlanetarySystem hostSystem = createTestSystem(1000, 1002, hostFaction);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, defenderSystem, hostSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        FactionHints hints = new FactionHints();
+        // attackerFaction is "contained" under hostFaction, with defenderFaction as its designated opponent - even
+        // though attackerFaction has territory of its own (so it isn't resolved away to hostFaction outright).
+        hints.addContainedFaction(hostFaction,
+              attackerFaction,
+              null,
+              null,
+              1.0,
+              Collections.singletonList(defenderFaction));
+
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, hints);
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(attackerFaction, defenderFaction);
+
+        assertEquals(List.of(defenderSystem), targets,
+              "With no direct border, a contained-faction-opponent relationship should provide a proxy border");
+    }
+
+    /**
+     * Regression test: two factions with no territory of their own (e.g. two pirate bands) have nowhere for a
+     * mission to occur.
+     */
+    @Test
+    public void testGetMissionTargetReturnsEmptyWhenBothFactionsAreLandless() {
+        Faction pirateAttacker = createTestFaction("PIR_A", false, false);
+        when(pirateAttacker.isPirate()).thenReturn(true);
+        Faction pirateDefender = createTestFaction("PIR_D", false, false);
+        when(pirateDefender.isPirate()).thenReturn(true);
+        RandomFactionGenerator rfg = createTestRFG();
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(pirateAttacker, pirateDefender);
+
+        assertTrue(targets.isEmpty(), "Two landless factions have no territory for a mission to occur on");
+    }
+
+    /**
+     * Regression test: a faction with no territory of its own, no configured contained-faction host, and none of
+     * the inherently-landless faction types (pirate/mercenary/ComStar/WoB/rebel) resolves to {@code null}, so no
+     * mission target can be found.
+     */
+    @Test
+    public void testGetMissionTargetReturnsEmptyWhenFactionHasNoTerritoryOrHost() {
+        Faction homelessFaction = createTestFaction("HOMELESS", false, false);
+        RandomFactionGenerator rfg = createTestRFG();
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(isFaction, homelessFaction);
+
+        assertTrue(targets.isEmpty(),
+              "A faction with no territory of its own and no configured host resolves to null, yielding no targets");
     }
 
     @Test
