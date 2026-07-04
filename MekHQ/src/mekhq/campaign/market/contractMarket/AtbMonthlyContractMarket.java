@@ -492,8 +492,10 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
         if (Factions.getInstance().getFaction(employer).isMercenary()) {
             contract.setMercSubcontract(true);
             for (int attempts = 0; attempts < MAXIMUM_ATTEMPTS_TO_FIND_NON_MERC_EMPLOYER; ++attempts) {
-                employer = RandomFactionGenerator.getInstance().getEmployerFaction(campaign.getCurrentLocation(),
-                      campaign.getLocalDate()).getShortName();
+                Faction rerolledEmployer = RandomFactionGenerator.getInstance()
+                                                  .getEmployerFaction(campaign.getCurrentLocation(),
+                                                        campaign.getLocalDate());
+                employer = rerolledEmployer == null ? null : rerolledEmployer.getShortName();
                 if ((employer != null) && !Factions.getInstance().getFaction(employer).isMercenary()) {
                     break;
                 }

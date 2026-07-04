@@ -188,14 +188,15 @@ public class FactionHints {
 
     /**
      * Accounts for non-existent factions that are used to indicate special status of the planet (undiscovered,
-     * abandoned).
+     * abandoned), as well as the synthetic placeholder faction {@link Factions#getFaction(String)} silently returns
+     * for any faction code it doesn't recognize (stale/typo'd/retired ownership data), rather than {@code null}.
      *
      * @param f The input faction
      *
      * @return Whether the faction is not a true faction
      */
     public static boolean isEmptyFaction(Faction f) {
-        return Stream.of("ABN", "UND", "NONE").anyMatch(s -> f.getShortName().equals(s));
+        return Stream.of("ABN", "UND", "NONE", Faction.DEFAULT_CODE).anyMatch(s -> f.getShortName().equals(s));
     }
 
     /**
