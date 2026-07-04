@@ -571,13 +571,15 @@ public abstract class AbstractContractMarket {
         contract.setPlayerAttacker(isAttacker);
     }
 
-    protected void setSystemId(AtBContract contract) throws NoContractLocationFoundException {
+    protected void setSystemId(AtBContract contract, Campaign campaign) throws NoContractLocationFoundException {
         if (contract.isPlayerAttacker()) {
             contract.setSystemId(RandomFactionGenerator.getInstance()
-                                       .getMissionTarget(contract.getEmployerCode(), contract.getEnemyCode()));
+                                       .getMissionTarget(contract.getEmployerCode(), contract.getEnemyCode(),
+                                             campaign.getCurrentLocation()));
         } else {
             contract.setSystemId(RandomFactionGenerator.getInstance()
-                                       .getMissionTarget(contract.getEnemyCode(), contract.getEmployerCode()));
+                                       .getMissionTarget(contract.getEnemyCode(), contract.getEmployerCode(),
+                                             campaign.getCurrentLocation()));
         }
         if (contract.getSystem() == null) {
             String errorMsg = "Could not find contract location for " +

@@ -213,7 +213,7 @@ class AtbMonthlyContractMarketTest {
             when(randomFactionGenerator.getFactionHints()).thenReturn(factionHints);
             when(randomFactionGenerator.getEnemy(anyBoolean(), any(), any(), eq(employerFaction)))
                   .thenReturn(enemyFaction);
-            when(randomFactionGenerator.getMissionTarget(anyString(), anyString()))
+            when(randomFactionGenerator.getMissionTarget(anyString(), anyString(), any()))
                   .thenReturn(UNREACHABLE_TARGET_ID)
                   .thenReturn(REACHABLE_TARGET_ID);
             RandomFactionGenerator.setInstance(randomFactionGenerator);

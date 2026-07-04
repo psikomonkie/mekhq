@@ -268,7 +268,7 @@ public class CamOpsContractMarket extends AbstractContractMarket {
         setAttacker(contract);
         // Step 3: Set the system location
         try {
-            setSystemId(contract);
+            setSystemId(contract, campaign);
         } catch (NoContractLocationFoundException ex) {
             return Optional.empty();
         }

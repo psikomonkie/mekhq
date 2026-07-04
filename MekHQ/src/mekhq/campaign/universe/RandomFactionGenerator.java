@@ -686,11 +686,13 @@ public class RandomFactionGenerator {
      *
      * @param attacker The faction key of the attacker
      * @param defender The faction key of the defender
+     * @param location the location to center the search on, scoped by this generator's configured search radius (see
+     *                 {@link #getMissionTargetList(Faction, Faction, ILocation)})
      *
      * @return The planetId of the chosen planet, or null if there are no target candidates
      */
     @Nullable
-    public String getMissionTarget(String attacker, String defender) {
+    public String getMissionTarget(String attacker, String defender, ILocation location) {
         Faction faction0 = Factions.getInstance().getFaction(attacker);
         Faction faction1 = Factions.getInstance().getFaction(defender);
         if (null == faction0) {
@@ -701,7 +703,7 @@ public class RandomFactionGenerator {
             LOGGER.error("Non-existent faction key: {}", attacker);
             return null;
         }
-        List<PlanetarySystem> planetList = getMissionTargetList(faction0, faction1);
+        List<PlanetarySystem> planetList = getMissionTargetList(faction0, faction1, location);
         if (!planetList.isEmpty()) {
             return ObjectUtility.getRandomItem(planetList).getId();
         }
@@ -713,10 +715,12 @@ public class RandomFactionGenerator {
      *
      * @param attackerKey The attacking faction's shortName
      * @param defenderKey The defending faction's shortName
+     * @param location    the location to center the search on, scoped by this generator's configured search radius
+     *                    (see {@link #getMissionTargetList(Faction, Faction, ILocation)})
      *
      * @return A list of potential mission targets
      */
-    public List<PlanetarySystem> getMissionTargetList(String attackerKey, String defenderKey) {
+    public List<PlanetarySystem> getMissionTargetList(String attackerKey, String defenderKey, ILocation location) {
         Faction attacker = Factions.getInstance().getFaction(attackerKey);
         Faction defender = Factions.getInstance().getFaction(defenderKey);
         if (null == attacker) {
@@ -726,22 +730,31 @@ public class RandomFactionGenerator {
             LOGGER.error("Non-existent faction key (defender): {}", defenderKey);
         }
         if ((null != attacker) && (null != defender)) {
-            return getMissionTargetList(attacker, defender);
+            return getMissionTargetList(attacker, defender, location);
         } else {
             return Collections.emptyList();
         }
     }
 
     /**
-     * Builds a list of planets controlled by the defender that are near one or more of the attacker's planets.
+     * Builds a list of planets controlled by the defender that are near one or more of the attacker's planets, within
+     * {@link FactionBorderTracker#getRadius()} of {@code location}'s current system.
+     * <p>
+     * Unlike the cached, single-region {@link FactionBorderTracker#getBorders(Faction)}/
+     * {@link FactionBorderTracker#getBorderSystems(Faction, Faction)}, every lookup here is computed fresh around
+     * {@code location}, so a campaign with multiple simultaneous locations (e.g. one per active force) gets a mission
+     * target scoped to whichever force the contract is actually being generated for, rather than whichever location
+     * last happened to recenter the tracker's shared cache.
      *
      * @param attacker The attacking faction
      * @param defender The defending faction
+     * @param location the location to center the search on
      *
      * @return A list of potential mission targets
      */
-    public List<PlanetarySystem> getMissionTargetList(Faction attacker, Faction defender) {
+    public List<PlanetarySystem> getMissionTargetList(Faction attacker, Faction defender, ILocation location) {
         LocalDate currentDate = getCurrentDate();
+        double radius = borderTracker.getRadius();
         attacker = resolveTerritorialHost(attacker, currentDate);
         defender = resolveTerritorialHost(defender, currentDate);
         if (attacker == null || defender == null) {
@@ -750,40 +763,44 @@ public class RandomFactionGenerator {
 
         // Certain attackers (pirates, mercenaries, ComStar/WoB) can strike anywhere the defender holds.
         if (isSpecialAttacker(attacker)) {
-            return systemsOf(borderTracker.getBorders(defender));
+            return systemsOf(borderTracker.getBorders(defender, location, radius));
         }
 
         // A rebel uprising happens somewhere within the attacking government's own territory, not on a border.
         if (defender.isRebel()) {
-            return systemsOf(borderTracker.getBorders(attacker));
+            return systemsOf(borderTracker.getBorders(attacker, location, radius));
         }
 
         // Both sides hold territory: target the shared border between them.
-        Set<PlanetarySystem> planetSet = new HashSet<>(borderTracker.getBorderSystems(attacker, defender));
+        Set<PlanetarySystem> planetSet = new HashSet<>(borderTracker.getBorderSystems(attacker, defender, location,
+              radius));
 
         // If the defender has no systems, widen the search to the attacker's frontier with every neighboring faction.
-        boolean widenForLandlessDefender = !borderTracker.getFactionsInRegion().contains(defender);
+        Set<Faction> regionalFactions = borderTracker.getFactionsInRegion(location, radius);
+        boolean widenForLandlessDefender = !regionalFactions.contains(defender);
 
         // If neither side directly borders the other, fall back to whichever regional faction hosts a "contained"
         // opponent relationship between the two sides. Collected alongside the frontier-widening above in a single
         // pass over the region instead of a second one, since both need the same regional-faction list; only
         // merged in below if nothing else found a target.
         Set<PlanetarySystem> containedFactionFallback = new HashSet<>();
-        for (Faction regionalFaction : borderTracker.getFactionsInRegion()) {
+        for (Faction regionalFaction : regionalFactions) {
             if (widenForLandlessDefender) {
-                planetSet.addAll(borderTracker.getBorderSystems(regionalFaction, attacker));
-                planetSet.addAll(borderTracker.getBorderSystems(attacker, regionalFaction));
+                planetSet.addAll(borderTracker.getBorderSystems(regionalFaction, attacker, location, radius));
+                planetSet.addAll(borderTracker.getBorderSystems(attacker, regionalFaction, location, radius));
             }
 
             for (Faction hintFaction : factionHints.getContainedFactions(regionalFaction, currentDate)) {
                 if (hintFaction.equals(attacker) &&
                           factionHints.isContainedFactionOpponent(regionalFaction, hintFaction, defender,
                                 currentDate)) {
-                    containedFactionFallback.addAll(borderTracker.getBorderSystems(regionalFaction, defender));
+                    containedFactionFallback.addAll(borderTracker.getBorderSystems(regionalFaction, defender,
+                          location, radius));
                 } else if (hintFaction.equals(defender) &&
                                  factionHints.isContainedFactionOpponent(regionalFaction, hintFaction, attacker,
                                        currentDate)) {
-                    containedFactionFallback.addAll(borderTracker.getBorderSystems(attacker, regionalFaction));
+                    containedFactionFallback.addAll(borderTracker.getBorderSystems(attacker, regionalFaction,
+                          location, radius));
                 }
             }
         }
@@ -795,7 +812,7 @@ public class RandomFactionGenerator {
         // Last resort: neither a direct border nor a contained-faction proxy border exists. Target whichever of
         // the defender's systems is physically closest to any of the attacker's, rather than giving up entirely.
         if (planetSet.isEmpty()) {
-            PlanetarySystem closestSystem = findClosestDefenderSystem(attacker, defender);
+            PlanetarySystem closestSystem = findClosestDefenderSystem(attacker, defender, location, radius);
             if (closestSystem != null) {
                 planetSet.add(closestSystem);
             }
@@ -806,17 +823,21 @@ public class RandomFactionGenerator {
 
     /**
      * Finds the system controlled by the defender that is physically closest to any system controlled by the
-     * attacker. Used as the final fallback in {@link #getMissionTargetList(Faction, Faction)} when neither a
-     * direct border nor a contained-faction proxy border could be found.
+     * attacker, both restricted to {@code radius} light years of {@code location}. Used as the final fallback in
+     * {@link #getMissionTargetList(Faction, Faction, ILocation)} when neither a direct border nor a contained-faction
+     * proxy border could be found.
      *
      * @param attacker the attacking faction
      * @param defender the defending faction
+     * @param location the location to center the search on
+     * @param radius   the search radius in light years from {@code location}'s current system
      *
-     * @return the closest defender-controlled system, or {@code null} if either faction controls no systems
+     * @return the closest defender-controlled system, or {@code null} if either faction controls no systems in range
      */
-    private @Nullable PlanetarySystem findClosestDefenderSystem(Faction attacker, Faction defender) {
-        FactionBorders attackerBorders = borderTracker.getBorders(attacker);
-        FactionBorders defenderBorders = borderTracker.getBorders(defender);
+    private @Nullable PlanetarySystem findClosestDefenderSystem(Faction attacker, Faction defender,
+          ILocation location, double radius) {
+        FactionBorders attackerBorders = borderTracker.getBorders(attacker, location, radius);
+        FactionBorders defenderBorders = borderTracker.getBorders(defender, location, radius);
         if (attackerBorders == null || defenderBorders == null) {
             return null;
         }
@@ -849,7 +870,7 @@ public class RandomFactionGenerator {
      * Resolves a faction with no directly-controlled systems in the region to its contained-faction host, if one is
      * configured, so mission targeting has something with real territory to work with. Inherently landless factions
      * (pirates, mercenaries, ComStar/WoB) and rebels are never contained by anyone, so this is a no-op for them;
-     * {@link #getMissionTargetList(Faction, Faction)} handles their lack of territory separately.
+     * {@link #getMissionTargetList(Faction, Faction, ILocation)} handles their lack of territory separately.
      *
      * @param faction the faction to resolve
      * @param date    the date to check the contained-faction relationship against

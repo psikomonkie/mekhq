@@ -531,7 +531,7 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
         }
         setAttacker(contract);
         try {
-            setSystemId(contract);
+            setSystemId(contract, campaign);
         } catch (NoContractLocationFoundException ex) {
             return generateAtBContract(campaign, employer, unitRatingMod, retries - 1);
         }

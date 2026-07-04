@@ -372,10 +372,11 @@ public class RandomFactionGeneratorTest {
     @Test
     public void testGetMissionTarget() {
         RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
 
-        assertFalse(rfg.getMissionTargetList(peripheryFaction, isFaction).isEmpty());
-        assertFalse(rfg.getMissionTargetList(peripheryFaction, innerISFaction).isEmpty());
-        assertFalse(rfg.getMissionTargetList(innerISFaction, peripheryFaction).isEmpty());
+        assertFalse(rfg.getMissionTargetList(peripheryFaction, isFaction, location).isEmpty());
+        assertFalse(rfg.getMissionTargetList(peripheryFaction, innerISFaction, location).isEmpty());
+        assertFalse(rfg.getMissionTargetList(innerISFaction, peripheryFaction, location).isEmpty());
     }
 
     /**
@@ -407,8 +408,9 @@ public class RandomFactionGeneratorTest {
         tracker.setDefaultBorderSize(2.5, 10, 2.5);
 
         RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
 
-        List<PlanetarySystem> targets = rfg.getMissionTargetList(attackerFaction, defenderFaction);
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(attackerFaction, defenderFaction, location);
 
         assertEquals(List.of(nearDefenderSystem), targets,
               "With no border or contained-faction relationship, the closest defender system should be the sole target");
@@ -423,8 +425,9 @@ public class RandomFactionGeneratorTest {
         Faction pirateFaction = createTestFaction("PIR", false, false);
         when(pirateFaction.isPirate()).thenReturn(true);
         RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
 
-        List<PlanetarySystem> targets = rfg.getMissionTargetList(pirateFaction, isFaction);
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(pirateFaction, isFaction, location);
 
         Set<PlanetarySystem> expected = new HashSet<>(borderTracker.getBorders(isFaction).getSystems());
         assertEquals(expected, new HashSet<>(targets),
@@ -440,8 +443,9 @@ public class RandomFactionGeneratorTest {
         Faction rebelFaction = createTestFaction("REB", false, false);
         when(rebelFaction.isRebel()).thenReturn(true);
         RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
 
-        List<PlanetarySystem> targets = rfg.getMissionTargetList(isFaction, rebelFaction);
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(isFaction, rebelFaction, location);
 
         Set<PlanetarySystem> expected = new HashSet<>(borderTracker.getBorders(isFaction).getSystems());
         assertEquals(expected, new HashSet<>(targets),
@@ -458,8 +462,9 @@ public class RandomFactionGeneratorTest {
         Faction mercDefender = createTestFaction("MERC_DEF", false, false);
         when(mercDefender.isMercenary()).thenReturn(true);
         RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
 
-        List<PlanetarySystem> targets = rfg.getMissionTargetList(isFaction, mercDefender);
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(isFaction, mercDefender, location);
 
         assertFalse(targets.isEmpty(),
               "A landless defender with no direct border should fall back to the attacker's general frontier");
@@ -511,8 +516,9 @@ public class RandomFactionGeneratorTest {
               Collections.singletonList(defenderFaction));
 
         RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, hints);
+        ILocation location = createTestLocation(attackerFaction);
 
-        List<PlanetarySystem> targets = rfg.getMissionTargetList(attackerFaction, defenderFaction);
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(attackerFaction, defenderFaction, location);
 
         assertEquals(List.of(defenderSystem), targets,
               "With no direct border, a contained-faction-opponent relationship should provide a proxy border");
@@ -529,8 +535,9 @@ public class RandomFactionGeneratorTest {
         Faction pirateDefender = createTestFaction("PIR_D", false, false);
         when(pirateDefender.isPirate()).thenReturn(true);
         RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
 
-        List<PlanetarySystem> targets = rfg.getMissionTargetList(pirateAttacker, pirateDefender);
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(pirateAttacker, pirateDefender, location);
 
         assertTrue(targets.isEmpty(), "Two landless factions have no territory for a mission to occur on");
     }
@@ -544,8 +551,9 @@ public class RandomFactionGeneratorTest {
     public void testGetMissionTargetReturnsEmptyWhenFactionHasNoTerritoryOrHost() {
         Faction homelessFaction = createTestFaction("HOMELESS", false, false);
         RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
 
-        List<PlanetarySystem> targets = rfg.getMissionTargetList(isFaction, homelessFaction);
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(isFaction, homelessFaction, location);
 
         assertTrue(targets.isEmpty(),
               "A faction with no territory of its own and no configured host resolves to null, yielding no targets");

@@ -503,7 +503,8 @@ public class NewAtBContractDialog extends NewContractDialog {
         if (!contract.getContractType().isGarrisonType() ||
                   Factions.getInstance().getFaction(getCurrentEnemyCode()).isRebelOrPirate()) {
             for (PlanetarySystem p : RandomFactionGenerator.getInstance()
-                                           .getMissionTargetList(getCurrentEmployerCode(), getCurrentEnemyCode())) {
+                                           .getMissionTargetList(getCurrentEmployerCode(), getCurrentEnemyCode(),
+                                                 campaign.getCurrentLocation())) {
                 systems.add(p.getName(campaign.getLocalDate()));
             }
         }
@@ -511,7 +512,8 @@ public class NewAtBContractDialog extends NewContractDialog {
         if ((contract.getContractType().isGarrisonType() || contract.getContractType().isReliefDuty()) &&
                   !contract.getEnemy().isRebel()) {
             for (PlanetarySystem p : RandomFactionGenerator.getInstance()
-                                           .getMissionTargetList(getCurrentEnemyCode(), getCurrentEmployerCode())) {
+                                           .getMissionTargetList(getCurrentEnemyCode(), getCurrentEmployerCode(),
+                                                 campaign.getCurrentLocation())) {
                 systems.add(p.getName(campaign.getLocalDate()));
             }
         }
