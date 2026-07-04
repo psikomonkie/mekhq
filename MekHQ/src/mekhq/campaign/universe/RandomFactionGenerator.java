@@ -33,9 +33,10 @@
  */
 package mekhq.campaign.universe;
 
-import static mekhq.MHQConstants.FORTRESS_REPUBLIC;
+import static mekhq.MHQConstants.FORTRESS_REPUBLIC_END;
+import static mekhq.MHQConstants.FORTRESS_REPUBLIC_START;
 import static mekhq.campaign.universe.Faction.CLAN_FACTION_CODE;
-import static mekhq.campaign.universe.Faction.COMSTAR_FACTION_CODE;
+import static mekhq.campaign.universe.Faction.INDEPENDENT_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.MERCENARY_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.PIRATE_FACTION_CODE;
 
@@ -68,8 +69,8 @@ import mekhq.campaign.universe.factionHints.FactionHints;
  *       <p>
  *       Uses Factions and Planets to weighted lists of potential employers and enemies for contract generation. Also
  *       finds a suitable planet for the action.
- *                                                                                                                                     TODO : Account for the de facto alliance of the invading Clans and the
- *                                                                                                                                     TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
+ *                                                                                                                                                             TODO : Account for the de facto alliance of the invading Clans and the
+ *                                                                                                                                                             TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
  */
 public class RandomFactionGenerator {
     private static final MMLogger LOGGER = MMLogger.create(RandomFactionGenerator.class);
@@ -189,6 +190,7 @@ public class RandomFactionGenerator {
     /**
      * @return A set of faction keys for all factions that have a presence within the search area.
      */
+    @Deprecated(since = "0.51.01")
     public Set<String> getCurrentFactions() {
         Set<String> retVal = new TreeSet<>();
         LocalDate currentDate = getCurrentDate();
@@ -198,7 +200,7 @@ public class RandomFactionGenerator {
                 continue;
             }
 
-            if (faction.getShortName().equals("ROS") && currentDate.isAfter(MHQConstants.FORTRESS_REPUBLIC)) {
+            if (faction.getShortName().equals("ROS") && currentDate.isAfter(MHQConstants.FORTRESS_REPUBLIC_START)) {
                 continue;
             }
             // Skip factions whose stated active years don't include the current date.
@@ -291,7 +293,9 @@ public class RandomFactionGenerator {
      * @return {@code true} if the faction is ROS and the date is after Fortress Republic begins
      */
     private static boolean isDuringFortressRepublic(String factionShortName, LocalDate currentDate) {
-        return factionShortName.equals("ROS") && currentDate.isAfter(FORTRESS_REPUBLIC);
+        return factionShortName.equals("ROS") &&
+                     currentDate.isBefore(FORTRESS_REPUBLIC_END) &&
+                     currentDate.isAfter(FORTRESS_REPUBLIC_START);
     }
 
     /**
@@ -386,247 +390,91 @@ public class RandomFactionGenerator {
         return null; // unreachable in practice, safety fallback
     }
 
-    /**
-     * Selects an enemy faction for the given employer, weighted by length of shared border and diplomatic relations.
-     * Factions at war or designated as rivals are twice as likely (cumulative) to be chosen as opponents. Allied
-     * factions are ignored except for Clans, which halves the weight for that option.
-     *
-     * @param employer  The shortName of the faction offering the contract
-     * @param useRebels Whether to include rebels as a possible opponent
-     *
-     * @return The shortName of the faction to use as the op for.
-     */
-    public String getEnemy(String employer, boolean useRebels) {
-        Faction employerFaction = Factions.getInstance().getFaction(employer);
-        if (null == employerFaction) {
-            LOGGER.error("Could not find enemy for employer: {}", employer);
-            return PIRATE_FACTION_CODE;
-        } else {
-            return getEnemy(employerFaction, useRebels);
-        }
-    }
-
-    /**
-     * Pick an enemy faction, possibly rebels or mercenaries, given an employer.
-     *
-     * @param employer  The faction offering the contract
-     * @param useRebels Whether to include rebels as a possible opponent
-     *
-     * @return The shortName of the faction to use as the op for.
-     */
-    public String getEnemy(Faction employer, boolean useRebels) {
-        return getEnemy(employer, useRebels, false);
-    }
-
-    /**
-     * Selects an enemy faction for the given employer, weighted by length of shared border and diplomatic relations.
-     * Factions at war or designated as rivals are twice as likely (cumulative) to be chosen as opponents. Allied
-     * factions are ignored except for Clans, which halves the weight for that option.
-     *
-     * @param employer  The faction offering the contract
-     * @param useRebels Whether to include rebels as a possible opponent
-     * @param useMercs  Whether to include MERC as a possible opponent. Note, don't do this when first generating
-     *                  contract, as contract generation relies on the op for having planets
-     *
-     * @return The faction to use as the op for.
-     */
-    public String getEnemy(Faction employer, boolean useRebels, boolean useMercs) {
-        String employerName = employer != null ?
-                                    employer.getShortName() :
-                                    "no employer supplied or faction does not exist";
-
-        /* Rebels occur on a 1-4 (d20) on nearly every enemy chart */
-        if (useRebels && (Compute.randomInt(5) == 0)) {
-            return "REB";
+    public Faction getEnemy(boolean isCovert, ILocation location, LocalDate date, @Nullable Faction employer) {
+        if (employer == null) {
+            LOGGER.warn("No employer supplied or faction does not exist. Returning INDEPENDENT");
+            return Factions.getInstance().getFaction(INDEPENDENT_FACTION_CODE);
         }
 
-        Faction enemy = null;
-        Faction originalEmployer = employer;
-        if (!borderTracker.getFactionsInRegion().contains(employer)) {
-            // First, try the contained faction host (from factionhints.xml)
-            employer = factionHints.getContainedFactionHost(employer, getCurrentDate());
-
-            // If that fails, look for a "super-state" faction that has this faction as a fallback
-            // This handles cases like FS during the Federated Commonwealth era (3028-3067)
-            if (employer == null) {
-                employer = findSuperStateFaction(originalEmployer);
-            }
-        }
-        if (null != employer) {
-            employerName = employer.getShortName();
-            WeightedIntMap<Faction> enemyMap = buildEnemyMap(employer);
-
-            if (useMercs) {
-                appendMercsToEnemyMap(enemyMap);
-            }
-
-            enemy = enemyMap.randomItem();
-        }
+        WeightedIntMap<Faction> enemyMap = buildEnemyMap(isCovert, location, date, employer);
+        Faction enemy = enemyMap.randomItem();
         if (null != enemy) {
-            return enemy.getShortName();
+            return enemy;
         }
 
-        LOGGER.error("Could not find enemy for employerName {}", employerName);
+        LOGGER.warn("Could not find enemy for employerName {}. Returning INDEPENDENT", employer.getShortName());
 
-        // Fallback; there are always pirates.
-        return PIRATE_FACTION_CODE;
+        return Factions.getInstance().getFaction(INDEPENDENT_FACTION_CODE);
     }
 
-    /**
-     * Finds a "super-state" faction that controls planets in the current region and has the given faction listed as one
-     * of its fallback factions.
-     *
-     * <p>This handles cases where a faction exists but doesn't directly control planets during a
-     * certain era because a larger state controls them. For example, during the Federated Commonwealth era (3028-3067),
-     * the Federated Suns (FS) and Lyran Commonwealth (LA) don't directly control planets - the Federated Commonwealth
-     * (FC) does. FC lists both FS and LA as its fallback factions, so this method will return FC when given FS or LA
-     * during that era.</p>
-     *
-     * @param faction The faction to find a super-state for
-     *
-     * @return The super-state faction if found, or {@code null} if no matching faction exists
-     */
-    private @Nullable Faction findSuperStateFaction(Faction faction) {
-        if (faction == null) {
-            return null;
-        }
-
-        String factionKey = faction.getShortName();
-        LocalDate currentDate = getCurrentDate();
-        int currentYear = currentDate.getYear();
-
-        for (Faction candidate : borderTracker.getFactionsInRegion()) {
-            // Skip if candidate isn't valid for the current date
-            if (!candidate.validIn(currentYear)) {
-                continue;
-            }
-
-            String[] fallbacks = candidate.getAlternativeFactionCodes();
-            boolean matchesFallback = false;
-            if (fallbacks != null) {
-                for (String fallback : fallbacks) {
-                    if (factionKey.equals(fallback)) {
-                        matchesFallback = true;
-                        break;
-                    }
-                }
-            }
-            if (matchesFallback) {
-                LOGGER.info("Found super-state faction {} for {} during {}",
-                      candidate.getShortName(), factionKey, currentYear);
-                return candidate;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Appends the mercenary faction to the given enemy map with an approximate weight equal to 10% of the total enemy
-     * weight, but only if the enemy map contains at least one non-Clan faction.
-     *
-     * <p>The method first checks if any faction in the enemy map returns {@code false} from {@link Faction#isClan()}.
-     * If all factions are Clan, no action is taken. Otherwise, the mercenary faction is added to the enemy map with a
-     * weight based on the sum of existing weights (at least 1).</p>
-     *
-     * <p>The check for non-Clan factions is to help avoid a situation where we have mercenary companies popping up
-     * in Clan-space.</p>
-     *
-     * @param enemyMap the {@link WeightedIntMap} of {@link Faction} to which the mercenary faction may be appended
-     */
-    protected void appendMercsToEnemyMap(WeightedIntMap<Faction> enemyMap) {
-        boolean hasNonClan = false;
-        for (Faction faction : enemyMap.values()) {
-            if (!faction.isClan()) {
-                hasNonClan = true;
-                break;
-            }
-        }
-
-        if (!hasNonClan) {
-            return;
-        }
-
-        int mercWeight = 0;
-        for (int key : enemyMap.keySet()) {
-            mercWeight += key;
-        }
-
-        enemyMap.add(Math.max(1, (mercWeight / 10)), Factions.getInstance().getFaction(MERCENARY_FACTION_CODE));
-    }
-
-    /**
-     * Builds a map of potential enemies keyed to cumulative weight
-     *
-     * @param employer The employer faction
-     *
-     * @return The weight map of potential enemies
-     */
-    protected WeightedIntMap<Faction> buildEnemyMap(Faction employer) {
+    protected WeightedIntMap<Faction> buildEnemyMap(boolean isCovert, ILocation location, LocalDate date,
+          Faction employer) {
         WeightedIntMap<Faction> enemyMap = new WeightedIntMap<>();
-        LocalDate currentDate = getCurrentDate();
-
-        // If the employer is a pirate, or ComStar return all border factions as "enemies"
-        String employerShortName = employer.getShortName();
-        if (employerShortName.equals(PIRATE_FACTION_CODE) || employerShortName.equals(COMSTAR_FACTION_CODE)) {
-            for (Faction enemy : borderTracker.getFactionsInRegion()) {
-                if (FactionHints.isEmptyFaction(enemy) ||
-                          enemy.getShortName().equals(CLAN_FACTION_CODE)) {
-                    continue;
-                }
-                if (!enemy.validIn(currentDate)) {
-                    continue;
-                }
-                enemyMap.add(1, enemy); // weight (1) can be adjusted as needed
-            }
+        PlanetarySystem system = location.getCurrentSystem();
+        if (system == null) {
             return enemyMap;
         }
 
-        for (Faction enemy : borderTracker.getFactionsInRegion()) {
-            if (FactionHints.isEmptyFaction(enemy) ||
-                      enemy.getShortName().equals(CLAN_FACTION_CODE)) {
+        double radius = borderTracker.getRadius();
+        Map<Faction, Integer> counts = new HashMap<>();
+        Set<Faction> knownFactions = new HashSet<>();
+        for (PlanetarySystem nearbySystem : borderTracker.getSystemList()) {
+            Set<Faction> controllers = nearbySystem.getFactionSet(date);
+            knownFactions.addAll(controllers);
+            if ((radius < 0) || (nearbySystem.getDistanceTo(system) <= radius)) {
+                for (Faction faction : controllers) {
+                    counts.merge(faction, 1, Integer::sum);
+                }
+            }
+        }
+
+        String employerShortName = employer.getShortName();
+        boolean unfiltered = employerShortName.equals(PIRATE_FACTION_CODE);
+
+        // A faction at war with the employer is always a valid target, even one with no systems in the search
+        // area
+        Set<Faction> candidates = new HashSet<>(counts.keySet());
+        if (!unfiltered) {
+            for (Faction faction : knownFactions) {
+                if (factionHints.isAtWarWith(employer, faction, date)) {
+                    candidates.add(faction);
+                }
+            }
+        }
+
+        for (Faction enemy : candidates) {
+            if (FactionHints.isEmptyFaction(enemy)) {
                 continue;
             }
 
-            if (isDuringFortressRepublic(enemy.getShortName(), currentDate)) {
+            if (isDuringFortressRepublic(enemy.getShortName(), date) || !enemy.validIn(date)) {
                 continue;
             }
 
-            // Skip extinct factions; stale planet ownership data can otherwise leak them into the enemy pool.
-            if (!enemy.validIn(currentDate)) {
+            if (unfiltered) {
+                enemyMap.add(1, enemy);
                 continue;
             }
 
-            int totalCount = borderTracker.getBorderSystems(employer, enemy).size();
-            double count = totalCount;
-            // Split the border between main controlling faction and any contained factions.
-            for (Faction containedFaction : factionHints.getContainedFactions(employer, currentDate)) {
-                if ((null == containedFaction) ||
-                          !factionHints.isContainedFactionOpponent(enemy, containedFaction, employer, currentDate)) {
-                    continue;
-                }
-
-                if (isDuringFortressRepublic(containedFaction.getShortName(), currentDate)) {
-                    continue;
-                }
-                if (!containedFaction.validIn(currentDate)) {
-                    continue;
-                }
-
-                if (factionHints.isNeutral(containedFaction, enemy, currentDate) ||
-                          factionHints.isNeutral(enemy, containedFaction, currentDate)) {
-                    continue;
-                }
-                double cfCount = totalCount;
-                if (factionHints.getAltLocationFraction(employer, containedFaction, currentDate) > 0.0) {
-                    cfCount = totalCount * factionHints.getAltLocationFraction(employer, containedFaction, currentDate);
-                    count -= cfCount;
-                }
-                cfCount = adjustBorderWeight(cfCount, employer, enemy, currentDate);
-                enemyMap.add((int) Math.floor(cfCount + 0.5), containedFaction);
+            if (enemy.equals(employer)) {
+                continue;
             }
-            count = adjustBorderWeight(count, employer, enemy, currentDate);
-            enemyMap.add((int) Math.floor(count + 0.5), enemy);
+
+            // During covert operations, allies may sometimes attack each other. However, this is a very low chance
+            boolean isAlly = factionHints.isAlliedWith(employer, enemy, date);
+            if (isCovert && isAlly) {
+                enemyMap.add(1, enemy);
+                continue;
+            }
+
+            if (isAlly) {
+                continue;
+            }
+
+            double weight = adjustEnemyWeight(counts.getOrDefault(enemy, 0), employer, enemy, date);
+            if (weight > 0) {
+                enemyMap.add((int) Math.floor(weight + 0.5), enemy);
+            }
         }
 
         return enemyMap;
@@ -668,6 +516,7 @@ public class RandomFactionGenerator {
      *
      * @return A list of faction that share a border
      */
+    @Deprecated(since = "0.51.01")
     public List<String> getEnemyList(String employerName) {
         Faction employer = Factions.getInstance().getFaction(employerName);
         if (null == employer) {
@@ -684,6 +533,7 @@ public class RandomFactionGenerator {
      *
      * @return A list of faction that share a border
      */
+    @Deprecated(since = "0.51.01")
     public List<String> getEnemyList(Faction employer) {
         Set<Faction> list = new HashSet<>();
         LocalDate currentDate = getCurrentDate();
@@ -692,6 +542,13 @@ public class RandomFactionGenerator {
             if (FactionHints.isEmptyFaction(enemy)) {
                 continue;
             }
+
+            if (enemy.isAggregate()) {
+                if (!enemy.isMercenary() && !enemy.isPirate()) {
+                    continue;
+                }
+            }
+            
             // Skip extinct factions; stale planet ownership data can otherwise leak them into the enemy list.
             if (!enemy.validIn(currentDate)) {
                 continue;
@@ -728,63 +585,53 @@ public class RandomFactionGenerator {
     }
 
     /**
-     * Applies modifiers to the border size (measured by number of planets within a certain proximity to one or more of
-     * the attacker's planets) based on diplomatic stance (e.g. war, rivalry, alliance).
+     * Applies diplomatic-stance multipliers to an enemy candidate's base area-presence weight (see
+     * {@link #buildEnemyMap(boolean, ILocation, LocalDate, Faction)}). Factions at war with the employer are floored to
+     * a weight of at least 1 before doubling, so a belligerent with no systems in the search area is still a valid,
+     * pickable target.
      *
-     * @param count    The number of planets
+     * @param count    The candidate's base weight (number of systems it controls in the search area)
      * @param employer The attacking faction
      * @param enemy    The defending faction
-     * @param date     The current campaign date
+     * @param date     The date to check diplomatic relations against
      *
-     * @return An adjusted weight
+     * @return The adjusted weight
      */
-    protected double adjustBorderWeight(double count, Faction employer, Faction enemy, LocalDate date) {
-        boolean isBeforeTukayyid = date.isBefore(MHQConstants.BATTLE_OF_TUKAYYID);
-        boolean isAfterFirstWaveBegins = date.isAfter(MHQConstants.CLAN_INVASION_FIRST_WAVE_BEGINS);
-        boolean isDuringClanInvasionHeight = isBeforeTukayyid && isAfterFirstWaveBegins;
+    protected double adjustEnemyWeight(int count, Faction employer, Faction enemy, LocalDate date) {
+        boolean isDuringClanInvasionHeight = date.isAfter(MHQConstants.CLAN_INVASION_FIRST_WAVE_BEGINS) &&
+                                                   date.isBefore(MHQConstants.BATTLE_OF_TUKAYYID);
+        boolean isDuringJihad = date.isAfter(MHQConstants.JIHAD_START) && date.isBefore(MHQConstants.NOMINAL_JIHAD_END);
         List<String> innerSphereClanWarCombatants = List.of("FC", "FRR", "DC");
 
-        boolean isAfterJihadBegins = date.isAfter(MHQConstants.JIHAD_START);
-        boolean isBeforeJihadEnds = date.isBefore(MHQConstants.NOMINAL_JIHAD_END);
-        boolean isDuringJihad = isAfterJihadBegins && isBeforeJihadEnds;
+        double weight = count;
+        if (factionHints.isAtWarWith(employer, enemy, date)) {
+            weight = Math.max(weight, 1.0) * 2.0;
+        }
 
-        if (factionHints.isNeutral(employer, enemy, getCurrentDate()) ||
-                  factionHints.isNeutral(enemy, employer, getCurrentDate())) {
-            return 0;
-        }
-        if (!employer.isClan() && factionHints.isAlliedWith(employer, enemy, date)) {
-            return 0;
-        }
-        if (employer.isClan() &&
-                  enemy.isClan() &&
-                  (factionHints.isAlliedWith(employer, enemy, date) ||
-                         (isDuringClanInvasionHeight && (borderTracker.getCenterY() < 600)))) {
-            /* Treat invading Clans as allies in the Inner Sphere */
-            count /= 4.0;
-        }
-        if (factionHints.isAtWarWith(employer, enemy, date) && !employer.equals(enemy)) {
-            count *= 2.0;
-        }
         if (factionHints.isRivalOf(employer, enemy, date)) {
-            count *= 2.0;
+            weight *= 2.0;
         }
+
         if (innerSphereClanWarCombatants.contains(employer.getShortName()) &&
                   enemy.isClan() &&
                   isDuringClanInvasionHeight) {
-            count *= 2.0;
+            weight *= 2.0;
         }
+
         if (isDuringJihad && enemy.isWoB()) {
-            count *= 2.0;
+            weight *= 2.0;
         }
+
         /*
          * This is pretty hacky, but ComStar does not have many targets
          * and tends to fight the Clans too much between Tukayyid and
          * the Jihad.
          */
         if (employer.getShortName().equals("CS") && enemy.isClan()) {
-            count /= 12.0;
+            weight /= 12.0;
         }
-        return count;
+
+        return weight;
     }
 
     /**

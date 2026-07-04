@@ -58,7 +58,8 @@ public final class MHQConstants extends SuiteConstants {
     public static final int FACTION_GENERATOR_BORDER_RANGE_NEAR_PERIPHERY = 90;
     public static final int FACTION_GENERATOR_BORDER_RANGE_DEEP_PERIPHERY = 210; // a bit more than this distance
     // between HL and NC
-    public static final LocalDate FORTRESS_REPUBLIC = LocalDate.of(3135, Month.NOVEMBER, 1);
+    public static final LocalDate FORTRESS_REPUBLIC_START = LocalDate.of(3135, Month.NOVEMBER, 1);
+    public static final LocalDate FORTRESS_REPUBLIC_END = LocalDate.of(3151, Month.JANUARY, 1);
     // endregion Faction Generation Constants
 
     // region GUI Constants

@@ -508,7 +508,7 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
 
         getContractType(contract);
 
-        setEnemyCode(contract);
+        setEnemyCode(contract, campaign);
 
         /*
          * Addition to AtB rules: factions which are generally neutral
@@ -624,9 +624,12 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
         } else if (contract.getContractType().isRiotDuty()) {
             contract.setEnemyCode("REB");
         } else {
-            contract.setEnemyCode(RandomFactionGenerator.getInstance()
-                                        .getEnemy(contract.getEmployerCode(),
-                                              contract.getContractType().isGarrisonType()));
+            Faction enemyFaction = RandomFactionGenerator.getInstance()
+                                         .getEnemy(false,
+                                               campaign.getCurrentLocation(),
+                                               campaign.getLocalDate(),
+                                               contract.getEmployerFaction());
+            contract.setEnemyCode(enemyFaction.getShortName());
         }
         if (contract.getContractType().isGarrisonDuty() && contract.getEnemy().isRebel()) {
             contract.setContractTypeAndName(AtBContractType.RIOT_DUTY);

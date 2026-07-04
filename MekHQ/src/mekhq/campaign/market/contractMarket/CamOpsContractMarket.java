@@ -264,7 +264,7 @@ public class CamOpsContractMarket extends AbstractContractMarket {
         // Step 2: Determine the mission type
         contract.setContractTypeAndName(determineMission(campaign, employer, reputation.getReputationModifier()));
         ContractTerms contractTerms = getContractTerms(campaign, contract);
-        setEnemyCode(contract);
+        setEnemyCode(contract, campaign);
         setAttacker(contract);
         // Step 3: Set the system location
         try {

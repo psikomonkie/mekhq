@@ -283,7 +283,8 @@ public class AtBContract extends Contract {
     public void updateEnemy(Campaign campaign, LocalDate today, @Nullable String enemyCode) {
         if (enemyCode == null) {
             Faction employer = getEmployerFaction();
-            enemyCode = RandomFactionGenerator.getInstance().getEnemy(employer, false, true);
+            enemyCode = RandomFactionGenerator.getInstance()
+                              .getEnemy(false, campaign.getCurrentLocation(), today, employer, false, true);
         }
         setEnemyCode(enemyCode);
 

@@ -109,6 +109,9 @@ public class RandomFactionGeneratorTest {
         // individual tests can override this for extinction-specific scenarios.
         when(f.validIn(any(LocalDate.class))).thenReturn(true);
         when(f.validIn(anyInt())).thenReturn(true);
+        // Non-Clan factions use mercenaries by default (Faction#isUsesMercenaries' real default); Clans generally
+        // don't, mirroring the historical CW/CSF-only exceptions. Individual tests can override this.
+        when(f.isUsesMercenaries(anyInt())).thenReturn(!clan);
         return f;
     }
 
@@ -195,11 +198,69 @@ public class RandomFactionGeneratorTest {
     @Test
     public void testGetEnemy() {
         RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
 
-        String enemy = rfg.getEnemy(isFaction, false);
+        String enemy = rfg.getEnemy(location, TEST_DATE, isFaction, false);
 
         assertNotEquals("PIR", enemy);
         assertNotEquals(isFaction.getShortName(), enemy);
+    }
+
+    /**
+     * Regression test: allied factions must never be selected as an enemy, with no exceptions.
+     */
+    @Test
+    public void testGetEnemyExcludesAlliedFaction() {
+        FactionHints hints = new FactionHints();
+        RandomFactionGenerator rfg = new RandomFactionGenerator(createTestBorderTracker(), hints);
+        hints.addAlliance("", null, null, isFaction, peripheryFaction);
+        ILocation location = createTestLocation(isFaction);
+
+        for (int i = 0; i < 500; i++) {
+            String enemy = rfg.getEnemy(location, TEST_DATE, isFaction, false);
+            assertNotEquals(peripheryFaction.getShortName(), enemy,
+                  "Allied faction must never be chosen as an enemy");
+        }
+    }
+
+    /**
+     * Regression test: a faction at war with the employer must always be a valid enemy target, even one with no
+     * systems within the search area, as long as the border tracker knows it controls territory elsewhere on the
+     * map.
+     */
+    @Test
+    public void testGetEnemyGuaranteesAtWarFactionOutsideSearchRadius() {
+        Faction warFaction = createTestFaction("WAR", false, false);
+
+        PlanetarySystem nearSystem = createTestSystem(0, 0, isFaction);
+        PlanetarySystem farSystem = mock(PlanetarySystem.class);
+        when(farSystem.getFactionSet(any())).thenReturn(Collections.singleton(warFaction));
+        when(farSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(1000.0);
+        when(nearSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(0.0);
+
+        List<PlanetarySystem> systems = List.of(nearSystem, farSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, 5) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+
+        FactionHints hints = new FactionHints();
+        hints.addWar("", null, null, isFaction, warFaction);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, hints);
+        ILocation location = mock(ILocation.class);
+        when(location.getCurrentSystem()).thenReturn(nearSystem);
+
+        boolean warFactionSeen = false;
+        for (int i = 0; i < 200; i++) {
+            String enemy = rfg.getEnemy(location, TEST_DATE, isFaction, false);
+            if (warFaction.getShortName().equals(enemy)) {
+                warFactionSeen = true;
+                break;
+            }
+        }
+        assertTrue(warFactionSeen, "At-war faction with no systems in the search radius should still be a valid target");
     }
 
     @Test
@@ -389,6 +450,7 @@ public class RandomFactionGeneratorTest {
     @Test
     public void testClanContainedFactionExcludedFromEmployers() {
         when(innerISFaction.isClan()).thenReturn(true);
+        when(innerISFaction.isUsesMercenaries(anyInt())).thenReturn(false);
         RandomFactionGenerator rfg = createTestRFG();
         ILocation location = createTestLocation(isFaction);
 
@@ -405,7 +467,7 @@ public class RandomFactionGeneratorTest {
         RandomFactionGenerator rfg = createIsolatedRfg(peripheryFaction);
         ILocation location = createTestLocation(peripheryFaction);
 
-        Faction chosen = rfg.getRandomEmployerFaction(location, TEST_DATE, null);
+        Faction chosen = rfg.getRandomEmployerFaction(location, TEST_DATE, null, false);
 
         assertNotNull(chosen, "Employer faction should not be null");
         assertEquals(peripheryFaction.getShortName(), chosen.getShortName());
@@ -417,7 +479,7 @@ public class RandomFactionGeneratorTest {
         ILocation location = mock(ILocation.class);
         when(location.getCurrentSystem()).thenReturn(null);
 
-        assertNull(rfg.getRandomEmployerFaction(location, TEST_DATE, null));
+        assertNull(rfg.getRandomEmployerFaction(location, TEST_DATE, null, false));
     }
 
     @Test
@@ -425,7 +487,7 @@ public class RandomFactionGeneratorTest {
         RandomFactionGenerator rfg = createIsolatedRfg(clanFaction);
         ILocation location = createTestLocation(clanFaction);
 
-        assertNull(rfg.getRandomEmployerFaction(location, TEST_DATE, null),
+        assertNull(rfg.getRandomEmployerFaction(location, TEST_DATE, null, true),
               "A Clan-controlled area with no eligible contained faction should have no employer");
     }
 
@@ -436,7 +498,7 @@ public class RandomFactionGeneratorTest {
         RandomFactionGenerator rfg = createIsolatedRfg(isFaction);
         ILocation location = createTestLocation(isFaction);
 
-        assertNull(rfg.getRandomEmployerFaction(location, TEST_DATE, null),
+        assertNull(rfg.getRandomEmployerFaction(location, TEST_DATE, null, false),
               "Extinct controlling faction should not be chosen, nor unlock its contained faction");
     }
 
@@ -447,7 +509,7 @@ public class RandomFactionGeneratorTest {
 
         boolean innerSeen = false;
         for (int i = 0; i < 500; i++) {
-            Faction chosen = rfg.getRandomEmployerFaction(location, TEST_DATE, null);
+            Faction chosen = rfg.getRandomEmployerFaction(location, TEST_DATE, null, false);
             assertNotNull(chosen, "Employer faction should not be null");
             if (innerISFaction.getShortName().equals(chosen.getShortName())) {
                 innerSeen = true;
@@ -464,11 +526,12 @@ public class RandomFactionGeneratorTest {
     @Test
     public void testRandomEmployerFactionExcludesClanContainedFaction() {
         when(innerISFaction.isClan()).thenReturn(true);
+        when(innerISFaction.isUsesMercenaries(anyInt())).thenReturn(false);
         RandomFactionGenerator rfg = createTestRFG();
         ILocation location = createTestLocation(isFaction);
 
         for (int i = 0; i < 500; i++) {
-            Faction chosen = rfg.getRandomEmployerFaction(location, TEST_DATE, null);
+            Faction chosen = rfg.getRandomEmployerFaction(location, TEST_DATE, null, true);
             assertNotNull(chosen, "Employer faction should not be null");
             assertNotEquals(innerISFaction.getShortName(), chosen.getShortName(),
                   "Clan contained faction must never be chosen as an employer");

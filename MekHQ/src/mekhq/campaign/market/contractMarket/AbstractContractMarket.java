@@ -534,7 +534,7 @@ public abstract class AbstractContractMarket {
         }
     }
 
-    protected void setEnemyCode(AtBContract contract) {
+    protected void setEnemyCode(AtBContract contract, Campaign campaign) {
         if (contract.getContractType().isPirateHunting()) {
             Faction employer = contract.getEmployerFaction();
             contract.setEnemyCode(employer.isClan() ? "BAN" : PIRATE_FACTION_CODE);
@@ -546,10 +546,11 @@ public abstract class AbstractContractMarket {
             String enemyCode = ObjectUtility.getRandomItem(localFactions);
             contract.setEnemyCode(enemyCode);
         } else {
-            String enemyFactionCode = RandomFactionGenerator.getInstance()
-                                            .getEnemy(contract.getEmployerCode(),
-                                                  contract.getContractType().isGarrisonType());
-            Faction enemyFaction = Factions.getInstance().getFaction(enemyFactionCode);
+            Faction enemyFaction = RandomFactionGenerator.getInstance()
+                                         .getEnemy(false,
+                                               campaign.getCurrentLocation(),
+                                               campaign.getLocalDate(),
+                                               contract.getEmployerFaction());
 
             // If the OpFor isn't Clan, there is a 1-in-5 chance they've hired mercenaries to do their dirty work. So
             // the original enemy faction is set as the mercenary's employer, while the enemy faction is set to
