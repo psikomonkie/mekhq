@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Set;
 
 import mekhq.campaign.location.ILocation;
+import mekhq.campaign.mission.mission.contractGeneration.GlobalEmployerTableValue;
 import mekhq.campaign.universe.factionHints.FactionHints;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -824,5 +825,140 @@ public class RandomFactionGeneratorTest {
         assertEquals(Set.of(isFaction.getShortName(), peripheryFaction.getShortName(), innerISFaction.getShortName()),
               candidates,
               "getEmployerFaction should draw from every eligible faction in the search area, plus contained factions");
+    }
+
+    /**
+     * Regression test: {@link RandomFactionGenerator#getRandomEmployerFaction} must filter candidates by the
+     * requested {@link GlobalEmployerTableValue} power tier, excluding any faction (controlling or contained) whose
+     * tier doesn't match.
+     */
+    @Test
+    public void testRandomEmployerFactionFiltersByEmployerType() {
+        when(isFaction.isMinorPower()).thenReturn(true);
+        RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
+
+        for (int i = 0; i < 500; i++) {
+            Faction chosen = rfg.getRandomEmployerFaction(location, TEST_DATE, GlobalEmployerTableValue.MINOR_POWER, false);
+            assertNotNull(chosen, "Employer faction should not be null");
+            assertEquals(isFaction.getShortName(), chosen.getShortName(),
+                  "Only factions matching the requested employer power tier should be returned, including excluding "
+                        + "an otherwise-eligible contained faction whose own tier doesn't match");
+        }
+    }
+
+    /**
+     * Regression test: {@code isMercenaryCampaign} must exclude any faction that doesn't use mercenaries, not just
+     * Clans (see {@link #testRandomEmployerFactionExcludesClanController} for the Clan-specific case).
+     */
+    @Test
+    public void testRandomEmployerFactionMercenaryCampaignExcludesNonMercenaryUsingFaction() {
+        when(peripheryFaction.isUsesMercenaries(anyInt())).thenReturn(false);
+        RandomFactionGenerator rfg = createIsolatedRfg(peripheryFaction);
+        ILocation location = createTestLocation(peripheryFaction);
+
+        assertNull(rfg.getRandomEmployerFaction(location, TEST_DATE, null, true),
+              "A non-Clan faction that doesn't use mercenaries should still be excluded during a mercenary campaign");
+    }
+
+    /**
+     * Regression test: a faction at war with the employer has its weight floored to at least 1 before being doubled,
+     * guaranteeing it remains a valid target even with no base presence in the search area.
+     */
+    @Test
+    public void testAdjustEnemyWeightFloorsAndDoublesForAtWarFaction() {
+        FactionHints hints = mock(FactionHints.class);
+        when(hints.isAtWarWith(isFaction, peripheryFaction, TEST_DATE)).thenReturn(true);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, hints);
+
+        double weight = rfg.adjustEnemyWeight(0, isFaction, peripheryFaction, TEST_DATE, false, false);
+
+        assertEquals(2.0, weight,
+              "A war partner with zero base presence should be floored to a weight of 1 before doubling");
+    }
+
+    /**
+     * Regression test: a rival's base weight is doubled.
+     */
+    @Test
+    public void testAdjustEnemyWeightDoublesForRival() {
+        FactionHints hints = mock(FactionHints.class);
+        when(hints.isRivalOf(isFaction, peripheryFaction, TEST_DATE)).thenReturn(true);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, hints);
+
+        double weight = rfg.adjustEnemyWeight(5, isFaction, peripheryFaction, TEST_DATE, false, false);
+
+        assertEquals(10.0, weight, "A rival's base weight should be doubled");
+    }
+
+    /**
+     * Regression test: one of the historical Inner Sphere Clan-war combatants (FC/FRR/DC) gets a doubled weight
+     * against a Clan enemy, but only during the invasion's height (first wave through Tukayyid).
+     */
+    @Test
+    public void testAdjustEnemyWeightDoublesForClanInvasionCombatantDuringInvasionHeight() {
+        Faction fedCom = createTestFaction("FC", false, false);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, mock(FactionHints.class));
+
+        double weight = rfg.adjustEnemyWeight(5, fedCom, clanFaction, TEST_DATE, true, false);
+
+        assertEquals(10.0, weight,
+              "An Inner Sphere Clan-war combatant's weight against a Clan enemy should double during the invasion's height");
+    }
+
+    /**
+     * Regression test: outside the invasion's height, the Clan-war-combatant multiplier must not apply even if the
+     * other conditions (combatant faction, Clan enemy) are met.
+     */
+    @Test
+    public void testAdjustEnemyWeightUnaffectedForClanInvasionCombatantOutsideInvasionWindow() {
+        Faction fedCom = createTestFaction("FC", false, false);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, mock(FactionHints.class));
+
+        double weight = rfg.adjustEnemyWeight(5, fedCom, clanFaction, TEST_DATE, false, false);
+
+        assertEquals(5.0, weight, "Outside the invasion's height, no Clan-invasion multiplier should apply");
+    }
+
+    /**
+     * Regression test: WoB's weight is doubled during the Jihad.
+     */
+    @Test
+    public void testAdjustEnemyWeightDoublesForWoBDuringJihad() {
+        Faction wobFaction = createTestFaction("WOB", false, false);
+        when(wobFaction.isWoB()).thenReturn(true);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, mock(FactionHints.class));
+
+        double weight = rfg.adjustEnemyWeight(5, isFaction, wobFaction, TEST_DATE, false, true);
+
+        assertEquals(10.0, weight, "WoB's weight should double during the Jihad");
+    }
+
+    /**
+     * Regression test: ComStar's weight against a Clan target is divided by 12, since ComStar has few targets and
+     * would otherwise fight the Clans too often between Tukayyid and the Jihad.
+     */
+    @Test
+    public void testAdjustEnemyWeightDividesByTwelveForComStarVsClan() {
+        Faction comStar = createTestFaction("CS", false, false);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, mock(FactionHints.class));
+
+        double weight = rfg.adjustEnemyWeight(12, comStar, clanFaction, TEST_DATE, false, false);
+
+        assertEquals(1.0, weight, "ComStar's weight against a Clan target should be divided by 12");
+    }
+
+    /**
+     * Regression test: the Clan-invasion-height multiplier only applies to the specific historical combatants
+     * (FC/FRR/DC); an unrelated Inner Sphere faction fighting a Clan during the same window gets no bonus.
+     */
+    @Test
+    public void testAdjustEnemyWeightUnaffectedForNonCombatantDuringClanInvasionHeight() {
+        RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, mock(FactionHints.class));
+
+        double weight = rfg.adjustEnemyWeight(5, isFaction, clanFaction, TEST_DATE, true, false);
+
+        assertEquals(5.0, weight,
+              "Only the historical Clan-war combatants (FC/FRR/DC) should get the invasion-era Clan-targeting bonus");
     }
 }
