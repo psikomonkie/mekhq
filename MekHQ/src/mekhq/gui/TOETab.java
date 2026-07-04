@@ -355,38 +355,27 @@ public final class TOETab extends CampaignGuiTab {
             case UNIT -> unit.getCrew().isEmpty() ? UNIT_CREW_TAB_INDEX : UNIT_STATS_TAB_INDEX_WITH_CREW;
         };
 
-        selectNodeFromForceView(unit);
+        selectTreePath(getTreePathForUnit(unit));
     }
 
     private void selectFormationFromForceView(Formation formation) {
-        selectNodeFromForceView(formation);
+        selectTreePath(getTreePathForFormation(formation));
     }
 
-    private void selectNodeFromForceView(Object node) {
-        TreePath path = getTreePathFor(node);
+    private void selectTreePath(TreePath path) {
         if (path != null) {
             orgTree.setSelectionPath(path);
             orgTree.scrollPathToVisible(path);
         }
     }
 
-    private TreePath getTreePathFor(Object target) {
-        if (target instanceof Formation formation) {
-            return getTreePathFor(formation);
-        }
-        if (target instanceof Unit unit) {
-            return getTreePathFor(unit);
-        }
-        return null;
-    }
-
-    private TreePath getTreePathFor(Unit unit) {
+    private TreePath getTreePathForUnit(Unit unit) {
         Formation formation = getCampaign().getFormation(unit.getFormationId());
-        TreePath formationPath = formation == null ? null : getTreePathFor(formation);
+        TreePath formationPath = formation == null ? null : getTreePathForFormation(formation);
         return formationPath == null ? null : formationPath.pathByAddingChild(unit);
     }
 
-    private TreePath getTreePathFor(Formation formation) {
+    private TreePath getTreePathForFormation(Formation formation) {
         Object root = orgTree.getModel().getRoot();
         if (!(root instanceof Formation rootFormation)) {
             return null;
