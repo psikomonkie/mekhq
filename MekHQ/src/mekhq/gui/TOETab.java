@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import javax.swing.*;
-import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -372,26 +371,47 @@ public final class TOETab extends CampaignGuiTab {
     }
 
     private TreePath getTreePathFor(Object target) {
-        TreeModel model = orgTree.getModel();
-        Object root = model.getRoot();
-        return getTreePathFor(model, root, target, new TreePath(root));
+        if (target instanceof Formation formation) {
+            return getTreePathFor(formation);
+        }
+        if (target instanceof Unit unit) {
+            return getTreePathFor(unit);
+        }
+        return null;
     }
 
-    private TreePath getTreePathFor(TreeModel model, Object node, Object target, TreePath path) {
-        if (node == target || node.equals(target)) {
-            return path;
+    private TreePath getTreePathFor(Unit unit) {
+        Formation formation = getCampaign().getFormation(unit.getFormationId());
+        TreePath formationPath = formation == null ? null : getTreePathFor(formation);
+        return formationPath == null ? null : formationPath.pathByAddingChild(unit);
+    }
+
+    private TreePath getTreePathFor(Formation formation) {
+        Object root = orgTree.getModel().getRoot();
+        if (!(root instanceof Formation rootFormation)) {
+            return null;
         }
 
-        int childCount = model.getChildCount(node);
-        for (int childIndex = 0; childIndex < childCount; childIndex++) {
-            Object child = model.getChild(node, childIndex);
-            TreePath childPath = getTreePathFor(model, child, target, path.pathByAddingChild(child));
-            if (childPath != null) {
-                return childPath;
+        if (formation == rootFormation || formation.equals(rootFormation)) {
+            return new TreePath(root);
+        }
+
+        List<Formation> parents = formation.getAllParents();
+        if (parents.stream().noneMatch(parent -> parent == rootFormation || parent.equals(rootFormation))) {
+            return null;
+        }
+
+        List<Object> pathComponents = new ArrayList<>();
+        pathComponents.add(root);
+        for (int parentIndex = parents.size() - 1; parentIndex >= 0; parentIndex--) {
+            Formation parent = parents.get(parentIndex);
+            if (parent != rootFormation && !parent.equals(rootFormation)) {
+                pathComponents.add(parent);
             }
         }
+        pathComponents.add(formation);
 
-        return null;
+        return new TreePath(pathComponents.toArray());
     }
 
     private JList<Person> getCrewList(CrewListModel model, JScrollPane scrollPerson) {
