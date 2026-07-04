@@ -51,10 +51,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.function.IntConsumer;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListCellRenderer;
@@ -75,14 +71,12 @@ import javax.swing.JTextField;
 import megamek.MMConstants;
 import megamek.client.ui.Messages;
 import megamek.client.ui.buttons.ColourSelectorButton;
-import megamek.client.ui.clientGUI.GUIPreferences;
 import megamek.client.ui.comboBoxes.FontComboBox;
 import megamek.client.ui.comboBoxes.MMComboBox;
 import megamek.client.ui.dialogs.buttonDialogs.CommonSettingsDialog;
 import megamek.client.ui.dialogs.helpDialogs.HelpDialog;
 import megamek.client.ui.displayWrappers.FontDisplay;
 import megamek.client.ui.util.UIUtil;
-import megamek.common.preference.PreferenceManager;
 import megamek.logging.MMLogger;
 import mekhq.MHQConstants;
 import mekhq.MHQOptions;
@@ -114,20 +108,110 @@ public class MHQOptionsPane extends JPanel {
 
     private final JFrame frame;
     private final MHQOptions options;
+    private final MHQOptionsModel model;
     private final List<CampaignOptionsRoute> routes = new ArrayList<>();
     private final Map<String, Supplier<Component>> pageFactories = new HashMap<>();
     private final Map<String, Component> pageCache = new HashMap<>();
 
-    private final List<Runnable> pageSavers = new ArrayList<>();
-
     private CampaignOptionsContentHost contentHost;
     private CampaignOptionsNavigationPanel navigationPanel;
+
+    // region Page controls
+    // These are populated as each page is lazily built and are read back into the model by the writeXToModel methods
+    // when the dialog is confirmed. A page that was never opened leaves its controls null, so its writeXToModel is a
+    // no-op and the model keeps the original values it was constructed with.
+
+    // Fonts
+    private FontComboBox comboMedicalViewDialogHandwritingFont;
+
+    // Display - General
+    private JTextField fieldDisplayDateFormat;
+    private JTextField fieldLongDisplayDateFormat;
+    private JSlider guiScaleSlider;
+    private CampaignOptionsCheckBox chkHideUnitFluff;
+    private CampaignOptionsCheckBox chkHistoricalDailyLog;
+    private CampaignOptionsCheckBox chkCompanyGeneratorStartup;
+    private CampaignOptionsCheckBox chkShowCompanyGenerator;
+    private CampaignOptionsCheckBox chkShowUnitPicturesOnTOE;
+
+    // Display - Interstellar Map
+    private CampaignOptionsCheckBox chkInterstellarMapShowJumpRadius;
+    private CampaignOptionsSpinner spinnerInterstellarMapShowJumpRadiusMinimumZoom;
+    private ColourSelectorButton btnInterstellarMapJumpRadiusColour;
+    private CampaignOptionsCheckBox chkInterstellarMapShowPlanetaryAcquisitionRadius;
+    private CampaignOptionsSpinner spinnerInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom;
+    private ColourSelectorButton btnInterstellarMapPlanetaryAcquisitionRadiusColour;
+    private CampaignOptionsCheckBox chkInterstellarMapShowContractSearchRadius;
+    private ColourSelectorButton btnInterstellarMapContractSearchRadiusColour;
+
+    // Display - Personnel List
+    private JComboBox<PersonnelFilterStyle> comboPersonnelFilterStyle;
+    private CampaignOptionsCheckBox chkPersonnelFilterOnPrimaryRole;
+    private CampaignOptionsCheckBox chkUnifiedDailyReport;
+    private CampaignOptionsCheckBox chkEnableDailyReportAggregateTab;
+
+    // Colours (keyed by resource name, matching MHQOptionsModel.statusColours)
+    private final Map<String, ColourSelectorButton> colourButtons = new HashMap<>();
+
+    // Autosave
+    private JRadioButton optionNoSave;
+    private JRadioButton optionSaveDaily;
+    private JRadioButton optionSaveWeekly;
+    private JRadioButton optionSaveMonthly;
+    private JRadioButton optionSaveYearly;
+    private CampaignOptionsCheckBox chkSaveBeforeScenarios;
+    private CampaignOptionsCheckBox chkSaveBeforeMissionEnd;
+    private CampaignOptionsSpinner spinnerSavedGamesCount;
+
+    // New Day - Personnel Pools (keyed by resource name, matching MHQOptionsModel.newDayPools)
+    private final Map<String, CampaignOptionsCheckBox> poolCheckBoxes = new HashMap<>();
+
+    // New Day - Automation
+    private CampaignOptionsCheckBox chkNewDayAutoLogistics;
+    private CampaignOptionsCheckBox chkNewDayMRMS;
+    private CampaignOptionsCheckBox chkNewDayOptimizeMedicalAssignments;
+    private CampaignOptionsCheckBox chkNewDayAutomaticallyAssignUnmaintainedUnits;
+    private CampaignOptionsCheckBox chkSelfCorrectMaintenance;
+
+    // New Day - Training
+    private CampaignOptionsCheckBox chkNewMonthQuickTrain;
+    private CampaignOptionsSpinner spinnerQuickTrainTarget;
+    private CampaignOptionsCheckBox chkLevelArtillery;
+    private CampaignOptionsCheckBox chkLevelScoutingSkills;
+    private CampaignOptionsCheckBox chkLevelEscapeSkills;
+    private CampaignOptionsCheckBox chkLevelLeadership;
+    private CampaignOptionsCheckBox chkLevelTraining;
+    private CampaignOptionsCheckBox chkLevelOtherCommandSkills;
+
+    // New Day - Formation Icons
+    private CampaignOptionsCheckBox chkNewDayFormationIconOperationalStatus;
+    private MMComboBox<FormationIconOperationalStatusStyle> comboNewDayFormationIconOperationalStatusStyle;
+
+    // Campaign Save
+    private CampaignOptionsCheckBox chkPreferGzippedOutput;
+    private CampaignOptionsCheckBox chkWriteCustomsToXML;
+    private CampaignOptionsCheckBox chkWriteAllUnitsToXML;
+    private CampaignOptionsCheckBox chkSaveMothballState;
+
+    // Reminders & Confirmations (keyed by MHQConstants nag/confirmation key, matching MHQOptionsModel.nagIgnores)
+    private final Map<String, CampaignOptionsCheckBox> nagCheckBoxes = new HashMap<>();
+
+    // Advanced
+    private JTextField userDirField;
+    private CampaignOptionsSpinner spinnerStartGameDelay;
+    private CampaignOptionsSpinner spinnerStartGameClientDelay;
+    private CampaignOptionsSpinner spinnerStartGameClientRetryCount;
+    private CampaignOptionsSpinner spinnerStartGameBotClientDelay;
+    private CampaignOptionsSpinner spinnerStartGameBotClientRetryCount;
+    private MMComboBox<CompanyGenerationMethod> comboDefaultCompanyGenerationMethod;
+    // endregion Page controls
 
     public MHQOptionsPane(JFrame frame) {
         super(new BorderLayout());
         setName("mhqOptionsPane");
         this.frame = frame;
         options = MekHQ.getMHQOptions();
+        model = new MHQOptionsModel(options);
         registerRoutes();
         initialize();
     }
@@ -194,67 +278,89 @@ public class MHQOptionsPane extends JPanel {
     private Component createFontsPage() {
         CampaignOptionsLabel label = new CampaignOptionsLabel(RESOURCE_BUNDLE, "lblMedicalViewDialogHandwritingFont");
 
-        FontComboBox fontCombo = new FontComboBox("comboMedicalViewDialogHandwritingFont");
-        fontCombo.setToolTipText(getTextAt(RESOURCE_BUNDLE, "lblMedicalViewDialogHandwritingFont.toolTipText"));
-        fontCombo.setSelectedItem(new FontDisplay(options.getMedicalViewDialogHandwritingFont()));
-        pageSavers.add(() -> options.setMedicalViewDialogHandwritingFont(fontCombo.getFont().getFamily()));
+        comboMedicalViewDialogHandwritingFont = new FontComboBox("comboMedicalViewDialogHandwritingFont");
+        comboMedicalViewDialogHandwritingFont.setToolTipText(
+              getTextAt(RESOURCE_BUNDLE, "lblMedicalViewDialogHandwritingFont.toolTipText"));
+        comboMedicalViewDialogHandwritingFont.setSelectedItem(new FontDisplay(model.medicalViewDialogHandwritingFont));
 
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQFontsContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
-        panel.addRow(label, fontCombo);
+        panel.addRow(label, comboMedicalViewDialogHandwritingFont);
         return buildMHQPage("MHQFontsPage", "lblMHQFontsSection.text", "lblMHQFontsSection.summary", panel);
     }
 
+    private void writeFontsToModel() {
+        if (comboMedicalViewDialogHandwritingFont == null) {
+            return;
+        }
+        model.medicalViewDialogHandwritingFont = comboMedicalViewDialogHandwritingFont.getFont().getFamily();
+    }
+
     private Component createCampaignSavePage() {
+        chkPreferGzippedOutput = checkBox("optionPreferGzippedOutput", model.preferGzippedOutput);
+        chkWriteCustomsToXML = checkBox("optionWriteCustomsToXML", model.writeCustomsToXML);
+        chkWriteAllUnitsToXML = checkBox("optionWriteAllUnitsToXML", model.writeAllUnitsToXML);
+        chkSaveMothballState = checkBox("optionSaveMothballState", model.saveMothballState);
+
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQCampaignSaveContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
-        panel.addCheckBoxGrid(2,
-              createCheckBox("optionPreferGzippedOutput",
-                    options::getPreferGzippedOutput, options::setPreferGzippedOutput),
-              createCheckBox("optionWriteCustomsToXML", options::getWriteCustomsToXML, options::setWriteCustomsToXML),
-              createCheckBox("optionWriteAllUnitsToXML", options::getWriteAllUnitsToXML, options::setWriteAllUnitsToXML),
-              createCheckBox("optionSaveMothballState", options::getSaveMothballState, options::setSaveMothballState));
+        panel.addCheckBoxGrid(2, chkPreferGzippedOutput, chkWriteCustomsToXML, chkWriteAllUnitsToXML,
+              chkSaveMothballState);
         return buildMHQPage("MHQCampaignSavePage", "lblMHQCampaignSaveSection.text",
               "lblMHQCampaignSaveSection.summary", panel);
     }
 
+    private void writeCampaignSaveToModel() {
+        if (chkPreferGzippedOutput == null) {
+            return;
+        }
+        model.preferGzippedOutput = chkPreferGzippedOutput.isSelected();
+        model.writeCustomsToXML = chkWriteCustomsToXML.isSelected();
+        model.writeAllUnitsToXML = chkWriteAllUnitsToXML.isSelected();
+        model.saveMothballState = chkSaveMothballState.isSelected();
+    }
+
     private Component createAutosavePage() {
         ButtonGroup saveFrequencyGroup = new ButtonGroup();
-        JRadioButton optionNoSave = createAutosaveFrequencyOption("optionNoSave", saveFrequencyGroup);
-        optionNoSave.setSelected(options.getNoAutosaveValue());
-        JRadioButton optionSaveDaily = createAutosaveFrequencyOption("optionSaveDaily", saveFrequencyGroup);
-        optionSaveDaily.setSelected(options.getAutosaveDailyValue());
-        JRadioButton optionSaveWeekly = createAutosaveFrequencyOption("optionSaveWeekly", saveFrequencyGroup);
-        optionSaveWeekly.setSelected(options.getAutosaveWeeklyValue());
-        JRadioButton optionSaveMonthly = createAutosaveFrequencyOption("optionSaveMonthly", saveFrequencyGroup);
-        optionSaveMonthly.setSelected(options.getAutosaveMonthlyValue());
-        JRadioButton optionSaveYearly = createAutosaveFrequencyOption("optionSaveYearly", saveFrequencyGroup);
-        optionSaveYearly.setSelected(options.getAutosaveYearlyValue());
+        optionNoSave = createAutosaveFrequencyOption("optionNoSave", saveFrequencyGroup);
+        optionNoSave.setSelected(model.noAutosave);
+        optionSaveDaily = createAutosaveFrequencyOption("optionSaveDaily", saveFrequencyGroup);
+        optionSaveDaily.setSelected(model.autosaveDaily);
+        optionSaveWeekly = createAutosaveFrequencyOption("optionSaveWeekly", saveFrequencyGroup);
+        optionSaveWeekly.setSelected(model.autosaveWeekly);
+        optionSaveMonthly = createAutosaveFrequencyOption("optionSaveMonthly", saveFrequencyGroup);
+        optionSaveMonthly.setSelected(model.autosaveMonthly);
+        optionSaveYearly = createAutosaveFrequencyOption("optionSaveYearly", saveFrequencyGroup);
+        optionSaveYearly.setSelected(model.autosaveYearly);
 
-        CampaignOptionsCheckBox checkSaveBeforeScenarios = createCheckBox("checkSaveBeforeScenarios",
-              options::getAutosaveBeforeScenariosValue, options::setAutosaveBeforeScenariosValue);
-        CampaignOptionsCheckBox checkSaveBeforeContractEnd = createCheckBox("checkSaveBeforeMissionEnd",
-              options::getAutosaveBeforeMissionEndValue, options::setAutosaveBeforeMissionEndValue);
+        chkSaveBeforeScenarios = checkBox("checkSaveBeforeScenarios", model.autosaveBeforeScenarios);
+        chkSaveBeforeMissionEnd = checkBox("checkSaveBeforeMissionEnd", model.autosaveBeforeMissionEnd);
 
         CampaignOptionsLabel labelSavedGamesCount = new CampaignOptionsLabel(RESOURCE_BUNDLE, "labelSavedGamesCount");
-        CampaignOptionsSpinner spinnerSavedGamesCount =
+        spinnerSavedGamesCount =
               new CampaignOptionsSpinner(RESOURCE_BUNDLE, "labelSavedGamesCount", 1, 1, 10, 1);
-        spinnerSavedGamesCount.setValue(options.getMaximumNumberOfAutoSavesValue());
-        pageSavers.add(() -> {
-            options.setNoAutosaveValue(optionNoSave.isSelected());
-            options.setAutosaveDailyValue(optionSaveDaily.isSelected());
-            options.setAutosaveWeeklyValue(optionSaveWeekly.isSelected());
-            options.setAutosaveMonthlyValue(optionSaveMonthly.isSelected());
-            options.setAutosaveYearlyValue(optionSaveYearly.isSelected());
-            options.setMaximumNumberOfAutoSavesValue((Integer) spinnerSavedGamesCount.getValue());
-        });
+        spinnerSavedGamesCount.setValue(model.maximumNumberOfAutoSaves);
 
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQAutosaveContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
         panel.addComponentGrid(1, optionNoSave, optionSaveDaily, optionSaveWeekly, optionSaveMonthly, optionSaveYearly);
-        panel.addCheckBoxGrid(2, checkSaveBeforeScenarios, checkSaveBeforeContractEnd);
+        panel.addCheckBoxGrid(2, chkSaveBeforeScenarios, chkSaveBeforeMissionEnd);
         panel.addRow(labelSavedGamesCount, spinnerSavedGamesCount);
         return buildMHQPage("MHQAutosavePage", "lblMHQAutosaveSection.text", "lblMHQAutosaveSection.summary", panel);
+    }
+
+    private void writeAutosaveToModel() {
+        if (optionNoSave == null) {
+            return;
+        }
+        model.noAutosave = optionNoSave.isSelected();
+        model.autosaveDaily = optionSaveDaily.isSelected();
+        model.autosaveWeekly = optionSaveWeekly.isSelected();
+        model.autosaveMonthly = optionSaveMonthly.isSelected();
+        model.autosaveYearly = optionSaveYearly.isSelected();
+        model.autosaveBeforeScenarios = chkSaveBeforeScenarios.isSelected();
+        model.autosaveBeforeMissionEnd = chkSaveBeforeMissionEnd.isSelected();
+        model.maximumNumberOfAutoSaves = (Integer) spinnerSavedGamesCount.getValue();
     }
 
     /**
@@ -286,15 +392,26 @@ public class MHQOptionsPane extends JPanel {
     }
 
     /**
-     * Creates a {@link CampaignOptionsCheckBox} whose text/tooltip come from {@code resourceName} in the GUI bundle,
-     * loads its state from {@code getter}, and registers a saver that writes it back via {@code setter}.
+     * Creates a {@link CampaignOptionsCheckBox} whose text/tooltip come from {@code resourceName} in the GUI bundle and
+     * sets its initial state to {@code selected}. The value is read back into the model by the owning page's
+     * {@code writeXToModel} method.
      */
-    private CampaignOptionsCheckBox createCheckBox(String resourceName, BooleanSupplier getter,
-          Consumer<Boolean> setter) {
+    private CampaignOptionsCheckBox checkBox(String resourceName, boolean selected) {
         CampaignOptionsCheckBox checkBox = new CampaignOptionsCheckBox(RESOURCE_BUNDLE, resourceName);
-        checkBox.setSelected(getter.getAsBoolean());
-        pageSavers.add(() -> setter.accept(checkBox.isSelected()));
+        checkBox.setSelected(selected);
         return checkBox;
+    }
+
+    /**
+     * Creates a {@link ColourSelectorButton} whose text comes from {@code key} in the GUI bundle and whose initial
+     * colour is {@code colour}. The chosen colour is read back into the model by the owning page's
+     * {@code writeXToModel} method.
+     */
+    private ColourSelectorButton colourButton(String key, Color colour) {
+        ColourSelectorButton button = new ColourSelectorButton(getTextAt(RESOURCE_BUNDLE, key + ".text"));
+        button.setName("btn" + key);
+        button.setColour(colour);
+        return button;
     }
 
     private Component createRemindersNagsPage() {
@@ -352,21 +469,25 @@ public class MHQOptionsPane extends JPanel {
 
     /**
      * Builds a two-column check box grid from {@code entries}, where each entry is a {@code {resourceName, ignoreKey}}
-     * pair. Each check box loads from {@link MHQOptions#getNagDialogIgnore} and registers a saver that writes it back
-     * via {@link MHQOptions#setNagDialogIgnore}.
+     * pair. Each check box loads its state from {@link MHQOptionsModel#nagIgnores} and is registered in
+     * {@link #nagCheckBoxes} under its ignore key so {@link #writeNagsToModel()} can read it back.
      */
     private CampaignOptionsFormPanel nagCheckBoxGrid(String name, String[][] entries) {
         List<JCheckBox> checkBoxes = new ArrayList<>();
         for (String[] entry : entries) {
             String ignoreKey = entry[1];
             CampaignOptionsCheckBox checkBox = new CampaignOptionsCheckBox(RESOURCE_BUNDLE, entry[0]);
-            checkBox.setSelected(options.getNagDialogIgnore(ignoreKey));
-            pageSavers.add(() -> options.setNagDialogIgnore(ignoreKey, checkBox.isSelected()));
+            checkBox.setSelected(Boolean.TRUE.equals(model.nagIgnores.get(ignoreKey)));
+            nagCheckBoxes.put(ignoreKey, checkBox);
             checkBoxes.add(checkBox);
         }
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel(name, FORM_LABEL_WIDTH, FORM_CONTROL_WIDTH);
         panel.addCheckBoxGrid(2, checkBoxes.toArray(new JCheckBox[0]));
         return panel;
+    }
+
+    private void writeNagsToModel() {
+        nagCheckBoxes.forEach((key, checkBox) -> model.nagIgnores.put(key, checkBox.isSelected()));
     }
 
     private Component createNewDayPoolsPage() {
@@ -391,36 +512,16 @@ public class MHQOptionsPane extends JPanel {
 
     private JPanel createNewDayPoolSection() {
         List<JCheckBox> checkBoxes = new ArrayList<>();
-        addPoolPair(checkBoxes, "chkNewDayAstechPoolFill", "chkNewDayAstechPoolNoRelease",
-              options::getNewDayAsTechPoolFill, options::setNewDayAsTechPoolFill,
-              options::getNewDayAsTechPoolNoRelease, options::setNewDayAsTechPoolNoRelease);
-        addPoolPair(checkBoxes, "chkNewDayMedicPoolFill", "chkNewDayMedicPoolNoRelease",
-              options::getNewDayMedicPoolFill, options::setNewDayMedicPoolFill,
-              options::getNewDayMedicPoolNoRelease, options::setNewDayMedicPoolNoRelease);
-        addPoolPair(checkBoxes, "chkNewDaySoldierPoolFill", "chkNewDaySoldierPoolNoRelease",
-              options::getNewDaySoldierPoolFill, options::setNewDaySoldierPoolFill,
-              options::getNewDaySoldierPoolNoRelease, options::setNewDaySoldierPoolNoRelease);
-        addPoolPair(checkBoxes, "chkNewDayBattleArmorPoolFill", "chkNewDayBattleArmorPoolNoRelease",
-              options::getNewDayBattleArmorPoolFill, options::setNewDayBattleArmorPoolFill,
-              options::getNewDayBattleArmorPoolNoRelease, options::setNewDayBattleArmorPoolNoRelease);
-        addPoolPair(checkBoxes, "chkNewDayVehicleCrewGroundPoolFill", "chkNewDayVehicleCrewGroundPoolNoRelease",
-              options::getNewDayVehicleCrewGroundPoolFill, options::setNewDayVehicleCrewGroundPoolFill,
-              options::getNewDayVehicleCrewGroundPoolNoRelease, options::setNewDayVehicleCrewGroundPoolNoRelease);
-        addPoolPair(checkBoxes, "chkNewDayVehicleCrewVTOLPoolFill", "chkNewDayVehicleCrewVTOLPoolNoRelease",
-              options::getNewDayVehicleCrewVTOLPoolFill, options::setNewDayVehicleCrewVTOLPoolFill,
-              options::getNewDayVehicleCrewVTOLPoolNoRelease, options::setNewDayVehicleCrewVTOLPoolNoRelease);
-        addPoolPair(checkBoxes, "chkNewDayVehicleCrewNavalPoolFill", "chkNewDayVehicleCrewNavalPoolNoRelease",
-              options::getNewDayVehicleCrewNavalPoolFill, options::setNewDayVehicleCrewNavalPoolFill,
-              options::getNewDayVehicleCrewNavalPoolNoRelease, options::setNewDayVehicleCrewNavalPoolNoRelease);
-        addPoolPair(checkBoxes, "chkNewDayVesselPilotPoolFill", "chkNewDayVesselPilotPoolNoRelease",
-              options::getNewDayVesselPilotPoolFill, options::setNewDayVesselPilotPoolFill,
-              options::getNewDayVesselPilotPoolNoRelease, options::setNewDayVesselPilotPoolNoRelease);
-        addPoolPair(checkBoxes, "chkNewDayVesselGunnerPoolFill", "chkNewDayVesselGunnerPoolNoRelease",
-              options::getNewDayVesselGunnerPoolFill, options::setNewDayVesselGunnerPoolFill,
-              options::getNewDayVesselGunnerPoolNoRelease, options::setNewDayVesselGunnerPoolNoRelease);
-        addPoolPair(checkBoxes, "chkNewDayVesselCrewPoolFill", "chkNewDayVesselCrewPoolNoRelease",
-              options::getNewDayVesselCrewPoolFill, options::setNewDayVesselCrewPoolFill,
-              options::getNewDayVesselCrewPoolNoRelease, options::setNewDayVesselCrewPoolNoRelease);
+        addPoolPair(checkBoxes, "chkNewDayAstechPoolFill", "chkNewDayAstechPoolNoRelease");
+        addPoolPair(checkBoxes, "chkNewDayMedicPoolFill", "chkNewDayMedicPoolNoRelease");
+        addPoolPair(checkBoxes, "chkNewDaySoldierPoolFill", "chkNewDaySoldierPoolNoRelease");
+        addPoolPair(checkBoxes, "chkNewDayBattleArmorPoolFill", "chkNewDayBattleArmorPoolNoRelease");
+        addPoolPair(checkBoxes, "chkNewDayVehicleCrewGroundPoolFill", "chkNewDayVehicleCrewGroundPoolNoRelease");
+        addPoolPair(checkBoxes, "chkNewDayVehicleCrewVTOLPoolFill", "chkNewDayVehicleCrewVTOLPoolNoRelease");
+        addPoolPair(checkBoxes, "chkNewDayVehicleCrewNavalPoolFill", "chkNewDayVehicleCrewNavalPoolNoRelease");
+        addPoolPair(checkBoxes, "chkNewDayVesselPilotPoolFill", "chkNewDayVesselPilotPoolNoRelease");
+        addPoolPair(checkBoxes, "chkNewDayVesselGunnerPoolFill", "chkNewDayVesselGunnerPoolNoRelease");
+        addPoolPair(checkBoxes, "chkNewDayVesselCrewPoolFill", "chkNewDayVesselCrewPoolNoRelease");
 
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQNewDayPoolContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
@@ -428,56 +529,89 @@ public class MHQOptionsPane extends JPanel {
         return panel;
     }
 
+    private void writePoolsToModel() {
+        poolCheckBoxes.forEach((key, checkBox) -> model.newDayPools.put(key, checkBox.isSelected()));
+    }
+
     private JPanel createNewDayTasksSection() {
+        chkNewDayAutoLogistics = checkBox("chkNewDayAutoLogistics", model.newDayAutoLogistics);
+        chkNewDayMRMS = checkBox("chkNewDayMRMS", model.newDayMRMS);
+        chkNewDayOptimizeMedicalAssignments =
+              checkBox("chkNewDayOptimizeMedicalAssignments", model.newDayOptimizeMedicalAssignments);
+        chkNewDayAutomaticallyAssignUnmaintainedUnits =
+              checkBox("chkNewDayAutomaticallyAssignUnmaintainedUnits",
+                    model.newDayAutomaticallyAssignUnmaintainedUnits);
+        chkSelfCorrectMaintenance = checkBox("chkSelfCorrectMaintenance", model.selfCorrectMaintenance);
+
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQNewDayTasksContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
-        panel.addCheckBoxGrid(2,
-              createCheckBox("chkNewDayAutoLogistics", options::getNewDayAutoLogistics, options::setNewDayAutoLogistics),
-              createCheckBox("chkNewDayMRMS", options::getNewDayMRMS, options::setNewDayMRMS),
-              createCheckBox("chkNewDayOptimizeMedicalAssignments",
-                    options::getNewDayOptimizeMedicalAssignments, options::setNewDayOptimizeMedicalAssignments),
-              createCheckBox("chkNewDayAutomaticallyAssignUnmaintainedUnits",
-                    options::getNewDayAutomaticallyAssignUnmaintainedUnits,
-                    options::setNewDayAutomaticallyAssignUnmaintainedUnits),
-              createCheckBox("chkSelfCorrectMaintenance",
-                    options::getSelfCorrectMaintenance, options::setSelfCorrectMaintenance));
+        panel.addCheckBoxGrid(2, chkNewDayAutoLogistics, chkNewDayMRMS, chkNewDayOptimizeMedicalAssignments,
+              chkNewDayAutomaticallyAssignUnmaintainedUnits, chkSelfCorrectMaintenance);
         return panel;
+    }
+
+    private void writeNewDayTasksToModel() {
+        if (chkNewDayAutoLogistics == null) {
+            return;
+        }
+        model.newDayAutoLogistics = chkNewDayAutoLogistics.isSelected();
+        model.newDayMRMS = chkNewDayMRMS.isSelected();
+        model.newDayOptimizeMedicalAssignments = chkNewDayOptimizeMedicalAssignments.isSelected();
+        model.newDayAutomaticallyAssignUnmaintainedUnits = chkNewDayAutomaticallyAssignUnmaintainedUnits.isSelected();
+        model.selfCorrectMaintenance = chkSelfCorrectMaintenance.isSelected();
     }
 
     private JPanel createNewDayTrainingSection() {
+        chkNewMonthQuickTrain = checkBox("chkNewMonthQuickTrain", model.newMonthQuickTrain);
+
         CampaignOptionsLabel labelQuickTrainTarget = new CampaignOptionsLabel(RESOURCE_BUNDLE, "lblQuickTrainTarget");
-        CampaignOptionsSpinner spinnerQuickTrainTarget =
+        spinnerQuickTrainTarget =
               new CampaignOptionsSpinner(RESOURCE_BUNDLE, "lblQuickTrainTarget", 5, 1, 10, 1);
-        spinnerQuickTrainTarget.setValue(options.getQuickTrainTarget());
-        pageSavers.add(() -> options.setQuickTrainTarget((int) spinnerQuickTrainTarget.getValue()));
+        spinnerQuickTrainTarget.setValue(model.quickTrainTarget);
+
+        chkLevelArtillery = checkBox("chkLevelArtillery", model.levelArtillery);
+        chkLevelScoutingSkills = checkBox("chkLevelScoutingSkills", model.levelScouting);
+        chkLevelEscapeSkills = checkBox("chkLevelEscapeSkills", model.levelEscape);
+        chkLevelLeadership = checkBox("chkLevelLeadership", model.levelLeadership);
+        chkLevelTraining = checkBox("chkLevelTraining", model.levelTraining);
+        chkLevelOtherCommandSkills = checkBox("chkLevelOtherCommandSkills", model.levelOtherCommand);
 
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQNewDayTrainingContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
-        panel.addCheckBox(createCheckBox("chkNewMonthQuickTrain",
-              options::getNewMonthQuickTrain, options::setNewMonthQuickTrain));
+        panel.addCheckBox(chkNewMonthQuickTrain);
         panel.addRow(labelQuickTrainTarget, spinnerQuickTrainTarget);
-        panel.addCheckBoxGrid(2,
-              createCheckBox("chkLevelArtillery", options::getLevelArtillery, options::setLevelArtillery),
-              createCheckBox("chkLevelScoutingSkills", options::getLevelScouting, options::setLevelScouting),
-              createCheckBox("chkLevelEscapeSkills", options::getLevelEscape, options::setLevelEscape),
-              createCheckBox("chkLevelLeadership", options::getLevelLeadership, options::setLevelLeadership),
-              createCheckBox("chkLevelTraining", options::getLevelTraining, options::setLevelTraining),
-              createCheckBox("chkLevelOtherCommandSkills", options::getLevelOtherCommand, options::setLevelOtherCommand));
+        panel.addCheckBoxGrid(2, chkLevelArtillery, chkLevelScoutingSkills, chkLevelEscapeSkills, chkLevelLeadership,
+              chkLevelTraining, chkLevelOtherCommandSkills);
         return panel;
     }
 
+    private void writeNewDayTrainingToModel() {
+        if (chkNewMonthQuickTrain == null) {
+            return;
+        }
+        model.newMonthQuickTrain = chkNewMonthQuickTrain.isSelected();
+        model.quickTrainTarget = (int) spinnerQuickTrainTarget.getValue();
+        model.levelArtillery = chkLevelArtillery.isSelected();
+        model.levelScouting = chkLevelScoutingSkills.isSelected();
+        model.levelEscape = chkLevelEscapeSkills.isSelected();
+        model.levelLeadership = chkLevelLeadership.isSelected();
+        model.levelTraining = chkLevelTraining.isSelected();
+        model.levelOtherCommand = chkLevelOtherCommandSkills.isSelected();
+    }
+
     private JPanel createNewDayFormationSection() {
-        CampaignOptionsCheckBox formationIconStatus = createCheckBox("chkNewDayFormationIconOperationalStatus",
-              options::getNewDayFormationIconOperationalStatus, options::setNewDayFormationIconOperationalStatus);
+        chkNewDayFormationIconOperationalStatus =
+              checkBox("chkNewDayFormationIconOperationalStatus", model.newDayFormationIconOperationalStatus);
 
         CampaignOptionsLabel labelStyle =
               new CampaignOptionsLabel(RESOURCE_BUNDLE, "lblNewDayFormationIconOperationalStatusStyle");
-        MMComboBox<FormationIconOperationalStatusStyle> comboStyle = new MMComboBox<>(
+        comboNewDayFormationIconOperationalStatusStyle = new MMComboBox<>(
               "comboNewDayFormationIconOperationalStatusStyle", FormationIconOperationalStatusStyle.values());
-        comboStyle.setSelectedItem(options.getNewDayFormationIconOperationalStatusStyle());
-        comboStyle.setToolTipText(getTextAt(RESOURCE_BUNDLE,
+        comboNewDayFormationIconOperationalStatusStyle.setSelectedItem(
+              model.newDayFormationIconOperationalStatusStyle);
+        comboNewDayFormationIconOperationalStatusStyle.setToolTipText(getTextAt(RESOURCE_BUNDLE,
               "lblNewDayFormationIconOperationalStatusStyle.toolTipText"));
-        comboStyle.setRenderer(new DefaultListCellRenderer() {
+        comboNewDayFormationIconOperationalStatusStyle.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index,
                   final boolean isSelected, final boolean cellHasFocus) {
@@ -488,80 +622,98 @@ public class MHQOptionsPane extends JPanel {
                 return this;
             }
         });
-        pageSavers.add(() -> options.setNewDayFormationIconOperationalStatusStyle(
-              Objects.requireNonNull(comboStyle.getSelectedItem())));
 
         // The style picker only matters when the status feature is on, so it tracks the check box's selected state.
         Runnable syncStyleEnabled = () -> {
-            boolean enabled = formationIconStatus.isSelected();
+            boolean enabled = chkNewDayFormationIconOperationalStatus.isSelected();
             labelStyle.setEnabled(enabled);
-            comboStyle.setEnabled(enabled);
+            comboNewDayFormationIconOperationalStatusStyle.setEnabled(enabled);
         };
-        formationIconStatus.addActionListener(evt -> syncStyleEnabled.run());
+        chkNewDayFormationIconOperationalStatus.addActionListener(evt -> syncStyleEnabled.run());
         syncStyleEnabled.run();
 
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQNewDayFormationContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
-        panel.addCheckBox(formationIconStatus);
-        panel.addRow(labelStyle, comboStyle);
+        panel.addCheckBox(chkNewDayFormationIconOperationalStatus);
+        panel.addRow(labelStyle, comboNewDayFormationIconOperationalStatusStyle);
         return panel;
+    }
+
+    private void writeNewDayFormationToModel() {
+        if (chkNewDayFormationIconOperationalStatus == null) {
+            return;
+        }
+        model.newDayFormationIconOperationalStatus = chkNewDayFormationIconOperationalStatus.isSelected();
+        model.newDayFormationIconOperationalStatusStyle =
+              Objects.requireNonNull(comboNewDayFormationIconOperationalStatusStyle.getSelectedItem());
     }
 
     private Component createDisplayGeneralPage() {
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQDisplayGeneralContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
+
+        fieldDisplayDateFormat = new JTextField(model.displayDateFormat, 20);
+        fieldDisplayDateFormat.setName("txtlabelDisplayDateFormat");
         panel.addRow(new CampaignOptionsLabel(RESOURCE_BUNDLE, "labelDisplayDateFormat"),
-              dateFormatControl("labelDisplayDateFormat", options.getDisplayDateFormat(),
-                    options::setDisplayDateFormat));
+              dateFormatControl(fieldDisplayDateFormat));
+        fieldLongDisplayDateFormat = new JTextField(model.longDisplayDateFormat, 20);
+        fieldLongDisplayDateFormat.setName("txtlabelLongDisplayDateFormat");
         panel.addRow(new CampaignOptionsLabel(RESOURCE_BUNDLE, "labelLongDisplayDateFormat"),
-              dateFormatControl("labelLongDisplayDateFormat", options.getLongDisplayDateFormat(),
-                    options::setLongDisplayDateFormat));
+              dateFormatControl(fieldLongDisplayDateFormat));
 
         JLabel guiScaleLabel = new JLabel(Messages.getString("CommonSettingsDialog.guiScale"));
-        JSlider guiScale = new JSlider(7, 24);
-        guiScale.setName("guiScale");
-        guiScale.setMajorTickSpacing(3);
+        guiScaleSlider = new JSlider(7, 24);
+        guiScaleSlider.setName("guiScale");
+        guiScaleSlider.setMajorTickSpacing(3);
         Hashtable<Integer, JComponent> labelTable = new Hashtable<>();
         labelTable.put(7, new JLabel("70%"));
         labelTable.put(10, new JLabel("100%"));
         labelTable.put(16, new JLabel("160%"));
         labelTable.put(22, new JLabel("220%"));
-        guiScale.setLabelTable(labelTable);
-        guiScale.setPaintTicks(true);
-        guiScale.setPaintLabels(true);
-        guiScale.setValue((int) (GUIPreferences.getInstance().getGUIScale() * 10));
-        guiScale.setToolTipText(Messages.getString("CommonSettingsDialog.guiScaleTT"));
-        pageSavers.add(() -> {
-            if (GUIPreferences.getInstance().getGUIScale() * 10 != guiScale.getValue()) {
-                GUIPreferences.getInstance().setValue(GUIPreferences.GUI_SCALE, 0.1 * guiScale.getValue());
-                MekHQ.updateGuiScaling();
-            }
-        });
-        panel.addRow(guiScaleLabel, guiScale);
+        guiScaleSlider.setLabelTable(labelTable);
+        guiScaleSlider.setPaintTicks(true);
+        guiScaleSlider.setPaintLabels(true);
+        guiScaleSlider.setValue(model.guiScaleValue);
+        guiScaleSlider.setToolTipText(Messages.getString("CommonSettingsDialog.guiScaleTT"));
+        panel.addRow(guiScaleLabel, guiScaleSlider);
 
-        panel.addCheckBoxGrid(2,
-              createCheckBox("optionHideUnitFluff", options::getHideUnitFluff, options::setHideUnitFluff),
-              createCheckBox("optionHistoricalDailyLog",
-                    options::getHistoricalDailyLog, options::setHistoricalDailyLog),
-              createCheckBox("chkCompanyGeneratorStartup",
-                    options::getCompanyGeneratorStartup, options::setCompanyGeneratorStartup),
-              createCheckBox("chkShowCompanyGenerator",
-                    options::getShowCompanyGenerator, options::setShowCompanyGenerator),
-              createCheckBox("chkShowUnitPicturesOnTOE",
-                    options::getShowUnitPicturesOnTOE, options::setShowUnitPicturesOnTOE));
+        chkHideUnitFluff = checkBox("optionHideUnitFluff", model.hideUnitFluff);
+        chkHistoricalDailyLog = checkBox("optionHistoricalDailyLog", model.historicalDailyLog);
+        chkCompanyGeneratorStartup = checkBox("chkCompanyGeneratorStartup", model.companyGeneratorStartup);
+        chkShowCompanyGenerator = checkBox("chkShowCompanyGenerator", model.showCompanyGenerator);
+        chkShowUnitPicturesOnTOE = checkBox("chkShowUnitPicturesOnTOE", model.showUnitPicturesOnTOE);
+        panel.addCheckBoxGrid(2, chkHideUnitFluff, chkHistoricalDailyLog, chkCompanyGeneratorStartup,
+              chkShowCompanyGenerator, chkShowUnitPicturesOnTOE);
 
         return buildMHQPage("MHQDisplayGeneralPage", "lblMHQDisplayGeneralSection.text",
               "lblMHQDisplayGeneralSection.summary", panel);
     }
 
+    private void writeDisplayGeneralToModel() {
+        if (fieldDisplayDateFormat == null) {
+            return;
+        }
+        // Only accept a valid pattern, matching the original dialog; an invalid one keeps the previous value.
+        if (validateDateFormat(fieldDisplayDateFormat.getText())) {
+            model.displayDateFormat = fieldDisplayDateFormat.getText();
+        }
+        if (validateDateFormat(fieldLongDisplayDateFormat.getText())) {
+            model.longDisplayDateFormat = fieldLongDisplayDateFormat.getText();
+        }
+        model.guiScaleValue = guiScaleSlider.getValue();
+        model.hideUnitFluff = chkHideUnitFluff.isSelected();
+        model.historicalDailyLog = chkHistoricalDailyLog.isSelected();
+        model.companyGeneratorStartup = chkCompanyGeneratorStartup.isSelected();
+        model.showCompanyGenerator = chkShowCompanyGenerator.isSelected();
+        model.showUnitPicturesOnTOE = chkShowUnitPicturesOnTOE.isSelected();
+    }
+
     /**
-     * Builds the control for a date-format row: an editable pattern field plus a live example label showing today's
-     * date in the entered pattern (or an error when it is invalid). The value is saved only when it is a valid pattern,
-     * matching the original dialog.
+     * Builds the control for a date-format row: the supplied editable pattern field plus a live example label showing
+     * today's date in the entered pattern (or an error when it is invalid). The field's value is read back into the
+     * model - only when it is a valid pattern - by {@link #writeDisplayGeneralToModel()}, matching the original dialog.
      */
-    private JComponent dateFormatControl(String labelKey, String initialValue, Consumer<String> setter) {
-        JTextField field = new JTextField(initialValue, 20);
-        field.setName("txt" + labelKey);
+    private JComponent dateFormatControl(JTextField field) {
         JLabel example = new JLabel();
         Runnable updateExample = () -> example.setText(validateDateFormat(field.getText())
               ? LocalDate.now().format(DateTimeFormatter.ofPattern(field.getText())
@@ -569,11 +721,6 @@ public class MHQOptionsPane extends JPanel {
               : getTextAt(RESOURCE_BUNDLE, "invalidDateFormat.error"));
         field.addActionListener(evt -> updateExample.run());
         updateExample.run();
-        pageSavers.add(() -> {
-            if (validateDateFormat(field.getText())) {
-                setter.accept(field.getText());
-            }
-        });
 
         JPanel control = new JPanel(new FlowLayout(FlowLayout.LEFT, UIUtil.scaleForGUI(6), 0));
         control.setOpaque(false);
@@ -595,76 +742,95 @@ public class MHQOptionsPane extends JPanel {
     private Component createDisplayInterstellarPage() {
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQDisplayInterstellarContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
-        addInterstellarRadiusGroup(panel, "chkInterstellarMapShowJumpRadius",
-              options::getInterstellarMapShowJumpRadius, options::setInterstellarMapShowJumpRadius,
-              "lblInterstellarMapShowJumpRadiusMinimumZoom", 3d,
-              options::getInterstellarMapShowJumpRadiusMinimumZoom, options::setInterstellarMapShowJumpRadiusMinimumZoom,
-              "btnInterstellarMapJumpRadiusColour",
-              options::getInterstellarMapJumpRadiusColour, options::setInterstellarMapJumpRadiusColour);
-        addInterstellarRadiusGroup(panel, "chkInterstellarMapShowPlanetaryAcquisitionRadius",
-              options::getInterstellarMapShowPlanetaryAcquisitionRadius,
-              options::setInterstellarMapShowPlanetaryAcquisitionRadius,
-              "lblInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom", 2d,
-              options::getInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom,
-              options::setInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom,
-              "btnInterstellarMapPlanetaryAcquisitionRadiusColour",
-              options::getInterstellarMapPlanetaryAcquisitionRadiusColour,
-              options::setInterstellarMapPlanetaryAcquisitionRadiusColour);
 
-        CampaignOptionsCheckBox contractCheckBox = createCheckBox("chkInterstellarMapShowContractSearchRadius",
-              options::getInterstellarMapShowContractSearchRadius,
-              options::setInterstellarMapShowContractSearchRadius);
-        ColourSelectorButton contractColour = createColourButton("btnInterstellarMapContractSearchRadiusColour",
-              options::getInterstellarMapContractSearchRadiusColour,
-              options::setInterstellarMapContractSearchRadiusColour);
-        Runnable syncContract = () -> contractColour.setEnabled(contractCheckBox.isSelected());
-        contractCheckBox.addActionListener(evt -> syncContract.run());
+        chkInterstellarMapShowJumpRadius =
+              checkBox("chkInterstellarMapShowJumpRadius", model.interstellarMapShowJumpRadius);
+        CampaignOptionsLabel jumpZoomLabel =
+              new CampaignOptionsLabel(RESOURCE_BUNDLE, "lblInterstellarMapShowJumpRadiusMinimumZoom");
+        spinnerInterstellarMapShowJumpRadiusMinimumZoom = new CampaignOptionsSpinner(RESOURCE_BUNDLE,
+              "lblInterstellarMapShowJumpRadiusMinimumZoom", 3d, 0d, 10d, 0.5);
+        spinnerInterstellarMapShowJumpRadiusMinimumZoom.setValue(model.interstellarMapShowJumpRadiusMinimumZoom);
+        btnInterstellarMapJumpRadiusColour =
+              colourButton("btnInterstellarMapJumpRadiusColour", model.interstellarMapJumpRadiusColour);
+        bindRadiusGating(chkInterstellarMapShowJumpRadius, jumpZoomLabel,
+              spinnerInterstellarMapShowJumpRadiusMinimumZoom, btnInterstellarMapJumpRadiusColour);
+        panel.addCheckBox(chkInterstellarMapShowJumpRadius);
+        panel.addRow(jumpZoomLabel, spinnerInterstellarMapShowJumpRadiusMinimumZoom);
+        panel.addComponentGrid(1, btnInterstellarMapJumpRadiusColour);
+
+        chkInterstellarMapShowPlanetaryAcquisitionRadius = checkBox(
+              "chkInterstellarMapShowPlanetaryAcquisitionRadius", model.interstellarMapShowPlanetaryAcquisitionRadius);
+        CampaignOptionsLabel acquisitionZoomLabel = new CampaignOptionsLabel(RESOURCE_BUNDLE,
+              "lblInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom");
+        spinnerInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom = new CampaignOptionsSpinner(RESOURCE_BUNDLE,
+              "lblInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom", 2d, 0d, 10d, 0.5);
+        spinnerInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom.setValue(
+              model.interstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom);
+        btnInterstellarMapPlanetaryAcquisitionRadiusColour = colourButton(
+              "btnInterstellarMapPlanetaryAcquisitionRadiusColour",
+              model.interstellarMapPlanetaryAcquisitionRadiusColour);
+        bindRadiusGating(chkInterstellarMapShowPlanetaryAcquisitionRadius, acquisitionZoomLabel,
+              spinnerInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom,
+              btnInterstellarMapPlanetaryAcquisitionRadiusColour);
+        panel.addCheckBox(chkInterstellarMapShowPlanetaryAcquisitionRadius);
+        panel.addRow(acquisitionZoomLabel, spinnerInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom);
+        panel.addComponentGrid(1, btnInterstellarMapPlanetaryAcquisitionRadiusColour);
+
+        chkInterstellarMapShowContractSearchRadius = checkBox("chkInterstellarMapShowContractSearchRadius",
+              model.interstellarMapShowContractSearchRadius);
+        btnInterstellarMapContractSearchRadiusColour = colourButton("btnInterstellarMapContractSearchRadiusColour",
+              model.interstellarMapContractSearchRadiusColour);
+        Runnable syncContract = () -> btnInterstellarMapContractSearchRadiusColour.setEnabled(
+              chkInterstellarMapShowContractSearchRadius.isSelected());
+        chkInterstellarMapShowContractSearchRadius.addActionListener(evt -> syncContract.run());
         syncContract.run();
-        panel.addCheckBox(contractCheckBox);
-        panel.addComponentGrid(1, contractColour);
+        panel.addCheckBox(chkInterstellarMapShowContractSearchRadius);
+        panel.addComponentGrid(1, btnInterstellarMapContractSearchRadiusColour);
 
         return buildMHQPage("MHQDisplayInterstellarPage", "lblMHQDisplayInterstellarSection.text",
               "lblMHQDisplayInterstellarSection.summary", panel);
     }
 
     /**
-     * Adds an interstellar-map radius group to {@code panel}: a master check box, a gated minimum-zoom spinner, and a
-     * gated colour button. The spinner and colour are enabled only while the check box is selected, matching the
-     * original dialog.
+     * Enables {@code label}, {@code spinner}, and {@code colour} only while {@code checkBox} is selected, and keeps them
+     * in sync when it is toggled - matching the original dialog's gating of each interstellar-map radius group.
      */
-    private void addInterstellarRadiusGroup(CampaignOptionsFormPanel panel, String checkBoxKey,
-          BooleanSupplier checkGetter, Consumer<Boolean> checkSetter, String zoomLabelKey, double zoomDefault,
-          Supplier<Double> zoomGetter, Consumer<Double> zoomSetter, String colourKey, Supplier<Color> colourGetter,
-          Consumer<Color> colourSetter) {
-        CampaignOptionsCheckBox checkBox = createCheckBox(checkBoxKey, checkGetter, checkSetter);
-        CampaignOptionsLabel zoomLabel = new CampaignOptionsLabel(RESOURCE_BUNDLE, zoomLabelKey);
-        CampaignOptionsSpinner zoomSpinner =
-              new CampaignOptionsSpinner(RESOURCE_BUNDLE, zoomLabelKey, zoomDefault, 0d, 10d, 0.5);
-        zoomSpinner.setValue(zoomGetter.get());
-        pageSavers.add(() -> zoomSetter.accept((Double) zoomSpinner.getValue()));
-        ColourSelectorButton colourButton = createColourButton(colourKey, colourGetter, colourSetter);
-
+    private void bindRadiusGating(JCheckBox checkBox, JComponent label, JComponent spinner, JComponent colour) {
         Runnable sync = () -> {
             boolean enabled = checkBox.isSelected();
-            zoomLabel.setEnabled(enabled);
-            zoomSpinner.setEnabled(enabled);
-            colourButton.setEnabled(enabled);
+            label.setEnabled(enabled);
+            spinner.setEnabled(enabled);
+            colour.setEnabled(enabled);
         };
         checkBox.addActionListener(evt -> sync.run());
         sync.run();
+    }
 
-        panel.addCheckBox(checkBox);
-        panel.addRow(zoomLabel, zoomSpinner);
-        panel.addComponentGrid(1, colourButton);
+    private void writeDisplayInterstellarToModel() {
+        if (chkInterstellarMapShowJumpRadius == null) {
+            return;
+        }
+        model.interstellarMapShowJumpRadius = chkInterstellarMapShowJumpRadius.isSelected();
+        model.interstellarMapShowJumpRadiusMinimumZoom =
+              (Double) spinnerInterstellarMapShowJumpRadiusMinimumZoom.getValue();
+        model.interstellarMapJumpRadiusColour = btnInterstellarMapJumpRadiusColour.getColour();
+        model.interstellarMapShowPlanetaryAcquisitionRadius =
+              chkInterstellarMapShowPlanetaryAcquisitionRadius.isSelected();
+        model.interstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom =
+              (Double) spinnerInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom.getValue();
+        model.interstellarMapPlanetaryAcquisitionRadiusColour =
+              btnInterstellarMapPlanetaryAcquisitionRadiusColour.getColour();
+        model.interstellarMapShowContractSearchRadius = chkInterstellarMapShowContractSearchRadius.isSelected();
+        model.interstellarMapContractSearchRadiusColour = btnInterstellarMapContractSearchRadiusColour.getColour();
     }
 
     private Component createDisplayPersonnelPage() {
         CampaignOptionsLabel filterStyleLabel =
               new CampaignOptionsLabel(RESOURCE_BUNDLE, "optionPersonnelFilterStyle");
-        JComboBox<PersonnelFilterStyle> filterStyle = new JComboBox<>(PersonnelFilterStyle.values());
-        filterStyle.setName("optionPersonnelFilterStyle");
-        filterStyle.setSelectedItem(options.getPersonnelFilterStyle());
-        filterStyle.setRenderer(new DefaultListCellRenderer() {
+        comboPersonnelFilterStyle = new JComboBox<>(PersonnelFilterStyle.values());
+        comboPersonnelFilterStyle.setName("optionPersonnelFilterStyle");
+        comboPersonnelFilterStyle.setSelectedItem(model.personnelFilterStyle);
+        comboPersonnelFilterStyle.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index,
                   final boolean isSelected, final boolean cellHasFocus) {
@@ -675,84 +841,54 @@ public class MHQOptionsPane extends JPanel {
                 return this;
             }
         });
-        pageSavers.add(() -> options.setPersonnelFilterStyle(
-              (PersonnelFilterStyle) Objects.requireNonNull(filterStyle.getSelectedItem())));
+
+        chkPersonnelFilterOnPrimaryRole =
+              checkBox("optionPersonnelFilterOnPrimaryRole", model.personnelFilterOnPrimaryRole);
+        chkUnifiedDailyReport = checkBox("chkUnifiedDailyReport", model.unifiedDailyReport);
+        chkEnableDailyReportAggregateTab = checkBox("chkEnableDailyReportAggregateTab", model.aggregateDailyReport);
 
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQDisplayPersonnelContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
-        panel.addRow(filterStyleLabel, filterStyle);
-        panel.addCheckBoxGrid(2,
-              createCheckBox("optionPersonnelFilterOnPrimaryRole",
-                    options::getPersonnelFilterOnPrimaryRole, options::setPersonnelFilterOnPrimaryRole),
-              createCheckBox("chkUnifiedDailyReport", options::getUnifiedDailyReport, options::setUnifiedDailyReport),
-              createCheckBox("chkEnableDailyReportAggregateTab",
-                    options::isUseAggregateDailyReport, options::setAggregateDailyReport));
+        panel.addRow(filterStyleLabel, comboPersonnelFilterStyle);
+        panel.addCheckBoxGrid(2, chkPersonnelFilterOnPrimaryRole, chkUnifiedDailyReport,
+              chkEnableDailyReportAggregateTab);
 
         return buildMHQPage("MHQDisplayPersonnelPage", "lblMHQDisplayPersonnelSection.text",
               "lblMHQDisplayPersonnelSection.summary", panel);
     }
 
+    private void writeDisplayPersonnelToModel() {
+        if (comboPersonnelFilterStyle == null) {
+            return;
+        }
+        model.personnelFilterStyle =
+              (PersonnelFilterStyle) Objects.requireNonNull(comboPersonnelFilterStyle.getSelectedItem());
+        model.personnelFilterOnPrimaryRole = chkPersonnelFilterOnPrimaryRole.isSelected();
+        model.unifiedDailyReport = chkUnifiedDailyReport.isSelected();
+        model.aggregateDailyReport = chkEnableDailyReportAggregateTab.isSelected();
+    }
+
     private Component createColoursUnitStatusPage() {
-        List<JComponent> buttons = new ArrayList<>();
-        addColourPair(buttons, "optionDeployedForeground",
-              options::getDeployedForeground, options::setDeployedForeground,
-              "optionDeployedBackground", options::getDeployedBackground, options::setDeployedBackground);
-        addColourPair(buttons, "optionBelowContractMinimumForeground",
-              options::getBelowContractMinimumForeground, options::setBelowContractMinimumForeground,
-              "optionBelowContractMinimumBackground",
-              options::getBelowContractMinimumBackground, options::setBelowContractMinimumBackground);
-        addColourPair(buttons, "optionInTransitForeground",
-              options::getInTransitForeground, options::setInTransitForeground,
-              "optionInTransitBackground", options::getInTransitBackground, options::setInTransitBackground);
-        addColourPair(buttons, "optionRefittingForeground",
-              options::getRefittingForeground, options::setRefittingForeground,
-              "optionRefittingBackground", options::getRefittingBackground, options::setRefittingBackground);
-        addColourPair(buttons, "optionMothballingForeground",
-              options::getMothballingForeground, options::setMothballingForeground,
-              "optionMothballingBackground", options::getMothballingBackground, options::setMothballingBackground);
-        addColourPair(buttons, "optionMothballedForeground",
-              options::getMothballedForeground, options::setMothballedForeground,
-              "optionMothballedBackground", options::getMothballedBackground, options::setMothballedBackground);
-        addColourPair(buttons, "optionNotRepairableForeground",
-              options::getNotRepairableForeground, options::setNotRepairableForeground,
-              "optionNotRepairableBackground", options::getNotRepairableBackground, options::setNotRepairableBackground);
-        addColourPair(buttons, "optionNonFunctionalForeground",
-              options::getNonFunctionalForeground, options::setNonFunctionalForeground,
-              "optionNonFunctionalBackground", options::getNonFunctionalBackground, options::setNonFunctionalBackground);
-        addColourPair(buttons, "optionNeedsPartsFixedForeground",
-              options::getNeedsPartsFixedForeground, options::setNeedsPartsFixedForeground,
-              "optionNeedsPartsFixedBackground",
-              options::getNeedsPartsFixedBackground, options::setNeedsPartsFixedBackground);
-        addColourPair(buttons, "optionUnmaintainedForeground",
-              options::getUnmaintainedForeground, options::setUnmaintainedForeground,
-              "optionUnmaintainedBackground", options::getUnmaintainedBackground, options::setUnmaintainedBackground);
-        addColourPair(buttons, "optionUncrewedForeground",
-              options::getUncrewedForeground, options::setUncrewedForeground,
-              "optionUncrewedBackground", options::getUncrewedBackground, options::setUncrewedBackground);
-        addColourPair(buttons, "optionLoanOverdueForeground",
-              options::getLoanOverdueForeground, options::setLoanOverdueForeground,
-              "optionLoanOverdueBackground", options::getLoanOverdueBackground, options::setLoanOverdueBackground);
-        addColourPair(buttons, "optionInjuredForeground",
-              options::getInjuredForeground, options::setInjuredForeground,
-              "optionInjuredBackground", options::getInjuredBackground, options::setInjuredBackground);
-        addColourPair(buttons, "optionHealedInjuriesForeground",
-              options::getHealedInjuriesForeground, options::setHealedInjuriesForeground,
-              "optionHealedInjuriesBackground",
-              options::getHealedInjuriesBackground, options::setHealedInjuriesBackground);
-        addColourPair(buttons, "optionPregnantForeground",
-              options::getPregnantForeground, options::setPregnantForeground,
-              "optionPregnantBackground", options::getPregnantBackground, options::setPregnantBackground);
-        addColourPair(buttons, "optionGoneForeground",
-              options::getGoneForeground, options::setGoneForeground,
-              "optionGoneBackground", options::getGoneBackground, options::setGoneBackground);
-        addColourPair(buttons, "optionAbsentForeground",
-              options::getAbsentForeground, options::setAbsentForeground,
-              "optionAbsentBackground", options::getAbsentBackground, options::setAbsentBackground);
-        addColourPair(buttons, "optionFatiguedForeground",
-              options::getFatiguedForeground, options::setFatiguedForeground,
-              "optionFatiguedBackground", options::getFatiguedBackground, options::setFatiguedBackground);
-        buttons.add(createColourButton("optionStratConHexCoordForeground",
-              options::getStratConHexCoordForeground, options::setStratConHexCoordForeground));
+        List<JComponent> buttons = buildColourButtons(
+              "optionDeployedForeground", "optionDeployedBackground",
+              "optionBelowContractMinimumForeground", "optionBelowContractMinimumBackground",
+              "optionInTransitForeground", "optionInTransitBackground",
+              "optionRefittingForeground", "optionRefittingBackground",
+              "optionMothballingForeground", "optionMothballingBackground",
+              "optionMothballedForeground", "optionMothballedBackground",
+              "optionNotRepairableForeground", "optionNotRepairableBackground",
+              "optionNonFunctionalForeground", "optionNonFunctionalBackground",
+              "optionNeedsPartsFixedForeground", "optionNeedsPartsFixedBackground",
+              "optionUnmaintainedForeground", "optionUnmaintainedBackground",
+              "optionUncrewedForeground", "optionUncrewedBackground",
+              "optionLoanOverdueForeground", "optionLoanOverdueBackground",
+              "optionInjuredForeground", "optionInjuredBackground",
+              "optionHealedInjuriesForeground", "optionHealedInjuriesBackground",
+              "optionPregnantForeground", "optionPregnantBackground",
+              "optionGoneForeground", "optionGoneBackground",
+              "optionAbsentForeground", "optionAbsentBackground",
+              "optionFatiguedForeground", "optionFatiguedBackground",
+              "optionStratConHexCoordForeground");
 
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQColoursUnitStatusContent");
         panel.addComponentGrid(2, buttons.toArray(new JComponent[0]));
@@ -761,21 +897,12 @@ public class MHQOptionsPane extends JPanel {
     }
 
     private Component createColoursSkillFeedbackPage() {
-        List<JComponent> buttons = new ArrayList<>();
-        addColourPair(buttons, "optionFontColorNegative",
-              options::getFontColorNegative, options::setFontColorNegative,
-              "optionFontColorWarning", options::getFontColorWarning, options::setFontColorWarning);
-        addColourPair(buttons, "optionFontColorPositive",
-              options::getFontColorPositive, options::setFontColorPositive,
-              "optionFontColorAmazing", options::getFontColorAmazing, options::setFontColorAmazing);
-        addColourPair(buttons, "optionFontColorSkillUltraGreen",
-              options::getFontColorSkillUltraGreen, options::setFontColorSkillUltraGreen,
-              "optionFontColorSkillGreen", options::getFontColorSkillGreen, options::setFontColorSkillGreen);
-        addColourPair(buttons, "optionFontColorSkillRegular",
-              options::getFontColorSkillRegular, options::setFontColorSkillRegular,
-              "optionFontColorSkillVeteran", options::getFontColorSkillVeteran, options::setFontColorSkillVeteran);
-        buttons.add(createColourButton("optionFontColorSkillElite",
-              options::getFontColorSkillElite, options::setFontColorSkillElite));
+        List<JComponent> buttons = buildColourButtons(
+              "optionFontColorNegative", "optionFontColorWarning",
+              "optionFontColorPositive", "optionFontColorAmazing",
+              "optionFontColorSkillUltraGreen", "optionFontColorSkillGreen",
+              "optionFontColorSkillRegular", "optionFontColorSkillVeteran",
+              "optionFontColorSkillElite");
 
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQColoursSkillFeedbackContent");
         panel.addComponentGrid(2, buttons.toArray(new JComponent[0]));
@@ -793,31 +920,27 @@ public class MHQOptionsPane extends JPanel {
     }
 
     /**
-     * Appends a foreground/background colour button pair to {@code target} (foreground first). Each button loads its
-     * colour and registers a saver via {@link #createColourButton}.
+     * Creates a colour button for each of {@code keys} (loading its initial colour from
+     * {@link MHQOptionsModel#statusColours}), registers it in {@link #colourButtons} under its key so
+     * {@link #writeColoursToModel()} can read it back, and returns them in order for placement in a grid.
      */
-    private void addColourPair(List<JComponent> target,
-          String foregroundKey, Supplier<Color> foregroundGetter, Consumer<Color> foregroundSetter,
-          String backgroundKey, Supplier<Color> backgroundGetter, Consumer<Color> backgroundSetter) {
-        target.add(createColourButton(foregroundKey, foregroundGetter, foregroundSetter));
-        target.add(createColourButton(backgroundKey, backgroundGetter, backgroundSetter));
+    private List<JComponent> buildColourButtons(String... keys) {
+        List<JComponent> buttons = new ArrayList<>();
+        for (String key : keys) {
+            ColourSelectorButton button = colourButton(key, model.statusColours.get(key));
+            colourButtons.put(key, button);
+            buttons.add(button);
+        }
+        return buttons;
     }
 
-    /**
-     * Creates a {@link ColourSelectorButton} whose text comes from {@code key} in the GUI bundle, loads its colour from
-     * {@code getter}, and registers a saver that writes the chosen colour back via {@code setter}.
-     */
-    private ColourSelectorButton createColourButton(String key, Supplier<Color> getter, Consumer<Color> setter) {
-        ColourSelectorButton button = new ColourSelectorButton(getTextAt(RESOURCE_BUNDLE, key + ".text"));
-        button.setName("btn" + key);
-        button.setColour(getter.get());
-        pageSavers.add(() -> setter.accept(button.getColour()));
-        return button;
+    private void writeColoursToModel() {
+        colourButtons.forEach((key, button) -> model.statusColours.put(key, button.getColour()));
     }
 
     private Component createAdvancedPage() {
         CampaignOptionsLabel userDirLabel = new CampaignOptionsLabel(RESOURCE_BUNDLE, "lblUserDir");
-        JTextField userDirField = new JTextField(PreferenceManager.getClientPreferences().getUserDir(), 20);
+        userDirField = new JTextField(model.userDir, 20);
         userDirField.setName("txtUserDir");
         userDirField.setToolTipText(getTextAt(RESOURCE_BUNDLE, "lblUserDir.toolTipText"));
         JButton userDirChooser = new JButton("...");
@@ -833,10 +956,6 @@ public class MHQOptionsPane extends JPanel {
         } catch (MalformedURLException ex) {
             LOGGER.error("Could not find the user data directory readme file at {}", MMConstants.USER_DIR_README_FILE);
         }
-        pageSavers.add(() -> {
-            PreferenceManager.getClientPreferences().setUserDir(userDirField.getText());
-            PreferenceManager.getInstance().save();
-        });
         JPanel userDirControls = new JPanel(new FlowLayout(FlowLayout.LEFT, UIUtil.scaleForGUI(6), 0));
         userDirControls.setOpaque(false);
         userDirControls.add(userDirField);
@@ -846,24 +965,24 @@ public class MHQOptionsPane extends JPanel {
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQAdvancedContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
         panel.addRow(userDirLabel, userDirControls);
-        addAdvancedSpinner(panel, "lblStartGameDelay", 1000, 250, 2500, 25,
-              options::getStartGameDelay, options::setStartGameDelay);
-        addAdvancedSpinner(panel, "lblStartGameClientDelay", 50, 50, 2500, 25,
-              options::getStartGameClientDelay, options::setStartGameClientDelay);
-        addAdvancedSpinner(panel, "lblStartGameClientRetryCount", 1000, 100, 2500, 50,
-              options::getStartGameClientRetryCount, options::setStartGameClientRetryCount);
-        addAdvancedSpinner(panel, "lblStartGameBotClientDelay", 50, 50, 2500, 25,
-              options::getStartGameBotClientDelay, options::setStartGameBotClientDelay);
-        addAdvancedSpinner(panel, "lblStartGameBotClientRetryCount", 250, 100, 2500, 50,
-              options::getStartGameBotClientRetryCount, options::setStartGameBotClientRetryCount);
+        spinnerStartGameDelay = advancedSpinner(panel, "lblStartGameDelay", 1000, 250, 2500, 25, model.startGameDelay);
+        spinnerStartGameClientDelay =
+              advancedSpinner(panel, "lblStartGameClientDelay", 50, 50, 2500, 25, model.startGameClientDelay);
+        spinnerStartGameClientRetryCount = advancedSpinner(panel, "lblStartGameClientRetryCount", 1000, 100, 2500, 50,
+              model.startGameClientRetryCount);
+        spinnerStartGameBotClientDelay =
+              advancedSpinner(panel, "lblStartGameBotClientDelay", 50, 50, 2500, 25, model.startGameBotClientDelay);
+        spinnerStartGameBotClientRetryCount = advancedSpinner(panel, "lblStartGameBotClientRetryCount", 250, 100, 2500,
+              50, model.startGameBotClientRetryCount);
 
         CampaignOptionsLabel companyGenerationLabel =
               new CampaignOptionsLabel(RESOURCE_BUNDLE, "lblDefaultCompanyGenerationMethod");
-        MMComboBox<CompanyGenerationMethod> companyGeneration =
+        comboDefaultCompanyGenerationMethod =
               new MMComboBox<>("comboDefaultCompanyGenerationMethod", CompanyGenerationMethod.values());
-        companyGeneration.setSelectedItem(options.getDefaultCompanyGenerationMethod());
-        companyGeneration.setToolTipText(getTextAt(RESOURCE_BUNDLE, "lblDefaultCompanyGenerationMethod.toolTipText"));
-        companyGeneration.setRenderer(new DefaultListCellRenderer() {
+        comboDefaultCompanyGenerationMethod.setSelectedItem(model.defaultCompanyGenerationMethod);
+        comboDefaultCompanyGenerationMethod.setToolTipText(
+              getTextAt(RESOURCE_BUNDLE, "lblDefaultCompanyGenerationMethod.toolTipText"));
+        comboDefaultCompanyGenerationMethod.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index,
                   final boolean isSelected, final boolean cellHasFocus) {
@@ -874,28 +993,50 @@ public class MHQOptionsPane extends JPanel {
                 return this;
             }
         });
-        pageSavers.add(() -> options.setDefaultCompanyGenerationMethod(
-              Objects.requireNonNull(companyGeneration.getSelectedItem())));
-        panel.addRow(companyGenerationLabel, companyGeneration);
+        panel.addRow(companyGenerationLabel, comboDefaultCompanyGenerationMethod);
 
         return buildMHQPage("MHQAdvancedPage", "lblMHQAdvancedSection.text", "lblMHQAdvancedSection.summary", panel);
     }
 
-    private void addAdvancedSpinner(CampaignOptionsFormPanel panel, String labelKey, int defaultValue,
-          int minimum, int maximum, int step, IntSupplier getter, IntConsumer setter) {
+    /**
+     * Creates a labelled integer spinner, initialises it to {@code value}, adds it to {@code panel} as a row, and
+     * returns it so the caller can store it in a field for {@link #writeAdvancedToModel()}.
+     */
+    private CampaignOptionsSpinner advancedSpinner(CampaignOptionsFormPanel panel, String labelKey, int defaultValue,
+          int minimum, int maximum, int step, int value) {
         CampaignOptionsLabel label = new CampaignOptionsLabel(RESOURCE_BUNDLE, labelKey);
         CampaignOptionsSpinner spinner =
               new CampaignOptionsSpinner(RESOURCE_BUNDLE, labelKey, defaultValue, minimum, maximum, step);
-        spinner.setValue(getter.getAsInt());
-        pageSavers.add(() -> setter.accept((Integer) spinner.getValue()));
+        spinner.setValue(value);
         panel.addRow(label, spinner);
+        return spinner;
     }
 
-    private void addPoolPair(List<JCheckBox> target, String fillKey, String noReleaseKey,
-          BooleanSupplier fillGetter, Consumer<Boolean> fillSetter,
-          BooleanSupplier noReleaseGetter, Consumer<Boolean> noReleaseSetter) {
-        CampaignOptionsCheckBox fill = createCheckBox(fillKey, fillGetter, fillSetter);
-        CampaignOptionsCheckBox noRelease = createCheckBox(noReleaseKey, noReleaseGetter, noReleaseSetter);
+    private void writeAdvancedToModel() {
+        if (userDirField == null) {
+            return;
+        }
+        model.userDir = userDirField.getText();
+        model.startGameDelay = (int) spinnerStartGameDelay.getValue();
+        model.startGameClientDelay = (int) spinnerStartGameClientDelay.getValue();
+        model.startGameClientRetryCount = (int) spinnerStartGameClientRetryCount.getValue();
+        model.startGameBotClientDelay = (int) spinnerStartGameBotClientDelay.getValue();
+        model.startGameBotClientRetryCount = (int) spinnerStartGameBotClientRetryCount.getValue();
+        model.defaultCompanyGenerationMethod =
+              Objects.requireNonNull(comboDefaultCompanyGenerationMethod.getSelectedItem());
+    }
+
+    /**
+     * Builds a pool fill / no-release check box pair, registers both in {@link #poolCheckBoxes} under their resource
+     * names (matching {@link MHQOptionsModel#newDayPools}), and appends them to {@code target}. The "no release" box is
+     * enabled only while the "fill" box is selected.
+     */
+    private void addPoolPair(List<JCheckBox> target, String fillKey, String noReleaseKey) {
+        CampaignOptionsCheckBox fill = checkBox(fillKey, Boolean.TRUE.equals(model.newDayPools.get(fillKey)));
+        CampaignOptionsCheckBox noRelease =
+              checkBox(noReleaseKey, Boolean.TRUE.equals(model.newDayPools.get(noReleaseKey)));
+        poolCheckBoxes.put(fillKey, fill);
+        poolCheckBoxes.put(noReleaseKey, noRelease);
         // The "no release" option only applies while the pool is being filled, so it follows the fill check box.
         noRelease.setEnabled(fill.isSelected());
         fill.addItemListener(evt -> noRelease.setEnabled(fill.isSelected()));
@@ -905,11 +1046,25 @@ public class MHQOptionsPane extends JPanel {
 
     /**
      * Writes the edited options back to {@link MHQOptions}. Called by the hosting dialog when the user confirms. Each
-     * page contributes its own saver when it is first built, so only pages the user has visited are written back.
+     * visited page copies its controls into the shared {@link MHQOptionsModel}; a page the user never opened leaves its
+     * controls null, so its {@code writeXToModel} is a no-op and the model keeps the values it was built with. The
+     * fully-populated model is then applied to {@link MHQOptions} (and the GUI-scale and user-directory stores) in one
+     * step.
      */
     public void save() {
-        for (Runnable saver : pageSavers) {
-            saver.run();
-        }
+        writeFontsToModel();
+        writeDisplayGeneralToModel();
+        writeDisplayInterstellarToModel();
+        writeDisplayPersonnelToModel();
+        writeColoursToModel();
+        writeAutosaveToModel();
+        writePoolsToModel();
+        writeNewDayTasksToModel();
+        writeNewDayTrainingToModel();
+        writeNewDayFormationToModel();
+        writeCampaignSaveToModel();
+        writeNagsToModel();
+        writeAdvancedToModel();
+        model.applyTo(options);
     }
 }
