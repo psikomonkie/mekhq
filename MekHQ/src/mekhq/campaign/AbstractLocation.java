@@ -192,7 +192,7 @@ public abstract class AbstractLocation implements IPlace {
         if (usedRechargeTime > 0) {
             if (!isSilentProcessing) {
                 campaign.addReport(GENERAL, getFormattedTextAt(RESOURCE_BUNDLE, "getReport.recharge.hours",
-                                                  Math.round(100.0 * usedRechargeTime) / 100.0));
+                      Math.round(100.0 * usedRechargeTime) / 100.0));
             }
             setRechargeTime(getRechargeTime() + usedRechargeTime);
             if (getRechargeTime() >= neededRechargeTime && !isSilentProcessing) {
@@ -275,20 +275,12 @@ public abstract class AbstractLocation implements IPlace {
      * @param campaignOptions the campaign's ruleset and configuration
      */
     static void checkForTransitDisorientationSyndrome(Campaign campaign, CampaignOptions campaignOptions) {
-        final boolean useAdvancedMedical = campaignOptions.isUseAdvancedMedical();
-        final boolean useAltAdvancedMedical = campaignOptions.isUseAlternativeAdvancedMedical();
         final boolean useFatigue = campaignOptions.isUseFatigue();
         final int fatigueRate = campaignOptions.getFatigueRate();
 
         for (Person person : campaign.getPersonnelFilteringOutDepartedAndAbsent()) {
             if (!person.getOptions().booleanOption(FLAW_TRANSIT_DISORIENTATION_SYNDROME)) {
                 continue;
-            }
-
-            if (useAdvancedMedical) {
-                person.addInjury(createTransitDisorientationInjury(campaign, person, useAltAdvancedMedical));
-            } else {
-                person.setHits(person.getHits() + 1);
             }
 
             if (useFatigue) {
