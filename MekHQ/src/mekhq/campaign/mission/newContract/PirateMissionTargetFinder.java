@@ -109,9 +109,11 @@ class PirateMissionTargetFinder {
     }
 
     /**
-     * Finds systems within {@code radius} light years of {@code location}'s current system whose only controlling
-     * faction is an empty/placeholder faction (see {@link FactionHints#isEmptyFaction(Faction)}) &mdash; that is,
-     * genuinely lawless, uncontested space, as opposed to a system some real faction happens to also claim.
+     * Finds systems within {@code radius} light years of {@code location}'s current system that have no real
+     * controlling faction &mdash; that is, genuinely lawless, uncontested space, as opposed to a system some real
+     * faction happens to also claim. This includes systems with no faction data at all (many real, populated systems
+     * have no owner tagged in the data at all, not even a placeholder) as well as ones whose only controlling
+     * "faction" is an empty/placeholder faction (see {@link FactionHints#isEmptyFaction(Faction)}).
      *
      * @param location the location to center the search on
      * @param radius   the search radius in light years from {@code location}'s current system; a negative radius
@@ -131,7 +133,8 @@ class PirateMissionTargetFinder {
         for (PlanetarySystem system : borderTracker.getSystemList()) {
             if ((radius < 0) || (system.getDistanceTo(origin) <= radius)) {
                 Set<Faction> factions = system.getFactionSet(date);
-                if (factions.size() == 1 && FactionHints.isEmptyFaction(factions.iterator().next())) {
+                if (factions.isEmpty() ||
+                          (factions.size() == 1 && FactionHints.isEmptyFaction(factions.iterator().next()))) {
                     emptySystems.add(system);
                 }
             }

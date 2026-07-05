@@ -289,6 +289,46 @@ public class MissionTargetFinderTest {
     }
 
     /**
+     * Regression test: a pirate defender has no real territory, so unlike a genuine war partner, there's no
+     * "guaranteed valid, just far away" pirate target for the closest-system fallback to reach for. If none of
+     * {@link PirateMissionTargetFinder}'s tiers find a plausible hideout within the search radius, find() must
+     * return no target at all rather than falling through to the whole-map closest-system fallback and landing on
+     * some incidental, far-flung world a pirate band happens to have once held.
+     */
+    @Test
+    public void testFindPirateDefenderNeverReachesOutsideSearchRadius() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction pirateFaction = createTestFaction("PIR", false, false);
+        when(pirateFaction.isPirate()).thenReturn(true);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        // Far outside the tracker's 5 ly search radius below - simulating a pirate band that happens to hold some
+        // distant world, not a genuine "guaranteed valid" target the way a real war partner would be.
+        PlanetarySystem distantPirateSystem = createTestSystem(1000, 1000, pirateFaction);
+        when(attackerSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(0.0);
+        when(distantPirateSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(2000.0);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, distantPirateSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, 5) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = mock(ILocation.class);
+        when(location.getCurrentSystem()).thenReturn(attackerSystem);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, pirateFaction, location, TEST_DATE);
+
+        assertTrue(targets.isEmpty(),
+              "A pirate defender with no plausible hideout within the search radius should never fall back to some "
+                    + "far-flung pirate-held world reached only by ignoring the radius entirely");
+    }
+
+    /**
      * Regression test: a pirate attacker is routed to {@link PirateMissionTargetFinder}, whose own tiers are tested
      * directly in {@code PirateMissionTargetFinderTest}; this just confirms find() delegates and returns its result.
      */

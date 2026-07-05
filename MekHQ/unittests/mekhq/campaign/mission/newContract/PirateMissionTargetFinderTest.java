@@ -74,6 +74,20 @@ public class PirateMissionTargetFinderTest {
     }
 
     /**
+     * Builds a system with no faction data at all (an empty {@code Set}, not a singleton placeholder faction) &mdash;
+     * the actual shape returned by {@link PlanetarySystem#getFactionSet} for many real, populated systems that were
+     * never tagged with an owner in the source data.
+     */
+    private static PlanetarySystem createUnownedTestSystem(final double x, final double y) {
+        PlanetarySystem p = mock(PlanetarySystem.class);
+        when(p.getX()).thenReturn(x);
+        when(p.getY()).thenReturn(y);
+        when(p.getFactionSet(any())).thenReturn(Collections.emptySet());
+        when(p.getId()).thenReturn(String.format("(%3.1f,%3.1f)", x, y));
+        return p;
+    }
+
+    /**
      * Builds a mock {@link ILocation} whose current system is controlled solely by the given faction.
      */
     private static ILocation createTestLocation(final Faction controllingFaction) {
@@ -120,6 +134,32 @@ public class PirateMissionTargetFinderTest {
 
         assertEquals(List.of(emptySystem), targets,
               "A pirate defender should prefer a nearby empty/lawless system over its own directly-owned system");
+    }
+
+    /**
+     * Regression test: a system with no faction data at all (an empty {@link java.util.Set}, as real, populated but
+     * never-owned systems actually report) must still count as an empty/lawless system, not just one whose sole
+     * faction is a recognized placeholder code like "UND".
+     */
+    @Test
+    public void testFindDefenderTargetsTreatsSystemWithNoFactionDataAsEmpty() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false);
+        Faction pirateFaction = createTestFaction("PIR", false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem pirateOwnedSystem = createTestSystem(1, 0, pirateFaction);
+        PlanetarySystem unownedSystem = createUnownedTestSystem(2, 0);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, pirateOwnedSystem, unownedSystem);
+        FactionBorderTracker tracker = buildTracker(systems);
+        PirateMissionTargetFinder finder = new PirateMissionTargetFinder(tracker);
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.findDefenderTargets(attackerFaction, pirateFaction, location,
+              tracker.getRadius(), TEST_DATE);
+
+        assertEquals(List.of(unownedSystem), targets,
+              "A system with no faction data at all should still be treated as empty/lawless space");
     }
 
     /**

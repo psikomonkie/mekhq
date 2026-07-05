@@ -102,14 +102,15 @@ public class MissionTargetFinder {
         }
 
         // A pirate defender is more likely holed up in lawless space near the frontier than on a system some real
-        // faction officially claims; a pirate attacker raids from the frontier rather than striking anywhere the
-        // defender holds. Only once both come up empty do we fall back to the usual border-based logic below.
+        // faction officially claims. Pirates hold no real territory, so unlike a normal defender, there's no
+        // "guaranteed valid, just far away" pirate target for the closest-system fallback further below to reach for
+        // (that fallback searches the whole map for the defender's side, which is only sound for a real faction
+        // that's a genuine, distant war partner) - if none of the pirate-specific tiers found a plausible hideout
+        // within the search radius, there simply isn't a valid one, so we return here unconditionally rather than
+        // falling through to logic that could land on some incidental, far-flung world a pirate band happens to
+        // have once held.
         if (defender.getShortName().equals(PIRATE_FACTION_CODE)) {
-            List<PlanetarySystem> targets = pirateFinder.findDefenderTargets(attacker, defender, location, radius,
-                  currentDate);
-            if (!targets.isEmpty()) {
-                return targets;
-            }
+            return pirateFinder.findDefenderTargets(attacker, defender, location, radius, currentDate);
         }
 
         if (attacker.getShortName().equals(PIRATE_FACTION_CODE)) {
