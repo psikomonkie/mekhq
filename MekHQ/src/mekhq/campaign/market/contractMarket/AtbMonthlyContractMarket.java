@@ -519,8 +519,6 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
         } catch (NoContractLocationFoundException ex) {
             return generateAtBContract(campaign, employer, unitRatingMod, retries - 1);
         }
-        logger.info("[MTF-DIAG] post-setSystemId system={} owner={}", contract.getSystem().getId(),
-              contract.getSystem().getFactionSet(campaign.getLocalDate()));
         JumpPath jp = null;
         try {
             jp = contract.getJumpPath(campaign);
@@ -583,22 +581,25 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
         contract.initContractDetails(campaign);
         contract.calculateContract(campaign);
 
-        contract.setName(generateDefaultName(employer, contract));
+        contract.setName(generateDefaultName(employer, contract, campaign));
 
         contract.clanTechSalvageOverride();
-
-        logger.info("[MTF-DIAG] pre-return system={} owner={}", contract.getSystem().getId(),
-              contract.getSystem().getFactionSet(campaign.getLocalDate()));
 
         return contract;
     }
 
-    static @org.jspecify.annotations.NonNull String generateDefaultName(String employer, AtBContract contract) {
+    static @org.jspecify.annotations.NonNull String generateDefaultName(String employer, AtBContract contract,
+          Campaign campaign) {
         return String.format("%s - %s - %s %s",
               contract.getStartDate()
                     .format(DateTimeFormatter.ofPattern("yyyy").withLocale(MekHQ.getMHQOptions().getDateLocale())),
               employer,
-              contract.getSystem().getName(contract.getStartDate()),
+              // Uses the campaign's current date rather than the contract's (possibly much later) start date: some
+              // targets are only reachable via a distant war partner with no local presence, and their start date can
+              // land past a scripted historical ownership change for that system. Planet's event cache is a single
+              // forward-advancing cursor shared by every accessor, so querying it with a future date here would
+              // permanently corrupt getFactionSet() and everything else for that system for the rest of the session.
+              contract.getSystem().getName(campaign.getLocalDate()),
               contract.getContractType());
     }
 

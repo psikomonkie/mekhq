@@ -189,16 +189,6 @@ public class FactionBorderTracker {
     }
 
     /**
-     * DIAGNOSTIC ONLY: exposes {@link #currentDate()} (the live {@code now} field actually used by
-     * {@link #getBorders(Faction, ILocation, double)} and {@link #getBorderSystems(Faction, Faction, ILocation, double)}
-     * for ownership checks), so callers can compare it against {@link #getLastUpdated()} to check for drift between the
-     * two.
-     */
-    public synchronized LocalDate getLiveDateForDiagnostics() {
-        return now;
-    }
-
-    /**
      * Retrieves a {@code Set} of all factions that control at least one planet in the region.
      * <p>
      * If the borders are being recalculated, this method may block until the calculation is complete. If the change

@@ -569,12 +569,6 @@ public abstract class AbstractContractMarket {
     }
 
     protected void setSystemId(AtBContract contract, Campaign campaign) throws NoContractLocationFoundException {
-        logger.info(
-              "[MTF-DIAG] setSystemId type={} employer={} enemy={} isPlayerAttacker={} currentSystem={} campaignDate={}",
-              contract.getContractType(), contract.getEmployerCode(), contract.getEnemyCode(),
-              contract.isPlayerAttacker(),
-              campaign.getCurrentSystem() == null ? "null" : campaign.getCurrentSystem().getId(),
-              campaign.getLocalDate());
         if (contract.isPlayerAttacker()) {
             contract.setSystemId(RandomFactionGenerator.getInstance()
                                        .getMissionTarget(contract.getEmployerCode(), contract.getEnemyCode(),
@@ -584,8 +578,6 @@ public abstract class AbstractContractMarket {
                                        .getMissionTarget(contract.getEnemyCode(), contract.getEmployerCode(),
                                              campaign.getCurrentLocation()));
         }
-        logger.info("[MTF-DIAG] setSystemId result system={}",
-              contract.getSystem() == null ? "null" : contract.getSystem().getId());
         if (contract.getSystem() == null) {
             String errorMsg = "Could not find contract location for " +
                                     contract.getEmployerCode() +
