@@ -32,6 +32,7 @@
  */
 package mekhq.gui.menus;
 
+import static mekhq.utilities.MHQInternationalization.getFormattedTextAt;
 import static mekhq.utilities.MHQInternationalization.getTextAt;
 
 import java.util.List;
@@ -86,11 +87,24 @@ public class LocationMenu extends JScrollableMenu {
                   destination -> campaign.getCampaignLocationManager().gmTeleport(campaign, items, destination),
                   "menu.teleportTo.text"));
 
-            JMenuItem completeTravel = new JMenuItem(getTextAt(RESOURCE_BUNDLE, "menuItem.completeTravel.text"));
+            JMenuItem completeTravel = new JMenuItem(completeTravelLabel(campaign, items));
             completeTravel.setEnabled(anyTravelingOrQueued(campaign, items));
             completeTravel.addActionListener(e -> campaign.getCampaignLocationManager().gmCompleteTravel(campaign, items));
             add(completeTravel);
         }
+    }
+
+    /**
+     * Builds the "Complete Travel" label, appending a "(+ n others)" hint when collapsing the selection's shared travel
+     * node(s) would also arrive co-travelers that are not part of the selection.
+     */
+    private static String completeTravelLabel(Campaign campaign, List<? extends ILocation> items) {
+        String label = getTextAt(RESOURCE_BUNDLE, "menuItem.completeTravel.text");
+        int others = campaign.getCampaignLocationManager().countUnselectedCoTravelers(items);
+        if (others > 0) {
+            label += " " + getFormattedTextAt(RESOURCE_BUNDLE, "menuItem.completeTravel.others.text", others);
+        }
+        return label;
     }
 
     private static boolean anyTravelingOrQueued(Campaign campaign, List<? extends ILocation> items) {

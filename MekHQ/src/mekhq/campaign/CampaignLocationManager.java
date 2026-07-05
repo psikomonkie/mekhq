@@ -202,14 +202,15 @@ public class CampaignLocationManager {
             }
         }
 
-        // Collapse each distinct in-transit node to arrived, mirroring CurrentLocation.newDay's finalize.
-        Set<AbstractMobileLocation> arrivingNodes = Collections.newSetFromMap(new IdentityHashMap<>());
-        for (ILocation item : items) {
-            if (item.getCurrentLocation() instanceof AbstractMobileLocation node && !node.hasArrived()) {
-                arrivingNodes.add(node);
-            }
-        }
-        for (AbstractMobileLocation node : arrivingNodes) {
+        // Collapse each distinct in-transit node to arrived, mirroring CurrentLocation.newDay's finalize. Capture every
+        // traveler carried by those nodes first — collapsing a shared node arrives co-travelers that were not selected,
+        // and they must be gathered before processAllArrivals empties the node.
+        Set<ILocation> toRefresh = Collections.newSetFromMap(new IdentityHashMap<>());
+        toRefresh.addAll(items);
+        for (AbstractMobileLocation node : collectInTransitNodes(items)) {
+            toRefresh.addAll(node.fetchPersonnelAtLocation());
+            toRefresh.addAll(node.fetchUnitsAtLocation());
+            toRefresh.addAll(node.fetchPartsAtLocation());
             node.setTransitTime(0);
             if (node instanceof CurrentLocation currentLocation) {
                 currentLocation.setJumpPath(null);
@@ -221,10 +222,45 @@ public class CampaignLocationManager {
         processAllArrivals(campaign);
 
         // Refresh the tables' location columns now — the daily cycle relies on a later full GUI refresh, but a GM
-        // override lands mid-session, so fire the per-item changed event each table listens for.
-        for (ILocation item : items) {
+        // override lands mid-session, so fire the per-item changed event each table listens for. Includes co-travelers
+        // swept along by a shared node, not just the selected items.
+        for (ILocation item : toRefresh) {
             fireLocationChanged(item);
         }
+    }
+
+    /**
+     * Counts the travelers a GM {@link #gmCompleteTravel} on {@code items} would also arrive but that are not themselves
+     * in {@code items} — co-travelers sharing an in-transit node with a selected item. Collapsing a shared travel node
+     * arrives everyone it carries, so this lets the menu warn the GM with a "(+ n others)" hint. Queued (not-yet-departed)
+     * items contribute nothing, since completing one queued traveler dispatches only that traveler.
+     */
+    public int countUnselectedCoTravelers(Collection<? extends ILocation> items) {
+        Set<ILocation> selected = Collections.newSetFromMap(new IdentityHashMap<>());
+        selected.addAll(items);
+
+        Set<ILocation> affected = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (AbstractMobileLocation node : collectInTransitNodes(items)) {
+            affected.addAll(node.fetchPersonnelAtLocation());
+            affected.addAll(node.fetchUnitsAtLocation());
+            affected.addAll(node.fetchPartsAtLocation());
+        }
+        affected.removeAll(selected);
+        return affected.size();
+    }
+
+    /**
+     * Returns the distinct in-transit travel nodes carrying {@code items}, keyed by object identity. An item that has
+     * arrived or is not on a mobile node contributes nothing.
+     */
+    private static Set<AbstractMobileLocation> collectInTransitNodes(Collection<? extends ILocation> items) {
+        Set<AbstractMobileLocation> nodes = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (ILocation item : items) {
+            if (item.getCurrentLocation() instanceof AbstractMobileLocation node && !node.hasArrived()) {
+                nodes.add(node);
+            }
+        }
+        return nodes;
     }
 
     /**
