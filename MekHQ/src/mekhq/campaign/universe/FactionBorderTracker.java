@@ -331,13 +331,9 @@ public class FactionBorderTracker {
 
     /**
      * Computes {@link FactionBorders} for the given faction restricted to systems within {@code radius} light years of
-     * {@code location}'s current system, without touching this tracker's persistently cached region, recalculation
-     * state, or background thread.
-     * <p>
-     * Unlike {@link #getBorders(Faction)}, this never blocks and is not tied to a single, campaign-wide "current
-     * location" — it's computed fresh on every call around whatever location is passed in. This makes it suitable for
-     * campaigns with multiple simultaneous locations (e.g. one per active force), where no single point can stand in
-     * for {@code campaign.getCurrentLocation()}.
+     * {@code location}'s current system. Unlike {@link #getBorders(Faction)}, this is computed fresh on every call and
+     * never blocks or touches this tracker's cached region &mdash; useful for campaigns with multiple simultaneous
+     * locations (e.g. one per active force), where no single point can stand in for a "current location."
      *
      * @param faction  the faction to calculate borders for
      * @param location the location to center the search on

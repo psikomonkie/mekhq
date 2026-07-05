@@ -393,6 +393,18 @@ public class RandomFactionGenerator {
         return null; // unreachable in practice, safety fallback
     }
 
+    /**
+     * Selects a random enemy faction for {@code employer} within the area around {@code location}, weighted by
+     * regional presence and diplomatic stance (see {@link #buildEnemyMap}).
+     *
+     * @param isCovert whether this is a covert operation, where allies become rare, low-chance targets instead of
+     *                 always being excluded
+     * @param location the location to center the search on
+     * @param date     the date to check faction control and diplomatic relations against
+     * @param employer the employer faction, or {@code null} to skip straight to the INDEPENDENT fallback
+     *
+     * @return a randomly selected enemy faction, or the INDEPENDENT faction if none could be found
+     */
     public Faction getEnemy(boolean isCovert, ILocation location, LocalDate date, @Nullable Faction employer) {
         if (employer == null) {
             return independentFallback("No employer supplied or faction does not exist. Returning INDEPENDENT");
@@ -422,6 +434,20 @@ public class RandomFactionGenerator {
         return Factions.getInstance().getFaction(INDEPENDENT_FACTION_CODE);
     }
 
+    /**
+     * Builds a weighted pool of enemy candidates for {@code employer} within the search area around {@code location}.
+     * Each faction's weight starts at the number of systems it controls in range; factions at war with the employer
+     * are added regardless of area presence, as long as they control territory anywhere; allies (direct or through a
+     * shared ally, see {@link #performIsAllyCheck}) are excluded; and remaining weights are adjusted for diplomatic
+     * stance (see {@link #adjustEnemyWeight}). A pirate employer bypasses all diplomatic checks.
+     *
+     * @param isCovert whether allies should be rare, low-chance targets instead of always excluded
+     * @param location the location to center the search on
+     * @param date     the date to check faction control and diplomatic relations against
+     * @param employer the employer faction
+     *
+     * @return a weighted map of enemy candidates, empty if {@code location} has no current system
+     */
     protected WeightedIntMap<Faction> buildEnemyMap(boolean isCovert, ILocation location, LocalDate date,
           Faction employer) {
         WeightedIntMap<Faction> enemyMap = new WeightedIntMap<>();
@@ -511,6 +537,16 @@ public class RandomFactionGenerator {
         return enemyMap;
     }
 
+    /**
+     * Checks whether two factions should be treated as allies: directly, or through a shared ally (e.g. two member
+     * states of the same superpower), unless a direct war record between them says otherwise.
+     *
+     * @param date     the date to check diplomatic relations against
+     * @param employer one faction
+     * @param enemy    the other faction
+     *
+     * @return {@code true} if the two factions should be treated as allied
+     */
     private boolean performIsAllyCheck(LocalDate date, Faction employer, Faction enemy) {
         return factionHints.isAlliedWith(employer, enemy, date) ||
                      (!factionHints.isAtWarWith(employer, enemy, date) &&
@@ -747,20 +783,19 @@ public class RandomFactionGenerator {
     }
 
     /**
-     * Builds a list of planets controlled by the defender that are near one or more of the attacker's planets, within
-     * {@link FactionBorderTracker#getRadius()} of {@code location}'s current system.
+     * Builds a list of potential mission-target planets near {@code location}, generally on the shared border
+     * between attacker and defender (see {@link #resolveTerritorialHost}, {@link #isSpecialAttacker}, and the
+     * closest-system fallback for the special cases). A pirate defender prefers a nearby empty/lawless system (see
+     * {@link #findEmptySystems}) over its own territory.
      * <p>
-     * Unlike the cached, single-region {@link FactionBorderTracker#getBorders(Faction)}/
-     * {@link FactionBorderTracker#getBorderSystems(Faction, Faction)}, every lookup here is computed fresh around
-     * {@code location}, so a campaign with multiple simultaneous locations (e.g. one per active force) gets a mission
-     * target scoped to whichever force the contract is actually being generated for, rather than whichever location
-     * last happened to recenter the tracker's shared cache.
+     * Computed fresh around {@code location} on every call rather than from the tracker's single cached region, so
+     * campaigns with multiple simultaneous locations get a target scoped to whichever force needs it.
      *
-     * @param attacker The attacking faction
-     * @param defender The defending faction
+     * @param attacker the attacking faction
+     * @param defender the defending faction
      * @param location the location to center the search on
      *
-     * @return A list of potential mission targets
+     * @return a list of potential mission targets
      */
     public List<PlanetarySystem> getMissionTargetList(Faction attacker, Faction defender, ILocation location) {
         LocalDate currentDate = getCurrentDate();
