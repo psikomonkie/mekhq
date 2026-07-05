@@ -703,7 +703,6 @@ public class CampaignNewDayManager {
         updateMASHTheatreCapacity();
     }
 
-
     private void processAllArrivals() {
         campaign.getCampaignLocationManager().processAllArrivals(campaign);
     }
