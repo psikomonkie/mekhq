@@ -536,6 +536,76 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
+     * Regression test: with no empty system nearby, a pirate defender should favor the attacker's own border with a
+     * Periphery neighbor (the classic "past the frontier" pirate haunt) over a border with a core neighbor.
+     */
+    @Test
+    public void testGetMissionTargetPirateDefenderPrefersPeripheryBorder() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction pirateFaction = createTestFaction("PIR", false, false);
+        when(pirateFaction.isPirate()).thenReturn(true);
+        Faction peripheryNeighbor = createTestFaction("PER", true, false);
+        Faction coreNeighbor = createTestFaction("CORE", false, false);
+
+        PlanetarySystem attackerSystemNearPeriphery = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem peripherySystem = createTestSystem(1, 0, peripheryNeighbor);
+        PlanetarySystem attackerSystemNearCore = createTestSystem(20, 0, attackerFaction);
+        PlanetarySystem coreSystem = createTestSystem(21, 0, coreNeighbor);
+
+        List<PlanetarySystem> systems = List.of(attackerSystemNearPeriphery, peripherySystem, attackerSystemNearCore,
+              coreSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(attackerFaction, pirateFaction, location);
+
+        assertEquals(List.of(attackerSystemNearPeriphery), targets,
+              "A pirate defender should prefer the attacker's border with a Periphery neighbor over one with a core "
+                    + "neighbor");
+    }
+
+    /**
+     * Regression test: with no empty system and no Periphery neighbor, a pirate defender should fall back to the
+     * attacker's border with any neighbor rather than the broader region-widening search.
+     */
+    @Test
+    public void testGetMissionTargetPirateDefenderFallsBackToAnyBorder() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction pirateFaction = createTestFaction("PIR", false, false);
+        when(pirateFaction.isPirate()).thenReturn(true);
+        Faction coreNeighbor = createTestFaction("CORE", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem coreSystem = createTestSystem(1, 0, coreNeighbor);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, coreSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(attackerFaction, pirateFaction, location);
+
+        assertEquals(List.of(attackerSystem), targets,
+              "With no Periphery neighbor, a pirate defender should fall back to the attacker's border with any "
+                    + "neighbor");
+    }
+
+    /**
      * Regression test: a rebel uprising happens somewhere within the attacking government's own territory, so a
      * rebel defender resolves to any of the attacker's own systems rather than a shared border.
      */

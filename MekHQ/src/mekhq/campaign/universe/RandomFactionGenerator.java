@@ -794,8 +794,9 @@ public class RandomFactionGenerator {
     /**
      * Builds a list of potential mission-target planets near {@code location}, generally on the shared border between
      * attacker and defender (see {@link #resolveTerritorialHost}, {@link #isSpecialAttacker}, and the closest-system
-     * fallback for the special cases). A pirate defender prefers a nearby empty/lawless system (see
-     * {@link #findEmptySystems}) over its own territory.
+     * fallback for the special cases). A pirate defender prefers a nearby empty/lawless system, then the attacker's
+     * own border with a Periphery neighbor, then any of the attacker's borders (see {@link #findEmptySystems} and
+     * {@link #findAttackerBorderSystems}) over its own (usually nonexistent) territory.
      * <p>
      * Computed fresh around {@code location} on every call rather than from the tracker's single cached region, so
      * campaigns with multiple simultaneous locations get a target scoped to whichever force needs it.
@@ -815,13 +816,25 @@ public class RandomFactionGenerator {
             return Collections.emptyList();
         }
 
-        // A pirate defender is more likely holed up in genuinely lawless, uncontested space than on a system some
-        // real faction officially claims; prefer such a system nearby if one exists, before falling back to the
-        // usual border-based logic below.
+        // A pirate defender is more likely holed up in lawless space near the frontier than on a system some real
+        // faction officially claims. Try, in order: genuinely empty/unclaimed systems; the attacker's own border with
+        // a Periphery neighbor (the classic "past the frontier" pirate haunt); the attacker's border with anyone.
+        // Only once all of those come up empty do we fall back to the usual border-based logic below.
         if (defender.getShortName().equals(PIRATE_FACTION_CODE)) {
             List<PlanetarySystem> emptySystems = findEmptySystems(location, radius, currentDate);
             if (!emptySystems.isEmpty()) {
                 return emptySystems;
+            }
+
+            List<PlanetarySystem> peripheryBorder = findAttackerBorderSystems(attacker, defender, location, radius,
+                  true);
+            if (!peripheryBorder.isEmpty()) {
+                return peripheryBorder;
+            }
+
+            List<PlanetarySystem> anyBorder = findAttackerBorderSystems(attacker, defender, location, radius, false);
+            if (!anyBorder.isEmpty()) {
+                return anyBorder;
             }
         }
 
@@ -951,6 +964,34 @@ public class RandomFactionGenerator {
             }
         }
         return emptySystems;
+    }
+
+    /**
+     * Finds the attacker's own systems that border another faction, within {@code radius} light years of
+     * {@code location}. Used to give a pirate defender a plausible frontier hideout when no empty system is
+     * available (see {@link #getMissionTargetList(Faction, Faction, ILocation)}).
+     *
+     * @param attacker              the attacking faction whose border systems are returned
+     * @param defender              the defending faction, excluded from the neighbor search
+     * @param location              the location to center the search on
+     * @param radius                the search radius in light years from {@code location}'s current system
+     * @param peripheryNeighborsOnly if {@code true}, only count borders with Periphery-tagged neighbors
+     *
+     * @return the attacker's border systems matching the neighbor criteria, or an empty list if none are found
+     */
+    private List<PlanetarySystem> findAttackerBorderSystems(Faction attacker, Faction defender, ILocation location,
+          double radius, boolean peripheryNeighborsOnly) {
+        Set<PlanetarySystem> borderSystems = new HashSet<>();
+        for (Faction neighbor : borderTracker.getFactionsInRegion(location, radius)) {
+            if (neighbor.equals(attacker) || neighbor.equals(defender) || FactionHints.isEmptyFaction(neighbor)) {
+                continue;
+            }
+            if (peripheryNeighborsOnly && !neighbor.isPeriphery()) {
+                continue;
+            }
+            borderSystems.addAll(borderTracker.getBorderSystems(neighbor, attacker, location, radius));
+        }
+        return new ArrayList<>(borderSystems);
     }
 
     /**
