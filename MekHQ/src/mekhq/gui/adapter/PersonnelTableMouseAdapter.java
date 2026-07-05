@@ -175,7 +175,7 @@ import mekhq.gui.control.EditLogControl.LogType;
 import mekhq.gui.dialog.*;
 import mekhq.gui.displayWrappers.RankDisplay;
 import mekhq.gui.menus.AssignPersonToUnitMenu;
-import mekhq.gui.menus.SendToLocationMenu;
+import mekhq.gui.menus.LocationMenu;
 import mekhq.gui.model.PersonnelTableModel;
 import mekhq.gui.utilities.JMenuHelpers;
 import mekhq.gui.utilities.MultiLineTooltip;
@@ -2433,9 +2433,7 @@ public class PersonnelTableMouseAdapter extends JPopupMenuAdapter {
 
         JMenuHelpers.addMenuIfNonEmpty(popup, new AssignPersonToUnitMenu(getCampaign(), selected));
         List<mekhq.campaign.personnel.Person> selectedPeople = Arrays.asList(selected);
-        JMenuHelpers.addMenuIfNonEmpty(popup, new SendToLocationMenu(getCampaign(), getFrame(),
-              selectedPeople,
-              destination -> getCampaign().getCampaignLocationManager().queueTravel(selectedPeople, destination)));
+        JMenuHelpers.addMenuIfNonEmpty(popup, new LocationMenu(getCampaign(), getFrame(), selectedPeople));
 
         JMenu familyRegularMenu = new JMenu(resources.getString("family.text"));
         if (oneSelected) {

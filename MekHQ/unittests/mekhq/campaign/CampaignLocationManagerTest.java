@@ -36,11 +36,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.UUID;
 
+import mekhq.MekHQ;
 import mekhq.campaign.location.LocationDispatch;
 import mekhq.campaign.unit.Unit;
 import org.junit.jupiter.api.Test;
@@ -103,5 +105,66 @@ class CampaignLocationManagerTest {
             dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), campaign, campaign));
         }
         assertFalse(manager.isQueuedForTravel(unit));
+    }
+
+    @Test
+    void gmTeleport_dispatchesThenProcessesArrivals() {
+        CampaignLocationManager manager = new CampaignLocationManager();
+        Campaign campaign = mock(Campaign.class);
+        Unit unit = mock(Unit.class);
+
+        try (MockedStatic<LocationDispatch> dispatch = mockStatic(LocationDispatch.class)) {
+            manager.gmTeleport(campaign, List.of(unit), campaign);
+            dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), campaign, campaign));
+        }
+        verify(campaign).processArrivals(campaign);
+    }
+
+    @Test
+    void gmCompleteTravel_startsQueuedItemToItsDestination() {
+        CampaignLocationManager manager = new CampaignLocationManager();
+        Campaign campaign = mock(Campaign.class);
+        Unit unit = mock(Unit.class);
+
+        // Queue the unit to travel to the campaign (used here as the destination ILocation).
+        manager.queueTravel(List.of(unit), campaign);
+
+        try (MockedStatic<LocationDispatch> dispatch = mockStatic(LocationDispatch.class)) {
+            manager.gmCompleteTravel(campaign, List.of(unit));
+            dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), campaign, campaign));
+        }
+        assertFalse(manager.isQueuedForTravel(unit));
+        verify(campaign).processArrivals(campaign);
+    }
+
+    @Test
+    void gmCompleteTravel_noopWhenNothingTravelingOrQueued() {
+        CampaignLocationManager manager = new CampaignLocationManager();
+        Campaign campaign = mock(Campaign.class);
+        Unit unit = mock(Unit.class);
+
+        try (MockedStatic<LocationDispatch> dispatch = mockStatic(LocationDispatch.class)) {
+            manager.gmCompleteTravel(campaign, List.of(unit));
+            dispatch.verifyNoInteractions();
+        }
+        verify(campaign).processArrivals(campaign);
+    }
+
+    @Test
+    void gmCompleteTravel_forcesInTransitNodeToArrive() {
+        CampaignLocationManager manager = new CampaignLocationManager();
+        Campaign campaign = mock(Campaign.class);
+        Unit unit = mock(Unit.class);
+        CurrentLocation travelNode = mock(CurrentLocation.class);
+        when(unit.getCurrentLocation()).thenReturn(travelNode);
+        when(travelNode.hasArrived()).thenReturn(false);
+
+        try (MockedStatic<MekHQ> ignored = mockStatic(MekHQ.class)) {
+            manager.gmCompleteTravel(campaign, List.of(unit));
+        }
+
+        verify(travelNode).setTransitTime(0);
+        verify(travelNode).setJumpPath(null);
+        verify(campaign).processArrivals(campaign);
     }
 }
