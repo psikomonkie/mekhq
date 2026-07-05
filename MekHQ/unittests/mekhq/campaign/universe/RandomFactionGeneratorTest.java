@@ -54,6 +54,7 @@ import java.util.Set;
 
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.mission.mission.contractGeneration.GlobalEmployerTableValue;
+import mekhq.campaign.universe.enums.HPGRating;
 import mekhq.campaign.universe.factionHints.FactionHints;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,8 +72,8 @@ public class RandomFactionGeneratorTest {
     private FactionBorderTracker borderTracker;
 
     /**
-     * Backs the mocked {@link Factions#getInstance()} roster; {@link RandomFactionGenerator#buildEnemyMap} consults
-     * it to find war partners with no presence in the immediate search area. Tests that introduce additional ad hoc
+     * Backs the mocked {@link Factions#getInstance()} roster; {@link RandomFactionGenerator#buildEnemyMap} consults it
+     * to find war partners with no presence in the immediate search area. Tests that introduce additional ad hoc
      * factions (e.g. a distant belligerent) must add them here too.
      */
     private List<Faction> allFactions;
@@ -227,11 +228,11 @@ public class RandomFactionGeneratorTest {
     }
 
     @Test
-    public void testGetEnemy() {
+    public void testGetRandomEnemy() {
         RandomFactionGenerator rfg = createTestRFG();
         ILocation location = createTestLocation(isFaction);
 
-        Faction enemy = rfg.getEnemy(false, location, TEST_DATE, isFaction);
+        Faction enemy = rfg.getRandomEnemy(false, location, TEST_DATE, isFaction);
 
         assertNotEquals("PIR", enemy.getShortName());
         assertNotEquals(isFaction.getShortName(), enemy.getShortName());
@@ -241,26 +242,25 @@ public class RandomFactionGeneratorTest {
      * Regression test: allied factions must never be selected as an enemy, with no exceptions.
      */
     @Test
-    public void testGetEnemyExcludesAlliedFaction() {
+    public void testGetRandomEnemyExcludesAlliedFaction() {
         FactionHints hints = new FactionHints();
         RandomFactionGenerator rfg = new RandomFactionGenerator(createTestBorderTracker(), hints);
         hints.addAlliance("", null, null, isFaction, peripheryFaction);
         ILocation location = createTestLocation(isFaction);
 
         for (int i = 0; i < 500; i++) {
-            Faction enemy = rfg.getEnemy(false, location, TEST_DATE, isFaction);
+            Faction enemy = rfg.getRandomEnemy(false, location, TEST_DATE, isFaction);
             assertNotEquals(peripheryFaction.getShortName(), enemy.getShortName(),
                   "Allied faction must never be chosen as an enemy");
         }
     }
 
     /**
-     * Regression test: a faction at war with the employer must always be a valid enemy target, even one with no
-     * systems within the search area, as long as the border tracker knows it controls territory elsewhere on the
-     * map.
+     * Regression test: a faction at war with the employer must always be a valid enemy target, even one with no systems
+     * within the search area, as long as the border tracker knows it controls territory elsewhere on the map.
      */
     @Test
-    public void testGetEnemyGuaranteesAtWarFactionOutsideSearchRadius() {
+    public void testGetRandomEnemyGuaranteesAtWarFactionOutsideSearchRadius() {
         Faction warFaction = createTestFaction("WAR", false, false);
         allFactions.add(warFaction);
 
@@ -286,22 +286,23 @@ public class RandomFactionGeneratorTest {
 
         boolean warFactionSeen = false;
         for (int i = 0; i < 200; i++) {
-            Faction enemy = rfg.getEnemy(false, location, TEST_DATE, isFaction);
+            Faction enemy = rfg.getRandomEnemy(false, location, TEST_DATE, isFaction);
             if (warFaction.getShortName().equals(enemy.getShortName())) {
                 warFactionSeen = true;
                 break;
             }
         }
-        assertTrue(warFactionSeen, "At-war faction with no systems in the search radius should still be a valid target");
+        assertTrue(warFactionSeen,
+              "At-war faction with no systems in the search radius should still be a valid target");
     }
 
     /**
-     * Regression test: during covert operations, an allied faction is a rare-but-possible enemy target, unlike
-     * normal operations where allies are always excluded with no exceptions (see
-     * {@link #testGetEnemyExcludesAlliedFaction}).
+     * Regression test: during covert operations, an allied faction is a rare-but-possible enemy target, unlike normal
+     * operations where allies are always excluded with no exceptions (see
+     * {@link #testGetRandomEnemyExcludesAlliedFaction}).
      */
     @Test
-    public void testGetEnemyCovertOpsCanTargetAllies() {
+    public void testGetRandomEnemyCovertOpsCanTargetAllies() {
         FactionHints hints = new FactionHints();
         RandomFactionGenerator rfg = new RandomFactionGenerator(createTestBorderTracker(), hints);
         hints.addAlliance("", null, null, isFaction, peripheryFaction);
@@ -309,7 +310,7 @@ public class RandomFactionGeneratorTest {
 
         boolean allySeen = false;
         for (int i = 0; i < 2000; i++) {
-            Faction enemy = rfg.getEnemy(true, location, TEST_DATE, isFaction);
+            Faction enemy = rfg.getRandomEnemy(true, location, TEST_DATE, isFaction);
             if (peripheryFaction.getShortName().equals(enemy.getShortName())) {
                 allySeen = true;
                 break;
@@ -324,7 +325,7 @@ public class RandomFactionGeneratorTest {
      * chosen as each other's enemy.
      */
     @Test
-    public void testGetEnemyExcludesFactionAlliedThroughSharedSuperpower() {
+    public void testGetRandomEnemyExcludesFactionAlliedThroughSharedSuperpower() {
         Faction superpower = createTestFaction("SUPER", false, false);
         FactionHints hints = new FactionHints();
         RandomFactionGenerator rfg = new RandomFactionGenerator(createTestBorderTracker(), hints);
@@ -334,7 +335,7 @@ public class RandomFactionGeneratorTest {
         ILocation location = createTestLocation(isFaction);
 
         for (int i = 0; i < 500; i++) {
-            Faction enemy = rfg.getEnemy(false, location, TEST_DATE, isFaction);
+            Faction enemy = rfg.getRandomEnemy(false, location, TEST_DATE, isFaction);
             assertNotEquals(peripheryFaction.getShortName(), enemy.getShortName(),
                   "A faction allied with the same superpower should never be chosen as an enemy, even without a "
                         + "direct alliance record");
@@ -342,11 +343,12 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: the shared-ally inheritance in {@link #testGetEnemyExcludesFactionAlliedThroughSharedSuperpower}
-     * must not apply when factionHints directly contradicts it with an explicit war record between the two factions.
+     * Regression test: the shared-ally inheritance in
+     * {@link #testGetRandomEnemyExcludesFactionAlliedThroughSharedSuperpower} must not apply when factionHints directly
+     * contradicts it with an explicit war record between the two factions.
      */
     @Test
-    public void testGetEnemyAtWarOverridesSharedSuperpowerAlliance() {
+    public void testGetRandomEnemyAtWarOverridesSharedSuperpowerAlliance() {
         Faction superpower = createTestFaction("SUPER", false, false);
         Faction warFaction = createTestFaction("WAR", false, false);
         allFactions.add(warFaction);
@@ -375,7 +377,7 @@ public class RandomFactionGeneratorTest {
 
         boolean warFactionSeen = false;
         for (int i = 0; i < 200; i++) {
-            Faction enemy = rfg.getEnemy(false, location, TEST_DATE, isFaction);
+            Faction enemy = rfg.getRandomEnemy(false, location, TEST_DATE, isFaction);
             if (warFaction.getShortName().equals(enemy.getShortName())) {
                 warFactionSeen = true;
                 break;
@@ -390,7 +392,7 @@ public class RandomFactionGeneratorTest {
      * valid faction with a presence in the area.
      */
     @Test
-    public void testGetEnemyPirateEmployerIgnoresNeutralStatus() {
+    public void testGetRandomEnemyPirateEmployerIgnoresNeutralStatus() {
         Faction pirateFaction = createTestFaction("PIR", false, false);
         when(pirateFaction.isPirate()).thenReturn(true);
 
@@ -401,7 +403,7 @@ public class RandomFactionGeneratorTest {
 
         boolean neutralSeen = false;
         for (int i = 0; i < 500; i++) {
-            Faction enemy = rfg.getEnemy(false, location, TEST_DATE, pirateFaction);
+            Faction enemy = rfg.getRandomEnemy(false, location, TEST_DATE, pirateFaction);
             if (peripheryFaction.getShortName().equals(enemy.getShortName())) {
                 neutralSeen = true;
                 break;
@@ -411,21 +413,21 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: {@link RandomFactionGenerator#getEnemy} falls back to the INDEPENDENT faction rather than
+     * Regression test: {@link RandomFactionGenerator#getRandomEnemy} falls back to the INDEPENDENT faction rather than
      * returning {@code null} when no employer is supplied.
      */
     @Test
-    public void testGetEnemyIndependentFallbackForNullEmployer() {
+    public void testGetRandomEnemyIndependentFallbackForNullEmployer() {
         RandomFactionGenerator rfg = createTestRFG();
         ILocation location = createTestLocation(isFaction);
 
-        Faction enemy = rfg.getEnemy(false, location, TEST_DATE, null);
+        Faction enemy = rfg.getRandomEnemy(false, location, TEST_DATE, null);
 
         assertEquals(independentFaction, enemy, "A null employer should fall back to the INDEPENDENT faction");
     }
 
     @Test
-    public void testGetEnemyList() {
+    public void testGetRandomEnemyList() {
         RandomFactionGenerator rfg = createTestRFG();
 
         List<String> enemyList = rfg.getEnemyList(clanFaction);
@@ -484,21 +486,105 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: a pirate attacker has no fixed territory of its own, so it can target any system the
-     * defender controls, not just systems on a shared border.
+     * Regression test: a pirate attacker raids from the frontier, so it favors the defender's border with a Periphery
+     * neighbor over a border with a core neighbor.
      */
     @Test
-    public void testGetMissionTargetPirateAttackerTargetsAllDefenderSystems() {
+    public void testGetMissionTargetPirateAttackerPrefersDefenderPeripheryBorder() {
         Faction pirateFaction = createTestFaction("PIR", false, false);
         when(pirateFaction.isPirate()).thenReturn(true);
-        RandomFactionGenerator rfg = createTestRFG();
-        ILocation location = createTestLocation(isFaction);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+        Faction peripheryNeighbor = createTestFaction("PER", true, false);
+        Faction coreNeighbor = createTestFaction("CORE", false, false);
 
-        List<PlanetarySystem> targets = rfg.getMissionTargetList(pirateFaction, isFaction, location);
+        PlanetarySystem defenderSystemNearPeriphery = createTestSystem(0, 0, defenderFaction);
+        PlanetarySystem peripherySystem = createTestSystem(1, 0, peripheryNeighbor);
+        PlanetarySystem defenderSystemNearCore = createTestSystem(20, 0, defenderFaction);
+        PlanetarySystem coreSystem = createTestSystem(21, 0, coreNeighbor);
 
-        Set<PlanetarySystem> expected = new HashSet<>(borderTracker.getBorders(isFaction).getSystems());
-        assertEquals(expected, new HashSet<>(targets),
-              "A pirate attacker should be able to target any system the defender controls, not just border systems");
+        List<PlanetarySystem> systems = List.of(defenderSystemNearPeriphery, peripherySystem, defenderSystemNearCore,
+              coreSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, new FactionHints());
+        ILocation location = createTestLocation(defenderFaction);
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(pirateFaction, defenderFaction, location);
+
+        assertEquals(List.of(defenderSystemNearPeriphery), targets,
+              "A pirate attacker should prefer the defender's border with a Periphery neighbor over one with a core "
+                    + "neighbor");
+    }
+
+    /**
+     * Regression test: with no Periphery neighbor, a pirate attacker should fall back to the defender's border with any
+     * neighbor rather than the broader region-widening search.
+     */
+    @Test
+    public void testGetMissionTargetPirateAttackerFallsBackToAnyDefenderBorder() {
+        Faction pirateFaction = createTestFaction("PIR", false, false);
+        when(pirateFaction.isPirate()).thenReturn(true);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+        Faction coreNeighbor = createTestFaction("CORE", false, false);
+
+        PlanetarySystem defenderSystem = createTestSystem(0, 0, defenderFaction);
+        PlanetarySystem coreSystem = createTestSystem(1, 0, coreNeighbor);
+
+        List<PlanetarySystem> systems = List.of(defenderSystem, coreSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, new FactionHints());
+        ILocation location = createTestLocation(defenderFaction);
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(pirateFaction, defenderFaction, location);
+
+        assertEquals(List.of(defenderSystem), targets,
+              "With no Periphery neighbor, a pirate attacker should fall back to the defender's border with any "
+                    + "neighbor");
+    }
+
+    /**
+     * Regression test: when the defender has no identifiable border at all (no neighboring factions), a pirate attacker
+     * falls back to striking anywhere the defender holds, rather than finding no target.
+     */
+    @Test
+    public void testGetMissionTargetPirateAttackerTargetsAllDefenderSystemsWhenNoBorder() {
+        Faction pirateFaction = createTestFaction("PIR", false, false);
+        when(pirateFaction.isPirate()).thenReturn(true);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        PlanetarySystem defenderSystem1 = createTestSystem(0, 0, defenderFaction);
+        PlanetarySystem defenderSystem2 = createTestSystem(1, 0, defenderFaction);
+
+        List<PlanetarySystem> systems = List.of(defenderSystem1, defenderSystem2);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, new FactionHints());
+        ILocation location = createTestLocation(defenderFaction);
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(pirateFaction, defenderFaction, location);
+
+        assertEquals(Set.of(defenderSystem1, defenderSystem2), new HashSet<>(targets),
+              "With no neighboring faction to form a border, a pirate attacker should be able to target any system "
+                    + "the defender controls");
     }
 
     /**
@@ -606,8 +692,81 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: a rebel uprising happens somewhere within the attacking government's own territory, so a
-     * rebel defender resolves to any of the attacker's own systems rather than a shared border.
+     * Regression test: ComStar's HPG network matters more than its sovereign territory, so when it's the defender, only
+     * its own systems or systems with an A/B-rated HPG station are valid targets, regardless of borders.
+     */
+    @Test
+    public void testGetMissionTargetComStarDefenderOnlyTargetsOwnedOrHighRatedHPGSystems() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction comStarFaction = createTestFaction("CS", false, false);
+        when(comStarFaction.isComStar()).thenReturn(true);
+        when(comStarFaction.isComStarOrWoB()).thenReturn(true);
+        Faction otherFaction = createTestFaction("OTHER", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(-1, 0, attackerFaction);
+        PlanetarySystem comStarOwnedSystem = createTestSystem(0, 0, comStarFaction);
+        PlanetarySystem highRatedHpgSystem = createTestSystem(1, 0, otherFaction);
+        when(highRatedHpgSystem.getHPG(any())).thenReturn(HPGRating.A);
+        PlanetarySystem lowRatedHpgSystem = createTestSystem(2, 0, otherFaction);
+        when(lowRatedHpgSystem.getHPG(any())).thenReturn(HPGRating.C);
+        PlanetarySystem noHpgSystem = createTestSystem(3, 0, otherFaction);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, comStarOwnedSystem, highRatedHpgSystem,
+              lowRatedHpgSystem, noHpgSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(attackerFaction, comStarFaction, location);
+
+        assertEquals(Set.of(comStarOwnedSystem, highRatedHpgSystem), new HashSet<>(targets),
+              "Only ComStar-owned systems or A/B-rated HPG systems should be valid targets against ComStar");
+    }
+
+    /**
+     * Regression test: with no ComStar-owned or A/B-rated HPG system in range, there is no valid target against ComStar
+     * &mdash; unlike the pirate cases, this is a hard restriction with no fallback to a broader search.
+     */
+    @Test
+    public void testGetMissionTargetComStarDefenderReturnsEmptyWhenNoQualifyingSystemsInRange() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction comStarFaction = createTestFaction("CS", false, false);
+        when(comStarFaction.isComStar()).thenReturn(true);
+        when(comStarFaction.isComStarOrWoB()).thenReturn(true);
+        Faction otherFaction = createTestFaction("OTHER", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(-1, 0, attackerFaction);
+        PlanetarySystem lowRatedHpgSystem = createTestSystem(0, 0, otherFaction);
+        when(lowRatedHpgSystem.getHPG(any())).thenReturn(HPGRating.C);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, lowRatedHpgSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(attackerFaction, comStarFaction, location);
+
+        assertTrue(targets.isEmpty(),
+              "With no ComStar-owned or A/B-rated HPG system in range, there should be no valid target");
+    }
+
+    /**
+     * Regression test: a rebel uprising happens somewhere within the attacking government's own territory, so a rebel
+     * defender resolves to any of the attacker's own systems rather than a shared border.
      */
     @Test
     public void testGetMissionTargetRebelDefenderTargetsAllAttackerSystems() {
@@ -696,8 +855,8 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: two factions with no territory of their own (e.g. two pirate bands) have nowhere for a
-     * mission to occur.
+     * Regression test: two factions with no territory of their own (e.g. two pirate bands) have nowhere for a mission
+     * to occur.
      */
     @Test
     public void testGetMissionTargetReturnsEmptyWhenBothFactionsAreLandless() {
@@ -714,9 +873,9 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: a faction with no territory of its own, no configured contained-faction host, and none of
-     * the inherently-landless faction types (pirate/mercenary/ComStar/WoB/rebel) resolves to {@code null}, so no
-     * mission target can be found.
+     * Regression test: a faction with no territory of its own, no configured contained-faction host, and none of the
+     * inherently-landless faction types (pirate/mercenary/ComStar/WoB/rebel) resolves to {@code null}, so no mission
+     * target can be found.
      */
     @Test
     public void testGetMissionTargetReturnsEmptyWhenFactionHasNoTerritoryOrHost() {
@@ -779,9 +938,9 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test for MekHQ issue #6451: an extinct faction (e.g. Aurigan Coalition
-     * past 3028) must not be returned as a current/employer faction even if stale planet
-     * ownership data still lists it as the controller of some systems.
+     * Regression test for MekHQ issue #6451: an extinct faction (e.g. Aurigan Coalition past 3028) must not be returned
+     * as a current/employer faction even if stale planet ownership data still lists it as the controller of some
+     * systems.
      */
     @Test
     public void testExtinctFactionExcludedFromCurrentFactions() {
@@ -889,8 +1048,8 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: {@code addAnyContainedFactions} previously re-checked the host faction's eligibility instead
-     * of the contained faction's, so a Clan contained faction could slip past the Clan filter and be chosen as an
+     * Regression test: {@code addAnyContainedFactions} previously re-checked the host faction's eligibility instead of
+     * the contained faction's, so a Clan contained faction could slip past the Clan filter and be chosen as an
      * employer. Marking the contained faction (not the host) as a Clan must exclude it.
      */
     @Test
@@ -986,8 +1145,8 @@ public class RandomFactionGeneratorTest {
 
     /**
      * {@link RandomFactionGenerator#getEmployerFaction(ILocation, LocalDate)} is a convenience wrapper around
-     * {@link RandomFactionGenerator#getRandomEmployerFaction} with no employer-type filtering; verify it draws from
-     * the same candidate pool as calling that method directly with a {@code null} employer type.
+     * {@link RandomFactionGenerator#getRandomEmployerFaction} with no employer-type filtering; verify it draws from the
+     * same candidate pool as calling that method directly with a {@code null} employer type.
      */
     @Test
     public void testGetEmployerFactionMatchesRandomEmployerFactionCandidatePool() {
@@ -1007,9 +1166,9 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: {@link RandomFactionGenerator#getRandomEmployerFaction} must filter candidates by the
-     * requested {@link GlobalEmployerTableValue} power tier, excluding any faction (controlling or contained) whose
-     * tier doesn't match.
+     * Regression test: {@link RandomFactionGenerator#getRandomEmployerFaction} must filter candidates by the requested
+     * {@link GlobalEmployerTableValue} power tier, excluding any faction (controlling or contained) whose tier doesn't
+     * match.
      */
     @Test
     public void testRandomEmployerFactionFiltersByEmployerType() {
@@ -1018,7 +1177,10 @@ public class RandomFactionGeneratorTest {
         ILocation location = createTestLocation(isFaction);
 
         for (int i = 0; i < 500; i++) {
-            Faction chosen = rfg.getRandomEmployerFaction(location, TEST_DATE, GlobalEmployerTableValue.MINOR_POWER, false);
+            Faction chosen = rfg.getRandomEmployerFaction(location,
+                  TEST_DATE,
+                  GlobalEmployerTableValue.MINOR_POWER,
+                  false);
             assertNotNull(chosen, "Employer faction should not be null");
             assertEquals(isFaction.getShortName(), chosen.getShortName(),
                   "Only factions matching the requested employer power tier should be returned, including excluding "
@@ -1071,8 +1233,8 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: one of the historical Inner Sphere Clan-war combatants (FC/FRR/DC) gets a doubled weight
-     * against a Clan enemy, but only during the invasion's height (first wave through Tukayyid).
+     * Regression test: one of the historical Inner Sphere Clan-war combatants (FC/FRR/DC) gets a doubled weight against
+     * a Clan enemy, but only during the invasion's height (first wave through Tukayyid).
      */
     @Test
     public void testAdjustEnemyWeightDoublesForClanInvasionCombatantDuringInvasionHeight() {
@@ -1081,7 +1243,8 @@ public class RandomFactionGeneratorTest {
 
         double weight = rfg.adjustEnemyWeight(5, fedCom, clanFaction, TEST_DATE, true, false);
 
-        assertEquals(10.0, weight,
+        assertEquals(10.0,
+              weight,
               "An Inner Sphere Clan-war combatant's weight against a Clan enemy should double during the invasion's height");
     }
 
@@ -1114,8 +1277,8 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: ComStar's weight against a Clan target is divided by 12, since ComStar has few targets and
-     * would otherwise fight the Clans too often between Tukayyid and the Jihad.
+     * Regression test: ComStar's weight against a Clan target is divided by 12, since ComStar has few targets and would
+     * otherwise fight the Clans too often between Tukayyid and the Jihad.
      */
     @Test
     public void testAdjustEnemyWeightDividesByTwelveForComStarVsClan() {

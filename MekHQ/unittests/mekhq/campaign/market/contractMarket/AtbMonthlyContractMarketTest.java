@@ -211,7 +211,7 @@ class AtbMonthlyContractMarketTest {
 
             RandomFactionGenerator randomFactionGenerator = mock(RandomFactionGenerator.class);
             when(randomFactionGenerator.getFactionHints()).thenReturn(factionHints);
-            when(randomFactionGenerator.getEnemy(anyBoolean(), any(), any(), eq(employerFaction)))
+            when(randomFactionGenerator.getRandomEnemy(anyBoolean(), any(), any(), eq(employerFaction)))
                   .thenReturn(enemyFaction);
             when(randomFactionGenerator.getMissionTarget(anyString(), anyString(), any()))
                   .thenReturn(UNREACHABLE_TARGET_ID)

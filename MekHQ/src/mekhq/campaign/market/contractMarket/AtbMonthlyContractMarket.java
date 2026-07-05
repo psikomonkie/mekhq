@@ -258,27 +258,6 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
                 numContracts++;
             }
 
-            /*
-             * If located on a faction's capital (interpreted as the starting planet for that faction),
-             * generate one contract offer for that faction.
-             */
-            if (!campaign.isPirateCampaign()) {
-                for (Faction f : campaign.getCurrentSystem().getFactionSet(campaign.getLocalDate())) {
-                    try {
-                        if (f.getStartingPlanet(campaign.getLocalDate()).equals(campaign.getCurrentSystem().getId()) &&
-                                  RandomFactionGenerator.getInstance().getEmployerSet().contains(f.getShortName())) {
-                            AtBContract c = generateAtBContract(campaign, f.getShortName(), unitRatingMod);
-                            if (c != null) {
-                                contracts.add(c);
-                                break;
-                            }
-                        }
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        // no starting planet in current era; continue to next faction
-                    }
-                }
-            }
-
             if (newCampaign) {
                 numContracts = max(numContracts, 2);
             }
@@ -320,13 +299,14 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
     private @Nullable AtBContract generateAtBContract(Campaign campaign, int unitRatingMod) {
         AtBContract contract = null;
 
+        boolean isMercenaryCampaign = campaign.isMercenaryCampaign();
         if (campaign.getFaction().isMercenary()) {
             if (null == campaign.getRetainerEmployerCode()) {
                 int retries = MAXIMUM_GENERATION_RETRIES;
                 while ((retries > 0) && (contract == null)) {
                     Faction employer =
-                          RandomFactionGenerator.getInstance().getEmployerFaction(campaign.getCurrentLocation(),
-                                campaign.getLocalDate());
+                          RandomFactionGenerator.getInstance().getRandomEmployerFaction(campaign.getCurrentLocation(),
+                                campaign.getLocalDate(), null, isMercenaryCampaign);
                     if (employer == null) {
                         retries--;
                         continue;
@@ -493,8 +473,10 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
             contract.setMercSubcontract(true);
             for (int attempts = 0; attempts < MAXIMUM_ATTEMPTS_TO_FIND_NON_MERC_EMPLOYER; ++attempts) {
                 Faction rerolledEmployer = RandomFactionGenerator.getInstance()
-                                                  .getEmployerFaction(campaign.getCurrentLocation(),
-                                                        campaign.getLocalDate());
+                                                 .getRandomEmployerFaction(campaign.getCurrentLocation(),
+                                                       campaign.getLocalDate(),
+                                                       null,
+                                                       true);
                 employer = rerolledEmployer == null ? null : rerolledEmployer.getShortName();
                 if ((employer != null) && !Factions.getInstance().getFaction(employer).isMercenary()) {
                     break;
@@ -627,7 +609,7 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
             contract.setEnemyCode("REB");
         } else {
             Faction enemyFaction = RandomFactionGenerator.getInstance()
-                                         .getEnemy(false,
+                                         .getRandomEnemy(false,
                                                campaign.getCurrentLocation(),
                                                campaign.getLocalDate(),
                                                contract.getEmployerFaction());
