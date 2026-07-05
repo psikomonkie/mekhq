@@ -32,6 +32,7 @@
  */
 package mekhq.campaign.universe;
 
+import static mekhq.MHQConstants.FORTRESS_REPUBLIC_START;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -887,6 +888,43 @@ public class RandomFactionGeneratorTest {
 
         assertTrue(targets.isEmpty(),
               "A faction with no territory of its own and no configured host resolves to null, yielding no targets");
+    }
+
+    @Test
+    public void testGetMissionTargetFortressRepublicFiltersNonTerraRepublicSystems() {
+        Faction rosFaction = createTestFaction(Faction.REPUBLIC_OF_THE_SPHERE_FACTION_CODE, false, false);
+        allFactions.add(rosFaction);
+        Faction mercAttacker = createTestFaction("MERC", false, false);
+        when(mercAttacker.isMercenary()).thenReturn(true);
+
+        PlanetarySystem terraSystem = createTestSystem(0, 0, rosFaction);
+        when(terraSystem.getId()).thenReturn("Terra");
+        PlanetarySystem otherRepublicSystem = createTestSystem(1, 0, rosFaction);
+        when(otherRepublicSystem.getId()).thenReturn("Addicks");
+
+        List<PlanetarySystem> systems = List.of(terraSystem, otherRepublicSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            protected Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        LocalDate fortressRepublicDate = FORTRESS_REPUBLIC_START.plusYears(1);
+        tracker.setDate(fortressRepublicDate);
+        // Blocks until the background recalculation triggered by setDate() has finished, so getMissionTargetList's
+        // use of the tracker's lastUpdated date below is guaranteed to reflect fortressRepublicDate.
+        tracker.getFactionsInRegion();
+
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, new FactionHints());
+        ILocation location = createTestLocation(rosFaction);
+
+        List<PlanetarySystem> targets = rfg.getMissionTargetList(mercAttacker, rosFaction, location);
+
+        assertEquals(List.of(terraSystem), targets,
+              "During the Fortress Republic era, only Terra should remain a valid target among Republic-owned "
+                    + "systems");
     }
 
     @Test
