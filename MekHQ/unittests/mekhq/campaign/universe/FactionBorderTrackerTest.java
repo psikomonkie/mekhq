@@ -69,7 +69,7 @@ public class FactionBorderTrackerTest {
 
         return new FactionBorderTracker() {
             @Override
-            protected Collection<PlanetarySystem> getSystemList() {
+            public Collection<PlanetarySystem> getSystemList() {
                 return systems;
             }
         };

@@ -1,0 +1,545 @@
+/*
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
+ *
+ * This file is part of MekHQ.
+ *
+ * MekHQ is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekHQ is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekHQ was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
+ */
+package mekhq.campaign.mission.newContract;
+
+import static mekhq.MHQConstants.FORTRESS_REPUBLIC_START;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import mekhq.campaign.location.ILocation;
+import mekhq.campaign.universe.Faction;
+import mekhq.campaign.universe.FactionBorderTracker;
+import mekhq.campaign.universe.Factions;
+import mekhq.campaign.universe.PlanetarySystem;
+import mekhq.campaign.universe.factionHints.FactionHints;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+/**
+ * Tests {@link MissionTargetFinder}'s own orchestration logic: territorial-host resolution, the special-attacker and
+ * rebel-defender fallbacks, the shared-border/widen/contained-faction/closest-system chain, and Fortress Republic
+ * filtering. Delegation to {@link PirateMissionTargetFinder}/{@link ComStarMissionTargetFinder} is confirmed here at
+ * the wiring level only; their own tiered fallback logic is tested directly in {@code PirateMissionTargetFinderTest}
+ * and {@code ComStarMissionTargetFinderTest}.
+ * <p>
+ * Moved from the equivalent {@code getMissionTargetList} scenarios in {@code RandomFactionGeneratorTest} now that
+ * this logic lives here.
+ */
+public class MissionTargetFinderTest {
+
+    private static final LocalDate TEST_DATE = LocalDate.of(3025, 1, 1);
+
+    private Faction isFaction;
+    private Faction clanFaction;
+    private Faction peripheryFaction;
+    private Faction innerISFaction;
+    private FactionBorderTracker borderTracker;
+
+    /**
+     * Backs the mocked {@link Factions#getInstance()} roster; {@link MissionTargetFinder}'s {@code systemsOf} helper
+     * consults it to resolve the Republic of the Sphere faction for Fortress Republic filtering.
+     */
+    private List<Faction> allFactions;
+
+    @BeforeEach
+    public void init() {
+        borderTracker = createTestBorderTracker();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        Factions.setInstance(null);
+    }
+
+    private FactionBorderTracker createTestBorderTracker() {
+        isFaction = createTestFaction("IS", false, false);
+        clanFaction = createTestFaction("Clan", false, true);
+        peripheryFaction = createTestFaction("Periphery", true, false);
+        innerISFaction = createTestFaction("IS2", false, false);
+
+        allFactions = new ArrayList<>(List.of(isFaction, clanFaction, peripheryFaction, innerISFaction));
+        Factions factions = mock(Factions.class);
+        when(factions.getFactions()).thenReturn(allFactions);
+        when(factions.getFaction(anyString())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            return allFactions.stream().filter(f -> f.getShortName().equals(code)).findFirst().orElse(null);
+        });
+        Factions.setInstance(factions);
+
+        List<PlanetarySystem> systems = new ArrayList<>();
+        for (int x = -2; x < 3; x++) {
+            for (int y = -2; y < 3; y++) {
+                if (x < 0) {
+                    systems.add(createTestSystem(x, y, isFaction));
+                }
+                if (x > 0) {
+                    systems.add(createTestSystem(x, y, clanFaction));
+                }
+                systems.add(createTestSystem(x, y + 10, peripheryFaction));
+            }
+        }
+
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        return tracker;
+    }
+
+    private static Faction createTestFaction(final String id, final boolean periphery, final boolean clan) {
+        Faction f = mock(Faction.class);
+        when(f.getShortName()).thenReturn(id);
+        when(f.isPeriphery()).thenReturn(periphery);
+        when(f.isClan()).thenReturn(clan);
+        return f;
+    }
+
+    private static PlanetarySystem createTestSystem(final double x, final double y, final Faction f) {
+        PlanetarySystem p = mock(PlanetarySystem.class);
+        when(p.getX()).thenReturn(x);
+        when(p.getY()).thenReturn(y);
+        when(p.getFactionSet(any())).thenReturn(Collections.singleton(f));
+        when(p.getId()).thenReturn(String.format("(%3.1f,%3.1f)", x, y));
+        return p;
+    }
+
+    private FactionHints createTestHints() {
+        FactionHints hints = new FactionHints();
+        hints.addContainedFaction(isFaction, innerISFaction, null, null, 0.5);
+        return hints;
+    }
+
+    private MissionTargetFinder createTestFinder() {
+        return new MissionTargetFinder(borderTracker, createTestHints());
+    }
+
+    /**
+     * Builds a mock {@link ILocation} whose current system is controlled solely by the given faction.
+     */
+    private static ILocation createTestLocation(final Faction controllingFaction) {
+        PlanetarySystem system = mock(PlanetarySystem.class);
+        when(system.getFactionSet(any())).thenReturn(Collections.singleton(controllingFaction));
+        ILocation location = mock(ILocation.class);
+        when(location.getCurrentSystem()).thenReturn(system);
+        return location;
+    }
+
+    @Test
+    public void testFind() {
+        MissionTargetFinder finder = createTestFinder();
+        ILocation location = createTestLocation(isFaction);
+
+        assertFalse(finder.find(peripheryFaction, isFaction, location, TEST_DATE).isEmpty());
+        assertFalse(finder.find(peripheryFaction, innerISFaction, location, TEST_DATE).isEmpty());
+        assertFalse(finder.find(innerISFaction, peripheryFaction, location, TEST_DATE).isEmpty());
+    }
+
+    /**
+     * Regression test: when neither a direct border nor a contained-faction proxy border exists between the two
+     * factions, find() should fall back to the defender's system physically closest to the attacker instead of
+     * returning nothing.
+     */
+    @Test
+    public void testFindFallsBackToClosestDefenderSystem() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        // Placed far apart in x/y so the geometric border-adjacency check excludes them before ever consulting
+        // getDistanceTo(), and no contained-faction relationship is configured (fresh FactionHints below).
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem nearDefenderSystem = createTestSystem(1000, 1000, defenderFaction);
+        PlanetarySystem farDefenderSystem = createTestSystem(2000, 2000, defenderFaction);
+
+        when(nearDefenderSystem.getDistanceTo(attackerSystem)).thenReturn(50.0);
+        when(farDefenderSystem.getDistanceTo(attackerSystem)).thenReturn(500.0);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, nearDefenderSystem, farDefenderSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE);
+
+        assertEquals(List.of(nearDefenderSystem), targets,
+              "With no border or contained-faction relationship, the closest defender system should be the sole target");
+    }
+
+    /**
+     * Regression test: a pirate defender is routed to {@link PirateMissionTargetFinder}, whose own tiers are tested
+     * directly in {@code PirateMissionTargetFinderTest}; this just confirms find() delegates and returns its result.
+     */
+    @Test
+    public void testFindDelegatesToPirateFinderForPirateDefender() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction pirateFaction = createTestFaction("PIR", false, false);
+        when(pirateFaction.isPirate()).thenReturn(true);
+        Faction emptyFaction = createTestFaction("UND", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem emptySystem = createTestSystem(1, 0, emptyFaction);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, emptySystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, pirateFaction, location, TEST_DATE);
+
+        assertEquals(List.of(emptySystem), targets,
+              "find() should delegate to the pirate finder for a pirate defender and return its result");
+    }
+
+    /**
+     * Regression test: a pirate attacker is routed to {@link PirateMissionTargetFinder}, whose own tiers are tested
+     * directly in {@code PirateMissionTargetFinderTest}; this just confirms find() delegates and returns its result.
+     */
+    @Test
+    public void testFindDelegatesToPirateFinderForPirateAttacker() {
+        Faction pirateFaction = createTestFaction("PIR", false, false);
+        when(pirateFaction.isPirate()).thenReturn(true);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+        Faction peripheryNeighbor = createTestFaction("PER", true, false);
+
+        PlanetarySystem defenderSystem = createTestSystem(0, 0, defenderFaction);
+        PlanetarySystem peripherySystem = createTestSystem(1, 0, peripheryNeighbor);
+
+        List<PlanetarySystem> systems = List.of(defenderSystem, peripherySystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(defenderFaction);
+
+        List<PlanetarySystem> targets = finder.find(pirateFaction, defenderFaction, location, TEST_DATE);
+
+        assertEquals(List.of(defenderSystem), targets,
+              "find() should delegate to the pirate finder for a pirate attacker and return its result");
+    }
+
+    /**
+     * Regression test: when the defender has no identifiable border at all, the pirate-attacker tier
+     * ({@link PirateMissionTargetFinder}) finds nothing, so find() falls back to striking anywhere the defender
+     * holds rather than finding no target.
+     */
+    @Test
+    public void testFindPirateAttackerFallsBackToAllDefenderSystemsWhenNoBorder() {
+        Faction pirateFaction = createTestFaction("PIR", false, false);
+        when(pirateFaction.isPirate()).thenReturn(true);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        PlanetarySystem defenderSystem1 = createTestSystem(0, 0, defenderFaction);
+        PlanetarySystem defenderSystem2 = createTestSystem(1, 0, defenderFaction);
+
+        List<PlanetarySystem> systems = List.of(defenderSystem1, defenderSystem2);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(defenderFaction);
+
+        List<PlanetarySystem> targets = finder.find(pirateFaction, defenderFaction, location, TEST_DATE);
+
+        assertEquals(Set.of(defenderSystem1, defenderSystem2), new HashSet<>(targets),
+              "With no neighboring faction to form a border, a pirate attacker should be able to target any system "
+                    + "the defender controls");
+    }
+
+    /**
+     * Regression test: a ComStar defender is routed to {@link ComStarMissionTargetFinder}, whose own filtering is
+     * tested directly in {@code ComStarMissionTargetFinderTest}; this just confirms find() delegates and returns its
+     * result.
+     */
+    @Test
+    public void testFindDelegatesToComStarFinderForComStarDefender() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction comStarFaction = createTestFaction("CS", false, false);
+        when(comStarFaction.isComStar()).thenReturn(true);
+        when(comStarFaction.isComStarOrWoB()).thenReturn(true);
+
+        PlanetarySystem attackerSystem = createTestSystem(-1, 0, attackerFaction);
+        PlanetarySystem comStarOwnedSystem = createTestSystem(0, 0, comStarFaction);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, comStarOwnedSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, comStarFaction, location, TEST_DATE);
+
+        assertEquals(List.of(comStarOwnedSystem), targets,
+              "find() should delegate to the ComStar finder for a ComStar defender and return its result");
+    }
+
+    /**
+     * Regression test: with no ComStar-owned or A/B-rated HPG system in range, find() returns no target for a
+     * ComStar defender &mdash; unlike the pirate cases, this is a hard restriction with no fallback to the generic
+     * border-based logic.
+     */
+    @Test
+    public void testFindReturnsEmptyForComStarDefenderWhenNoQualifyingSystems() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction comStarFaction = createTestFaction("CS", false, false);
+        when(comStarFaction.isComStar()).thenReturn(true);
+        when(comStarFaction.isComStarOrWoB()).thenReturn(true);
+
+        PlanetarySystem attackerSystem = createTestSystem(-1, 0, attackerFaction);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, comStarFaction, location, TEST_DATE);
+
+        assertTrue(targets.isEmpty(),
+              "With no ComStar-owned or A/B-rated HPG system in range, there should be no valid target, and no "
+                    + "fallback to the generic border logic");
+    }
+
+    /**
+     * Regression test: a rebel uprising happens somewhere within the attacking government's own territory, so a
+     * rebel defender resolves to any of the attacker's own systems rather than a shared border.
+     */
+    @Test
+    public void testFindRebelDefenderTargetsAllAttackerSystems() {
+        Faction rebelFaction = createTestFaction("REB", false, false);
+        when(rebelFaction.isRebel()).thenReturn(true);
+        MissionTargetFinder finder = createTestFinder();
+        ILocation location = createTestLocation(isFaction);
+
+        List<PlanetarySystem> targets = finder.find(isFaction, rebelFaction, location, TEST_DATE);
+
+        Set<PlanetarySystem> expected = new HashSet<>(borderTracker.getBorders(isFaction).getSystems());
+        assertEquals(expected, new HashSet<>(targets),
+              "A rebel uprising should be targetable anywhere within the attacker's own territory");
+    }
+
+    /**
+     * Regression test: a defender with no territory of its own (and no configured host) isn't tied to a specific
+     * border, so the search widens to the attacker's frontier with every neighboring faction instead of coming up
+     * empty.
+     */
+    @Test
+    public void testFindWidensSearchForLandlessDefender() {
+        Faction mercDefender = createTestFaction("MERC_DEF", false, false);
+        when(mercDefender.isMercenary()).thenReturn(true);
+        MissionTargetFinder finder = createTestFinder();
+        ILocation location = createTestLocation(isFaction);
+
+        List<PlanetarySystem> targets = finder.find(isFaction, mercDefender, location, TEST_DATE);
+
+        assertFalse(targets.isEmpty(),
+              "A landless defender with no direct border should fall back to the attacker's general frontier");
+        // getBorderSystems(a, b) returns b's systems near a, so the widened search returns a mix of the attacker's
+        // own frontier systems and neighboring factions' systems near that frontier - not exclusively systems the
+        // attacker itself controls. Every result should still belong to one of the region's known factions.
+        Set<PlanetarySystem> allKnownSystems = new HashSet<>();
+        allKnownSystems.addAll(borderTracker.getBorders(isFaction).getSystems());
+        allKnownSystems.addAll(borderTracker.getBorders(clanFaction).getSystems());
+        allKnownSystems.addAll(borderTracker.getBorders(peripheryFaction).getSystems());
+        assertTrue(allKnownSystems.containsAll(targets),
+              "Frontier-widening should only return systems controlled by a known regional faction");
+    }
+
+    /**
+     * Regression test: when the attacker and defender don't directly border each other, but the attacker is a
+     * "contained" faction of some other regional faction with the defender listed as its opponent, that regional
+     * faction's own border with the defender should be used as a proxy target.
+     */
+    @Test
+    public void testFindContainedFactionOpponentFallback() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+        Faction hostFaction = createTestFaction("HOST", false, false);
+
+        // The attacker and defender are far apart (no direct border); the host is placed right next to the
+        // defender so its own border can serve as a proxy.
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem defenderSystem = createTestSystem(1000, 1000, defenderFaction);
+        PlanetarySystem hostSystem = createTestSystem(1000, 1002, hostFaction);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, defenderSystem, hostSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        FactionHints hints = new FactionHints();
+        // attackerFaction is "contained" under hostFaction, with defenderFaction as its designated opponent - even
+        // though attackerFaction has territory of its own (so it isn't resolved away to hostFaction outright).
+        hints.addContainedFaction(hostFaction,
+              attackerFaction,
+              null,
+              null,
+              1.0,
+              Collections.singletonList(defenderFaction));
+
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, hints);
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE);
+
+        assertEquals(List.of(defenderSystem), targets,
+              "With no direct border, a contained-faction-opponent relationship should provide a proxy border");
+    }
+
+    /**
+     * Regression test: two factions with no territory of their own (e.g. two pirate bands) have nowhere for a
+     * mission to occur.
+     */
+    @Test
+    public void testFindReturnsEmptyWhenBothFactionsAreLandless() {
+        Faction pirateAttacker = createTestFaction("PIR_A", false, false);
+        when(pirateAttacker.isPirate()).thenReturn(true);
+        Faction pirateDefender = createTestFaction("PIR_D", false, false);
+        when(pirateDefender.isPirate()).thenReturn(true);
+        MissionTargetFinder finder = createTestFinder();
+        ILocation location = createTestLocation(isFaction);
+
+        List<PlanetarySystem> targets = finder.find(pirateAttacker, pirateDefender, location, TEST_DATE);
+
+        assertTrue(targets.isEmpty(), "Two landless factions have no territory for a mission to occur on");
+    }
+
+    /**
+     * Regression test: a faction with no territory of its own, no configured contained-faction host, and none of
+     * the inherently-landless faction types (pirate/mercenary/ComStar/WoB/rebel) resolves to {@code null}, so no
+     * mission target can be found.
+     */
+    @Test
+    public void testFindReturnsEmptyWhenFactionHasNoTerritoryOrHost() {
+        Faction homelessFaction = createTestFaction("HOMELESS", false, false);
+        MissionTargetFinder finder = createTestFinder();
+        ILocation location = createTestLocation(isFaction);
+
+        List<PlanetarySystem> targets = finder.find(isFaction, homelessFaction, location, TEST_DATE);
+
+        assertTrue(targets.isEmpty(),
+              "A faction with no territory of its own and no configured host resolves to null, yielding no targets");
+    }
+
+    @Test
+    public void testFindFortressRepublicFiltersNonTerraRepublicSystems() {
+        Faction rosFaction = createTestFaction(Faction.REPUBLIC_OF_THE_SPHERE_FACTION_CODE, false, false);
+        allFactions.add(rosFaction);
+        Faction mercAttacker = createTestFaction("MERC", false, false);
+        when(mercAttacker.isMercenary()).thenReturn(true);
+
+        PlanetarySystem terraSystem = createTestSystem(0, 0, rosFaction);
+        when(terraSystem.getId()).thenReturn("Terra");
+        PlanetarySystem otherRepublicSystem = createTestSystem(1, 0, rosFaction);
+        when(otherRepublicSystem.getId()).thenReturn("Addicks");
+
+        List<PlanetarySystem> systems = List.of(terraSystem, otherRepublicSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        LocalDate fortressRepublicDate = FORTRESS_REPUBLIC_START.plusYears(1);
+        tracker.setDate(fortressRepublicDate);
+        // Blocks until the background recalculation triggered by setDate() has finished, so the tracker's cached
+        // state (consulted by resolveTerritorialHost) is guaranteed to reflect fortressRepublicDate.
+        tracker.getFactionsInRegion();
+
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(rosFaction);
+
+        List<PlanetarySystem> targets = finder.find(mercAttacker, rosFaction, location, fortressRepublicDate);
+
+        assertEquals(List.of(terraSystem), targets,
+              "During the Fortress Republic era, only Terra should remain a valid target among Republic-owned "
+                    + "systems");
+    }
+}

@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.universe;
+package mekhq.campaign.mission.newContract;
 
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_END;
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_START;
@@ -47,20 +47,26 @@ import java.util.Set;
 
 import megamek.common.annotations.Nullable;
 import mekhq.campaign.location.ILocation;
+import mekhq.campaign.universe.Faction;
+import mekhq.campaign.universe.FactionBorderTracker;
+import mekhq.campaign.universe.FactionBorders;
+import mekhq.campaign.universe.Factions;
+import mekhq.campaign.universe.PlanetarySystem;
+import mekhq.campaign.universe.RandomFactionGenerator;
 import mekhq.campaign.universe.factionHints.FactionHints;
 
 /**
  * Finds potential mission-target planets for a given attacker/defender pair, generally on their shared border, with
- * dedicated tiers for factions whose territory doesn't work like a normal nation's (pirates, ComStar, rebels). Used
- * by {@link RandomFactionGenerator#getMissionTargetList(Faction, Faction, ILocation)}.
+ * dedicated tiers for factions whose territory doesn't work like a normal nation's (pirates, ComStar, rebels). Used by
+ * {@link RandomFactionGenerator#getMissionTargetList(Faction, Faction, ILocation)}.
  */
-class MissionTargetFinder {
+public class MissionTargetFinder {
     private final FactionBorderTracker borderTracker;
     private final FactionHints factionHints;
     private final PirateMissionTargetFinder pirateFinder;
     private final ComStarMissionTargetFinder comStarFinder;
 
-    MissionTargetFinder(FactionBorderTracker borderTracker, FactionHints factionHints) {
+    public MissionTargetFinder(FactionBorderTracker borderTracker, FactionHints factionHints) {
         this.borderTracker = borderTracker;
         this.factionHints = factionHints;
         this.pirateFinder = new PirateMissionTargetFinder(borderTracker);
@@ -84,7 +90,7 @@ class MissionTargetFinder {
      *
      * @return a list of potential mission targets
      */
-    List<PlanetarySystem> find(Faction attacker, Faction defender, ILocation location, LocalDate currentDate) {
+    public List<PlanetarySystem> find(Faction attacker, Faction defender, ILocation location, LocalDate currentDate) {
         double radius = borderTracker.getRadius();
         attacker = resolveTerritorialHost(attacker, currentDate);
         defender = resolveTerritorialHost(defender, currentDate);

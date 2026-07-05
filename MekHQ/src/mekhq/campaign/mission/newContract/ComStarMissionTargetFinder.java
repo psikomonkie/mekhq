@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.universe;
+package mekhq.campaign.mission.newContract;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -38,6 +38,10 @@ import java.util.Collections;
 import java.util.List;
 
 import mekhq.campaign.location.ILocation;
+import mekhq.campaign.universe.Faction;
+import mekhq.campaign.universe.FactionBorderTracker;
+import mekhq.campaign.universe.PlanetarySystem;
+import mekhq.campaign.universe.RandomFactionGenerator;
 import mekhq.campaign.universe.enums.HPGRating;
 
 /**

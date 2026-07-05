@@ -215,8 +215,8 @@ public class FactionBorderTracker {
 
     /**
      * Retrieves a {@code Set} of all factions that control at least one planet within {@code radius} light years of
-     * {@code location}'s current system, computed fresh rather than from this tracker's persistently cached region.
-     * See {@link #getBorders(Faction, ILocation, double)} for why this exists.
+     * {@code location}'s current system, computed fresh rather than from this tracker's persistently cached region. See
+     * {@link #getBorders(Faction, ILocation, double)} for why this exists.
      *
      * @param location the location to center the search on
      * @param radius   the search radius in light years from {@code location}'s current system; a negative radius
@@ -368,8 +368,8 @@ public class FactionBorderTracker {
     }
 
     /**
-     * Equivalent to {@link #getBorderSystems(Faction, Faction)}, but computed fresh around an arbitrary location
-     * within {@code radius} light years, rather than this tracker's persistently cached, single-centered region. See
+     * Equivalent to {@link #getBorderSystems(Faction, Faction)}, but computed fresh around an arbitrary location within
+     * {@code radius} light years, rather than this tracker's persistently cached, single-centered region. See
      * {@link #getBorders(Faction, ILocation, double)} for why this exists.
      *
      * @param self     the faction whose planets are used to test proximity
@@ -396,8 +396,8 @@ public class FactionBorderTracker {
     }
 
     /**
-     * @return the systems from {@link #getSystemList()} within {@code radius} light years of {@code origin}; a
-     *       negative radius returns every system
+     * @return the systems from {@link #getSystemList()} within {@code radius} light years of {@code origin}; a negative
+     *       radius returns every system
      */
     private List<PlanetarySystem> systemsNear(PlanetarySystem origin, double radius) {
         List<PlanetarySystem> nearby = new ArrayList<>();
@@ -537,7 +537,7 @@ public class FactionBorderTracker {
      *
      * @return A collection of all available planets.
      */
-    protected Collection<PlanetarySystem> getSystemList() {
+    public Collection<PlanetarySystem> getSystemList() {
         return Systems.getInstance().getSystems().values();
     }
 

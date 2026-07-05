@@ -62,6 +62,7 @@ import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.mission.mission.contractGeneration.GlobalEmployerTableValue;
+import mekhq.campaign.mission.newContract.MissionTargetFinder;
 import mekhq.campaign.universe.factionHints.FactionHints;
 
 /**
@@ -69,8 +70,8 @@ import mekhq.campaign.universe.factionHints.FactionHints;
  *       <p>
  *       Uses Factions and Planets to weighted lists of potential employers and enemies for contract generation. Also
  *       finds a suitable planet for the action.
- *                                                                                                                                                                                                                                           TODO : Account for the de facto alliance of the invading Clans and the
- *                                                                                                                                                                                                                                           TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
+ *                                                                                                                                                                                                                                                 TODO : Account for the de facto alliance of the invading Clans and the
+ *                                                                                                                                                                                                                                                 TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
  */
 public class RandomFactionGenerator {
     private static final MMLogger LOGGER = MMLogger.create(RandomFactionGenerator.class);
@@ -82,7 +83,7 @@ public class RandomFactionGenerator {
 
     private FactionBorderTracker borderTracker;
     private FactionHints factionHints;
-    private MissionTargetFinder missionTargetFinder;
+    private final MissionTargetFinder missionTargetFinder;
 
     /**
      * Constructs a generator with a default {@link FactionBorderTracker} and the shared {@link FactionHints} instance.
@@ -679,8 +680,8 @@ public class RandomFactionGenerator {
     /**
      * Applies diplomatic-stance multipliers to an enemy candidate's base area-presence weight (see
      * {@link #buildEnemyMap(boolean, ILocation, LocalDate, Faction)}). Factions at war with the employer are floored to
-     * a weight of at least 1 before doubling, so a belligerent with no systems in the search area is still a valid,
-     * pickable target.
+     * a weight of at least 1 before quadrupling, so a belligerent with no systems in the search area is still a valid,
+     * heavily-weighted, pickable target.
      *
      * @param count                      The candidate's base weight (number of systems it controls in the search area)
      * @param employer                   The attacking faction

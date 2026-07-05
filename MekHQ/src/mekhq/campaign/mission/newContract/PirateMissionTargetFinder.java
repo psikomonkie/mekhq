@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.universe;
+package mekhq.campaign.mission.newContract;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -40,12 +40,16 @@ import java.util.List;
 import java.util.Set;
 
 import mekhq.campaign.location.ILocation;
+import mekhq.campaign.universe.Faction;
+import mekhq.campaign.universe.FactionBorderTracker;
+import mekhq.campaign.universe.PlanetarySystem;
+import mekhq.campaign.universe.RandomFactionGenerator;
 import mekhq.campaign.universe.factionHints.FactionHints;
 
 /**
- * Finds mission targets for pirates, who favor border worlds over the interior on either side of a conflict rather
- * than a normal shared-border search: as defender, a nearby empty/lawless system, then a border with a Periphery
- * neighbor, then a border with anyone; as attacker, the same border preference against the defender.
+ * Finds mission targets for pirates, who favor border worlds over the interior on either side of a conflict rather than
+ * a normal shared-border search: as defender, a nearby empty/lawless system, then a border with a Periphery neighbor,
+ * then a border with anyone; as attacker, the same border preference against the defender.
  * <p>
  * Used by {@link MissionTargetFinder} for the pirate-specific tiers of
  * {@link RandomFactionGenerator#getMissionTargetList(Faction, Faction, ILocation)}.
@@ -151,7 +155,9 @@ class PirateMissionTargetFinder {
           ILocation location, double radius, boolean peripheryNeighborsOnly) {
         Set<PlanetarySystem> borderSystems = new HashSet<>();
         for (Faction neighbor : borderTracker.getFactionsInRegion(location, radius)) {
-            if (neighbor.equals(faction) || neighbor.equals(excludedNeighbor) || FactionHints.isEmptyFaction(neighbor)) {
+            if (neighbor.equals(faction) ||
+                      neighbor.equals(excludedNeighbor) ||
+                      FactionHints.isEmptyFaction(neighbor)) {
                 continue;
             }
             if (peripheryNeighborsOnly && !neighbor.isPeriphery()) {
