@@ -40,12 +40,14 @@ import static mekhq.campaign.universe.Faction.REPUBLIC_OF_THE_SPHERE_FACTION_COD
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import megamek.common.annotations.Nullable;
+import megamek.logging.MMLogger;
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.FactionBorderTracker;
@@ -61,6 +63,8 @@ import mekhq.campaign.universe.factionHints.FactionHints;
  * {@link RandomFactionGenerator#getMissionTargetList(Faction, Faction, ILocation)}.
  */
 public class MissionTargetFinder {
+    private static final MMLogger LOGGER = MMLogger.create(MissionTargetFinder.class);
+
     private final FactionBorderTracker borderTracker;
     private final FactionHints factionHints;
     private final PirateMissionTargetFinder pirateFinder;
@@ -95,8 +99,14 @@ public class MissionTargetFinder {
      */
     public List<PlanetarySystem> find(Faction attacker, Faction defender, ILocation location, LocalDate currentDate) {
         double radius = borderTracker.getRadius();
+        String originalAttacker = attacker.getShortName();
+        String originalDefender = defender.getShortName();
         attacker = resolveTerritorialHost(attacker, currentDate);
         defender = resolveTerritorialHost(defender, currentDate);
+        LOGGER.info("[MTF-DIAG] find({} -> {}, {} -> {}) radius={} paramDate={} liveTrackerDate={}", originalAttacker,
+              attacker == null ? "null" : attacker.getShortName(), originalDefender,
+              defender == null ? "null" : defender.getShortName(), radius, currentDate,
+              borderTracker.getLiveDateForDiagnostics());
         if (attacker == null || defender == null) {
             return Collections.emptyList();
         }
@@ -108,6 +118,7 @@ public class MissionTargetFinder {
             List<PlanetarySystem> targets = pirateFinder.findDefenderTargets(attacker, defender, location, radius,
                   currentDate);
             if (!targets.isEmpty()) {
+                LOGGER.info("[MTF-DIAG] tier=pirateDefender result={}", describe(targets, currentDate));
                 return targets;
             }
         }
@@ -115,6 +126,7 @@ public class MissionTargetFinder {
         if (attacker.getShortName().equals(PIRATE_FACTION_CODE)) {
             List<PlanetarySystem> targets = pirateFinder.findAttackerTargets(attacker, defender, location, radius);
             if (!targets.isEmpty()) {
+                LOGGER.info("[MTF-DIAG] tier=pirateAttacker result={}", describe(targets, currentDate));
                 return targets;
             }
         }
@@ -122,25 +134,32 @@ public class MissionTargetFinder {
         // ComStar's HPG network matters more than its (minimal) sovereign territory: only its own systems and
         // A/B-rated HPG stations anywhere are valid targets, regardless of borders.
         if (defender.isComStar()) {
-            return comStarFinder.findValidSystems(defender, location, radius, currentDate);
+            List<PlanetarySystem> targets = comStarFinder.findValidSystems(defender, location, radius, currentDate);
+            LOGGER.info("[MTF-DIAG] tier=comstar result={}", describe(targets, currentDate));
+            return targets;
         }
 
         // Certain attackers (pirates, mercenaries, ComStar/WoB) can strike anywhere the defender holds.
         if (isSpecialAttacker(attacker)) {
             FactionBorders borders = borderTracker.getBorders(defender, location, radius);
-            return systemsOf(borders, currentDate);
+            List<PlanetarySystem> targets = systemsOf(borders, currentDate);
+            LOGGER.info("[MTF-DIAG] tier=specialAttacker result={}", describe(targets, currentDate));
+            return targets;
         }
 
         // A rebel uprising happens somewhere within the attacking government's own territory, not on a border.
         if (defender.isRebel()) {
             FactionBorders borders = borderTracker.getBorders(attacker, location, radius);
-            return systemsOf(borders, currentDate);
+            List<PlanetarySystem> targets = systemsOf(borders, currentDate);
+            LOGGER.info("[MTF-DIAG] tier=rebelDefender result={}", describe(targets, currentDate));
+            return targets;
         }
 
         // Both sides hold territory: target the shared border between them. getBorderSystems(self, other) returns
         // OTHER's systems near SELF, so this is always defender-owned.
         Set<PlanetarySystem> planetSet = new HashSet<>(borderTracker.getBorderSystems(attacker, defender, location,
               radius));
+        LOGGER.info("[MTF-DIAG] tier=directBorder result={}", describe(planetSet, currentDate));
 
         // If neither side directly borders the other, fall back to whichever regional faction hosts a "contained"
         // opponent relationship with the attacker, using that host's own border with the defender as a proxy for the
@@ -152,7 +171,11 @@ public class MissionTargetFinder {
                     if (hintFaction.equals(attacker) &&
                               factionHints.isContainedFactionOpponent(regionalFaction, hintFaction, defender,
                                     currentDate)) {
-                        planetSet.addAll(borderTracker.getBorderSystems(regionalFaction, defender, location, radius));
+                        List<PlanetarySystem> added = borderTracker.getBorderSystems(regionalFaction, defender,
+                              location, radius);
+                        LOGGER.info("[MTF-DIAG] tier=containedFallback regionalFaction={} added={}",
+                              regionalFaction.getShortName(), describe(added, currentDate));
+                        planetSet.addAll(added);
                     }
                 }
             }
@@ -163,7 +186,11 @@ public class MissionTargetFinder {
         if (planetSet.isEmpty()) {
             PlanetarySystem closestSystem = findClosestDefenderSystem(attacker, defender, location, radius);
             if (closestSystem != null) {
+                LOGGER.info("[MTF-DIAG] tier=closestSystem result={}",
+                      describe(List.of(closestSystem), currentDate));
                 planetSet.add(closestSystem);
+            } else {
+                LOGGER.info("[MTF-DIAG] tier=closestSystem result=null");
             }
         }
 
@@ -171,22 +198,60 @@ public class MissionTargetFinder {
     }
 
     /**
-     * Finds the system controlled by the defender that is physically closest to any system controlled by the
-     * attacker. Used as the final fallback in {@link #find} when neither a direct border nor a contained-faction
-     * proxy border could be found.
+     * DIAGNOSTIC ONLY: renders each system's name and actual owning faction(s), to make it obvious from the log whether
+     * a returned system's real ownership matches the defender it was supposedly selected for. Shows ownership as of
+     * both {@code date} (the date passed into {@link #find}) and the border tracker's live internal date, since those
+     * two can diverge.
+     */
+    private String describe(Collection<PlanetarySystem> systems, LocalDate date) {
+        LocalDate liveDate = borderTracker.getLiveDateForDiagnostics();
+        StringBuilder sb = new StringBuilder("[");
+        boolean first = true;
+        for (PlanetarySystem system : systems) {
+            if (!first) {
+                sb.append(", ");
+            }
+            first = false;
+            sb.append(system.getId())
+                  .append("(paramDateOwner=")
+                  .append(ownerNames(system, date))
+                  .append(", liveDateOwner=")
+                  .append(ownerNames(system, liveDate))
+                  .append(")");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private static String ownerNames(PlanetarySystem system, LocalDate date) {
+        Set<Faction> owners = system.getFactionSet(date);
+        StringBuilder ownerNames = new StringBuilder();
+        for (Faction owner : owners) {
+            if (!ownerNames.isEmpty()) {
+                ownerNames.append("/");
+            }
+            ownerNames.append(owner.getShortName());
+        }
+        return ownerNames.toString();
+    }
+
+    /**
+     * Finds the system controlled by the defender that is physically closest to any system controlled by the attacker.
+     * Used as the final fallback in {@link #find} when neither a direct border nor a contained-faction proxy border
+     * could be found.
      * <p>
      * The defender's search is unrestricted (whole map) rather than limited to {@code radius}: a defender can end up
      * here specifically because it was guaranteed a valid target regardless of local presence (e.g. a faction at war
      * with the attacker, per {@code RandomFactionGenerator#buildEnemyMap}), so it may have no systems anywhere near
      * {@code location} at all. Without this, such a match would find no target and fail contract generation entirely.
-     * The attacker's search stays scoped to {@code radius}, since the mission should still originate from
-     * somewhere near the force generating it.
+     * The attacker's search stays scoped to {@code radius}, since the mission should still originate from somewhere
+     * near the force generating it.
      *
      * @param attacker the attacking faction
      * @param defender the defending faction
      * @param location the location to center the search on
-     * @param radius   the search radius in light years from {@code location}'s current system, applied to the
-     *                 attacker only
+     * @param radius   the search radius in light years from {@code location}'s current system, applied to the attacker
+     *                 only
      *
      * @return the closest defender-controlled system, or {@code null} if either faction controls no systems in range
      */
@@ -194,9 +259,21 @@ public class MissionTargetFinder {
           ILocation location, double radius) {
         FactionBorders attackerBorders = borderTracker.getBorders(attacker, location, radius);
         FactionBorders defenderBorders = borderTracker.getBorders(defender, location, -1);
+        LOGGER.info(
+              "[MTF-DIAG] findClosestDefenderSystem attacker={} attackerBordersFaction={} attackerBordersCount={} "
+                    + "defender={} defenderBordersFaction={} defenderBordersCount={}",
+              attacker.getShortName(),
+              attackerBorders == null ? "null" : attackerBorders.getFaction().getShortName(),
+              attackerBorders == null ? 0 : attackerBorders.getSystems().size(),
+              defender.getShortName(),
+              defenderBorders == null ? "null" : defenderBorders.getFaction().getShortName(),
+              defenderBorders == null ? 0 : defenderBorders.getSystems().size());
         if (attackerBorders == null || defenderBorders == null) {
             return null;
         }
+        FactionBorders recheck = borderTracker.getBorders(defender, location, -1);
+        LOGGER.info("[MTF-DIAG] immediate re-query defenderBordersCount={} (was {})",
+              recheck == null ? 0 : recheck.getSystems().size(), defenderBorders.getSystems().size());
 
         PlanetarySystem closestSystem = null;
         double closestDistance = Double.MAX_VALUE;
@@ -251,9 +328,9 @@ public class MissionTargetFinder {
     }
 
     /**
-     * Checks whether the given faction controls at least one system anywhere the border tracker knows about,
-     * stopping at the first match. Only called for the rare faction with no presence in the tracker's cached region,
-     * so this deliberately isn't cached &mdash; most calls never reach it.
+     * Checks whether the given faction controls at least one system anywhere the border tracker knows about, stopping
+     * at the first match. Only called for the rare faction with no presence in the tracker's cached region, so this
+     * deliberately isn't cached &mdash; most calls never reach it.
      *
      * @param faction the faction to check
      * @param date    the date to check faction control against

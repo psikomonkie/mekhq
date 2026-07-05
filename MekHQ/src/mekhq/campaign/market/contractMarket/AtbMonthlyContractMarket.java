@@ -519,6 +519,8 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
         } catch (NoContractLocationFoundException ex) {
             return generateAtBContract(campaign, employer, unitRatingMod, retries - 1);
         }
+        logger.info("[MTF-DIAG] post-setSystemId system={} owner={}", contract.getSystem().getId(),
+              contract.getSystem().getFactionSet(campaign.getLocalDate()));
         JumpPath jp = null;
         try {
             jp = contract.getJumpPath(campaign);
@@ -584,6 +586,9 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
         contract.setName(generateDefaultName(employer, contract));
 
         contract.clanTechSalvageOverride();
+
+        logger.info("[MTF-DIAG] pre-return system={} owner={}", contract.getSystem().getId(),
+              contract.getSystem().getFactionSet(campaign.getLocalDate()));
 
         return contract;
     }
