@@ -38,12 +38,12 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 import javax.xml.parsers.DocumentBuilder;
 
 import megamek.common.annotations.Nullable;
@@ -188,15 +188,16 @@ public class FactionHints {
 
     /**
      * Accounts for non-existent factions that are used to indicate special status of the planet (undiscovered,
-     * abandoned), as well as the synthetic placeholder faction {@link Factions#getFaction(String)} silently returns
-     * for any faction code it doesn't recognize (stale/typo'd/retired ownership data), rather than {@code null}.
+     * abandoned), as well as the synthetic placeholder faction {@link Factions#getFaction(String)} silently returns for
+     * any faction code it doesn't recognize (stale/typo'd/retired ownership data), rather than {@code null}.
      *
      * @param f The input faction
      *
      * @return Whether the faction is not a true faction
      */
     public static boolean isEmptyFaction(Faction f) {
-        return Stream.of("ABN", "UND", "NONE", Faction.DEFAULT_CODE).anyMatch(s -> f.getShortName().equals(s));
+        List<String> codes = Arrays.asList(Faction.DEFAULT_CODE, "UND", "ABN", "NONE");
+        return codes.contains(f.getShortName());
     }
 
     /**
