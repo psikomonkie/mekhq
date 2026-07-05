@@ -125,6 +125,7 @@ import mekhq.campaign.events.persons.PersonLogEvent;
 import mekhq.campaign.events.persons.PersonStatusChangedEvent;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.finances.enums.TransactionType;
+import mekhq.campaign.location.LocationUtils;
 import mekhq.campaign.log.LogEntry;
 import mekhq.campaign.log.PerformanceLogger;
 import mekhq.campaign.personnel.Award;
@@ -588,8 +589,14 @@ public class PersonnelTableMouseAdapter extends JPopupMenuAdapter {
                         case JOURNEY_TO_CAMPUS:
                         case JOURNEY_FROM_CAMPUS:
                             // this should be enough to ensure even the most distant academy is
-                            // reached/returned from
+                            // reached/returned from via the day-counter fallback
                             person.setEduDaysOfTravel(9999);
+                            // When the student is physically mid-journey on a travel node, the day counter alone
+                            // won't land them — force the transit to finish with the GM override so the arrival
+                            // processing below advances the education stage.
+                            if (LocationUtils.isInTransit(person)) {
+                                getCampaign().getCampaignLocationManager().gmCompleteTravel(getCampaign(), List.of(person));
+                            }
                             break;
                         case EDUCATION:
                             if (!academy.isPrepSchool()) {
