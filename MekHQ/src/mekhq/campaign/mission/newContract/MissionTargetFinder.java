@@ -80,6 +80,9 @@ public class MissionTargetFinder {
      * {@link PirateMissionTargetFinder}). A ComStar defender is targeted by HPG network presence instead of borders
      * (see {@link ComStarMissionTargetFinder}).
      * <p>
+     * Outside of those special cases, every returned system is one the defender actually owns: a mission is a raid on
+     * (or defense of) a specific enemy world, never a neighbor's or the attacker's own territory.
+     * <p>
      * Computed fresh around {@code location} on every call rather than from the tracker's single cached region, so
      * campaigns with multiple simultaneous locations get a target scoped to whichever force needs it.
      *
@@ -134,42 +137,25 @@ public class MissionTargetFinder {
             return systemsOf(borders, currentDate);
         }
 
-        // Both sides hold territory: target the shared border between them.
+        // Both sides hold territory: target the shared border between them. getBorderSystems(self, other) returns
+        // OTHER's systems near SELF, so this is always defender-owned.
         Set<PlanetarySystem> planetSet = new HashSet<>(borderTracker.getBorderSystems(attacker, defender, location,
               radius));
 
-        // If the defender has no systems, widen the search to the attacker's frontier with every neighboring faction.
-        Set<Faction> regionalFactions = borderTracker.getFactionsInRegion(location, radius);
-        boolean widenForLandlessDefender = !regionalFactions.contains(defender);
-
         // If neither side directly borders the other, fall back to whichever regional faction hosts a "contained"
-        // opponent relationship between the two sides. Collected alongside the frontier-widening above in a single
-        // pass over the region instead of a second one, since both need the same regional-faction list; only
-        // merged in below if nothing else found a target.
-        Set<PlanetarySystem> containedFactionFallback = new HashSet<>();
-        for (Faction regionalFaction : regionalFactions) {
-            if (widenForLandlessDefender) {
-                planetSet.addAll(borderTracker.getBorderSystems(regionalFaction, attacker, location, radius));
-                planetSet.addAll(borderTracker.getBorderSystems(attacker, regionalFaction, location, radius));
-            }
-
-            for (Faction hintFaction : factionHints.getContainedFactions(regionalFaction, currentDate)) {
-                if (hintFaction.equals(attacker) &&
-                          factionHints.isContainedFactionOpponent(regionalFaction, hintFaction, defender,
-                                currentDate)) {
-                    containedFactionFallback.addAll(borderTracker.getBorderSystems(regionalFaction, defender,
-                          location, radius));
-                } else if (hintFaction.equals(defender) &&
-                                 factionHints.isContainedFactionOpponent(regionalFaction, hintFaction, attacker,
-                                       currentDate)) {
-                    containedFactionFallback.addAll(borderTracker.getBorderSystems(attacker, regionalFaction,
-                          location, radius));
+        // opponent relationship with the attacker, using that host's own border with the defender as a proxy for the
+        // attacker's otherwise poorly-defined local presence. Still always defender-owned, since it's the defender's
+        // systems near the host that get returned, not the host's own.
+        if (planetSet.isEmpty()) {
+            for (Faction regionalFaction : borderTracker.getFactionsInRegion(location, radius)) {
+                for (Faction hintFaction : factionHints.getContainedFactions(regionalFaction, currentDate)) {
+                    if (hintFaction.equals(attacker) &&
+                              factionHints.isContainedFactionOpponent(regionalFaction, hintFaction, defender,
+                                    currentDate)) {
+                        planetSet.addAll(borderTracker.getBorderSystems(regionalFaction, defender, location, radius));
+                    }
                 }
             }
-        }
-
-        if (planetSet.isEmpty()) {
-            planetSet.addAll(containedFactionFallback);
         }
 
         // Last resort: neither a direct border nor a contained-faction proxy border exists. Target whichever of
@@ -185,21 +171,29 @@ public class MissionTargetFinder {
     }
 
     /**
-     * Finds the system controlled by the defender that is physically closest to any system controlled by the attacker,
-     * both restricted to {@code radius} light years of {@code location}. Used as the final fallback in {@link #find}
-     * when neither a direct border nor a contained-faction proxy border could be found.
+     * Finds the system controlled by the defender that is physically closest to any system controlled by the
+     * attacker. Used as the final fallback in {@link #find} when neither a direct border nor a contained-faction
+     * proxy border could be found.
+     * <p>
+     * The defender's search is unrestricted (whole map) rather than limited to {@code radius}: a defender can end up
+     * here specifically because it was guaranteed a valid target regardless of local presence (e.g. a faction at war
+     * with the attacker, per {@code RandomFactionGenerator#buildEnemyMap}), so it may have no systems anywhere near
+     * {@code location} at all. Without this, such a match would find no target and fail contract generation entirely.
+     * The attacker's search stays scoped to {@code radius}, since the mission should still originate from
+     * somewhere near the force generating it.
      *
      * @param attacker the attacking faction
      * @param defender the defending faction
      * @param location the location to center the search on
-     * @param radius   the search radius in light years from {@code location}'s current system
+     * @param radius   the search radius in light years from {@code location}'s current system, applied to the
+     *                 attacker only
      *
      * @return the closest defender-controlled system, or {@code null} if either faction controls no systems in range
      */
     private @Nullable PlanetarySystem findClosestDefenderSystem(Faction attacker, Faction defender,
           ILocation location, double radius) {
         FactionBorders attackerBorders = borderTracker.getBorders(attacker, location, radius);
-        FactionBorders defenderBorders = borderTracker.getBorders(defender, location, radius);
+        FactionBorders defenderBorders = borderTracker.getBorders(defender, location, -1);
         if (attackerBorders == null || defenderBorders == null) {
             return null;
         }
@@ -229,24 +223,50 @@ public class MissionTargetFinder {
     }
 
     /**
-     * Resolves a faction with no directly-controlled systems in the region to its contained-faction host, if one is
+     * Resolves a faction with no directly-controlled systems anywhere to its contained-faction host, if one is
      * configured, so mission targeting has something with real territory to work with. Inherently landless factions
      * (pirates, mercenaries, ComStar/WoB) and rebels are never contained by anyone, so this is a no-op for them;
      * {@link #find} handles their lack of territory separately.
+     * <p>
+     * A faction with territory only outside the local search area (e.g. a war partner guaranteed valid by
+     * {@code RandomFactionGenerator#buildEnemyMap} regardless of local presence) is still returned unchanged, not
+     * redirected to a host: it has real territory to work with, just not nearby. The cached, region-limited
+     * {@link FactionBorderTracker#getFactionsInRegion()} is checked first as a cheap common-case shortcut; the full,
+     * uncached {@link #controlsAnySystem} scan only runs for the rare faction with no local presence.
      *
      * @param faction the faction to resolve
-     * @param date    the date to check the contained-faction relationship against
+     * @param date    the date to check faction control and the contained-faction relationship against
      *
      * @return the resolved faction (its host if one was found and needed, otherwise the faction unchanged), or
-     *       {@code null} if the faction has no systems of its own and no host could be found
+     *       {@code null} if the faction has no systems anywhere and no host could be found
      */
     private @Nullable Faction resolveTerritorialHost(Faction faction, LocalDate date) {
         if (borderTracker.getFactionsInRegion().contains(faction) ||
                   isSpecialAttacker(faction) ||
-                  faction.isRebel()) {
+                  faction.isRebel() ||
+                  controlsAnySystem(faction, date)) {
             return faction;
         }
         return factionHints.getContainedFactionHost(faction, date);
+    }
+
+    /**
+     * Checks whether the given faction controls at least one system anywhere the border tracker knows about,
+     * stopping at the first match. Only called for the rare faction with no presence in the tracker's cached region,
+     * so this deliberately isn't cached &mdash; most calls never reach it.
+     *
+     * @param faction the faction to check
+     * @param date    the date to check faction control against
+     *
+     * @return {@code true} if the faction controls at least one known system on the given date
+     */
+    private boolean controlsAnySystem(Faction faction, LocalDate date) {
+        for (PlanetarySystem system : borderTracker.getSystemList()) {
+            if (system.getFactionSet(date).contains(faction)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

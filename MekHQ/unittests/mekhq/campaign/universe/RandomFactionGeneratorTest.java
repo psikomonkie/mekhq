@@ -751,9 +751,9 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: a faction at war with the employer has its weight floored to at least 1 before being
+     * Regression test: a faction at war with the employer has its weight floored to at least 10 before being
      * quadrupled, guaranteeing it remains a valid, heavily-weighted target even with no base presence in the search
-     * area.
+     * area (e.g. distant warring factions during the early Clan Invasion or the Reunification Wars).
      */
     @Test
     public void testAdjustEnemyWeightFloorsAndQuadruplesForAtWarFaction() {
@@ -761,10 +761,10 @@ public class RandomFactionGeneratorTest {
         when(hints.isAtWarWith(isFaction, peripheryFaction, TEST_DATE)).thenReturn(true);
         RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, hints);
 
-        double weight = rfg.adjustEnemyWeight(0, isFaction, peripheryFaction, TEST_DATE, false, false);
+        double weight = rfg.adjustEnemyWeight(0, isFaction, peripheryFaction, TEST_DATE, false);
 
-        assertEquals(4.0, weight,
-              "A war partner with zero base presence should be floored to a weight of 1 before quadrupling");
+        assertEquals(40.0, weight,
+              "A war partner with zero base presence should be floored to a weight of 10 before quadrupling");
     }
 
     /**
@@ -776,25 +776,9 @@ public class RandomFactionGeneratorTest {
         when(hints.isRivalOf(isFaction, peripheryFaction, TEST_DATE)).thenReturn(true);
         RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, hints);
 
-        double weight = rfg.adjustEnemyWeight(5, isFaction, peripheryFaction, TEST_DATE, false, false);
+        double weight = rfg.adjustEnemyWeight(5, isFaction, peripheryFaction, TEST_DATE, false);
 
         assertEquals(10.0, weight, "A rival's base weight should be doubled");
-    }
-
-    /**
-     * Regression test: one of the historical Inner Sphere Clan-war combatants (FC/FRR/DC) gets a doubled weight against
-     * a Clan enemy, but only during the invasion's height (first wave through Tukayyid).
-     */
-    @Test
-    public void testAdjustEnemyWeightDoublesForClanInvasionCombatantDuringInvasionHeight() {
-        Faction fedCom = createTestFaction("FC", false, false);
-        RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, mock(FactionHints.class));
-
-        double weight = rfg.adjustEnemyWeight(5, fedCom, clanFaction, TEST_DATE, true, false);
-
-        assertEquals(10.0,
-              weight,
-              "An Inner Sphere Clan-war combatant's weight against a Clan enemy should double during the invasion's height");
     }
 
     /**
@@ -806,7 +790,7 @@ public class RandomFactionGeneratorTest {
         Faction fedCom = createTestFaction("FC", false, false);
         RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, mock(FactionHints.class));
 
-        double weight = rfg.adjustEnemyWeight(5, fedCom, clanFaction, TEST_DATE, false, false);
+        double weight = rfg.adjustEnemyWeight(5, fedCom, clanFaction, TEST_DATE, false);
 
         assertEquals(5.0, weight, "Outside the invasion's height, no Clan-invasion multiplier should apply");
     }
@@ -820,7 +804,7 @@ public class RandomFactionGeneratorTest {
         when(wobFaction.isWoB()).thenReturn(true);
         RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, mock(FactionHints.class));
 
-        double weight = rfg.adjustEnemyWeight(5, isFaction, wobFaction, TEST_DATE, false, true);
+        double weight = rfg.adjustEnemyWeight(5, isFaction, wobFaction, TEST_DATE, true);
 
         assertEquals(10.0, weight, "WoB's weight should double during the Jihad");
     }
@@ -834,22 +818,8 @@ public class RandomFactionGeneratorTest {
         Faction comStar = createTestFaction("CS", false, false);
         RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, mock(FactionHints.class));
 
-        double weight = rfg.adjustEnemyWeight(12, comStar, clanFaction, TEST_DATE, false, false);
+        double weight = rfg.adjustEnemyWeight(12, comStar, clanFaction, TEST_DATE, false);
 
         assertEquals(1.0, weight, "ComStar's weight against a Clan target should be divided by 12");
-    }
-
-    /**
-     * Regression test: the Clan-invasion-height multiplier only applies to the specific historical combatants
-     * (FC/FRR/DC); an unrelated Inner Sphere faction fighting a Clan during the same window gets no bonus.
-     */
-    @Test
-    public void testAdjustEnemyWeightUnaffectedForNonCombatantDuringClanInvasionHeight() {
-        RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, mock(FactionHints.class));
-
-        double weight = rfg.adjustEnemyWeight(5, isFaction, clanFaction, TEST_DATE, true, false);
-
-        assertEquals(5.0, weight,
-              "Only the historical Clan-war combatants (FC/FRR/DC) should get the invasion-era Clan-targeting bonus");
     }
 }

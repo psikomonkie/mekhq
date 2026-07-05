@@ -61,7 +61,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Tests {@link MissionTargetFinder}'s own orchestration logic: territorial-host resolution, the special-attacker and
- * rebel-defender fallbacks, the shared-border/widen/contained-faction/closest-system chain, and Fortress Republic
+ * rebel-defender fallbacks, the shared-border/contained-faction/closest-system chain, and Fortress Republic
  * filtering. Delegation to {@link PirateMissionTargetFinder}/{@link ComStarMissionTargetFinder} is confirmed here at
  * the wiring level only; their own tiered fallback logic is tested directly in {@code PirateMissionTargetFinderTest}
  * and {@code ComStarMissionTargetFinderTest}.
@@ -216,6 +216,44 @@ public class MissionTargetFinderTest {
 
         assertEquals(List.of(nearDefenderSystem), targets,
               "With no border or contained-faction relationship, the closest defender system should be the sole target");
+    }
+
+    /**
+     * Regression test: a defender guaranteed as a valid target regardless of local presence (e.g. a faction at war
+     * with the attacker, chosen by {@code RandomFactionGenerator#buildEnemyMap} even with no systems in the search
+     * area) must still resolve to a real system via the closest-system fallback, rather than leaving contract
+     * generation with no valid location. The defender's own search must not be limited to the local search radius,
+     * even though the attacker's is.
+     */
+    @Test
+    public void testFindClosestDefenderSystemFallbackIgnoresRadiusForDefender() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        // Far outside the tracker's 5 ly search radius below - simulating a war partner with no local presence.
+        PlanetarySystem distantDefenderSystem = createTestSystem(1000, 1000, defenderFaction);
+        when(attackerSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(0.0);
+        when(distantDefenderSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(2000.0);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, distantDefenderSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, 5) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = mock(ILocation.class);
+        when(location.getCurrentSystem()).thenReturn(attackerSystem);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE);
+
+        assertEquals(List.of(distantDefenderSystem), targets,
+              "A defender with no presence within the search radius should still resolve via the whole-map "
+                    + "closest-system fallback, rather than yielding no target at all");
     }
 
     /**
@@ -400,12 +438,12 @@ public class MissionTargetFinderTest {
     }
 
     /**
-     * Regression test: a defender with no territory of its own (and no configured host) isn't tied to a specific
-     * border, so the search widens to the attacker's frontier with every neighboring faction instead of coming up
-     * empty.
+     * Regression test: a mission target must always be a system the defender actually owns. A landless defender
+     * with no territory, no direct border, and no contained-faction-host relationship has nothing valid to target,
+     * so this correctly yields no target rather than falling back to a neighbor's or the attacker's own systems.
      */
     @Test
-    public void testFindWidensSearchForLandlessDefender() {
+    public void testFindReturnsEmptyForLandlessDefenderWithNoDirectRelationship() {
         Faction mercDefender = createTestFaction("MERC_DEF", false, false);
         when(mercDefender.isMercenary()).thenReturn(true);
         MissionTargetFinder finder = createTestFinder();
@@ -413,17 +451,47 @@ public class MissionTargetFinderTest {
 
         List<PlanetarySystem> targets = finder.find(isFaction, mercDefender, location, TEST_DATE);
 
-        assertFalse(targets.isEmpty(),
-              "A landless defender with no direct border should fall back to the attacker's general frontier");
-        // getBorderSystems(a, b) returns b's systems near a, so the widened search returns a mix of the attacker's
-        // own frontier systems and neighboring factions' systems near that frontier - not exclusively systems the
-        // attacker itself controls. Every result should still belong to one of the region's known factions.
-        Set<PlanetarySystem> allKnownSystems = new HashSet<>();
-        allKnownSystems.addAll(borderTracker.getBorders(isFaction).getSystems());
-        allKnownSystems.addAll(borderTracker.getBorders(clanFaction).getSystems());
-        allKnownSystems.addAll(borderTracker.getBorders(peripheryFaction).getSystems());
-        assertTrue(allKnownSystems.containsAll(targets),
-              "Frontier-widening should only return systems controlled by a known regional faction");
+        assertTrue(targets.isEmpty(),
+              "A landless defender with no direct relationship to the attacker should never fall back to a "
+                    + "neighbor's or the attacker's own systems");
+    }
+
+    /**
+     * Regression test: even when the attacker borders other regional factions closely, none of the attacker's own
+     * systems (nor those third-party neighbors') should ever be picked as a mission target &mdash; only a system the
+     * defender actually owns, however far away that may be (see {@link #testFindClosestDefenderSystemFallbackIgnoresRadiusForDefender}).
+     */
+    @Test
+    public void testFindNeverReturnsAttackerOrNeighborOwnedSystems() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction neighborFaction = createTestFaction("NEIGHBOR", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem neighborSystem = createTestSystem(1, 0, neighborFaction);
+        PlanetarySystem distantDefenderSystem = createTestSystem(1000, 1000, defenderFaction);
+        when(attackerSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(0.0);
+        when(neighborSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(1.0);
+        when(distantDefenderSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(2000.0);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, neighborSystem, distantDefenderSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, 5) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = mock(ILocation.class);
+        when(location.getCurrentSystem()).thenReturn(attackerSystem);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE);
+
+        assertEquals(List.of(distantDefenderSystem), targets,
+              "Only the defender's own system should ever be returned, never the attacker's or a third-party "
+                    + "neighbor's, even when those are nearby and the defender is not");
     }
 
     /**

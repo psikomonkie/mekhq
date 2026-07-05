@@ -33,6 +33,7 @@
  */
 package mekhq.campaign.universe;
 
+import static java.lang.Math.max;
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_END;
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_START;
 import static mekhq.campaign.universe.Faction.CLAN_FACTION_CODE;
@@ -70,14 +71,11 @@ import mekhq.campaign.universe.factionHints.FactionHints;
  *       <p>
  *       Uses Factions and Planets to weighted lists of potential employers and enemies for contract generation. Also
  *       finds a suitable planet for the action.
- *                                                                                                                                                                                                                                                 TODO : Account for the de facto alliance of the invading Clans and the
- *                                                                                                                                                                                                                                                 TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
+ *                                                                                                                                                                                                                                                                         TODO : Account for the de facto alliance of the invading Clans and the
+ *                                                                                                                                                                                                                                                                         TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
  */
 public class RandomFactionGenerator {
     private static final MMLogger LOGGER = MMLogger.create(RandomFactionGenerator.class);
-
-    /** Inner Sphere factions that fought the Clans during the invasion; see {@link #adjustEnemyWeight}. */
-    private static final List<String> INNER_SPHERE_CLAN_WAR_COMBATANTS = List.of("FC", "FRR", "DC");
 
     private static RandomFactionGenerator randomFactionGenerator = null;
 
@@ -527,7 +525,6 @@ public class RandomFactionGenerator {
                   employer,
                   enemy,
                   date,
-                  isDuringClanInvasionHeight,
                   isDuringJihad);
             if (weight > 0) {
                 enemyMap.add((int) Math.round(weight), enemy);
@@ -680,34 +677,31 @@ public class RandomFactionGenerator {
     /**
      * Applies diplomatic-stance multipliers to an enemy candidate's base area-presence weight (see
      * {@link #buildEnemyMap(boolean, ILocation, LocalDate, Faction)}). Factions at war with the employer are floored to
-     * a weight of at least 1 before quadrupling, so a belligerent with no systems in the search area is still a valid,
-     * heavily-weighted, pickable target.
+     * a weight of at least 10 before quadrupling, so a belligerent with no systems in the search area is still a
+     * valid, heavily-weighted, pickable target (e.g. distant warring factions during the early Clan Invasion or the
+     * Reunification Wars).
      *
-     * @param count                      The candidate's base weight (number of systems it controls in the search area)
-     * @param employer                   The attacking faction
-     * @param enemy                      The defending faction
-     * @param date                       The date to check diplomatic relations against
-     * @param isDuringClanInvasionHeight Whether {@code date} falls between the Clan invasion's first wave and the
-     *                                   Battle of Tukayyid
-     * @param isDuringJihad              Whether {@code date} falls within the Jihad
+     * @param count         The candidate's base weight (number of systems it controls in the search area)
+     * @param employer      The attacking faction
+     * @param enemy         The defending faction
+     * @param date          The date to check diplomatic relations against
+     * @param isDuringJihad Whether {@code date} falls within the Jihad
      *
      * @return The adjusted weight
      */
     protected double adjustEnemyWeight(int count, Faction employer, Faction enemy, LocalDate date,
-          boolean isDuringClanInvasionHeight, boolean isDuringJihad) {
+          boolean isDuringJihad) {
         double weight = count;
         if (factionHints.isAtWarWith(employer, enemy, date)) {
-            weight = Math.max(weight, 1.0);
+            // minimum 'count' enforced for warring factions. This allows us to better ensure fighting between warring
+            // factions that are not near each other. For example, the early years of the Clan Invasion, or the
+            // Reunification Wars.
+            weight = max(10.0, weight);
+
             weight *= 4.0;
         }
 
         if (factionHints.isRivalOf(employer, enemy, date)) {
-            weight *= 2.0;
-        }
-
-        if (INNER_SPHERE_CLAN_WAR_COMBATANTS.contains(employer.getShortName()) &&
-                  enemy.isClan() &&
-                  isDuringClanInvasionHeight) {
             weight *= 2.0;
         }
 
@@ -739,17 +733,17 @@ public class RandomFactionGenerator {
      */
     @Nullable
     public String getMissionTarget(String attacker, String defender, ILocation location) {
-        Faction faction0 = Factions.getInstance().getFaction(attacker);
-        Faction faction1 = Factions.getInstance().getFaction(defender);
-        if (null == faction0) {
+        Faction attackerFaction = Factions.getInstance().getFaction(attacker);
+        Faction defenderFaction = Factions.getInstance().getFaction(defender);
+        if (null == attackerFaction) {
             LOGGER.error("Non-existent faction key: {}", attacker);
             return null;
         }
-        if (null == faction1) {
+        if (null == defenderFaction) {
             LOGGER.error("Non-existent faction key: {}", attacker);
             return null;
         }
-        List<PlanetarySystem> planetList = getMissionTargetList(faction0, faction1, location);
+        List<PlanetarySystem> planetList = getMissionTargetList(attackerFaction, defenderFaction, location);
         if (!planetList.isEmpty()) {
             return ObjectUtility.getRandomItem(planetList).getId();
         }
@@ -761,8 +755,8 @@ public class RandomFactionGenerator {
      *
      * @param attackerKey The attacking faction's shortName
      * @param defenderKey The defending faction's shortName
-     * @param location    the location to center the search on, scoped by this generator's configured search radius (see
-     *                    {@link #getMissionTargetList(Faction, Faction, ILocation)})
+     * @param location    the location to center the search on, scoped by this generator's configured search radius
+     *                    (see {@link #getMissionTargetList(Faction, Faction, ILocation)})
      *
      * @return A list of potential mission targets
      */
@@ -785,7 +779,8 @@ public class RandomFactionGenerator {
     /**
      * Builds a list of potential mission-target planets near {@code location}, generally on the shared border between
      * attacker and defender, with dedicated tiers for factions whose territory doesn't work like a normal nation's
-     * (pirates, ComStar, rebels). See {@link MissionTargetFinder} for the full selection logic.
+     * (pirates, ComStar, rebels). Outside of those special cases, only planets the defender actually owns are ever
+     * valid targets. See {@link MissionTargetFinder} for the full selection logic.
      *
      * @param attacker the attacking faction
      * @param defender the defending faction
