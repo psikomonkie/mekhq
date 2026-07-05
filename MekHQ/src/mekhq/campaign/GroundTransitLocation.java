@@ -63,6 +63,8 @@ import org.w3c.dom.NodeList;
 public class GroundTransitLocation extends AbstractMobileLocation {
     private static final MMLogger logger = MMLogger.create(GroundTransitLocation.class);
 
+    private static final String RESOURCE_BUNDLE = "mekhq.resources.GroundTransitLocation";
+
     // total length of the journey in days, used to report travel progress
     private double totalTransitTime;
 
@@ -100,14 +102,15 @@ public class GroundTransitLocation extends AbstractMobileLocation {
         transitTime -= daysTravelled;
 
         if (!isSilentProcessing) {
-            campaign.addReport(GENERAL, MHQInternationalization.getFormattedText("getReport.newDay.timeTraveling",
-                  (Math.round(100.0 * 24.0 * daysTravelled) / 100.0)));
+            campaign.addReport(GENERAL, MHQInternationalization.getFormattedTextAt(RESOURCE_BUNDLE,
+                  "getReport.newDay.timeTraveling", (Math.round(100.0 * 24.0 * daysTravelled) / 100.0)));
         }
 
         if (transitTime <= 0) {
             transitTime = 0;
             if (!isSilentProcessing) {
-                campaign.addReport(GENERAL, MHQInternationalization.getText("getReport.newDay.destination"));
+                campaign.addReport(GENERAL,
+                      MHQInternationalization.getTextAt(RESOURCE_BUNDLE, "getReport.newDay.destination"));
             }
             MekHQ.triggerEvent(new TransitCompleteEvent(this));
             notifyChildrenArrived(campaign, isSilentProcessing);
