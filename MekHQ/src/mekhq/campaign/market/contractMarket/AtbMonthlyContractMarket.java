@@ -546,6 +546,14 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
                   campaign.getCurrentSystem().getName(campaign.getLocalDate()));
             return generateAtBContract(campaign, employer, unitRatingMod, retries - 1);
         }
+
+        if (violatesHomeworldsExclusion(contract, campaign)) {
+            logger.warn(
+                  "Contract location {} is within the Clan Homeworlds exclusion zone outside Operation Bulldog; "
+                        + "retrying.", contract.getSystem().getName(campaign.getLocalDate()));
+            return generateAtBContract(campaign, employer, unitRatingMod, retries - 1);
+        }
+
         final ReputationController reputation = campaign.getReputation();
         final SkillLevel campaignSkillLevel = reputation == null ? REGULAR : reputation.getAverageSkillLevel();
         final boolean useDynamicDifficulty = campaign.getCampaignOptions().isUseDynamicDifficulty();

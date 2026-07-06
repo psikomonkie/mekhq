@@ -272,6 +272,9 @@ public class CamOpsContractMarket extends AbstractContractMarket {
         } catch (NoContractLocationFoundException ex) {
             return Optional.empty();
         }
+        if (violatesHomeworldsExclusion(contract, campaign)) {
+            return Optional.empty();
+        }
         // Step 4: Populate some information about enemies and allies
         final SkillLevel campaignSkillLevel = reputation.getAverageSkillLevel();
         final boolean useDynamicDifficulty = campaign.getCampaignOptions().isUseDynamicDifficulty();
