@@ -69,6 +69,7 @@ import mekhq.campaign.mission.Mission;
 import mekhq.campaign.mission.enums.AtBContractType;
 import mekhq.campaign.mission.enums.CombatRole;
 import mekhq.campaign.mission.enums.ContractCommandRights;
+import mekhq.campaign.mission.newContract.EnemySelectionProfile;
 import mekhq.campaign.mission.newContract.MissionLocationProfile;
 import mekhq.campaign.mission.utilities.ContractUtilities;
 import mekhq.campaign.universe.Faction;
@@ -537,33 +538,30 @@ public abstract class AbstractContractMarket {
         }
     }
 
+    /**
+     * Selects and sets the contract's enemy faction, using an enemy-selection preference derived from the contract's
+     * type (see {@link EnemySelectionProfile}): pirate hunting and riot duty resolve to their baked-in enemies as
+     * before, while the other profiles shape which factions the weighted pool prefers.
+     *
+     * @param contract the contract to select an enemy for; its type and employer must already be set
+     * @param campaign the active campaign
+     */
     protected void setEnemyCode(AtBContract contract, Campaign campaign) {
-        if (contract.getContractType().isPirateHunting()) {
-            Faction employer = contract.getEmployerFaction();
-            contract.setEnemyCode(employer.isClan() ? "BAN" : PIRATE_FACTION_CODE);
-        } else if (contract.getContractType().isRiotDuty()) {
-            contract.setEnemyCode("REB");
-        } else if (contract.getEmployerCode().equals(PIRATE_FACTION_CODE)) {
-            RandomFactionGenerator factionGenerator = RandomFactionGenerator.getInstance();
-            Faction enemyFaction = factionGenerator.getRandomEnemy(false, campaign.getCurrentLocation(),
-                  campaign.getLocalDate(), contract.getEmployerFaction());
-            contract.setEnemyCode(enemyFaction.getShortName());
-        } else {
-            Faction enemyFaction = RandomFactionGenerator.getInstance()
-                                         .getRandomEnemy(false,
-                                               campaign.getCurrentLocation(),
-                                               campaign.getLocalDate(),
-                                               contract.getEmployerFaction());
+        EnemySelectionProfile profile = EnemySelectionProfile.fromContractType(contract.getContractType());
+        Faction enemyFaction = RandomFactionGenerator.getInstance()
+                                     .getRandomEnemy(campaign.getCurrentLocation(), campaign.getLocalDate(),
+                                           contract.getEmployerFaction(), profile);
 
-            // If the OpFor isn't Clan, there is a 1-in-5 chance they've hired mercenaries to do their dirty work. So
-            // the original enemy faction is set as the mercenary's employer, while the enemy faction is set to
-            // Mercenaries.
-            if (!enemyFaction.isClan() && !enemyFaction.isAggregate() && randomInt(5) == 0) {
-                contract.setEnemyMercenaryEmployerCode(enemyFaction.getShortName());
-                contract.setEnemyCode(MERCENARY_FACTION_CODE);
-            } else {
-                contract.setEnemyCode(enemyFaction.getShortName());
-            }
+        // If the OpFor isn't Clan (or an aggregate like pirates and rebels), there is a 1-in-5 chance they've hired
+        // mercenaries to do their dirty work. So the original enemy faction is set as the mercenary's employer,
+        // while the enemy faction is set to Mercenaries. A pirate employer's grudges are its own, so its enemies are
+        // never substituted.
+        boolean isPirateEmployer = contract.getEmployerCode().equals(PIRATE_FACTION_CODE);
+        if (!isPirateEmployer && !enemyFaction.isClan() && !enemyFaction.isAggregate() && randomInt(5) == 0) {
+            contract.setEnemyMercenaryEmployerCode(enemyFaction.getShortName());
+            contract.setEnemyCode(MERCENARY_FACTION_CODE);
+        } else {
+            contract.setEnemyCode(enemyFaction.getShortName());
         }
     }
 

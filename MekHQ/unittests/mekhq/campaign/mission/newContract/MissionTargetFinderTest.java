@@ -847,4 +847,60 @@ public class MissionTargetFinderTest {
               "With no recently conquered world in range, a guerrilla contract should land deep in the defender's "
                     + "space rather than on the contested border");
     }
+
+    /**
+     * INVASION (planetary assault): the invader can take, supply, and hold a world only from adjacent friendly
+     * territory, so only defender systems on the shared border are valid - never the defender's interior.
+     */
+    @Test
+    public void testFindInvasionProfileTargetsSharedBorderOnly() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem borderSystem = createTestSystem(2, 0, defenderFaction);
+        PlanetarySystem interiorSystem = createTestSystem(30, 0, defenderFaction);
+        stubDistances(attackerSystem, borderSystem, interiorSystem);
+
+        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, borderSystem, interiorSystem));
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE,
+              MissionLocationProfile.INVASION);
+
+        assertEquals(List.of(borderSystem), targets,
+              "A planetary invasion should only ever target defender worlds on the shared border");
+    }
+
+    /**
+     * INVASION is the one hard location restriction among the profiles: with no shared border at all, there must be no
+     * target - never a fallback to the whole-map closest-defender-system placement that a DEFAULT contract would reach
+     * for.
+     */
+    @Test
+    public void testFindInvasionProfileFindsNoTargetWithoutASharedBorder() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        // Far beyond any border reach - only the whole-map closest-system fallback could ever land here.
+        PlanetarySystem distantDefenderSystem = createTestSystem(1000, 1000, defenderFaction);
+        stubDistances(attackerSystem, distantDefenderSystem);
+
+        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, distantDefenderSystem));
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> defaultTargets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE);
+        assertEquals(List.of(distantDefenderSystem), defaultTargets,
+              "Sanity check: a DEFAULT contract should still reach the distant defender via the closest-system "
+                    + "fallback");
+
+        List<PlanetarySystem> invasionTargets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE,
+              MissionLocationProfile.INVASION);
+        assertTrue(invasionTargets.isEmpty(),
+              "An invasion with no shared border has no viable target: the attacker could never hold a world so far "
+                    + "from its own territory");
+    }
 }

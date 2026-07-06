@@ -64,6 +64,7 @@ import mekhq.campaign.finances.Money;
 import mekhq.campaign.force.CombatTeam;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.enums.AtBContractType;
+import mekhq.campaign.mission.newContract.EnemySelectionProfile;
 import mekhq.campaign.mission.utilities.ContractUtilities;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.Factions;
@@ -211,8 +212,8 @@ class AtbMonthlyContractMarketTest {
 
             RandomFactionGenerator randomFactionGenerator = mock(RandomFactionGenerator.class);
             when(randomFactionGenerator.getFactionHints()).thenReturn(factionHints);
-            when(randomFactionGenerator.getRandomEnemy(anyBoolean(), any(), any(), eq(employerFaction)))
-                  .thenReturn(enemyFaction);
+            when(randomFactionGenerator.getRandomEnemy(any(), any(), eq(employerFaction),
+                  any(EnemySelectionProfile.class))).thenReturn(enemyFaction);
             when(randomFactionGenerator.getMissionTarget(anyString(), anyString(), any(), any()))
                   .thenReturn(UNREACHABLE_TARGET_ID)
                   .thenReturn(REACHABLE_TARGET_ID);

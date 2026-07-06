@@ -41,9 +41,11 @@ import static mekhq.campaign.universe.Faction.CLAN_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.INDEPENDENT_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.MERCENARY_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.PIRATE_FACTION_CODE;
+import static mekhq.campaign.universe.Faction.REBEL_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.REPUBLIC_OF_THE_SPHERE_FACTION_CODE;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,6 +66,7 @@ import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.mission.mission.contractGeneration.GlobalEmployerTableValue;
+import mekhq.campaign.mission.newContract.EnemySelectionProfile;
 import mekhq.campaign.mission.newContract.MissionLocationProfile;
 import mekhq.campaign.mission.newContract.MissionTargetFinder;
 import mekhq.campaign.universe.enums.HPGRating;
@@ -74,8 +77,8 @@ import mekhq.campaign.universe.factionHints.FactionHints;
  *       <p>
  *       Uses Factions and Planets to weighted lists of potential employers and enemies for contract generation. Also
  *       finds a suitable planet for the action.
- *                                                                                                                                                                                                                                                                                     TODO : Account for the de facto alliance of the invading Clans and the
- *                                                                                                                                                                                                                                                                                     TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
+ *                                                                                                                                                                                                                                                                                           TODO : Account for the de facto alliance of the invading Clans and the
+ *                                                                                                                                                                                                                                                                                           TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
  */
 public class RandomFactionGenerator {
     private static final MMLogger LOGGER = MMLogger.create(RandomFactionGenerator.class);
@@ -419,6 +422,167 @@ public class RandomFactionGenerator {
 
         return independentFallback("Could not find enemy for employerName {}. Returning INDEPENDENT",
               employer.getShortName());
+    }
+
+    /**
+     * Selects an enemy faction for {@code employer} using the given contract-type enemy-selection profile: synthetic
+     * enemies (pirates, rebels, raiders) resolve directly, war-based profiles prefer the employer's actual belligerents
+     * before falling back to the standard pool, and covert profiles run the standard pool under covert rules (see
+     * {@link #getRandomEnemy(boolean, ILocation, LocalDate, Faction)}).
+     *
+     * @param location the location to center any pool-based search on
+     * @param date     the date to check faction control and diplomatic relations against
+     * @param employer the employer faction, or {@code null} to skip straight to the INDEPENDENT fallback
+     * @param profile  the enemy-selection profile for the contract's type
+     *
+     * @return the selected enemy faction, or the INDEPENDENT faction if none could be found
+     */
+    public Faction getRandomEnemy(ILocation location, LocalDate date, @Nullable Faction employer,
+          EnemySelectionProfile profile) {
+        if (employer == null) {
+            return independentFallback("No employer supplied or faction does not exist. Returning INDEPENDENT");
+        }
+
+        return switch (profile) {
+            case PIRATES -> pirateFactionFor(employer);
+            case REBELS -> Factions.getInstance().getFaction(REBEL_FACTION_CODE);
+            case RAIDERS -> raiderEnemy(employer);
+            case AT_WAR -> atWarEnemy(location, date, employer);
+            case OCCUPYING_POWER -> occupyingPowerEnemy(location, date, employer);
+            case COVERT -> getRandomEnemy(true, location, date, employer);
+            case DEFAULT -> getRandomEnemy(false, location, date, employer);
+        };
+    }
+
+    /**
+     * @param employer the employer faction
+     *
+     * @return the pirate faction appropriate to the employer: the Bandit Caste for a Clan employer, otherwise the
+     *       regular pirate faction
+     */
+    private static Faction pirateFactionFor(Faction employer) {
+        return Factions.getInstance()
+                     .getFaction(employer.isClan() ? BANDIT_CASTE_FACTION_CODE : PIRATE_FACTION_CODE);
+    }
+
+    /**
+     * Picks an irregular rear-area harasser: pirates or rebels, even odds. A pirate employer always gets rebels, so the
+     * pirate faction never ends up as its own enemy.
+     *
+     * @param employer the employer faction
+     *
+     * @return the raider enemy faction
+     */
+    private Faction raiderEnemy(Faction employer) {
+        Faction pirates = pirateFactionFor(employer);
+        if (employer.equals(pirates) || (Compute.randomInt(2) == 0)) {
+            return Factions.getInstance().getFaction(REBEL_FACTION_CODE);
+        }
+        return pirates;
+    }
+
+    /**
+     * Picks a faction the employer is at war with, falling back to the standard pool when the employer isn't at war
+     * with anyone.
+     *
+     * @param location the location to center the fallback pool search on
+     * @param date     the date to check diplomatic relations against
+     * @param employer the employer faction
+     *
+     * @return the selected enemy faction
+     */
+    private Faction atWarEnemy(ILocation location, LocalDate date, Faction employer) {
+        List<Faction> belligerents = findEnemiesAtWarWith(employer, date);
+        if (!belligerents.isEmpty()) {
+            return ObjectUtility.getRandomItem(belligerents);
+        }
+        return getRandomEnemy(false, location, date, employer);
+    }
+
+    /**
+     * Picks a faction at war with the employer that occupies a world recently taken from it (within the search area,
+     * using the same lookback window as {@link MissionLocationProfile#OCCUPIED_TERRITORY}'s location tier), then any
+     * war partner, then the standard pool.
+     *
+     * @param location the location to center the search on
+     * @param date     the date to check faction control and diplomatic relations against
+     * @param employer the employer faction
+     *
+     * @return the selected enemy faction
+     */
+    private Faction occupyingPowerEnemy(ILocation location, LocalDate date, Faction employer) {
+        List<Faction> belligerents = findEnemiesAtWarWith(employer, date);
+        if (belligerents.isEmpty()) {
+            return getRandomEnemy(false, location, date, employer);
+        }
+
+        List<Faction> occupiers = new ArrayList<>();
+        for (Faction belligerent : belligerents) {
+            if (holdsRecentConquestFrom(belligerent, employer, location, date)) {
+                occupiers.add(belligerent);
+            }
+        }
+        if (!occupiers.isEmpty()) {
+            return ObjectUtility.getRandomItem(occupiers);
+        }
+        return ObjectUtility.getRandomItem(belligerents);
+    }
+
+    /**
+     * Finds every faction the employer is at war with on the given date that also controls at least one known system,
+     * applying the same basic eligibility rules as the standard pool (real, currently valid, not
+     * Fortress-Republic-locked).
+     *
+     * @param employer the employer faction
+     * @param date     the date to check diplomatic relations and faction control against
+     *
+     * @return the employer's territorial war partners, possibly empty
+     */
+    private List<Faction> findEnemiesAtWarWith(Faction employer, LocalDate date) {
+        List<Faction> belligerents = new ArrayList<>();
+        for (Faction faction : Factions.getInstance().getFactions()) {
+            if (faction.equals(employer) || FactionHints.isEmptyFaction(faction) || !faction.validIn(date)) {
+                continue;
+            }
+            if (isDuringFortressRepublic(faction.getShortName(), date)) {
+                continue;
+            }
+            if (factionHints.isAtWarWith(employer, faction, date) && controlsAnySystem(faction, date)) {
+                belligerents.add(faction);
+            }
+        }
+        return belligerents;
+    }
+
+    /**
+     * Checks whether {@code occupier} currently holds a system within the search radius that {@code formerOwner} held
+     * {@value MissionLocationProfile#OCCUPIED_TERRITORY_LOOKBACK_YEARS} years ago, stopping at the first match.
+     *
+     * @param occupier    the faction suspected of occupying the former owner's territory
+     * @param formerOwner the faction whose lost worlds are being looked for
+     * @param location    the location to center the search on
+     * @param date        the current date; the "before" ownership check uses the shared lookback window
+     *
+     * @return {@code true} if at least one such occupied system exists in range
+     */
+    private boolean holdsRecentConquestFrom(Faction occupier, Faction formerOwner, ILocation location,
+          LocalDate date) {
+        PlanetarySystem origin = location.getCurrentSystem();
+        if (origin == null) {
+            return false;
+        }
+
+        double radius = borderTracker.getRadius();
+        LocalDate beforeConquest = date.minusYears(MissionLocationProfile.OCCUPIED_TERRITORY_LOOKBACK_YEARS);
+        for (PlanetarySystem system : borderTracker.getSystemList()) {
+            if ((radius < 0) || (system.getDistanceTo(origin) <= radius)) {
+                if (system.getFactionSet(date).contains(occupier) &&
+                          system.getFactionSet(beforeConquest).contains(formerOwner)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

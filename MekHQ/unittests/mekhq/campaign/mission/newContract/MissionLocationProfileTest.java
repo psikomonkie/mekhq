@@ -85,15 +85,19 @@ class MissionLocationProfileTest {
     }
 
     @Test
-    void highValueTypesMapToHighValue() {
-        assertEquals(MissionLocationProfile.HIGH_VALUE,
-              MissionLocationProfile.fromContractType(AtBContractType.PLANETARY_ASSAULT));
+    void covertHighValueTypesMapToHighValue() {
         assertEquals(MissionLocationProfile.HIGH_VALUE,
               MissionLocationProfile.fromContractType(AtBContractType.ESPIONAGE));
         assertEquals(MissionLocationProfile.HIGH_VALUE,
               MissionLocationProfile.fromContractType(AtBContractType.SABOTAGE));
         assertEquals(MissionLocationProfile.HIGH_VALUE,
               MissionLocationProfile.fromContractType(AtBContractType.TERRORISM));
+    }
+
+    @Test
+    void planetaryAssaultMapsToInvasion() {
+        assertEquals(MissionLocationProfile.INVASION,
+              MissionLocationProfile.fromContractType(AtBContractType.PLANETARY_ASSAULT));
     }
 
     @Test
@@ -113,10 +117,11 @@ class MissionLocationProfileTest {
     }
 
     @Test
-    void onlyHighValueAndInteriorPopulatedArePopulationWeighted() {
+    void onlyHighValueInteriorPopulatedAndInvasionArePopulationWeighted() {
         for (MissionLocationProfile profile : MissionLocationProfile.values()) {
             if ((profile == MissionLocationProfile.HIGH_VALUE) ||
-                      (profile == MissionLocationProfile.INTERIOR_POPULATED)) {
+                      (profile == MissionLocationProfile.INTERIOR_POPULATED) ||
+                      (profile == MissionLocationProfile.INVASION)) {
                 assertTrue(profile.isPopulationWeighted(), profile + " should be population-weighted");
             } else {
                 assertFalse(profile.isPopulationWeighted(), profile + " should not be population-weighted");

@@ -42,7 +42,9 @@ import mekhq.campaign.mission.enums.AtBContractType;
  *
  * <p>Each profile is a <em>preference</em>, not a hard restriction: if a profile's preferred tier finds no candidate
  * systems, selection falls back to the default border-based search so contract generation never fails just because the
- * fiction-preferred geography doesn't exist in the area.</p>
+ * fiction-preferred geography doesn't exist in the area. The one exception is {@link #INVASION}, which is a hard
+ * restriction: an invader can only supply and hold a conquest adjacent to its own territory, so with no shared border
+ * there is no viable target and the contract is regenerated instead.</p>
  *
  * <p>The profile is derived from the contract type at {@code setSystemId} time, after any contract-type overrides
  * (e.g. pity contracts) have run, so it always reflects the contract's final type.</p>
@@ -72,10 +74,24 @@ public enum MissionLocationProfile {
     OCCUPIED_TERRITORY,
     /**
      * The mission uses the standard candidate pool, but the final pick is weighted toward high-value worlds
-     * (population, major HPG presence) instead of being uniformly random: nobody launches a planetary assault on an
-     * uninhabited iceball when the border also contains a factory world.
+     * (population, major HPG presence) instead of being uniformly random: a sabotage or espionage campaign aims at a
+     * factory world, not an uninhabited iceball.
      */
-    HIGH_VALUE;
+    HIGH_VALUE,
+    /**
+     * The mission is a full planetary invasion, viable only on the shared border between the two factions: the attacker
+     * can take, supply, and hold a world only from adjacent friendly territory. The pick among border worlds is
+     * weighted like {@link #HIGH_VALUE}, but unlike every other profile there is no deep-placement fallback &mdash; no
+     * shared border means no viable invasion target at all.
+     */
+    INVASION;
+
+    /**
+     * How many years back a "recently conquered" ownership check looks. Shared between the {@link #OCCUPIED_TERRITORY}
+     * location tier and {@link EnemySelectionProfile#OCCUPYING_POWER}'s enemy preference, so that when guerrilla
+     * contracts pick an occupying enemy, the location tier's flipped-world search agrees on what "recent" means.
+     */
+    public static final int OCCUPIED_TERRITORY_LOOKBACK_YEARS = 10;
 
     /**
      * Maps a contract type to its location profile. Deliberately exhaustive with no {@code default} branch so that
@@ -96,7 +112,8 @@ public enum MissionLocationProfile {
             case DIVERSIONARY_RAID, OBJECTIVE_RAID, RECON_RAID, EXTRACTION_RAID, OBSERVATION_RAID, ASSASSINATION ->
                   DEEP_RAID;
             case GUERRILLA_WARFARE -> OCCUPIED_TERRITORY;
-            case PLANETARY_ASSAULT, ESPIONAGE, SABOTAGE, TERRORISM -> HIGH_VALUE;
+            case PLANETARY_ASSAULT -> INVASION;
+            case ESPIONAGE, SABOTAGE, TERRORISM -> HIGH_VALUE;
             case GARRISON_DUTY, RELIEF_DUTY, PIRATE_HUNTING, MOLE_HUNTING, UNDEFINED -> DEFAULT;
         };
     }
@@ -106,6 +123,6 @@ public enum MissionLocationProfile {
      *       (populated, connected) each world is, rather than uniformly random
      */
     public boolean isPopulationWeighted() {
-        return (this == HIGH_VALUE) || (this == INTERIOR_POPULATED);
+        return (this == HIGH_VALUE) || (this == INTERIOR_POPULATED) || (this == INVASION);
     }
 }

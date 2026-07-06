@@ -54,6 +54,7 @@ import java.util.Set;
 
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.mission.mission.contractGeneration.GlobalEmployerTableValue;
+import mekhq.campaign.mission.newContract.EnemySelectionProfile;
 import mekhq.campaign.universe.enums.HPGRating;
 import mekhq.campaign.universe.factionHints.FactionHints;
 import org.junit.jupiter.api.AfterEach;
@@ -834,5 +835,181 @@ public class RandomFactionGeneratorTest {
 
         assertEquals(1, RandomFactionGenerator.populationWeight(barrenWorld, TEST_DATE),
               "A system with no population or HPG data should still carry the minimum weight of 1");
+    }
+
+    /**
+     * PIRATES (pirate hunting): the enemy is baked into the contract type - the pirate faction, or the Bandit Caste for
+     * a Clan employer.
+     */
+    @Test
+    public void testGetRandomEnemyProfilePirates() {
+        Faction pirates = createTestFaction(Faction.PIRATE_FACTION_CODE, false, false);
+        Faction banditCaste = createTestFaction(Faction.BANDIT_CASTE_FACTION_CODE, false, true);
+        allFactions.add(pirates);
+        allFactions.add(banditCaste);
+        RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
+
+        assertEquals(pirates, rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.PIRATES),
+              "A non-Clan employer hunting pirates should face the pirate faction");
+        assertEquals(banditCaste, rfg.getRandomEnemy(location, TEST_DATE, clanFaction, EnemySelectionProfile.PIRATES),
+              "A Clan employer hunting pirates should face the Bandit Caste");
+    }
+
+    /**
+     * REBELS (riot duty): a riot is internal unrest, so the enemy is always the rebel faction.
+     */
+    @Test
+    public void testGetRandomEnemyProfileRebels() {
+        Faction rebels = createTestFaction(Faction.REBEL_FACTION_CODE, false, false);
+        allFactions.add(rebels);
+        RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
+
+        assertEquals(rebels, rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.REBELS),
+              "A riot-duty enemy should always be the rebel faction");
+    }
+
+    /**
+     * RAIDERS (cadre duty): a rear-area posting is harassed by irregulars - pirates or rebels - never by a peer state's
+     * line regiments.
+     */
+    @Test
+    public void testGetRandomEnemyProfileRaidersReturnsPiratesOrRebels() {
+        Faction pirates = createTestFaction(Faction.PIRATE_FACTION_CODE, false, false);
+        Faction rebels = createTestFaction(Faction.REBEL_FACTION_CODE, false, false);
+        allFactions.add(pirates);
+        allFactions.add(rebels);
+        RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(isFaction);
+
+        Faction enemy = rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.RAIDERS);
+
+        assertTrue(Set.of(pirates, rebels).contains(enemy),
+              "A cadre-duty enemy should be an irregular force (pirates or rebels), not a peer state");
+    }
+
+    /**
+     * RAIDERS with the pirate faction itself as the employer must never pick pirates as their own enemy, so the
+     * irregular opposition is always rebels.
+     */
+    @Test
+    public void testGetRandomEnemyProfileRaidersNeverPicksThePirateEmployerItself() {
+        Faction pirates = createTestFaction(Faction.PIRATE_FACTION_CODE, false, false);
+        Faction rebels = createTestFaction(Faction.REBEL_FACTION_CODE, false, false);
+        allFactions.add(pirates);
+        allFactions.add(rebels);
+        RandomFactionGenerator rfg = createTestRFG();
+        ILocation location = createTestLocation(pirates);
+
+        assertEquals(rebels, rfg.getRandomEnemy(location, TEST_DATE, pirates, EnemySelectionProfile.RAIDERS),
+              "A pirate employer's rear-area harassers should always be rebels, never the pirate faction itself");
+    }
+
+    /**
+     * AT_WAR (planetary assault, relief duty): an open-warfare contract should be against a faction the employer is
+     * actually at war with, when one exists.
+     */
+    @Test
+    public void testGetRandomEnemyProfileAtWarPrefersBelligerent() {
+        FactionHints hints = mock(FactionHints.class);
+        when(hints.isAtWarWith(isFaction, clanFaction, TEST_DATE)).thenReturn(true);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, hints);
+        ILocation location = createTestLocation(isFaction);
+
+        assertEquals(clanFaction, rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.AT_WAR),
+              "An open-warfare contract should be against the employer's actual war partner when one exists");
+    }
+
+    /**
+     * AT_WAR is a preference, not a restriction: an employer at war with nobody still gets an enemy from the standard
+     * pool rather than failing generation.
+     */
+    @Test
+    public void testGetRandomEnemyProfileAtWarFallsBackToStandardPoolWithoutAWar() {
+        RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, mock(FactionHints.class));
+        ILocation location = createTestLocation(isFaction);
+
+        Faction enemy = rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.AT_WAR);
+
+        assertTrue(Set.of(clanFaction, peripheryFaction).contains(enemy),
+              "With no active war, the enemy should come from the standard regional pool");
+    }
+
+    /**
+     * OCCUPYING_POWER (guerrilla warfare): among the employer's war partners, prefer one that occupies a world recently
+     * taken from the employer - the same lookback the OCCUPIED_TERRITORY location tier uses, so the flipped-world
+     * location search can actually fire.
+     */
+    @Test
+    public void testGetRandomEnemyProfileOccupyingPowerPrefersRecentConqueror() {
+        Faction occupier = createTestFaction("OCCUPIER", false, false);
+        Faction distantBelligerent = createTestFaction("DISTANT", false, false);
+        allFactions.add(occupier);
+        allFactions.add(distantBelligerent);
+
+        PlanetarySystem employerHome = createTestSystem(0, 0, isFaction);
+        // Owned by the employer until 3020, by the occupier since - a conquest within the lookback window.
+        PlanetarySystem occupiedSystem = createTestSystem(2, 0, occupier);
+        when(occupiedSystem.getFactionSet(any())).thenAnswer(invocation -> {
+            LocalDate when = invocation.getArgument(0);
+            return when.isBefore(LocalDate.of(3020, 1, 1)) ?
+                         Collections.singleton(isFaction) :
+                         Collections.singleton(occupier);
+        });
+        PlanetarySystem distantBelligerentSystem = createTestSystem(4, 0, distantBelligerent);
+
+        List<PlanetarySystem> systems = List.of(employerHome, occupiedSystem, distantBelligerentSystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        FactionHints hints = mock(FactionHints.class);
+        when(hints.isAtWarWith(isFaction, occupier, TEST_DATE)).thenReturn(true);
+        when(hints.isAtWarWith(isFaction, distantBelligerent, TEST_DATE)).thenReturn(true);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, hints);
+        ILocation location = mock(ILocation.class);
+        when(location.getCurrentSystem()).thenReturn(employerHome);
+
+        assertEquals(occupier,
+              rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.OCCUPYING_POWER),
+              "A guerrilla contract should be against the war partner that actually occupies the employer's "
+                    + "recently lost worlds");
+    }
+
+    /**
+     * COVERT (espionage, sabotage, terrorism, assassination): the covert rules make allies rare-but-possible targets,
+     * where the default rules exclude them outright.
+     */
+    @Test
+    public void testGetRandomEnemyProfileCovertCanTargetAllyThatDefaultExcludes() {
+        Faction ally = createTestFaction("ALLY", false, false);
+        allFactions.add(ally);
+
+        PlanetarySystem employerSystem = createTestSystem(0, 0, isFaction);
+        PlanetarySystem allySystem = createTestSystem(1, 0, ally);
+        List<PlanetarySystem> systems = List.of(employerSystem, allySystem);
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+
+        FactionHints hints = mock(FactionHints.class);
+        when(hints.isAlliedWith(isFaction, ally, TEST_DATE)).thenReturn(true);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, hints);
+        ILocation location = createTestLocation(isFaction);
+
+        assertEquals(ally, rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.COVERT),
+              "Under covert rules, an ally should be a possible (if rare) target");
+        assertEquals(independentFaction,
+              rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.DEFAULT),
+              "Under default rules, an ally is excluded outright, leaving only the INDEPENDENT fallback here");
     }
 }

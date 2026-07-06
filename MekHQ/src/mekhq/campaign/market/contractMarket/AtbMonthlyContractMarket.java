@@ -50,7 +50,6 @@ import static mekhq.campaign.personnel.PersonnelOptions.EDGE_COMMANDER_NEGOTIATI
 import static mekhq.campaign.personnel.skills.SkillType.S_NEGOTIATION;
 import static mekhq.campaign.randomEvents.other.GrayMonday.isGrayMonday;
 import static mekhq.campaign.universe.Faction.COMSTAR_FACTION_CODE;
-import static mekhq.campaign.universe.Faction.PIRATE_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.WORD_OF_BLAKE_FACTION_CODE;
 import static mekhq.utilities.MHQInternationalization.getFormattedTextAt;
 import static mekhq.utilities.MHQInternationalization.getTextAt;
@@ -76,6 +75,7 @@ import mekhq.campaign.market.enums.ContractMarketMethod;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.enums.AtBContractType;
 import mekhq.campaign.mission.enums.ContractCommandRights;
+import mekhq.campaign.mission.newContract.EnemySelectionProfile;
 import mekhq.campaign.mission.utilities.ContractUtilities;
 import mekhq.campaign.personnel.Person;
 import mekhq.campaign.personnel.PersonnelOptions;
@@ -616,19 +616,13 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
         contract.updateEmployer(parent.getEmployerCode(), campaign.getGameYear());
         getContractType(contract);
 
-        if (contract.getContractType().isPirateHunting()) {
-            Faction employer = contract.getEmployerFaction();
-            contract.setEnemyCode(employer.isClan() ? "BAN" : PIRATE_FACTION_CODE);
-        } else if (contract.getContractType().isRiotDuty()) {
-            contract.setEnemyCode("REB");
-        } else {
-            Faction enemyFaction = RandomFactionGenerator.getInstance()
-                                         .getRandomEnemy(false,
-                                               campaign.getCurrentLocation(),
-                                               campaign.getLocalDate(),
-                                               contract.getEmployerFaction());
-            contract.setEnemyCode(enemyFaction.getShortName());
-        }
+        // Same type-derived enemy preference as setEnemyCode, minus the mercenary-opposition substitution, which
+        // subcontracts have never rolled for.
+        Faction enemyFaction = RandomFactionGenerator.getInstance()
+                                     .getRandomEnemy(campaign.getCurrentLocation(), campaign.getLocalDate(),
+                                           contract.getEmployerFaction(),
+                                           EnemySelectionProfile.fromContractType(contract.getContractType()));
+        contract.setEnemyCode(enemyFaction.getShortName());
         if (contract.getContractType().isGarrisonDuty() && contract.getEnemy().isRebel()) {
             contract.setContractTypeAndName(AtBContractType.RIOT_DUTY);
         }

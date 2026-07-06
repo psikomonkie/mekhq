@@ -168,15 +168,39 @@ public class MissionTargetFinder {
             return profileTargets;
         }
 
-        // Both sides hold territory: target the shared border between them. getBorderSystems(self, other) returns
-        // OTHER's systems near SELF, so this is always defender-owned.
+        // INVASION found no shared border above, and it is the one profile that is a hard restriction rather than a
+        // preference: an invader can only supply and hold a conquest adjacent to its own territory, so there is no
+        // deep-placement fallback for it - no shared border means no viable invasion target at all.
+        if (profile == MissionLocationProfile.INVASION) {
+            return Collections.emptyList();
+        }
+
+        List<PlanetarySystem> borderTargets = findSharedBorderTargets(attacker, defender, location, radius,
+              currentDate);
+        if (!borderTargets.isEmpty()) {
+            return borderTargets;
+        }
+
+        // Last resort: neither a direct border nor a contained-faction proxy border exists. Target whichever of
+        // the defender's systems is physically closest to any of the attacker's, rather than giving up entirely.
+        PlanetarySystem closestSystem = findClosestDefenderSystem(attacker, defender, location, radius);
+        if (closestSystem == null) {
+            return Collections.emptyList();
+        }
+        return List.of(closestSystem);
+    }
+
+    /**
+     * Finds the defender's systems on a genuine shared border with the attacker: the direct border between the two
+     * first and, when none exists, the border of whichever regional faction hosts the attacker as a "contained"
+     * opponent of the defender, as a proxy for the attacker's otherwise poorly-defined local presence. Either way the
+     * result is always defender-owned, since {@code getBorderSystems(self, other)} returns OTHER's systems near SELF.
+     */
+    private List<PlanetarySystem> findSharedBorderTargets(Faction attacker, Faction defender, ILocation location,
+          double radius, LocalDate currentDate) {
         Set<PlanetarySystem> planetSet = new HashSet<>(borderTracker.getBorderSystems(attacker, defender, location,
               radius));
 
-        // If neither side directly borders the other, fall back to whichever regional faction hosts a "contained"
-        // opponent relationship with the attacker, using that host's own border with the defender as a proxy for the
-        // attacker's otherwise poorly-defined local presence. Still always defender-owned, since it's the defender's
-        // systems near the host that get returned, not the host's own.
         if (planetSet.isEmpty()) {
             for (Faction regionalFaction : borderTracker.getFactionsInRegion(location, radius)) {
                 for (Faction hintFaction : factionHints.getContainedFactions(regionalFaction, currentDate)) {
@@ -186,15 +210,6 @@ public class MissionTargetFinder {
                         planetSet.addAll(borderTracker.getBorderSystems(regionalFaction, defender, location, radius));
                     }
                 }
-            }
-        }
-
-        // Last resort: neither a direct border nor a contained-faction proxy border exists. Target whichever of
-        // the defender's systems is physically closest to any of the attacker's, rather than giving up entirely.
-        if (planetSet.isEmpty()) {
-            PlanetarySystem closestSystem = findClosestDefenderSystem(attacker, defender, location, radius);
-            if (closestSystem != null) {
-                planetSet.add(closestSystem);
             }
         }
 
@@ -208,16 +223,12 @@ public class MissionTargetFinder {
     private static final double DEEP_RAID_BORDER_MULTIPLIER = 2.0;
 
     /**
-     * How many years back {@link MissionLocationProfile#OCCUPIED_TERRITORY} looks when deciding whether the defender
-     * "recently" took a system from the attacker.
-     */
-    private static final int OCCUPIED_TERRITORY_LOOKBACK_YEARS = 10;
-
-    /**
      * Dispatches to the given profile's preferred-tier search. {@link MissionLocationProfile#DEFAULT} and
      * {@link MissionLocationProfile#HIGH_VALUE} intentionally return nothing here: DEFAULT has no preference, and
      * HIGH_VALUE uses the default candidate pool unchanged, differing only in how the final pick is weighted (see
-     * {@code RandomFactionGenerator}).
+     * {@code RandomFactionGenerator}). An empty result from {@link MissionLocationProfile#INVASION} does NOT fall
+     * through &mdash; {@link #find} blocks it from reaching the deep fallbacks, since an invasion with no shared
+     * border has no viable target.
      *
      * @return the profile's preferred candidate systems, or an empty list to fall through to the default chain
      */
@@ -229,6 +240,7 @@ public class MissionTargetFinder {
             case DEEP_RAID -> borderTracker.getBorderSystems(attacker, defender, location, radius,
                   deepRaidBorderSize(attacker, defender));
             case OCCUPIED_TERRITORY -> findOccupiedTerritoryTargets(attacker, defender, location, radius, date);
+            case INVASION -> findSharedBorderTargets(attacker, defender, location, radius, date);
             case HIGH_VALUE, DEFAULT -> Collections.emptyList();
         };
     }
@@ -265,7 +277,8 @@ public class MissionTargetFinder {
 
     /**
      * Finds targets for a guerrilla campaign behind enemy lines. Preferred tier: defender-held systems in range that
-     * the attacker held {@value #OCCUPIED_TERRITORY_LOOKBACK_YEARS} years ago &mdash; recently conquered worlds whose
+     * the attacker held {@value MissionLocationProfile#OCCUPIED_TERRITORY_LOOKBACK_YEARS} years ago &mdash; recently
+     * conquered worlds whose
      * population plausibly still sympathizes with the attacker. Second tier: any defender system in range away from the
      * shared border, since a guerrilla campaign on the contested front is just the regular war. Empty only when the
      * defender holds nothing in range beyond the border itself.
@@ -277,7 +290,7 @@ public class MissionTargetFinder {
             return defenderSystems;
         }
 
-        LocalDate beforeConquest = date.minusYears(OCCUPIED_TERRITORY_LOOKBACK_YEARS);
+        LocalDate beforeConquest = date.minusYears(MissionLocationProfile.OCCUPIED_TERRITORY_LOOKBACK_YEARS);
         List<PlanetarySystem> recentlyConquered = new ArrayList<>();
         for (PlanetarySystem system : defenderSystems) {
             if (system.getFactionSet(beforeConquest).contains(attacker)) {
