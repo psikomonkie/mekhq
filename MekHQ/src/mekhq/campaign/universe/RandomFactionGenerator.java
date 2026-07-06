@@ -184,16 +184,26 @@ public class RandomFactionGenerator {
     }
 
     /**
-     * Checks whether the given faction controls at least one system anywhere the border tracker knows about &mdash;
-     * i.e. whether it has any planets at all, not just presence in the current search area.
+     * Checks whether the given faction has any territory to its name: systems it controls directly anywhere on the
+     * map, or failing that, a contained-faction host that does (e.g. the Star League's member states while the
+     * League itself holds almost nothing directly).
      *
      * @param faction the faction to check
-     * @param date    the date to check faction control against
+     * @param date    the date to check faction control and the contained-faction relationship against
      *
-     * @return {@code true} if the faction controls at least one known system on the given date
+     * @return {@code true} if the faction controls at least one known system on the given date, or is hosted by a
+     *       faction that does
      */
-    public boolean controlsAnySystem(Faction faction, LocalDate date) {
-        return borderTracker.controlsAnySystem(faction, date);
+    public boolean hasAnyTerritory(Faction faction, LocalDate date) {
+        if (borderTracker.controlsAnySystem(faction, date)) {
+            return true;
+        }
+        for (Faction host : factionHints.getContainedFactionHosts(faction, date)) {
+            if (borderTracker.controlsAnySystem(host, date)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -713,7 +723,9 @@ public class RandomFactionGenerator {
 
     /**
      * Checks whether two factions should be treated as allies: directly, or through a shared ally (e.g. two member
-     * states of the same superpower), unless a direct war record between them says otherwise.
+     * states of the same superpower). An explicit war record between them overrides either kind of alliance &mdash;
+     * a formal pact that hasn't been expunged from the data doesn't stop a shooting war (e.g. the Star League and
+     * the Amaris-held Terran Hegemony, nominally allied for the whole League era but at war from the coup on).
      *
      * @param date     the date to check diplomatic relations against
      * @param employer one faction
@@ -722,9 +734,11 @@ public class RandomFactionGenerator {
      * @return {@code true} if the two factions should be treated as allied
      */
     private boolean performIsAllyCheck(LocalDate date, Faction employer, Faction enemy) {
+        if (factionHints.isAtWarWith(employer, enemy, date)) {
+            return false;
+        }
         return factionHints.isAlliedWith(employer, enemy, date) ||
-                     (!factionHints.isAtWarWith(employer, enemy, date) &&
-                            factionHints.isAlliedThroughSharedAlly(employer, enemy, date));
+                     factionHints.isAlliedThroughSharedAlly(employer, enemy, date);
     }
 
     /**

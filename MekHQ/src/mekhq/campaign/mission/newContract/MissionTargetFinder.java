@@ -365,31 +365,62 @@ public class MissionTargetFinder {
     }
 
     /**
-     * Resolves a faction with no directly-controlled systems anywhere to its contained-faction host, if one is
-     * configured, so mission targeting has something with real territory to work with. Inherently landless factions
+     * Resolves a faction with no directly-controlled systems in the search region to its contained-faction host, if one
+     * is configured, so mission targeting has something with real territory to work with. Inherently landless factions
      * (pirates, mercenaries, ComStar/WoB) and rebels are never contained by anyone, so this is a no-op for them;
      * {@link #find} handles their lack of territory separately.
-     * <p>A faction with territory only outside the local search area (e.g. a war partner guaranteed valid by
-     * {@code RandomFactionGenerator#buildEnemyMap} regardless of local presence) is still returned unchanged, not
-     * redirected to a host: it has real territory to work with, just not nearby. The cached, region-limited
-     * {@link FactionBorderTracker#getFactionsInRegion()} is checked first as a cheap common-case shortcut; the full,
-     * uncached {@link FactionBorderTracker#controlsAnySystem} scan only runs for the rare faction with no local
-     * presence.</p>
+     * <p>The host redirect takes precedence over the faction's own <em>remote</em> holdings: a contained faction can
+     * hold a few titular worlds far from the campaign (e.g. the Star League's far-periphery administrative systems)
+     * that would otherwise pass a controls-anything check and leave it with no usable territory anywhere near the
+     * search area. Only a faction with no host at all falls back on its remote territory, which the whole-map
+     * closest-system fallback in {@link #find} can still reach (e.g. a distant war partner guaranteed valid by
+     * {@code RandomFactionGenerator#buildEnemyMap} regardless of local presence).</p>
      *
      * @param faction the faction to resolve
      * @param date    the date to check faction control and the contained-faction relationship against
      *
-     * @return the resolved faction (its host if one was found and needed, otherwise the faction unchanged), or
-     *       {@code null} if the faction has no systems anywhere and no host could be found
+     * @return the resolved faction (a host with territory if one was found and needed, otherwise the faction
+     *       unchanged), or {@code null} if the faction has no systems anywhere and no territorial host
      */
     private @Nullable Faction resolveTerritorialHost(Faction faction, LocalDate date) {
         if (borderTracker.getFactionsInRegion().contains(faction) ||
                   isSpecialAttacker(faction) ||
-                  faction.isRebel() ||
-                  borderTracker.controlsAnySystem(faction, date)) {
+                  faction.isRebel()) {
             return faction;
         }
-        return factionHints.getContainedFactionHost(faction, date);
+
+        Faction territorialHost = findTerritorialHost(faction, date);
+        if (territorialHost != null) {
+            return territorialHost;
+        }
+
+        return borderTracker.controlsAnySystem(faction, date) ? faction : null;
+    }
+
+    /**
+     * Picks the contained-faction host whose territory should stand in for the given faction's: a host with systems in
+     * the search region first, then any host with systems at all. A host can itself be landless at the time (the
+     * occupied Terran Hegemony during the Amaris Civil War, while still nominally hosting the Star League), so hosting
+     * alone is not enough &mdash; the chosen host must actually hold territory.
+     *
+     * @param faction the contained faction to find a host for
+     * @param date    the date to check faction control and the contained-faction relationship against
+     *
+     * @return the best territorial host, or {@code null} if the faction has no host with any territory
+     */
+    private @Nullable Faction findTerritorialHost(Faction faction, LocalDate date) {
+        List<Faction> hosts = factionHints.getContainedFactionHosts(faction, date);
+        for (Faction host : hosts) {
+            if (borderTracker.getFactionsInRegion().contains(host)) {
+                return host;
+            }
+        }
+        for (Faction host : hosts) {
+            if (borderTracker.controlsAnySystem(host, date)) {
+                return host;
+            }
+        }
+        return null;
     }
 
     /**

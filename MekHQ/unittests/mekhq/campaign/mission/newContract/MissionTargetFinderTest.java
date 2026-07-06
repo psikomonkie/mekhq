@@ -843,4 +843,63 @@ public class MissionTargetFinderTest {
               "An invasion with no shared border has no viable target: the attacker could never hold a world so far "
                     + "from its own territory");
     }
+
+    /**
+     * Regression test: a contained faction whose only direct holdings are far outside the search region (e.g. the Star
+     * League's far-periphery administrative worlds during the Amaris Civil War) must resolve to its contained-faction
+     * host's territory, not be left stranded on its remote worlds by a controls-anything-anywhere check.
+     */
+    @Test
+    public void testFindRedirectsContainedFactionWithOnlyRemoteHoldingsToItsHost() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction leagueFaction = createTestFaction("LEAGUE", false, false);
+        Faction hostFaction = createTestFaction("HOST", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem hostSystem = createTestSystem(2, 0, hostFaction);
+        // The contained faction's only direct holding, far outside the 5 ly search region below.
+        PlanetarySystem remoteSystem = createTestSystem(1000, 1000, leagueFaction);
+        stubDistances(attackerSystem, hostSystem, remoteSystem);
+
+        FactionBorderTracker tracker = buildTestTracker(List.of(attackerSystem, hostSystem, remoteSystem), 5);
+        FactionHints hints = new FactionHints();
+        hints.addContainedFaction(hostFaction, leagueFaction, null, null, 0.5);
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, hints);
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, leagueFaction, location, TEST_DATE);
+
+        assertEquals(List.of(hostSystem), targets,
+              "A contained faction with only remote holdings should fight on its host's territory, not be stranded "
+                    + "on a titular world on the far side of the map");
+    }
+
+    /**
+     * Regression test: a contained faction's host can itself be landless at the time (the occupied Terran Hegemony
+     * during the Amaris Civil War, still nominally hosting the Star League), so host resolution must skip past it to a
+     * host that actually holds territory.
+     */
+    @Test
+    public void testFindSkipsLandlessHostWhenResolvingContainedFaction() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction leagueFaction = createTestFaction("LEAGUE", false, false);
+        Faction occupiedHostFaction = createTestFaction("OCCUPIED_HOST", false, false);
+        Faction intactHostFaction = createTestFaction("INTACT_HOST", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem intactHostSystem = createTestSystem(2, 0, intactHostFaction);
+        stubDistances(attackerSystem, intactHostSystem);
+
+        FactionBorderTracker tracker = buildTestTracker(List.of(attackerSystem, intactHostSystem), 5);
+        FactionHints hints = new FactionHints();
+        hints.addContainedFaction(occupiedHostFaction, leagueFaction, null, null, 0.5);
+        hints.addContainedFaction(intactHostFaction, leagueFaction, null, null, 0.5);
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, hints);
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, leagueFaction, location, TEST_DATE);
+
+        assertEquals(List.of(intactHostSystem), targets,
+              "Host resolution should skip a host that holds no territory and use one that does");
+    }
 }

@@ -585,14 +585,14 @@ public abstract class AbstractContractMarket {
      *                                          defending for an employer that controls no planets to defend
      */
     protected void setSystemId(AtBContract contract, Campaign campaign) throws NoContractLocationFoundException {
-        // A contract where the player defends is a defense of the employer's own territory, so an employer with no
-        // planets anywhere has nothing to defend and the contract fails outright - it must not be redirected to a
-        // contained-faction host's worlds by the location search. Contracts where the player attacks stay valid for
-        // a landless employer.
+        // A contract where the player defends is a defense of the employer's territory, so an employer with no
+        // planets anywhere - neither its own nor a contained-faction host's worlds to stand on - has nothing to
+        // defend, and the contract fails outright. Contracts where the player attacks stay valid for a landless
+        // employer.
         Faction employerFaction = contract.getEmployerFaction();
         if (!contract.isPlayerAttacker() &&
                   (employerFaction != null) &&
-                  !RandomFactionGenerator.getInstance().controlsAnySystem(employerFaction, campaign.getLocalDate())) {
+                  !RandomFactionGenerator.getInstance().hasAnyTerritory(employerFaction, campaign.getLocalDate())) {
             String errorMsg = "Defensive contract for landless employer " + contract.getEmployerCode() +
                                     "; nothing to defend";
             logger.warn(errorMsg);

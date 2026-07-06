@@ -976,6 +976,50 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
+     * A recorded war overrides a direct alliance that hasn't been expunged from the data: the Star League and the
+     * Amaris-held Terran Hegemony were nominally allied for the whole League era yet at war from the coup on, and the
+     * war must win.
+     */
+    @Test
+    public void testGetRandomEnemyWarOverridesDirectAlliance() {
+        Faction formerAlly = createTestFaction("FORMER_ALLY", false, false);
+        allFactions.add(formerAlly);
+
+        PlanetarySystem employerSystem = createTestSystem(0, 0, isFaction);
+        PlanetarySystem formerAllySystem = createTestSystem(1, 0, formerAlly);
+        FactionHints hints = mock(FactionHints.class);
+        when(hints.isAlliedWith(isFaction, formerAlly, TEST_DATE)).thenReturn(true);
+        when(hints.isAtWarWith(isFaction, formerAlly, TEST_DATE)).thenReturn(true);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(
+              buildTestTracker(List.of(employerSystem, formerAllySystem)), hints);
+        ILocation location = createTestLocation(isFaction);
+
+        assertEquals(formerAlly, rfg.getRandomEnemy(false, location, TEST_DATE, isFaction),
+              "A faction recorded both allied and at war should be a valid enemy: the war record wins");
+    }
+
+    /**
+     * {@code hasAnyTerritory} accepts a contained-faction host's territory in place of the faction's own, so a landless
+     * government hosted by territorial states (e.g. the Star League) still counts as having something to defend.
+     */
+    @Test
+    public void testHasAnyTerritoryAcceptsContainedFactionHost() {
+        Faction leagueFaction = createTestFaction("LEAGUE", false, false);
+        Faction hostFaction = createTestFaction("HOST", false, false);
+        Faction hostlessFaction = createTestFaction("HOSTLESS", false, false);
+
+        PlanetarySystem hostSystem = createTestSystem(0, 0, hostFaction);
+        FactionHints hints = new FactionHints();
+        hints.addContainedFaction(hostFaction, leagueFaction, null, null, 0.5);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(buildTestTracker(List.of(hostSystem)), hints);
+
+        assertTrue(rfg.hasAnyTerritory(leagueFaction, TEST_DATE),
+              "A landless faction hosted by a territorial state has territory to defend");
+        assertFalse(rfg.hasAnyTerritory(hostlessFaction, TEST_DATE),
+              "A landless faction with no host has no territory at all");
+    }
+
+    /**
      * A faction explicitly recorded at war with itself (a civil war, e.g. the FedCom Civil War) can generate contracts
      * against itself.
      */
