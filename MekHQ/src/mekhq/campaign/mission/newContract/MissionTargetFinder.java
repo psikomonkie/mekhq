@@ -366,7 +366,8 @@ public class MissionTargetFinder {
      * {@code RandomFactionGenerator#buildEnemyMap} regardless of local presence) is still returned unchanged, not
      * redirected to a host: it has real territory to work with, just not nearby. The cached, region-limited
      * {@link FactionBorderTracker#getFactionsInRegion()} is checked first as a cheap common-case shortcut; the full,
-     * uncached {@link #controlsAnySystem} scan only runs for the rare faction with no local presence.</p>
+     * uncached {@link FactionBorderTracker#controlsAnySystem} scan only runs for the rare faction with no local
+     * presence.</p>
      *
      * @param faction the faction to resolve
      * @param date    the date to check faction control and the contained-faction relationship against
@@ -378,29 +379,10 @@ public class MissionTargetFinder {
         if (borderTracker.getFactionsInRegion().contains(faction) ||
                   isSpecialAttacker(faction) ||
                   faction.isRebel() ||
-                  controlsAnySystem(faction, date)) {
+                  borderTracker.controlsAnySystem(faction, date)) {
             return faction;
         }
         return factionHints.getContainedFactionHost(faction, date);
-    }
-
-    /**
-     * Checks whether the given faction controls at least one system anywhere the border tracker knows about, stopping
-     * at the first match. Only called for the rare faction with no presence in the tracker's cached region, so this
-     * deliberately isn't cached &mdash; most calls never reach it.
-     *
-     * @param faction the faction to check
-     * @param date    the date to check faction control against
-     *
-     * @return {@code true} if the faction controls at least one known system on the given date
-     */
-    private boolean controlsAnySystem(Faction faction, LocalDate date) {
-        for (PlanetarySystem system : borderTracker.getSystemList()) {
-            if (system.getFactionSet(date).contains(faction)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

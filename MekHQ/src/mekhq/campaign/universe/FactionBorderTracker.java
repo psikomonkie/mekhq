@@ -416,6 +416,25 @@ public class FactionBorderTracker {
     }
 
     /**
+     * Checks whether the given faction controls at least one system anywhere in {@link #getSystemList()}, stopping at
+     * the first match. An uncached linear scan, intended for rare candidates (e.g. a war partner with no presence in
+     * the cached region) rather than as a routine per-faction query.
+     *
+     * @param faction the faction to check
+     * @param date    the date to check faction control against
+     *
+     * @return {@code true} if the faction controls at least one known system on the given date
+     */
+    public boolean controlsAnySystem(Faction faction, LocalDate date) {
+        for (PlanetarySystem system : getSystemList()) {
+            if (system.getFactionSet(date).contains(faction)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @return the systems from {@link #getSystemList()} within {@code radius} light years of {@code origin}; a negative
      *       radius returns every system
      */

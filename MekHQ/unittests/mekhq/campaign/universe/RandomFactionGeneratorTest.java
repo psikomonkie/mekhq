@@ -123,13 +123,7 @@ public class RandomFactionGeneratorTest {
             }
         }
 
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems);
         return tracker;
     }
 
@@ -187,14 +181,30 @@ public class RandomFactionGeneratorTest {
      */
     private RandomFactionGenerator createIsolatedRfg(final Faction faction) {
         List<PlanetarySystem> systems = Collections.singletonList(createTestSystem(0, 0, faction));
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+        return new RandomFactionGenerator(buildTestTracker(systems), new FactionHints());
+    }
+
+    /**
+     * Builds a tracker over exactly the given systems with the standard test border sizes and an unlimited search
+     * radius.
+     */
+    private static FactionBorderTracker buildTestTracker(final List<PlanetarySystem> systems) {
+        return buildTestTracker(systems, -1);
+    }
+
+    /**
+     * Builds a tracker over exactly the given systems with the standard test border sizes and the given search radius
+     * in light years (negative for unlimited).
+     */
+    private static FactionBorderTracker buildTestTracker(final List<PlanetarySystem> systems, final double radius) {
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, radius) {
             @Override
             public Collection<PlanetarySystem> getSystemList() {
                 return systems;
             }
         };
         tracker.setDefaultBorderSize(2.5, 10, 2.5);
-        return new RandomFactionGenerator(tracker, new FactionHints());
+        return tracker;
     }
 
     @Test
@@ -272,12 +282,7 @@ public class RandomFactionGeneratorTest {
         when(nearSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(0.0);
 
         List<PlanetarySystem> systems = List.of(nearSystem, farSystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, 5) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
+        FactionBorderTracker tracker = buildTestTracker(systems, 5);
 
         FactionHints hints = new FactionHints();
         hints.addWar("", null, null, isFaction, warFaction);
@@ -361,12 +366,7 @@ public class RandomFactionGeneratorTest {
         when(nearSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(0.0);
 
         List<PlanetarySystem> systems = List.of(nearSystem, farSystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, 5) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
+        FactionBorderTracker tracker = buildTestTracker(systems, 5);
 
         FactionHints hints = new FactionHints();
         hints.addAlliance("", null, null, superpower, isFaction);
@@ -960,13 +960,7 @@ public class RandomFactionGeneratorTest {
         PlanetarySystem distantBelligerentSystem = createTestSystem(4, 0, distantBelligerent);
 
         List<PlanetarySystem> systems = List.of(employerHome, occupiedSystem, distantBelligerentSystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems);
 
         FactionHints hints = mock(FactionHints.class);
         when(hints.isAtWarWith(isFaction, occupier, TEST_DATE)).thenReturn(true);
@@ -982,6 +976,54 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
+     * A faction explicitly recorded at war with itself (a civil war, e.g. the FedCom Civil War) can generate contracts
+     * against itself.
+     */
+    @Test
+    public void testGetRandomEnemyCivilWarAllowsSelfAsEnemy() {
+        List<PlanetarySystem> systems = List.of(createTestSystem(0, 0, isFaction));
+        FactionHints hints = mock(FactionHints.class);
+        when(hints.isAtWarWith(isFaction, isFaction, TEST_DATE)).thenReturn(true);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(buildTestTracker(systems), hints);
+        ILocation location = createTestLocation(isFaction);
+
+        assertEquals(isFaction, rfg.getRandomEnemy(false, location, TEST_DATE, isFaction),
+              "A faction at war with itself should be able to generate contracts against itself");
+    }
+
+    /**
+     * Without an explicit self-war record in factionHints, a faction is never its own enemy - the civil-war exception
+     * must be gated strictly on the recorded war state.
+     */
+    @Test
+    public void testGetRandomEnemyExcludesSelfWithoutCivilWar() {
+        List<PlanetarySystem> systems = List.of(createTestSystem(0, 0, isFaction));
+        RandomFactionGenerator rfg = new RandomFactionGenerator(buildTestTracker(systems), mock(FactionHints.class));
+        ILocation location = createTestLocation(isFaction);
+
+        assertEquals(independentFaction, rfg.getRandomEnemy(false, location, TEST_DATE, isFaction),
+              "Without a recorded self-war, a faction alone in the area should find no enemy but the INDEPENDENT "
+                    + "fallback");
+    }
+
+    /**
+     * AT_WAR (planetary assault, relief duty): a civil-war employer's own rebellious half is a genuine belligerent, so
+     * open-warfare contracts can be generated against itself.
+     */
+    @Test
+    public void testGetRandomEnemyProfileAtWarCanPickSelfDuringCivilWar() {
+        List<PlanetarySystem> systems = List.of(createTestSystem(0, 0, isFaction));
+        FactionHints hints = mock(FactionHints.class);
+        when(hints.isAtWarWith(isFaction, isFaction, TEST_DATE)).thenReturn(true);
+        RandomFactionGenerator rfg = new RandomFactionGenerator(buildTestTracker(systems), hints);
+        ILocation location = createTestLocation(isFaction);
+
+        assertEquals(isFaction, rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.AT_WAR),
+              "During a civil war, an open-warfare contract should be able to target the employer's own "
+                    + "rebellious half");
+    }
+
+    /**
      * COVERT (espionage, sabotage, terrorism, assassination): the covert rules make allies rare-but-possible targets,
      * where the default rules exclude them outright.
      */
@@ -993,13 +1035,7 @@ public class RandomFactionGeneratorTest {
         PlanetarySystem employerSystem = createTestSystem(0, 0, isFaction);
         PlanetarySystem allySystem = createTestSystem(1, 0, ally);
         List<PlanetarySystem> systems = List.of(employerSystem, allySystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems);
 
         FactionHints hints = mock(FactionHints.class);
         when(hints.isAlliedWith(isFaction, ally, TEST_DATE)).thenReturn(true);

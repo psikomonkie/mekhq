@@ -122,13 +122,7 @@ public class MissionTargetFinderTest {
             }
         }
 
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems);
         return tracker;
     }
 
@@ -200,13 +194,7 @@ public class MissionTargetFinderTest {
         when(farDefenderSystem.getDistanceTo(attackerSystem)).thenReturn(500.0);
 
         List<PlanetarySystem> systems = List.of(attackerSystem, nearDefenderSystem, farDefenderSystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems);
 
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(attackerFaction);
@@ -236,13 +224,7 @@ public class MissionTargetFinderTest {
         when(distantDefenderSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(2000.0);
 
         List<PlanetarySystem> systems = List.of(attackerSystem, distantDefenderSystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, 5) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems, 5);
 
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = mock(ILocation.class);
@@ -270,13 +252,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem emptySystem = createTestSystem(1, 0, emptyFaction);
 
         List<PlanetarySystem> systems = List.of(attackerSystem, emptySystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems);
 
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(attackerFaction);
@@ -308,13 +284,7 @@ public class MissionTargetFinderTest {
         when(distantPirateSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(2000.0);
 
         List<PlanetarySystem> systems = List.of(attackerSystem, distantPirateSystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, 5) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems, 5);
 
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = mock(ILocation.class);
@@ -342,13 +312,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem peripherySystem = createTestSystem(1, 0, peripheryNeighbor);
 
         List<PlanetarySystem> systems = List.of(defenderSystem, peripherySystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems);
 
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(defenderFaction);
@@ -374,13 +338,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem defenderSystem2 = createTestSystem(1, 0, defenderFaction);
 
         List<PlanetarySystem> systems = List.of(defenderSystem1, defenderSystem2);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems);
 
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(defenderFaction);
@@ -408,13 +366,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem comStarOwnedSystem = createTestSystem(0, 0, comStarFaction);
 
         List<PlanetarySystem> systems = List.of(attackerSystem, comStarOwnedSystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems);
 
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(attackerFaction);
@@ -440,13 +392,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem attackerSystem = createTestSystem(-1, 0, attackerFaction);
 
         List<PlanetarySystem> systems = List.of(attackerSystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems);
 
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(attackerFaction);
@@ -515,13 +461,7 @@ public class MissionTargetFinderTest {
         when(distantDefenderSystem.getDistanceTo(any(PlanetarySystem.class))).thenReturn(2000.0);
 
         List<PlanetarySystem> systems = List.of(attackerSystem, neighborSystem, distantDefenderSystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, 5) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems, 5);
 
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = mock(ILocation.class);
@@ -552,13 +492,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem hostSystem = createTestSystem(1000, 1002, hostFaction);
 
         List<PlanetarySystem> systems = List.of(attackerSystem, defenderSystem, hostSystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems);
 
         FactionHints hints = new FactionHints();
         // attackerFaction is "contained" under hostFaction, with defenderFaction as its designated opponent - even
@@ -627,13 +561,7 @@ public class MissionTargetFinderTest {
         when(otherRepublicSystem.getId()).thenReturn("Addicks");
 
         List<PlanetarySystem> systems = List.of(terraSystem, otherRepublicSystem);
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
-            @Override
-            public Collection<PlanetarySystem> getSystemList() {
-                return systems;
-            }
-        };
-        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        FactionBorderTracker tracker = buildTestTracker(systems);
 
         LocalDate fortressRepublicDate = FORTRESS_REPUBLIC_START.plusYears(1);
         tracker.setDate(fortressRepublicDate);
@@ -664,8 +592,20 @@ public class MissionTargetFinderTest {
         }
     }
 
-    private static FactionBorderTracker buildProfileTestTracker(final List<PlanetarySystem> systems) {
-        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+    /**
+     * Builds a tracker over exactly the given systems with the standard test border sizes and an unlimited search
+     * radius.
+     */
+    private static FactionBorderTracker buildTestTracker(final List<PlanetarySystem> systems) {
+        return buildTestTracker(systems, -1);
+    }
+
+    /**
+     * Builds a tracker over exactly the given systems with the standard test border sizes and the given search radius
+     * in light years (negative for unlimited).
+     */
+    private static FactionBorderTracker buildTestTracker(final List<PlanetarySystem> systems, final double radius) {
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, radius) {
             @Override
             public Collection<PlanetarySystem> getSystemList() {
                 return systems;
@@ -689,7 +629,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem interiorSystem = createTestSystem(30, 0, defenderFaction);
         stubDistances(attackerSystem, borderSystem, interiorSystem);
 
-        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, borderSystem, interiorSystem));
+        FactionBorderTracker tracker = buildTestTracker(List.of(attackerSystem, borderSystem, interiorSystem));
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(attackerFaction);
 
@@ -713,7 +653,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem borderSystem = createTestSystem(2, 0, defenderFaction);
         stubDistances(attackerSystem, borderSystem);
 
-        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, borderSystem));
+        FactionBorderTracker tracker = buildTestTracker(List.of(attackerSystem, borderSystem));
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(attackerFaction);
 
@@ -739,7 +679,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem interiorSystem = createTestSystem(30, 0, defenderFaction);
         stubDistances(attackerSystem, borderSystem, interiorSystem);
 
-        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, borderSystem, interiorSystem));
+        FactionBorderTracker tracker = buildTestTracker(List.of(attackerSystem, borderSystem, interiorSystem));
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(attackerFaction);
 
@@ -769,7 +709,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem deepInteriorSystem = createTestSystem(30, 0, defenderFaction);
         stubDistances(attackerSystem, borderSystem, nearInteriorSystem, deepInteriorSystem);
 
-        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, borderSystem,
+        FactionBorderTracker tracker = buildTestTracker(List.of(attackerSystem, borderSystem,
               nearInteriorSystem, deepInteriorSystem));
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(attackerFaction);
@@ -807,7 +747,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem alwaysDefenderSystem = createTestSystem(28, 0, defenderFaction);
         stubDistances(attackerSystem, recentlyConqueredSystem, alwaysDefenderSystem);
 
-        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, recentlyConqueredSystem,
+        FactionBorderTracker tracker = buildTestTracker(List.of(attackerSystem, recentlyConqueredSystem,
               alwaysDefenderSystem));
         // The fresh border computations use the tracker's own date, which defaults to the wall-clock date; pin it to
         // the test date so the date-sensitive ownership mock above resolves consistently.
@@ -836,7 +776,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem deepSystem = createTestSystem(30, 0, defenderFaction);
         stubDistances(attackerSystem, borderSystem, deepSystem);
 
-        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, borderSystem, deepSystem));
+        FactionBorderTracker tracker = buildTestTracker(List.of(attackerSystem, borderSystem, deepSystem));
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(attackerFaction);
 
@@ -862,7 +802,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem interiorSystem = createTestSystem(30, 0, defenderFaction);
         stubDistances(attackerSystem, borderSystem, interiorSystem);
 
-        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, borderSystem, interiorSystem));
+        FactionBorderTracker tracker = buildTestTracker(List.of(attackerSystem, borderSystem, interiorSystem));
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(attackerFaction);
 
@@ -888,7 +828,7 @@ public class MissionTargetFinderTest {
         PlanetarySystem distantDefenderSystem = createTestSystem(1000, 1000, defenderFaction);
         stubDistances(attackerSystem, distantDefenderSystem);
 
-        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, distantDefenderSystem));
+        FactionBorderTracker tracker = buildTestTracker(List.of(attackerSystem, distantDefenderSystem));
         MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
         ILocation location = createTestLocation(attackerFaction);
 
