@@ -58,8 +58,9 @@ import mekhq.campaign.universe.factionHints.FactionHints;
 
 /**
  * Finds potential mission-target planets for a given attacker/defender pair, generally on their shared border, with
- * dedicated tiers for factions whose territory doesn't work like a normal nation's (pirates, ComStar, rebels). Used by
- * {@link RandomFactionGenerator#getMissionTargetList(Faction, Faction, ILocation)}.
+ * dedicated tiers for factions whose territory doesn't work like a normal nation's (pirates, ComStar, rebels) and
+ * optional contract-type-driven preferences ({@link MissionLocationProfile}) for contracts that don't happen at the
+ * front. Used by {@link RandomFactionGenerator#getMissionTargetList(Faction, Faction, ILocation)}.
  */
 public class MissionTargetFinder {
     private final FactionBorderTracker borderTracker;
@@ -93,6 +94,25 @@ public class MissionTargetFinder {
      * @return a list of potential mission targets
      */
     public List<PlanetarySystem> find(Faction attacker, Faction defender, ILocation location, LocalDate currentDate) {
+        return find(attacker, defender, location, currentDate, MissionLocationProfile.DEFAULT);
+    }
+
+    /**
+     * As {@link #find(Faction, Faction, ILocation, LocalDate)}, but with a contract-type-driven
+     * {@link MissionLocationProfile} layered on top of the default search: the profile's preferred tier is tried after
+     * the faction-specific routing (pirates, ComStar, landless attackers, rebels) but before the default shared-border
+     * chain, which remains the fallback whenever the preferred tier finds nothing.
+     *
+     * @param attacker    the attacking faction
+     * @param defender    the defending faction
+     * @param location    the location to center the search on
+     * @param currentDate the date to check faction control and diplomatic relations against
+     * @param profile     the location profile for the contract's type
+     *
+     * @return a list of potential mission targets
+     */
+    public List<PlanetarySystem> find(Faction attacker, Faction defender, ILocation location, LocalDate currentDate,
+          MissionLocationProfile profile) {
         double radius = borderTracker.getRadius();
         attacker = resolveTerritorialHost(attacker, currentDate);
         defender = resolveTerritorialHost(defender, currentDate);
@@ -139,6 +159,15 @@ public class MissionTargetFinder {
             return systemsOf(borders, currentDate);
         }
 
+        // The contract type's preferred geography, when it has one (rear areas for training, deep strikes for
+        // raids, occupied territory for guerrillas...). A preference only: an empty result falls through to the
+        // default chain below rather than failing generation.
+        List<PlanetarySystem> profileTargets = findProfileTargets(profile, attacker, defender, location, radius,
+              currentDate);
+        if (!profileTargets.isEmpty()) {
+            return profileTargets;
+        }
+
         // Both sides hold territory: target the shared border between them. getBorderSystems(self, other) returns
         // OTHER's systems near SELF, so this is always defender-owned.
         Set<PlanetarySystem> planetSet = new HashSet<>(borderTracker.getBorderSystems(attacker, defender, location,
@@ -173,15 +202,107 @@ public class MissionTargetFinder {
     }
 
     /**
+     * Multiplier applied to the standard border size for {@link MissionLocationProfile#DEEP_RAID} contracts:
+     * hit-and-run strikes can reach roughly twice as deep past the front line as a conventional border extends.
+     */
+    private static final double DEEP_RAID_BORDER_MULTIPLIER = 2.0;
+
+    /**
+     * How many years back {@link MissionLocationProfile#OCCUPIED_TERRITORY} looks when deciding whether the defender
+     * "recently" took a system from the attacker.
+     */
+    private static final int OCCUPIED_TERRITORY_LOOKBACK_YEARS = 10;
+
+    /**
+     * Dispatches to the given profile's preferred-tier search. {@link MissionLocationProfile#DEFAULT} and
+     * {@link MissionLocationProfile#HIGH_VALUE} intentionally return nothing here: DEFAULT has no preference, and
+     * HIGH_VALUE uses the default candidate pool unchanged, differing only in how the final pick is weighted (see
+     * {@code RandomFactionGenerator}).
+     *
+     * @return the profile's preferred candidate systems, or an empty list to fall through to the default chain
+     */
+    private List<PlanetarySystem> findProfileTargets(MissionLocationProfile profile, Faction attacker,
+          Faction defender, ILocation location, double radius, LocalDate date) {
+        return switch (profile) {
+            case REAR_AREA -> findRearAreaTargets(attacker, defender, location, radius, date);
+            case INTERIOR_POPULATED -> findAllDefenderTargets(defender, location, radius, date);
+            case DEEP_RAID -> borderTracker.getBorderSystems(attacker, defender, location, radius,
+                  deepRaidBorderSize(attacker, defender));
+            case OCCUPIED_TERRITORY -> findOccupiedTerritoryTargets(attacker, defender, location, radius, date);
+            case HIGH_VALUE, DEFAULT -> Collections.emptyList();
+        };
+    }
+
+    /**
+     * Finds the defender's systems in range that are <em>not</em> on the shared border with the attacker: training
+     * cadres and standing retainers are stationed in the safe rear, not on a contested front-line world. Empty when
+     * everything the defender holds in range is border (fall back to the default chain, i.e. accept the front).
+     */
+    private List<PlanetarySystem> findRearAreaTargets(Faction attacker, Faction defender, ILocation location,
+          double radius, LocalDate date) {
+        Set<PlanetarySystem> interior = new HashSet<>(findAllDefenderTargets(defender, location, radius, date));
+        interior.removeAll(borderTracker.getBorderSystems(attacker, defender, location, radius));
+        return new ArrayList<>(interior);
+    }
+
+    /**
+     * Finds every system the defender holds in range, border or not: riots and internal-security work can flare up
+     * anywhere in the defender's space, with no particular relationship to the enemy's border.
+     */
+    private List<PlanetarySystem> findAllDefenderTargets(Faction defender, ILocation location, double radius,
+          LocalDate date) {
+        return systemsOf(borderTracker.getBorders(defender, location, radius), date);
+    }
+
+    /**
+     * @return the widened border size for a deep raid between the two factions: the standard shared-border size times
+     *       {@link #DEEP_RAID_BORDER_MULTIPLIER}
+     */
+    private double deepRaidBorderSize(Faction attacker, Faction defender) {
+        return Math.max(borderTracker.getBorderSize(attacker), borderTracker.getBorderSize(defender)) *
+                     DEEP_RAID_BORDER_MULTIPLIER;
+    }
+
+    /**
+     * Finds targets for a guerrilla campaign behind enemy lines. Preferred tier: defender-held systems in range that
+     * the attacker held {@value #OCCUPIED_TERRITORY_LOOKBACK_YEARS} years ago &mdash; recently conquered worlds whose
+     * population plausibly still sympathizes with the attacker. Second tier: any defender system in range away from the
+     * shared border, since a guerrilla campaign on the contested front is just the regular war. Empty only when the
+     * defender holds nothing in range beyond the border itself.
+     */
+    private List<PlanetarySystem> findOccupiedTerritoryTargets(Faction attacker, Faction defender, ILocation location,
+          double radius, LocalDate date) {
+        List<PlanetarySystem> defenderSystems = findAllDefenderTargets(defender, location, radius, date);
+        if (defenderSystems.isEmpty()) {
+            return defenderSystems;
+        }
+
+        LocalDate beforeConquest = date.minusYears(OCCUPIED_TERRITORY_LOOKBACK_YEARS);
+        List<PlanetarySystem> recentlyConquered = new ArrayList<>();
+        for (PlanetarySystem system : defenderSystems) {
+            if (system.getFactionSet(beforeConquest).contains(attacker)) {
+                recentlyConquered.add(system);
+            }
+        }
+        if (!recentlyConquered.isEmpty()) {
+            return recentlyConquered;
+        }
+
+        Set<PlanetarySystem> deepSystems = new HashSet<>(defenderSystems);
+        deepSystems.removeAll(borderTracker.getBorderSystems(attacker, defender, location, radius));
+        return new ArrayList<>(deepSystems);
+    }
+
+    /**
      * Finds the system controlled by the defender that is physically closest to any system controlled by the attacker.
      * Used as the final fallback in {@link #find} when neither a direct border nor a contained-faction proxy border
      * could be found.
      * <p>The defender's search is unrestricted (whole map) rather than limited to {@code radius}: a defender can end
-     * up here specifically because it was guaranteed a valid target regardless of local presence (e.g. a faction at
-     * war with the attacker, per {@code RandomFactionGenerator#buildEnemyMap}), so it may have no systems anywhere
-     * near {@code location} at all. Without this, such a match would find no target and fail contract generation
-     * entirely. The attacker's search stays scoped to {@code radius}, since the mission should still originate from
-     * somewhere near the force generating it.</p>
+     * up here specifically because it was guaranteed a valid target regardless of local presence (e.g. a faction at war
+     * with the attacker, per {@code RandomFactionGenerator#buildEnemyMap}), so it may have no systems anywhere near
+     * {@code location} at all. Without this, such a match would find no target and fail contract generation entirely.
+     * The attacker's search stays scoped to {@code radius}, since the mission should still originate from somewhere
+     * near the force generating it.</p>
      *
      * @param attacker the attacking faction
      * @param defender the defending faction

@@ -69,6 +69,7 @@ import mekhq.campaign.mission.Mission;
 import mekhq.campaign.mission.enums.AtBContractType;
 import mekhq.campaign.mission.enums.CombatRole;
 import mekhq.campaign.mission.enums.ContractCommandRights;
+import mekhq.campaign.mission.newContract.MissionLocationProfile;
 import mekhq.campaign.mission.utilities.ContractUtilities;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.Factions;
@@ -573,15 +574,27 @@ public abstract class AbstractContractMarket {
         contract.setPlayerAttacker(isAttacker);
     }
 
+    /**
+     * Resolves and sets the contract's target system, searching the defender's side of the conflict with a location
+     * preference derived from the contract's type (see {@link MissionLocationProfile}). Must be called after any enemy
+     * or contract-type overrides (e.g. pity contracts), since both the attacker/defender roles and the profile are read
+     * from the contract's current state.
+     *
+     * @param contract the contract to resolve a target system for
+     * @param campaign the active campaign
+     *
+     * @throws NoContractLocationFoundException if no valid target system could be found
+     */
     protected void setSystemId(AtBContract contract, Campaign campaign) throws NoContractLocationFoundException {
+        MissionLocationProfile profile = MissionLocationProfile.fromContractType(contract.getContractType());
         if (contract.isPlayerAttacker()) {
             contract.setSystemId(RandomFactionGenerator.getInstance()
                                        .getMissionTarget(contract.getEmployerCode(), contract.getEnemyCode(),
-                                             campaign.getCurrentLocation()));
+                                             campaign.getCurrentLocation(), profile));
         } else {
             contract.setSystemId(RandomFactionGenerator.getInstance()
                                        .getMissionTarget(contract.getEnemyCode(), contract.getEmployerCode(),
-                                             campaign.getCurrentLocation()));
+                                             campaign.getCurrentLocation(), profile));
         }
         if (contract.getSystem() == null) {
             String errorMsg = "Could not find contract location for " +

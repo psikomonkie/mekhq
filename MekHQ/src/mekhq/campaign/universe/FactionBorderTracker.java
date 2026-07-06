@@ -382,6 +382,27 @@ public class FactionBorderTracker {
      *       within the border region, or an empty list if {@code location} has no current system
      */
     public List<PlanetarySystem> getBorderSystems(Faction self, Faction other, ILocation location, double radius) {
+        return getBorderSystems(self, other, location, radius, Math.max(getBorderSize(self), getBorderSize(other)));
+    }
+
+    /**
+     * Equivalent to {@link #getBorderSystems(Faction, Faction, ILocation, double)}, but with an explicitly supplied
+     * border size instead of the standard per-faction sizes &mdash; e.g. for raids that reach deeper past the front
+     * line than a conventional border does.
+     *
+     * @param self       the faction whose planets are used to test proximity
+     * @param other      the faction whose planets are added to the returned list if they are within a certain distance
+     * @param location   the location to center the search on
+     * @param radius     the search radius in light years from {@code location}'s current system; a negative radius
+     *                   includes every system returned by {@link #getSystemList()}
+     * @param borderSize the distance in light years from one of {@code self}'s systems within which one of
+     *                   {@code other}'s systems counts as a border system
+     *
+     * @return a list of all planets near {@code location} that are controlled by {@code other} and considered to be
+     *       within the border region, or an empty list if {@code location} has no current system
+     */
+    public List<PlanetarySystem> getBorderSystems(Faction self, Faction other, ILocation location, double radius,
+          double borderSize) {
         PlanetarySystem origin = location.getCurrentSystem();
         if (origin == null) {
             return Collections.emptyList();
@@ -391,7 +412,6 @@ public class FactionBorderTracker {
         LocalDate when = currentDate();
         FactionBorders selfBorders = new FactionBorders(self, when, nearby);
         FactionBorders otherBorders = new FactionBorders(other, when, nearby);
-        double borderSize = Math.max(getBorderSize(self), getBorderSize(other));
         return selfBorders.getBorderSystems(otherBorders, borderSize);
     }
 

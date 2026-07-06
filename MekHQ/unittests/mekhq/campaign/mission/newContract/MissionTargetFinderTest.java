@@ -61,10 +61,10 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Tests {@link MissionTargetFinder}'s own orchestration logic: territorial-host resolution, the special-attacker and
- * rebel-defender fallbacks, the shared-border/contained-faction/closest-system chain, and Fortress Republic
- * filtering. Delegation to {@link PirateMissionTargetFinder}/{@link ComStarMissionTargetFinder} is confirmed here at
- * the wiring level only; their own tiered fallback logic is tested directly in {@code PirateMissionTargetFinderTest}
- * and {@code ComStarMissionTargetFinderTest}.
+ * rebel-defender fallbacks, the shared-border/contained-faction/closest-system chain, and Fortress Republic filtering.
+ * Delegation to {@link PirateMissionTargetFinder}/{@link ComStarMissionTargetFinder} is confirmed here at the wiring
+ * level only; their own tiered fallback logic is tested directly in {@code PirateMissionTargetFinderTest} and
+ * {@code ComStarMissionTargetFinderTest}.
  * <p>Moved from the equivalent {@code getMissionTargetList} scenarios in {@code RandomFactionGeneratorTest} now that
  * this logic lives here.</p>
  */
@@ -218,11 +218,11 @@ public class MissionTargetFinderTest {
     }
 
     /**
-     * Regression test: a defender guaranteed as a valid target regardless of local presence (e.g. a faction at war
-     * with the attacker, chosen by {@code RandomFactionGenerator#buildEnemyMap} even with no systems in the search
-     * area) must still resolve to a real system via the closest-system fallback, rather than leaving contract
-     * generation with no valid location. The defender's own search must not be limited to the local search radius,
-     * even though the attacker's is.
+     * Regression test: a defender guaranteed as a valid target regardless of local presence (e.g. a faction at war with
+     * the attacker, chosen by {@code RandomFactionGenerator#buildEnemyMap} even with no systems in the search area)
+     * must still resolve to a real system via the closest-system fallback, rather than leaving contract generation with
+     * no valid location. The defender's own search must not be limited to the local search radius, even though the
+     * attacker's is.
      */
     @Test
     public void testFindClosestDefenderSystemFallbackIgnoresRadiusForDefender() {
@@ -288,11 +288,11 @@ public class MissionTargetFinderTest {
     }
 
     /**
-     * Regression test: a pirate defender has no real territory, so unlike a genuine war partner, there's no
-     * "guaranteed valid, just far away" pirate target for the closest-system fallback to reach for. If none of
-     * {@link PirateMissionTargetFinder}'s tiers find a plausible hideout within the search radius, find() must
-     * return no target at all rather than falling through to the whole-map closest-system fallback and landing on
-     * some incidental, far-flung world a pirate band happens to have once held.
+     * Regression test: a pirate defender has no real territory, so unlike a genuine war partner, there's no "guaranteed
+     * valid, just far away" pirate target for the closest-system fallback to reach for. If none of
+     * {@link PirateMissionTargetFinder}'s tiers find a plausible hideout within the search radius, find() must return
+     * no target at all rather than falling through to the whole-map closest-system fallback and landing on some
+     * incidental, far-flung world a pirate band happens to have once held.
      */
     @Test
     public void testFindPirateDefenderNeverReachesOutsideSearchRadius() {
@@ -361,8 +361,8 @@ public class MissionTargetFinderTest {
 
     /**
      * Regression test: when the defender has no identifiable border at all, the pirate-attacker tier
-     * ({@link PirateMissionTargetFinder}) finds nothing, so find() falls back to striking anywhere the defender
-     * holds rather than finding no target.
+     * ({@link PirateMissionTargetFinder}) finds nothing, so find() falls back to striking anywhere the defender holds
+     * rather than finding no target.
      */
     @Test
     public void testFindPirateAttackerFallsBackToAllDefenderSystemsWhenNoBorder() {
@@ -426,9 +426,9 @@ public class MissionTargetFinderTest {
     }
 
     /**
-     * Regression test: with no ComStar-owned or A/B-rated HPG system in range, find() returns no target for a
-     * ComStar defender &mdash; unlike the pirate cases, this is a hard restriction with no fallback to the generic
-     * border-based logic.
+     * Regression test: with no ComStar-owned or A/B-rated HPG system in range, find() returns no target for a ComStar
+     * defender &mdash; unlike the pirate cases, this is a hard restriction with no fallback to the generic border-based
+     * logic.
      */
     @Test
     public void testFindReturnsEmptyForComStarDefenderWhenNoQualifyingSystems() {
@@ -459,8 +459,8 @@ public class MissionTargetFinderTest {
     }
 
     /**
-     * Regression test: a rebel uprising happens somewhere within the attacking government's own territory, so a
-     * rebel defender resolves to any of the attacker's own systems rather than a shared border.
+     * Regression test: a rebel uprising happens somewhere within the attacking government's own territory, so a rebel
+     * defender resolves to any of the attacker's own systems rather than a shared border.
      */
     @Test
     public void testFindRebelDefenderTargetsAllAttackerSystems() {
@@ -477,9 +477,9 @@ public class MissionTargetFinderTest {
     }
 
     /**
-     * Regression test: a mission target must always be a system the defender actually owns. A landless defender
-     * with no territory, no direct border, and no contained-faction-host relationship has nothing valid to target,
-     * so this correctly yields no target rather than falling back to a neighbor's or the attacker's own systems.
+     * Regression test: a mission target must always be a system the defender actually owns. A landless defender with no
+     * territory, no direct border, and no contained-faction-host relationship has nothing valid to target, so this
+     * correctly yields no target rather than falling back to a neighbor's or the attacker's own systems.
      */
     @Test
     public void testFindReturnsEmptyForLandlessDefenderWithNoDirectRelationship() {
@@ -498,7 +498,8 @@ public class MissionTargetFinderTest {
     /**
      * Regression test: even when the attacker borders other regional factions closely, none of the attacker's own
      * systems (nor those third-party neighbors') should ever be picked as a mission target &mdash; only a system the
-     * defender actually owns, however far away that may be (see {@link #testFindClosestDefenderSystemFallbackIgnoresRadiusForDefender}).
+     * defender actually owns, however far away that may be (see
+     * {@link #testFindClosestDefenderSystemFallbackIgnoresRadiusForDefender}).
      */
     @Test
     public void testFindNeverReturnsAttackerOrNeighborOwnedSystems() {
@@ -579,8 +580,8 @@ public class MissionTargetFinderTest {
     }
 
     /**
-     * Regression test: two factions with no territory of their own (e.g. two pirate bands) have nowhere for a
-     * mission to occur.
+     * Regression test: two factions with no territory of their own (e.g. two pirate bands) have nowhere for a mission
+     * to occur.
      */
     @Test
     public void testFindReturnsEmptyWhenBothFactionsAreLandless() {
@@ -597,9 +598,9 @@ public class MissionTargetFinderTest {
     }
 
     /**
-     * Regression test: a faction with no territory of its own, no configured contained-faction host, and none of
-     * the inherently-landless faction types (pirate/mercenary/ComStar/WoB/rebel) resolves to {@code null}, so no
-     * mission target can be found.
+     * Regression test: a faction with no territory of its own, no configured contained-faction host, and none of the
+     * inherently-landless faction types (pirate/mercenary/ComStar/WoB/rebel) resolves to {@code null}, so no mission
+     * target can be found.
      */
     @Test
     public void testFindReturnsEmptyWhenFactionHasNoTerritoryOrHost() {
@@ -648,5 +649,202 @@ public class MissionTargetFinderTest {
         assertEquals(List.of(terraSystem), targets,
               "During the Fortress Republic era, only Terra should remain a valid target among Republic-owned "
                     + "systems");
+    }
+
+    /**
+     * Stubs {@link PlanetarySystem#getDistanceTo} between every pair of the given mocked systems from their stubbed
+     * coordinates: the border machinery's final range check uses real distances, which mocks otherwise report as 0.
+     */
+    private static void stubDistances(final PlanetarySystem... systems) {
+        for (PlanetarySystem a : systems) {
+            for (PlanetarySystem b : systems) {
+                double distance = Math.hypot(a.getX() - b.getX(), a.getY() - b.getY());
+                when(a.getDistanceTo(b)).thenReturn(distance);
+            }
+        }
+    }
+
+    private static FactionBorderTracker buildProfileTestTracker(final List<PlanetarySystem> systems) {
+        FactionBorderTracker tracker = new FactionBorderTracker(0, 0, -1) {
+            @Override
+            public Collection<PlanetarySystem> getSystemList() {
+                return systems;
+            }
+        };
+        tracker.setDefaultBorderSize(2.5, 10, 2.5);
+        return tracker;
+    }
+
+    /**
+     * REAR_AREA (cadre duty, retainers): the mission belongs in the defender's safe interior, so a defender system away
+     * from the shared border must be preferred over the border world the default search would pick.
+     */
+    @Test
+    public void testFindRearAreaProfilePrefersDefenderInterior() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem borderSystem = createTestSystem(2, 0, defenderFaction);
+        PlanetarySystem interiorSystem = createTestSystem(30, 0, defenderFaction);
+        stubDistances(attackerSystem, borderSystem, interiorSystem);
+
+        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, borderSystem, interiorSystem));
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE,
+              MissionLocationProfile.REAR_AREA);
+
+        assertEquals(List.of(interiorSystem), targets,
+              "A rear-area contract should be placed on a defender system away from the shared border");
+    }
+
+    /**
+     * REAR_AREA is a preference, not a restriction: when everything the defender holds in range is border, the search
+     * must fall back to the default shared-border chain rather than failing generation.
+     */
+    @Test
+    public void testFindRearAreaProfileFallsBackToBorderWhenNoInterior() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem borderSystem = createTestSystem(2, 0, defenderFaction);
+        stubDistances(attackerSystem, borderSystem);
+
+        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, borderSystem));
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE,
+              MissionLocationProfile.REAR_AREA);
+
+        assertEquals(List.of(borderSystem), targets,
+              "With no interior system available, a rear-area contract should fall back to the default border "
+                    + "search rather than finding no target");
+    }
+
+    /**
+     * INTERIOR_POPULATED (riot duty, security duty): unrest can flare up anywhere in the defender's space, so both
+     * border and interior defender systems are valid, unlike the default border-only pool.
+     */
+    @Test
+    public void testFindInteriorPopulatedProfileTargetsAllDefenderSystems() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem borderSystem = createTestSystem(2, 0, defenderFaction);
+        PlanetarySystem interiorSystem = createTestSystem(30, 0, defenderFaction);
+        stubDistances(attackerSystem, borderSystem, interiorSystem);
+
+        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, borderSystem, interiorSystem));
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE,
+              MissionLocationProfile.INTERIOR_POPULATED);
+
+        assertEquals(Set.of(borderSystem, interiorSystem), new HashSet<>(targets),
+              "An internal-security contract should be able to land on any defender system in range, not just "
+                    + "border worlds");
+    }
+
+    /**
+     * DEEP_RAID (raids, assassination): hit-and-run strikes reach past the standard border depth (about twice as deep),
+     * but not arbitrarily far into the defender's interior.
+     */
+    @Test
+    public void testFindDeepRaidProfileReachesPastStandardBorder() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        // Within the standard 2.5 ly border...
+        PlanetarySystem borderSystem = createTestSystem(2, 0, defenderFaction);
+        // ...past it, but within the doubled deep-raid reach of 5 ly...
+        PlanetarySystem nearInteriorSystem = createTestSystem(4, 0, defenderFaction);
+        // ...and far beyond even that.
+        PlanetarySystem deepInteriorSystem = createTestSystem(30, 0, defenderFaction);
+        stubDistances(attackerSystem, borderSystem, nearInteriorSystem, deepInteriorSystem);
+
+        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, borderSystem,
+              nearInteriorSystem, deepInteriorSystem));
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> defaultTargets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE);
+        assertEquals(Set.of(borderSystem), new HashSet<>(defaultTargets),
+              "Sanity check: the default search should stop at the standard border depth");
+
+        List<PlanetarySystem> raidTargets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE,
+              MissionLocationProfile.DEEP_RAID);
+        assertEquals(Set.of(borderSystem, nearInteriorSystem), new HashSet<>(raidTargets),
+              "A raid contract should reach past the standard border depth, but not arbitrarily deep");
+    }
+
+    /**
+     * OCCUPIED_TERRITORY (guerrilla warfare): the preferred battleground is a world the defender recently took from the
+     * attacker, whose population plausibly still sympathizes with the attacker.
+     */
+    @Test
+    public void testFindOccupiedTerritoryProfilePrefersRecentlyConqueredSystems() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        // Owned by the attacker until 3020, by the defender since - i.e. conquered within the lookback window.
+        PlanetarySystem recentlyConqueredSystem = createTestSystem(30, 0, defenderFaction);
+        when(recentlyConqueredSystem.getFactionSet(any())).thenAnswer(invocation -> {
+            LocalDate when = invocation.getArgument(0);
+            return when.isBefore(LocalDate.of(3020, 1, 1)) ?
+                         Collections.singleton(attackerFaction) :
+                         Collections.singleton(defenderFaction);
+        });
+        // Both defender systems sit deep in the defender's space, so the recently-conquered one must win on its
+        // ownership history alone, not merely on being away from the border.
+        PlanetarySystem alwaysDefenderSystem = createTestSystem(28, 0, defenderFaction);
+        stubDistances(attackerSystem, recentlyConqueredSystem, alwaysDefenderSystem);
+
+        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, recentlyConqueredSystem,
+              alwaysDefenderSystem));
+        // The fresh border computations use the tracker's own date, which defaults to the wall-clock date; pin it to
+        // the test date so the date-sensitive ownership mock above resolves consistently.
+        tracker.setDate(TEST_DATE);
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE,
+              MissionLocationProfile.OCCUPIED_TERRITORY);
+
+        assertEquals(List.of(recentlyConqueredSystem), targets,
+              "A guerrilla contract should prefer a world the defender recently took from the attacker");
+    }
+
+    /**
+     * OCCUPIED_TERRITORY without any recent conquest in range: the campaign belongs behind enemy lines, so defender
+     * systems away from the shared border are preferred over the border worlds the default search would pick.
+     */
+    @Test
+    public void testFindOccupiedTerritoryProfileFallsBackToDeepDefenderSystems() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
+        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem borderSystem = createTestSystem(2, 0, defenderFaction);
+        PlanetarySystem deepSystem = createTestSystem(30, 0, defenderFaction);
+        stubDistances(attackerSystem, borderSystem, deepSystem);
+
+        FactionBorderTracker tracker = buildProfileTestTracker(List.of(attackerSystem, borderSystem, deepSystem));
+        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE,
+              MissionLocationProfile.OCCUPIED_TERRITORY);
+
+        assertEquals(List.of(deepSystem), targets,
+              "With no recently conquered world in range, a guerrilla contract should land deep in the defender's "
+                    + "space rather than on the contested border");
     }
 }

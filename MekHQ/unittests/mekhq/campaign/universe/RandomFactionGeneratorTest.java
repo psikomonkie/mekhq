@@ -54,6 +54,7 @@ import java.util.Set;
 
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.mission.mission.contractGeneration.GlobalEmployerTableValue;
+import mekhq.campaign.universe.enums.HPGRating;
 import mekhq.campaign.universe.factionHints.FactionHints;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -807,5 +808,31 @@ public class RandomFactionGeneratorTest {
         double weight = rfg.adjustEnemyWeight(12, comStar, clanFaction, TEST_DATE, false);
 
         assertEquals(1.0, weight, "ComStar's weight against a Clan target should be divided by 12");
+    }
+
+    /**
+     * The population-weighted mission-target pick scores population on a log10 scale plus a bonus for a major HPG, so
+     * major worlds are favored without drowning out everything else.
+     */
+    @Test
+    public void testPopulationWeightScalesWithPopulationAndHpg() {
+        PlanetarySystem majorWorld = mock(PlanetarySystem.class);
+        when(majorWorld.getPopulation(TEST_DATE)).thenReturn(1_000_000_000L);
+        when(majorWorld.getHPG(TEST_DATE)).thenReturn(HPGRating.A);
+
+        assertEquals(13, RandomFactionGenerator.populationWeight(majorWorld, TEST_DATE),
+              "A billion-population world with an A-rated HPG should weigh 1 + log10(1e9) + 3");
+    }
+
+    /**
+     * A system with no population or HPG data must still get a weight of 1, so it remains a pickable (if unlikely)
+     * mission target instead of silently dropping out of the weighted pool.
+     */
+    @Test
+    public void testPopulationWeightFloorsAtOneWithNoData() {
+        PlanetarySystem barrenWorld = mock(PlanetarySystem.class);
+
+        assertEquals(1, RandomFactionGenerator.populationWeight(barrenWorld, TEST_DATE),
+              "A system with no population or HPG data should still carry the minimum weight of 1");
     }
 }

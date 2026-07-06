@@ -64,7 +64,9 @@ import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.mission.mission.contractGeneration.GlobalEmployerTableValue;
+import mekhq.campaign.mission.newContract.MissionLocationProfile;
 import mekhq.campaign.mission.newContract.MissionTargetFinder;
+import mekhq.campaign.universe.enums.HPGRating;
 import mekhq.campaign.universe.factionHints.FactionHints;
 
 /**
@@ -722,7 +724,10 @@ public class RandomFactionGenerator {
     }
 
     /**
-     * Selects a random planet from a list of potential targets based on the attacking and defending factions.
+     * Selects a random planet from a list of potential targets based on the attacking and defending factions, with no
+     * contract-type location preference. Equivalent to calling
+     * {@link #getMissionTarget(String, String, ILocation, MissionLocationProfile)} with
+     * {@link MissionLocationProfile#DEFAULT}.
      *
      * @param attacker The faction key of the attacker
      * @param defender The faction key of the defender
@@ -733,6 +738,27 @@ public class RandomFactionGenerator {
      */
     @Nullable
     public String getMissionTarget(String attacker, String defender, ILocation location) {
+        return getMissionTarget(attacker, defender, location, MissionLocationProfile.DEFAULT);
+    }
+
+    /**
+     * Selects a random planet from a list of potential targets based on the attacking and defending factions, applying
+     * the given contract-type location profile to both the candidate search (see
+     * {@link MissionTargetFinder#find(Faction, Faction, ILocation, LocalDate, MissionLocationProfile)}) and the final
+     * pick: for {@linkplain MissionLocationProfile#isPopulationWeighted() population-weighted} profiles the pick is
+     * weighted toward populous, well-connected worlds instead of being uniformly random.
+     *
+     * @param attacker The faction key of the attacker
+     * @param defender The faction key of the defender
+     * @param location the location to center the search on, scoped by this generator's configured search radius (see
+     *                 {@link #getMissionTargetList(Faction, Faction, ILocation)})
+     * @param profile  the location profile for the contract's type
+     *
+     * @return The planetId of the chosen planet, or null if there are no target candidates
+     */
+    @Nullable
+    public String getMissionTarget(String attacker, String defender, ILocation location,
+          MissionLocationProfile profile) {
         Faction attackerFaction = Factions.getInstance().getFaction(attacker);
         Faction defenderFaction = Factions.getInstance().getFaction(defender);
         if (null == attackerFaction) {
@@ -740,14 +766,65 @@ public class RandomFactionGenerator {
             return null;
         }
         if (null == defenderFaction) {
-            LOGGER.error("Non-existent faction key: {}", attacker);
+            LOGGER.error("Non-existent faction key: {}", defender);
             return null;
         }
-        List<PlanetarySystem> planetList = getMissionTargetList(attackerFaction, defenderFaction, location);
-        if (!planetList.isEmpty()) {
-            return ObjectUtility.getRandomItem(planetList).getId();
+        List<PlanetarySystem> planetList = getMissionTargetList(attackerFaction, defenderFaction, location, profile);
+        if (planetList.isEmpty()) {
+            return null;
         }
-        return null;
+        if (profile.isPopulationWeighted()) {
+            return pickPopulationWeighted(planetList).getId();
+        }
+        return ObjectUtility.getRandomItem(planetList).getId();
+    }
+
+    /**
+     * Weight bonus for a system with a major (A- or B-rated) HPG station in the population-weighted pick: a hub world
+     * matters beyond its raw head count.
+     */
+    private static final int MAJOR_HPG_WEIGHT_BONUS = 3;
+
+    /**
+     * Picks a candidate weighted by {@link #populationWeight}, so populous, well-connected worlds are favored without
+     * making them the only possible outcome.
+     *
+     * @param candidates the candidate systems; must not be empty
+     *
+     * @return the chosen system
+     */
+    private PlanetarySystem pickPopulationWeighted(List<PlanetarySystem> candidates) {
+        LocalDate now = getCurrentDate();
+        WeightedIntMap<PlanetarySystem> weightedCandidates = new WeightedIntMap<>();
+        for (PlanetarySystem system : candidates) {
+            weightedCandidates.add(populationWeight(system, now), system);
+        }
+        PlanetarySystem chosen = weightedCandidates.randomItem();
+        return (chosen != null) ? chosen : ObjectUtility.getRandomItem(candidates);
+    }
+
+    /**
+     * Scores a system's value as a high-profile mission target. Population is scored on a log10 scale (a
+     * billion-population world weighs ~10, a thousand-person outpost ~4) so major worlds are favored without drowning
+     * out everything else, plus {@value #MAJOR_HPG_WEIGHT_BONUS} for an A/B-rated HPG. A system with no data at all
+     * still gets a weight of 1, so it remains pickable.
+     *
+     * @param system the system to score
+     * @param when   the date to check population and HPG rating against
+     *
+     * @return the system's weight, at least 1
+     */
+    static int populationWeight(PlanetarySystem system, LocalDate when) {
+        int weight = 1;
+        long population = system.getPopulation(when);
+        if (population > 0) {
+            weight += (int) Math.log10(population);
+        }
+        HPGRating hpg = system.getHPG(when);
+        if ((hpg != null) && (hpg.compareTo(HPGRating.B) >= 0)) {
+            weight += MAJOR_HPG_WEIGHT_BONUS;
+        }
+        return weight;
     }
 
     /**
@@ -789,6 +866,23 @@ public class RandomFactionGenerator {
      * @return a list of potential mission targets
      */
     public List<PlanetarySystem> getMissionTargetList(Faction attacker, Faction defender, ILocation location) {
-        return missionTargetFinder.find(attacker, defender, location, getCurrentDate());
+        return getMissionTargetList(attacker, defender, location, MissionLocationProfile.DEFAULT);
+    }
+
+    /**
+     * As {@link #getMissionTargetList(Faction, Faction, ILocation)}, but applying the given contract-type location
+     * profile's preferred tier before the default border-based search (see
+     * {@link MissionTargetFinder#find(Faction, Faction, ILocation, LocalDate, MissionLocationProfile)}).
+     *
+     * @param attacker the attacking faction
+     * @param defender the defending faction
+     * @param location the location to center the search on
+     * @param profile  the location profile for the contract's type
+     *
+     * @return a list of potential mission targets
+     */
+    public List<PlanetarySystem> getMissionTargetList(Faction attacker, Faction defender, ILocation location,
+          MissionLocationProfile profile) {
+        return missionTargetFinder.find(attacker, defender, location, getCurrentDate(), profile);
     }
 }
