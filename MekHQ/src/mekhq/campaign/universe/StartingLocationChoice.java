@@ -36,9 +36,15 @@ import jakarta.annotation.Nullable;
 import mekhq.campaign.universe.enums.StartingLocationMode;
 
 /**
- * The player's answer to the new-campaign starting-location prompt for a mercenary or pirate campaign.
+ * The player's starting-location choice, made in the campaign options when a new campaign is created.
  *
- * @param mode                 the kind of starting location requested
+ * <p>Mercenary and pirate campaigns use every field: {@code mode} (together with {@code specificFaction} and
+ * {@code includeDeepPeriphery} where the mode calls for them) selects the faction to attach to, and
+ * {@code useFactionCapital} then selects the world. Aligned campaigns (Great Houses, Periphery states, Clans, and so
+ * on) always begin with their own faction, so only {@code useFactionCapital} applies; {@code mode},
+ * {@code specificFaction}, and {@code includeDeepPeriphery} are ignored.</p>
+ *
+ * @param mode                 the kind of starting location requested (ignored for aligned campaigns)
  * @param specificFaction      the faction to start with when {@code mode} is
  *                             {@link StartingLocationMode#SPECIFIC_FACTION}; otherwise {@code null}
  * @param useFactionCapital    {@code true} to start on the chosen faction's capital, {@code false} to start on a

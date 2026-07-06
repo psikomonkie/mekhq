@@ -8882,7 +8882,7 @@ public class Campaign implements ITechManager, IPlace {
      *
      * <p>For mercenary and pirate campaigns the choice's {@link StartingLocationMode} (mercenary capital, random,
      * random Great House, random Periphery, or a specific faction) is resolved by
-     * {@link #getMercenaryOrPirateStartingPlanet(Factions, String, StartingLocationChoice)}.</p>
+     * {@link #getMercenaryOrPirateStartingPlanet(Factions, StartingLocationChoice)}.</p>
      *
      * <p>All other campaigns begin with their own faction. The player only chooses whether to start on that faction's
      * capital or on a random hiring hall in its territory. If no valid system can be found, the logic falls back to a
@@ -9001,7 +9001,8 @@ public class Campaign implements ITechManager, IPlace {
                 return (specificFaction != null) ? specificFaction : fallbackFaction;
             }
             default -> {
-                List<Faction> pool = buildStartingFactionPool(factions, choice.mode(), choice.includeDeepPeriphery());
+                List<Faction> pool = buildStartingFactionPool(
+                    factions, choice.mode(), choice.includeDeepPeriphery());
                 Faction randomFaction = ObjectUtility.getRandomItem(pool);
                 return (randomFaction != null) ? randomFaction : fallbackFaction;
             }

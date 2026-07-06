@@ -666,7 +666,8 @@ public class GeneralPage {
             return getTextAt(getCampaignOptionsResourceBundle(),
                   "lblStartingLocationMode.MERCENARY_CAPITAL.pirate.text");
         }
-        return getTextAt(getCampaignOptionsResourceBundle(), "lblStartingLocationMode." + locationMode.name() + ".text");
+        return getTextAt(getCampaignOptionsResourceBundle(),
+                "lblStartingLocationMode." + locationMode.name() + ".text");
     }
 
     /**
