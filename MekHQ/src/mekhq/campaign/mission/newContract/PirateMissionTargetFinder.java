@@ -51,9 +51,8 @@ import mekhq.campaign.universe.factionHints.FactionHints;
  * Finds mission targets for pirates, who favor border worlds over the interior on either side of a conflict rather than
  * a normal shared-border search: as defender, a nearby empty/lawless system, then a border with a Periphery neighbor,
  * then a border with anyone; as attacker, the same border preference against the defender.
- * <p>
- * Used by {@link MissionTargetFinder} for the pirate-specific tiers of
- * {@link RandomFactionGenerator#getMissionTargetList(Faction, Faction, ILocation)}.
+ * <p>Used by {@link MissionTargetFinder} for the pirate-specific tiers of
+ * {@link RandomFactionGenerator#getMissionTargetList(Faction, Faction, ILocation)}.</p>
  */
 class PirateMissionTargetFinder {
     private final FactionBorderTracker borderTracker;
@@ -115,12 +114,11 @@ class PirateMissionTargetFinder {
      * faction happens to also claim. This includes systems with no faction data at all (many real, populated systems
      * have no owner tagged in the data at all, not even a placeholder) as well as ones whose only controlling
      * "faction" is an empty/placeholder faction (see {@link FactionHints#isEmptyFaction(Faction)}).
-     * <p>
-     * Connector systems ({@link PlanetarySystem#isConnector()}) are synthetic jump-path waypoints with no lore behind
-     * them, so they're excluded from mission targeting generally. Pirates are the one exception: a raiding band
+     * <p>Connector systems ({@link PlanetarySystem#isConnector()}) are synthetic jump-path waypoints with no lore
+     * behind them, so they're excluded from mission targeting generally. Pirates are the one exception: a raiding band
      * hiding out at an otherwise-uncharted waypoint is plausible as long as it has a proper world to hide on, so a
      * connector system still qualifies here if its primary planet is {@link PlanetaryType#TERRESTRIAL} (as opposed to
-     * a gas giant, asteroid belt, or similar place no one could actually raid).
+     * a gas giant, asteroid belt, or similar place no one could actually raid).</p>
      *
      * @param location the location to center the search on
      * @param radius   the search radius in light years from {@code location}'s current system; a negative radius

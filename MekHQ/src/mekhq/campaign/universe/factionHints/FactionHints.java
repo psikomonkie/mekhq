@@ -216,9 +216,8 @@ public class FactionHints {
      * a direct alliance record between the two. This covers member states of the same superpower that are each
      * individually recorded as allied with that superpower (but not with each other directly) &mdash; without this,
      * such member states would incorrectly be valid targets against each other.
-     * <p>
-     * Only a single degree of separation is considered (a third faction directly allied with both {@code f1} and
-     * {@code f2}); this does not recurse through chains of shared allies.
+     * <p>Only a single degree of separation is considered (a third faction directly allied with both {@code f1} and
+     * {@code f2}); this does not recurse through chains of shared allies.</p>
      *
      * @param f1   Faction One
      * @param f2   Faction Two

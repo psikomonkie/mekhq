@@ -65,9 +65,8 @@ import org.junit.jupiter.api.Test;
  * filtering. Delegation to {@link PirateMissionTargetFinder}/{@link ComStarMissionTargetFinder} is confirmed here at
  * the wiring level only; their own tiered fallback logic is tested directly in {@code PirateMissionTargetFinderTest}
  * and {@code ComStarMissionTargetFinderTest}.
- * <p>
- * Moved from the equivalent {@code getMissionTargetList} scenarios in {@code RandomFactionGeneratorTest} now that
- * this logic lives here.
+ * <p>Moved from the equivalent {@code getMissionTargetList} scenarios in {@code RandomFactionGeneratorTest} now that
+ * this logic lives here.</p>
  */
 public class MissionTargetFinderTest {
 

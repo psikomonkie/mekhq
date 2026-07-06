@@ -80,12 +80,10 @@ public class MissionTargetFinder {
      * fallback for the special cases). Pirates favor border worlds over the interior on either side of a conflict (see
      * {@link PirateMissionTargetFinder}). A ComStar defender is targeted by HPG network presence instead of borders
      * (see {@link ComStarMissionTargetFinder}).
-     * <p>
-     * Outside of those special cases, every returned system is one the defender actually owns: a mission is a raid on
-     * (or defense of) a specific enemy world, never a neighbor's or the attacker's own territory.
-     * <p>
-     * Computed fresh around {@code location} on every call rather than from the tracker's single cached region, so
-     * campaigns with multiple simultaneous locations get a target scoped to whichever force needs it.
+     * <p>Outside of those special cases, every returned system is one the defender actually owns: a mission is a raid
+     * on (or defense of) a specific enemy world, never a neighbor's or the attacker's own territory.</p>
+     * <p>Computed fresh around {@code location} on every call rather than from the tracker's single cached region, so
+     * campaigns with multiple simultaneous locations get a target scoped to whichever force needs it.</p>
      *
      * @param attacker    the attacking faction
      * @param defender    the defending faction
@@ -178,13 +176,12 @@ public class MissionTargetFinder {
      * Finds the system controlled by the defender that is physically closest to any system controlled by the attacker.
      * Used as the final fallback in {@link #find} when neither a direct border nor a contained-faction proxy border
      * could be found.
-     * <p>
-     * The defender's search is unrestricted (whole map) rather than limited to {@code radius}: a defender can end up
-     * here specifically because it was guaranteed a valid target regardless of local presence (e.g. a faction at war
-     * with the attacker, per {@code RandomFactionGenerator#buildEnemyMap}), so it may have no systems anywhere near
-     * {@code location} at all. Without this, such a match would find no target and fail contract generation entirely.
-     * The attacker's search stays scoped to {@code radius}, since the mission should still originate from somewhere
-     * near the force generating it.
+     * <p>The defender's search is unrestricted (whole map) rather than limited to {@code radius}: a defender can end
+     * up here specifically because it was guaranteed a valid target regardless of local presence (e.g. a faction at
+     * war with the attacker, per {@code RandomFactionGenerator#buildEnemyMap}), so it may have no systems anywhere
+     * near {@code location} at all. Without this, such a match would find no target and fail contract generation
+     * entirely. The attacker's search stays scoped to {@code radius}, since the mission should still originate from
+     * somewhere near the force generating it.</p>
      *
      * @param attacker the attacking faction
      * @param defender the defending faction
@@ -231,12 +228,11 @@ public class MissionTargetFinder {
      * configured, so mission targeting has something with real territory to work with. Inherently landless factions
      * (pirates, mercenaries, ComStar/WoB) and rebels are never contained by anyone, so this is a no-op for them;
      * {@link #find} handles their lack of territory separately.
-     * <p>
-     * A faction with territory only outside the local search area (e.g. a war partner guaranteed valid by
+     * <p>A faction with territory only outside the local search area (e.g. a war partner guaranteed valid by
      * {@code RandomFactionGenerator#buildEnemyMap} regardless of local presence) is still returned unchanged, not
      * redirected to a host: it has real territory to work with, just not nearby. The cached, region-limited
      * {@link FactionBorderTracker#getFactionsInRegion()} is checked first as a cheap common-case shortcut; the full,
-     * uncached {@link #controlsAnySystem} scan only runs for the rare faction with no local presence.
+     * uncached {@link #controlsAnySystem} scan only runs for the rare faction with no local presence.</p>
      *
      * @param faction the faction to resolve
      * @param date    the date to check faction control and the contained-faction relationship against

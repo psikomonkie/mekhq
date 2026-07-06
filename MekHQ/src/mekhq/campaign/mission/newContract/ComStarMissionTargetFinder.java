@@ -47,9 +47,8 @@ import mekhq.campaign.universe.enums.HPGRating;
 /**
  * Finds mission targets for missions against ComStar, whose HPG network matters more than its (minimal) sovereign
  * territory: only its own systems and A/B-rated HPG stations are valid targets, regardless of borders.
- * <p>
- * Used by {@link MissionTargetFinder} for the ComStar-specific tier of
- * {@link RandomFactionGenerator#getMissionTargetList(Faction, Faction, ILocation)}.
+ * <p>Used by {@link MissionTargetFinder} for the ComStar-specific tier of
+ * {@link RandomFactionGenerator#getMissionTargetList(Faction, Faction, ILocation)}.</p>
  */
 class ComStarMissionTargetFinder {
     private final FactionBorderTracker borderTracker;

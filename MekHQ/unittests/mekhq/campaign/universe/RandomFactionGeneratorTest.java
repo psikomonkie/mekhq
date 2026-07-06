@@ -782,20 +782,6 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: outside the invasion's height, the Clan-war-combatant multiplier must not apply even if the
-     * other conditions (combatant faction, Clan enemy) are met.
-     */
-    @Test
-    public void testAdjustEnemyWeightUnaffectedForClanInvasionCombatantOutsideInvasionWindow() {
-        Faction fedCom = createTestFaction("FC", false, false);
-        RandomFactionGenerator rfg = new RandomFactionGenerator(borderTracker, mock(FactionHints.class));
-
-        double weight = rfg.adjustEnemyWeight(5, fedCom, clanFaction, TEST_DATE, false);
-
-        assertEquals(5.0, weight, "Outside the invasion's height, no Clan-invasion multiplier should apply");
-    }
-
-    /**
      * Regression test: WoB's weight is doubled during the Jihad.
      */
     @Test

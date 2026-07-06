@@ -62,6 +62,7 @@ import mekhq.campaign.enums.DragoonRating;
 import mekhq.campaign.force.CombatTeam;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.market.enums.ContractMarketMethod;
+import mekhq.campaign.mission.AbstractMissionTransition;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.Contract;
 import mekhq.campaign.mission.Mission;
@@ -602,16 +603,16 @@ public abstract class AbstractContractMarket {
     /**
      * Outside of Operation Bulldog ({@link MHQConstants#OPERATION_BULLDOG_START} to
      * {@link MHQConstants#OPERATION_BULLDOG_END}), no non-Clan faction has the reach to strike within
-     * {@value #HOMEWORLDS_EXCLUSION_RADIUS} light years of Strana Mechty: that one historical invasion is the only
-     * time Inner Sphere/mercenary forces ever operated that deep in the Clan Homeworlds.
+     * {@value #HOMEWORLDS_EXCLUSION_RADIUS} light years of Strana Mechty: that one historical invasion is the only time
+     * Inner Sphere/mercenary forces ever operated that deep in the Clan Homeworlds.
      *
      * @param contract the contract whose target system to check
      * @param campaign the active campaign, used to compute the arrival date (current date plus travel time)
      *
-     * @return {@code true} if the contract's attacking faction is non-Clan, its target is within the exclusion
-     *       radius, and the attacker would arrive there outside the Operation Bulldog window
+     * @return {@code true} if the contract's attacking faction is non-Clan, its target is within the exclusion radius,
+     *       and the attacker would arrive there outside the Operation Bulldog window
      */
-    protected boolean violatesHomeworldsExclusion(AtBContract contract, Campaign campaign) {
+    protected boolean violatesHomeworldsExclusion(AbstractMissionTransition contract, Campaign campaign) {
         Faction attacker = contract.isPlayerAttacker() ? contract.getEmployerFaction() : contract.getEnemy();
         if (attacker.isClan()) {
             return false;
