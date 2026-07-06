@@ -184,6 +184,19 @@ public class RandomFactionGenerator {
     }
 
     /**
+     * Checks whether the given faction controls at least one system anywhere the border tracker knows about &mdash;
+     * i.e. whether it has any planets at all, not just presence in the current search area.
+     *
+     * @param faction the faction to check
+     * @param date    the date to check faction control against
+     *
+     * @return {@code true} if the faction controls at least one known system on the given date
+     */
+    public boolean controlsAnySystem(Faction faction, LocalDate date) {
+        return borderTracker.controlsAnySystem(faction, date);
+    }
+
+    /**
      * Unregisters the border tracker as an event handler.
      */
     public void dispose() {

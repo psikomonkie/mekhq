@@ -581,9 +581,24 @@ public abstract class AbstractContractMarket {
      * @param contract the contract to resolve a target system for
      * @param campaign the active campaign
      *
-     * @throws NoContractLocationFoundException if no valid target system could be found
+     * @throws NoContractLocationFoundException if no valid target system could be found, or the player would be
+     *                                          defending for an employer that controls no planets to defend
      */
     protected void setSystemId(AtBContract contract, Campaign campaign) throws NoContractLocationFoundException {
+        // A contract where the player defends is a defense of the employer's own territory, so an employer with no
+        // planets anywhere has nothing to defend and the contract fails outright - it must not be redirected to a
+        // contained-faction host's worlds by the location search. Contracts where the player attacks stay valid for
+        // a landless employer.
+        Faction employerFaction = contract.getEmployerFaction();
+        if (!contract.isPlayerAttacker() &&
+                  (employerFaction != null) &&
+                  !RandomFactionGenerator.getInstance().controlsAnySystem(employerFaction, campaign.getLocalDate())) {
+            String errorMsg = "Defensive contract for landless employer " + contract.getEmployerCode() +
+                                    "; nothing to defend";
+            logger.warn(errorMsg);
+            throw new NoContractLocationFoundException(errorMsg);
+        }
+
         MissionLocationProfile profile = MissionLocationProfile.fromContractType(contract.getContractType());
         if (contract.isPlayerAttacker()) {
             contract.setSystemId(RandomFactionGenerator.getInstance()
