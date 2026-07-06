@@ -151,8 +151,30 @@ public class CampaignLocationManager {
             return;
         }
         for (ILocation traveler : travelers) {
+            removeExistingPendingTravel(traveler);
             TravelRoute route = new TravelRoute(traveler.getCurrentLocation(), destination);
             pendingTravel.computeIfAbsent(route, key -> new ArrayList<>()).add(traveler);
+        }
+    }
+
+    /**
+     * Removes {@code traveler} from any route it is already queued on, logging at debug level when it is found. Called
+     * before re-queuing so a later {@link #queueTravel} supersedes an earlier one rather than leaving the traveler
+     * bound to two destinations (which would dispatch it twice). A route left empty by the removal is dropped so it
+     * does not linger in {@link #pendingTravel}.
+     */
+    private void removeExistingPendingTravel(ILocation traveler) {
+        Iterator<Map.Entry<TravelRoute, List<ILocation>>> iterator = pendingTravel.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<TravelRoute, List<ILocation>> entry = iterator.next();
+            if (entry.getValue().remove(traveler)) {
+                LOGGER.debug("queueTravel: {} was already queued for travel to {} — removing prior pending travel",
+                      traveler.getClass().getSimpleName(), entry.getKey().destination());
+                if (entry.getValue().isEmpty()) {
+                    iterator.remove();
+                }
+                return;
+            }
         }
     }
 
@@ -418,7 +440,7 @@ public class CampaignLocationManager {
                       || !location.fetchUnitsAtLocation().isEmpty()) {
                 return false;
             }
-            if (location instanceof CurrentLocation) {
+            if (location instanceof AbstractMobileLocation) {
                 location.setParent(null);
             } else if (location instanceof FixedLocation) {
                 for (ILocation child : new ArrayList<>(location.getChildLocations())) {

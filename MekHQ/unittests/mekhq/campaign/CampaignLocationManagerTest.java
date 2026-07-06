@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -47,6 +48,7 @@ import java.util.UUID;
 
 import mekhq.MekHQ;
 import mekhq.campaign.events.units.UnitChangedEvent;
+import mekhq.campaign.location.ILocation;
 import mekhq.campaign.location.LocationDispatch;
 import mekhq.campaign.unit.Unit;
 import org.junit.jupiter.api.Test;
@@ -109,6 +111,28 @@ class CampaignLocationManagerTest {
             dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), campaign, campaign));
         }
         assertFalse(manager.isQueuedForTravel(unit));
+    }
+
+    @Test
+    void queueTravel_reQueueRemovesPriorPendingTravel() {
+        CampaignLocationManager manager = new CampaignLocationManager();
+        Campaign campaign = mock(Campaign.class);
+        ILocation firstDestination = mock(ILocation.class);
+        ILocation secondDestination = mock(ILocation.class);
+        Unit unit = mock(Unit.class);
+        UUID unitId = UUID.randomUUID();
+        when(unit.getId()).thenReturn(unitId);
+        when(campaign.getUnit(unitId)).thenReturn(unit);
+
+        manager.queueTravel(List.of(unit), firstDestination);
+        manager.queueTravel(List.of(unit), secondDestination);
+
+        try (MockedStatic<LocationDispatch> dispatch = mockStatic(LocationDispatch.class)) {
+            manager.dispatchPendingTravel(campaign);
+            dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), secondDestination, campaign));
+            dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), firstDestination, campaign),
+                  never());
+        }
     }
 
     @Test
