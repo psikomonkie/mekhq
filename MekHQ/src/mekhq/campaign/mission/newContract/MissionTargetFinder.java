@@ -35,6 +35,7 @@ package mekhq.campaign.mission.newContract;
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_END;
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_START;
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_TERRA_ONLY_END;
+import static mekhq.campaign.universe.Faction.BANDIT_CASTE_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.PIRATE_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.REPUBLIC_OF_THE_SPHERE_FACTION_CODE;
 
@@ -109,11 +110,13 @@ public class MissionTargetFinder {
         // within the search radius, there simply isn't a valid one, so we return here unconditionally rather than
         // falling through to logic that could land on some incidental, far-flung world a pirate band happens to
         // have once held.
-        if (defender.getShortName().equals(PIRATE_FACTION_CODE)) {
+        String defenderShortName = defender.getShortName();
+        if (defenderShortName.equals(PIRATE_FACTION_CODE) || defenderShortName.equals(BANDIT_CASTE_FACTION_CODE)) {
             return pirateFinder.findDefenderTargets(attacker, defender, location, radius, currentDate);
         }
 
-        if (attacker.getShortName().equals(PIRATE_FACTION_CODE)) {
+        String attackerShortName = attacker.getShortName();
+        if (attackerShortName.equals(PIRATE_FACTION_CODE) || attackerShortName.equals(BANDIT_CASTE_FACTION_CODE)) {
             List<PlanetarySystem> targets = pirateFinder.findAttackerTargets(attacker, defender, location, radius);
             if (!targets.isEmpty()) {
                 return targets;

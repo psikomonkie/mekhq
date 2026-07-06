@@ -46,7 +46,9 @@ import java.util.List;
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.FactionBorderTracker;
+import mekhq.campaign.universe.Planet;
 import mekhq.campaign.universe.PlanetarySystem;
+import mekhq.campaign.universe.enums.PlanetaryType;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -84,6 +86,25 @@ public class PirateMissionTargetFinderTest {
         when(p.getY()).thenReturn(y);
         when(p.getFactionSet(any())).thenReturn(Collections.emptySet());
         when(p.getId()).thenReturn(String.format("(%3.1f,%3.1f)", x, y));
+        return p;
+    }
+
+    /**
+     * Builds a connector system (see {@link PlanetarySystem#isConnector()}) with no faction data, whose primary
+     * planet is of the given type.
+     */
+    private static PlanetarySystem createConnectorTestSystem(final double x, final double y,
+          final PlanetaryType planetType) {
+        Planet primaryPlanet = mock(Planet.class);
+        when(primaryPlanet.getPlanetType()).thenReturn(planetType);
+
+        PlanetarySystem p = mock(PlanetarySystem.class);
+        when(p.getX()).thenReturn(x);
+        when(p.getY()).thenReturn(y);
+        when(p.getFactionSet(any())).thenReturn(Collections.emptySet());
+        when(p.getId()).thenReturn(String.format("(%3.1f,%3.1f)", x, y));
+        when(p.isConnector()).thenReturn(true);
+        when(p.getPrimaryPlanet()).thenReturn(primaryPlanet);
         return p;
     }
 
@@ -160,6 +181,55 @@ public class PirateMissionTargetFinderTest {
 
         assertEquals(List.of(unownedSystem), targets,
               "A system with no faction data at all should still be treated as empty/lawless space");
+    }
+
+    /**
+     * Regression test: connector systems are synthetic jump-path waypoints with no lore behind them and are normally
+     * excluded from mission targeting, but a pirate defender may still hide out at one if its primary planet is
+     * terrestrial (i.e. a place a raiding band could plausibly occupy).
+     */
+    @Test
+    public void testFindDefenderTargetsIncludesTerrestrialConnectorSystem() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false);
+        Faction pirateFaction = createTestFaction("PIR", false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem terrestrialConnector = createConnectorTestSystem(1, 0, PlanetaryType.TERRESTRIAL);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, terrestrialConnector);
+        FactionBorderTracker tracker = buildTracker(systems);
+        PirateMissionTargetFinder finder = new PirateMissionTargetFinder(tracker);
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.findDefenderTargets(attackerFaction, pirateFaction, location,
+              tracker.getRadius(), TEST_DATE);
+
+        assertEquals(List.of(terrestrialConnector), targets,
+              "A connector system with a terrestrial primary planet should be a valid pirate hideout");
+    }
+
+    /**
+     * Regression test: a connector system whose primary planet is not terrestrial (e.g. a gas giant or asteroid
+     * belt) is not a plausible pirate hideout, so it must not be picked even though it has no faction data.
+     */
+    @Test
+    public void testFindDefenderTargetsExcludesNonTerrestrialConnectorSystem() {
+        Faction attackerFaction = createTestFaction("ATTACKER", false);
+        Faction pirateFaction = createTestFaction("PIR", false);
+
+        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
+        PlanetarySystem gasGiantConnector = createConnectorTestSystem(1, 0, PlanetaryType.GAS_GIANT);
+
+        List<PlanetarySystem> systems = List.of(attackerSystem, gasGiantConnector);
+        FactionBorderTracker tracker = buildTracker(systems);
+        PirateMissionTargetFinder finder = new PirateMissionTargetFinder(tracker);
+        ILocation location = createTestLocation(attackerFaction);
+
+        List<PlanetarySystem> targets = finder.findDefenderTargets(attackerFaction, pirateFaction, location,
+              tracker.getRadius(), TEST_DATE);
+
+        assertTrue(targets.isEmpty(),
+              "A connector system with a non-terrestrial primary planet should never be picked as a pirate hideout");
     }
 
     /**

@@ -36,6 +36,7 @@ package mekhq.campaign.universe;
 import static java.lang.Math.max;
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_END;
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_START;
+import static mekhq.campaign.universe.Faction.BANDIT_CASTE_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.CLAN_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.INDEPENDENT_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.MERCENARY_FACTION_CODE;
@@ -71,8 +72,8 @@ import mekhq.campaign.universe.factionHints.FactionHints;
  *       <p>
  *       Uses Factions and Planets to weighted lists of potential employers and enemies for contract generation. Also
  *       finds a suitable planet for the action.
- *                                                                                                                                                                                                                                                                         TODO : Account for the de facto alliance of the invading Clans and the
- *                                                                                                                                                                                                                                                                         TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
+ *                                                                                                                                                                                                                                                                                     TODO : Account for the de facto alliance of the invading Clans and the
+ *                                                                                                                                                                                                                                                                                     TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
  */
 public class RandomFactionGenerator {
     private static final MMLogger LOGGER = MMLogger.create(RandomFactionGenerator.class);
@@ -465,7 +466,8 @@ public class RandomFactionGenerator {
         }
 
         String employerShortName = employer.getShortName();
-        boolean isPirateEmployer = employerShortName.equals(PIRATE_FACTION_CODE);
+        boolean isPirateEmployer = employerShortName.equals(PIRATE_FACTION_CODE) ||
+                                         employerShortName.equals(BANDIT_CASTE_FACTION_CODE);
 
         // A faction at war with the employer is always a valid target, even one with no systems in the search
         // area, as long as it controls territory somewhere on the map. War relationships are sparse, so check who
@@ -482,10 +484,8 @@ public class RandomFactionGenerator {
             }
         }
 
-        // These only depend on the date, not on any individual candidate, so compute them once per call rather
+        // This only depends on the date, not on any individual candidate, so compute them once per call rather
         // than once per candidate in adjustEnemyWeight.
-        boolean isDuringClanInvasionHeight = date.isAfter(MHQConstants.CLAN_INVASION_FIRST_WAVE_BEGINS) &&
-                                                   date.isBefore(MHQConstants.BATTLE_OF_TUKAYYID);
         boolean isDuringJihad = date.isAfter(MHQConstants.JIHAD_START) && date.isBefore(MHQConstants.NOMINAL_JIHAD_END);
 
         for (Faction enemy : candidates) {
@@ -677,8 +677,8 @@ public class RandomFactionGenerator {
     /**
      * Applies diplomatic-stance multipliers to an enemy candidate's base area-presence weight (see
      * {@link #buildEnemyMap(boolean, ILocation, LocalDate, Faction)}). Factions at war with the employer are floored to
-     * a weight of at least 10 before quadrupling, so a belligerent with no systems in the search area is still a
-     * valid, heavily-weighted, pickable target (e.g. distant warring factions during the early Clan Invasion or the
+     * a weight of at least 10 before quadrupling, so a belligerent with no systems in the search area is still a valid,
+     * heavily-weighted, pickable target (e.g. distant warring factions during the early Clan Invasion or the
      * Reunification Wars).
      *
      * @param count         The candidate's base weight (number of systems it controls in the search area)
@@ -755,8 +755,8 @@ public class RandomFactionGenerator {
      *
      * @param attackerKey The attacking faction's shortName
      * @param defenderKey The defending faction's shortName
-     * @param location    the location to center the search on, scoped by this generator's configured search radius
-     *                    (see {@link #getMissionTargetList(Faction, Faction, ILocation)})
+     * @param location    the location to center the search on, scoped by this generator's configured search radius (see
+     *                    {@link #getMissionTargetList(Faction, Faction, ILocation)})
      *
      * @return A list of potential mission targets
      */
