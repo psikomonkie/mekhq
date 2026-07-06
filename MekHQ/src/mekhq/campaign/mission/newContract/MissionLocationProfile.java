@@ -106,6 +106,8 @@ public enum MissionLocationProfile {
      * @return the location profile to use when selecting the contract's target system
      */
     public static MissionLocationProfile fromContractType(AtBContractType contractType) {
+        // TODO move this to the AtBContractType enum (not doing that here as it will conflict awfully with the larger
+        //  contract overhaul project)
         return switch (contractType) {
             case CADRE_DUTY, RETAINER -> REAR_AREA;
             case RIOT_DUTY, SECURITY_DUTY -> INTERIOR_POPULATED;

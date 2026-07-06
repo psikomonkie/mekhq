@@ -155,8 +155,16 @@ public class MissionTargetFinder {
 
         // A rebel uprising happens somewhere within the attacking government's own territory, not on a border.
         if (defender.isRebel()) {
-            FactionBorders borders = borderTracker.getBorders(attacker, location, radius);
-            return systemsOf(borders, currentDate);
+            MissionLocationProfile rebelProfile = MissionLocationProfile.INTERIOR_POPULATED;
+            List<PlanetarySystem> profileTargets = findProfileTargets(rebelProfile,
+                  defender,
+                  attacker,
+                  location,
+                  radius,
+                  currentDate);
+            if (!profileTargets.isEmpty()) {
+                return profileTargets;
+            }
         }
 
         // The contract type's preferred geography, when it has one (rear areas for training, deep strikes for
@@ -227,8 +235,8 @@ public class MissionTargetFinder {
      * {@link MissionLocationProfile#HIGH_VALUE} intentionally return nothing here: DEFAULT has no preference, and
      * HIGH_VALUE uses the default candidate pool unchanged, differing only in how the final pick is weighted (see
      * {@code RandomFactionGenerator}). An empty result from {@link MissionLocationProfile#INVASION} does NOT fall
-     * through &mdash; {@link #find} blocks it from reaching the deep fallbacks, since an invasion with no shared
-     * border has no viable target.
+     * through &mdash; {@link #find} blocks it from reaching the deep fallbacks, since an invasion with no shared border
+     * has no viable target.
      *
      * @return the profile's preferred candidate systems, or an empty list to fall through to the default chain
      */
@@ -278,10 +286,9 @@ public class MissionTargetFinder {
     /**
      * Finds targets for a guerrilla campaign behind enemy lines. Preferred tier: defender-held systems in range that
      * the attacker held {@value MissionLocationProfile#OCCUPIED_TERRITORY_LOOKBACK_YEARS} years ago &mdash; recently
-     * conquered worlds whose
-     * population plausibly still sympathizes with the attacker. Second tier: any defender system in range away from the
-     * shared border, since a guerrilla campaign on the contested front is just the regular war. Empty only when the
-     * defender holds nothing in range beyond the border itself.
+     * conquered worlds whose population plausibly still sympathizes with the attacker. Second tier: any defender system
+     * in range away from the shared border, since a guerrilla campaign on the contested front is just the regular war.
+     * Empty only when the defender holds nothing in range beyond the border itself.
      */
     private List<PlanetarySystem> findOccupiedTerritoryTargets(Faction attacker, Faction defender, ILocation location,
           double radius, LocalDate date) {
