@@ -56,8 +56,8 @@ public final class RequestedStockLevels {
 
     /**
      * A shared, empty, do-nothing instance returned by any {@link mekhq.campaign.location.IPlace} that does not own real
-     * stock levels, so callers never have to deal with {@code null}. Its map is empty and unmodifiable, and mutating
-     * operations are no-ops, so every part falls through to its default stock percentage.
+     * stock levels, so callers never have to deal with {@code null}. Its map is empty and unmodifiable; mutating
+     * methods are no-ops, so every part falls through to its default stock percentage.
      */
     public static final RequestedStockLevels NO_RESTOCK = new RequestedStockLevels(true);
 

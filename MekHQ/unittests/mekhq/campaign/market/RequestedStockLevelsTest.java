@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -57,7 +58,7 @@ class RequestedStockLevelsTest {
         String xml = sw.toString();
 
         Document document = MHQXMLUtility.newSafeDocumentBuilder()
-                                  .parse(new ByteArrayInputStream(xml.getBytes()));
+                                  .parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
         Element root = document.getDocumentElement();
         assertEquals("partInUseMap", root.getNodeName());
         return RequestedStockLevels.generateInstanceFromXML(root);
