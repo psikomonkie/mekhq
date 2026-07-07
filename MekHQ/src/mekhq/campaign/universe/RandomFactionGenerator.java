@@ -39,7 +39,6 @@ import static mekhq.MHQConstants.FORTRESS_REPUBLIC_START;
 import static mekhq.campaign.universe.Faction.BANDIT_CASTE_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.CLAN_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.COMSTAR_FACTION_CODE;
-import static mekhq.campaign.universe.Faction.INDEPENDENT_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.MERCENARY_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.PIRATE_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.REBEL_FACTION_CODE;
@@ -432,13 +431,13 @@ public class RandomFactionGenerator {
      *                 always being excluded
      * @param location the location to center the search on
      * @param date     the date to check faction control and diplomatic relations against
-     * @param employer the employer faction, or {@code null} to skip straight to the INDEPENDENT fallback
+     * @param employer the employer faction, or {@code null} to skip straight to the REBEL fallback
      *
      * @return a randomly selected enemy faction, or the INDEPENDENT faction if none could be found
      */
     public Faction getRandomEnemy(boolean isCovert, ILocation location, LocalDate date, @Nullable Faction employer) {
         if (employer == null) {
-            return independentFallback("No employer supplied or faction does not exist. Returning INDEPENDENT");
+            return rebelFallback("No employer supplied or faction does not exist. Returning REBEL");
         }
 
         WeightedIntMap<Faction> enemyMap = buildEnemyMap(isCovert, location, date, employer);
@@ -447,7 +446,7 @@ public class RandomFactionGenerator {
             return enemy;
         }
 
-        return independentFallback("Could not find enemy for employerName {}. Returning INDEPENDENT",
+        return rebelFallback("Could not find enemy for employerName {}. Returning REBEL",
               employer.getShortName());
     }
 
@@ -467,7 +466,7 @@ public class RandomFactionGenerator {
     public Faction getRandomEnemy(ILocation location, LocalDate date, @Nullable Faction employer,
           EnemySelectionProfile profile) {
         if (employer == null) {
-            return independentFallback("No employer supplied or faction does not exist. Returning INDEPENDENT");
+            return rebelFallback("No employer supplied or faction does not exist. Returning REBEL");
         }
 
         return switch (profile) {
@@ -620,17 +619,17 @@ public class RandomFactionGenerator {
     }
 
     /**
-     * Logs the given warning and returns the INDEPENDENT faction, used as {@link #getRandomEnemy}'s fallback when no
-     * employer is supplied or no valid enemy candidate could be found.
+     * Logs the given warning and returns the REBEL faction, used as {@link #getRandomEnemy}'s fallback when no employer
+     * is supplied or no valid enemy candidate could be found.
      *
      * @param message the warning message (may contain {@code {}} placeholders)
      * @param args    arguments for the message's placeholders
      *
-     * @return the INDEPENDENT faction
+     * @return the faction faction
      */
-    private Faction independentFallback(String message, Object... args) {
+    private Faction rebelFallback(String message, Object... args) {
         LOGGER.warn(message, args);
-        return Factions.getInstance().getFaction(INDEPENDENT_FACTION_CODE);
+        return Factions.getInstance().getFaction(REBEL_FACTION_CODE);
     }
 
     /**
@@ -688,7 +687,7 @@ public class RandomFactionGenerator {
             }
 
             // A faction is never its own enemy - unless factionHints explicitly records it at war with itself,
-            // which is how a civil war is represented (e.g. the FedCom Civil War).
+            // which is how a civil war can be represented (e.g. the Ghost Bear Civil War).
             if (enemy.equals(employer) && !factionHints.isAtWarWith(employer, employer, date)) {
                 continue;
             }
