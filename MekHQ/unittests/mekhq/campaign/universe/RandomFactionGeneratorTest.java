@@ -42,6 +42,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -52,6 +53,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import megamek.common.compute.Compute;
+import megamek.common.util.weightedMaps.WeightedIntMap;
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.mission.mission.contractGeneration.GlobalEmployerTableValue;
 import mekhq.campaign.mission.newContract.EnemySelectionProfile;
@@ -63,6 +66,7 @@ import mekhq.campaign.universe.factionHints.FactionHints;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 public class RandomFactionGeneratorTest {
 
@@ -844,9 +848,9 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * {@code industrialWeight} scores only industry and output (production capacity), not raw materials or
-     * agriculture (self-sufficiency): a fully industrialized, high-output world should score the maximum 8, and a
-     * world with none of either should score 0.
+     * {@code industrialWeight} scores only industry and output (production capacity), not raw materials or agriculture
+     * (self-sufficiency): a fully industrialized, high-output world should score the maximum 8, and a world with none
+     * of either should score 0.
      */
     @Test
     public void testIndustrialWeightScoresIndustryAndOutputOnly() {
@@ -945,19 +949,81 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * RAIDERS with the pirate faction itself as the employer must never pick pirates as their own enemy, so the
-     * irregular opposition is always rebels.
+     * RAIDERS with the pirate faction itself as the employer can still pick pirates as their own enemy: rival pirate
+     * bands harassing each other's rear-area postings makes just as much sense as pirates harassing a real government
+     * (see {@code isSelfConflictingFaction}).
      */
     @Test
-    public void testGetRandomEnemyProfileRaidersNeverPicksThePirateEmployerItself() {
+    public void testGetRandomEnemyProfileRaidersCanPickPirateEmployerItself() {
         Faction pirates = createTestFaction(Faction.PIRATE_FACTION_CODE, false, false);
         allFactions.add(pirates);
         allFactions.add(rebelFaction);
         RandomFactionGenerator rfg = createTestRFG();
         ILocation location = createTestLocation(pirates);
 
-        assertEquals(rebelFaction, rfg.getRandomEnemy(location, TEST_DATE, pirates, EnemySelectionProfile.RAIDERS),
-              "A pirate employer's rear-area harassers should always be rebels, never the pirate faction itself");
+        try (MockedStatic<Compute> compute = mockStatic(Compute.class)) {
+            compute.when(() -> Compute.randomInt(2)).thenReturn(1);
+
+            assertEquals(pirates, rfg.getRandomEnemy(location, TEST_DATE, pirates, EnemySelectionProfile.RAIDERS),
+                  "A pirate employer's rear-area harassers should be able to be pirates as well as rebels");
+        }
+    }
+
+    /**
+     * The "aggregate" factions - pirates, the Bandit Caste, rebels, mercenaries - can each generate contracts against
+     * themselves with no {@code factionHints} war record required: their countless independent bands, cells, and
+     * companies fight each other constantly without any specific war ever being declared.
+     */
+    @Test
+    public void testBuildEnemyMapAllowsAggregateFactionsToFightThemselvesWithoutAWarRecord() {
+        for (String aggregateCode : List.of(Faction.PIRATE_FACTION_CODE, Faction.BANDIT_CASTE_FACTION_CODE,
+              Faction.REBEL_FACTION_CODE, Faction.MERCENARY_FACTION_CODE)) {
+            Faction aggregateFaction = createTestFaction(aggregateCode, false, false);
+            List<PlanetarySystem> systems = List.of(createTestSystem(0, 0, aggregateFaction));
+            RandomFactionGenerator rfg = new RandomFactionGenerator(buildTestTracker(systems),
+                  mock(FactionHints.class));
+            ILocation location = createTestLocation(aggregateFaction);
+
+            WeightedIntMap<Faction> enemyMap = rfg.buildEnemyMap(false, location, TEST_DATE, aggregateFaction);
+
+            assertTrue(enemyMap.containsValue(aggregateFaction),
+                  aggregateCode + " should be able to generate contracts against itself with no war record");
+        }
+    }
+
+    /**
+     * A non-aggregate faction (an ordinary government) must still be excluded as its own enemy with no war record, even
+     * though it controls the only system in range - the self-conflict exception is specific to the aggregate factions,
+     * not a general "sole candidate" carve-out.
+     */
+    @Test
+    public void testBuildEnemyMapStillExcludesOrdinaryFactionFromItselfWithoutAWarRecord() {
+        List<PlanetarySystem> systems = List.of(createTestSystem(0, 0, isFaction));
+        RandomFactionGenerator rfg = new RandomFactionGenerator(buildTestTracker(systems), mock(FactionHints.class));
+        ILocation location = createTestLocation(isFaction);
+
+        WeightedIntMap<Faction> enemyMap = rfg.buildEnemyMap(false, location, TEST_DATE, isFaction);
+
+        assertFalse(enemyMap.containsValue(isFaction),
+              "An ordinary government should still need a recorded civil war to be its own enemy");
+    }
+
+    /**
+     * AT_WAR (and by extension OCCUPYING_POWER, which shares the same belligerent search): an aggregate-faction
+     * employer can be matched against itself with no war record, since {@link #findEnemiesAtWarWith} carries the same
+     * self-conflict exception as {@link #buildEnemyMap}.
+     */
+    @Test
+    public void testGetRandomEnemyProfileAtWarAllowsMercenaryEmployerToFightItselfWithoutAWarRecord() {
+        Faction mercFaction = createTestFaction(Faction.MERCENARY_FACTION_CODE, false, false);
+        allFactions.add(mercFaction);
+        List<PlanetarySystem> systems = List.of(createTestSystem(0, 0, mercFaction));
+        RandomFactionGenerator rfg = new RandomFactionGenerator(buildTestTracker(systems), mock(FactionHints.class));
+        ILocation location = createTestLocation(mercFaction);
+
+        assertEquals(mercFaction, rfg.getRandomEnemy(location, TEST_DATE, mercFaction, EnemySelectionProfile.AT_WAR),
+              "A mercenary employer's open-warfare contract should be able to target a rival mercenary company with "
+                    + "no recorded war");
     }
 
     /**

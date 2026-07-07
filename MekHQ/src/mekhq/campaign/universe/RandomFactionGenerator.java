@@ -493,19 +493,35 @@ public class RandomFactionGenerator {
     }
 
     /**
-     * Picks an irregular rear-area harasser: pirates or rebels, even odds. A pirate employer always gets rebels, so the
-     * pirate faction never ends up as its own enemy.
+     * @param faction the faction to check
+     *
+     * @return {@code true} if the faction is one of the "aggregate" factions &mdash; pirates, the Bandit Caste, rebels,
+     *       mercenaries &mdash; whose innumerable independent bands, cells, and companies routinely fight each other
+     *       without any specific war ever being declared between them. Unlike a real government's civil war, this
+     *       doesn't need a {@code factionHints} war record: it's true of the faction unconditionally.
+     */
+    private static boolean isSelfConflictingFaction(Faction faction) {
+        String code = faction.getShortName();
+        return code.equals(PIRATE_FACTION_CODE) ||
+                     code.equals(BANDIT_CASTE_FACTION_CODE) ||
+                     code.equals(REBEL_FACTION_CODE) ||
+                     code.equals(MERCENARY_FACTION_CODE);
+    }
+
+    /**
+     * Picks an irregular rear-area harasser: pirates or rebels, even odds. Either can end up as its own enemy (rival
+     * pirate bands, rival rebel cells - see {@link #isSelfConflictingFaction}), so no special-casing is needed when the
+     * employer itself is one of the two.
      *
      * @param employer the employer faction
      *
      * @return the raider enemy faction
      */
     private Faction raiderEnemy(Faction employer) {
-        Faction pirates = pirateFactionFor(employer);
-        if (employer.equals(pirates) || (Compute.randomInt(2) == 0)) {
+        if (Compute.randomInt(2) == 0) {
             return Factions.getInstance().getFaction(REBEL_FACTION_CODE);
         }
-        return pirates;
+        return pirateFactionFor(employer);
     }
 
     /**
@@ -560,11 +576,12 @@ public class RandomFactionGenerator {
     /**
      * Finds every faction the employer is at war with on the given date that also controls at least one known system,
      * applying the same basic eligibility rules as the standard pool (real, currently valid, not
-     * Fortress-Republic-locked). The employer itself qualifies when factionHints records it at war with itself, which
-     * is how a civil war is represented. Serves both the {@link EnemySelectionProfile#AT_WAR}-family preferences and
-     * {@link #buildEnemyMap}'s guarantee that a war partner is a valid target regardless of local presence. War
-     * relationships are sparse, so the war check runs first (cheap, over the whole faction roster) before the territory
-     * scan (only for the handful of actual war partners).
+     * Fortress-Republic-locked). The employer itself qualifies either when it's one of the aggregate factions that are
+     * always at war with themselves (see {@link #isSelfConflictingFaction}), or when factionHints records a real
+     * government at war with itself, which is how a civil war is represented. Serves both the
+     * {@link EnemySelectionProfile#AT_WAR}-family preferences and {@link #buildEnemyMap}'s guarantee that a war partner
+     * is a valid target regardless of local presence. War relationships are sparse, so the war check runs first (cheap,
+     * over the whole faction roster) before the territory scan (only for the handful of actual war partners).
      *
      * @param employer the employer faction
      * @param date     the date to check diplomatic relations and faction control against
@@ -580,8 +597,11 @@ public class RandomFactionGenerator {
             if (isDuringFortressRepublic(faction.getShortName(), date)) {
                 continue;
             }
-            if (factionHints.isAtWarWith(employer, faction, date) &&
-                      borderTracker.controlsAnySystem(faction, date)) {
+            boolean atWar = faction.equals(employer) ?
+                                  isSelfConflictingFaction(employer) || factionHints.isAtWarWith(employer, employer,
+                                        date) :
+                                  factionHints.isAtWarWith(employer, faction, date);
+            if (atWar && borderTracker.controlsAnySystem(faction, date)) {
                 belligerents.add(faction);
             }
         }
@@ -687,9 +707,13 @@ public class RandomFactionGenerator {
                 continue;
             }
 
-            // A faction is never its own enemy - unless factionHints explicitly records it at war with itself,
-            // which is how a civil war can be represented (e.g. the Ghost Bear Civil War).
-            if (enemy.equals(employer) && !factionHints.isAtWarWith(employer, employer, date)) {
+            // A faction is never its own enemy, with two exceptions: an aggregate faction whose bands, cells, or
+            // companies fight each other constantly with no war ever formally declared (see
+            // isSelfConflictingFaction), or factionHints explicitly recording it at war with itself, which is how a
+            // civil war is represented for a real government (e.g. the Ghost Bear Civil War).
+            if (enemy.equals(employer) &&
+                      !isSelfConflictingFaction(employer) &&
+                      !factionHints.isAtWarWith(employer, employer, date)) {
                 continue;
             }
 
@@ -957,15 +981,15 @@ public class RandomFactionGenerator {
     /**
      * Per-point weight bonus for a system's industrial capacity (see {@link #industrialWeight}), applied for
      * {@linkplain MissionLocationProfile#isIndustriallyWeighted() industrially-weighted} profiles. Scaled up from the
-     * raw 0-8 industrial score so a heavily industrialized world competes with a populous one rather than being
-     * drowned out by the population term's log scale.
+     * raw 0-8 industrial score so a heavily industrialized world competes with a populous one rather than being drowned
+     * out by the population term's log scale.
      */
     private static final int INDUSTRIAL_WEIGHT_MULTIPLIER = 2;
 
     /**
      * Picks a candidate weighted by {@link #populationWeight}, plus {@link #industrialWeight} for
-     * {@linkplain MissionLocationProfile#isIndustriallyWeighted() industrially-weighted} profiles, so the most
-     * valuable world is favored without making it the only possible outcome.
+     * {@linkplain MissionLocationProfile#isIndustriallyWeighted() industrially-weighted} profiles, so the most valuable
+     * world is favored without making it the only possible outcome.
      *
      * @param candidates the candidate systems; must not be empty
      * @param profile    the location profile driving this pick, used to decide whether industrial capacity counts
