@@ -73,14 +73,13 @@ import mekhq.campaign.universe.enums.HPGRating;
 import mekhq.campaign.universe.factionHints.FactionHints;
 
 /**
+ * Uses Factions and Planets to weighted lists of potential employers and enemies for contract generation. Also finds a
+ * suitable planet for the action.
+ *
  * @author Neoancient
- *       <p>
- *       Uses Factions and Planets to weighted lists of potential employers and enemies for contract generation. Also
- *       finds a suitable planet for the action.
- *                                                                                                                                                                                                                                                                                                 TODO : Account for the de facto alliance of the invading Clans and the
- *                                                                                                                                                                                                                                                                                                 TODO : Fortress Republic in a way that doesn't involve hard-coding them here.
  */
 public class RandomFactionGenerator {
+    // TODO : Account for the moratorium on trials for the Clans during the early Clan Invasion
     private static final MMLogger LOGGER = MMLogger.create(RandomFactionGenerator.class);
 
     private static RandomFactionGenerator randomFactionGenerator = null;
@@ -184,9 +183,9 @@ public class RandomFactionGenerator {
     }
 
     /**
-     * Checks whether the given faction has any territory to its name: systems it controls directly anywhere on the
-     * map, or failing that, a contained-faction host that does (e.g. the Star League's member states while the
-     * League itself holds almost nothing directly).
+     * Checks whether the given faction has any territory to its name: systems it controls directly anywhere on the map,
+     * or failing that, a contained-faction host that does (e.g. the Star League's member states while the League itself
+     * holds almost nothing directly).
      *
      * @param faction the faction to check
      * @param date    the date to check faction control and the contained-faction relationship against
@@ -723,9 +722,9 @@ public class RandomFactionGenerator {
 
     /**
      * Checks whether two factions should be treated as allies: directly, or through a shared ally (e.g. two member
-     * states of the same superpower). An explicit war record between them overrides either kind of alliance &mdash;
-     * a formal pact that hasn't been expunged from the data doesn't stop a shooting war (e.g. the Star League and
-     * the Amaris-held Terran Hegemony, nominally allied for the whole League era but at war from the coup on).
+     * states of the same superpower). An explicit war record between them overrides either kind of alliance &mdash; a
+     * formal pact that hasn't been expunged from the data doesn't stop a shooting war (e.g. the Star League and the
+     * Amaris-held Terran Hegemony, nominally allied for the whole League era but at war from the coup on).
      *
      * @param date     the date to check diplomatic relations against
      * @param employer one faction
