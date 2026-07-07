@@ -47,7 +47,6 @@ import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.events.ProcurementEvent;
 import mekhq.campaign.finances.Money;
-import mekhq.campaign.location.ILocation;
 import mekhq.campaign.location.IPlace;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.parts.Refit;
@@ -184,8 +183,8 @@ public class ShoppingList {
         // The main force leaves orders unanchored (their part resolves to the campaign warehouse); a base anchors the
         // order at that base so it resolves to the base warehouse.
         IPlace destination = (place instanceof Campaign) ? null : place;
-        if (destination != null && newWork instanceof ILocation location) {
-            location.setParent(destination);
+        if (destination != null) {
+            newWork.setParent(destination);
         }
 
         // check to see if this is already on the shopping list for the same destination. If so, then add

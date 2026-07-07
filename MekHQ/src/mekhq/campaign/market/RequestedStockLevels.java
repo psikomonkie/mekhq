@@ -142,7 +142,11 @@ public final class RequestedStockLevels {
             if (field.getNodeName().equalsIgnoreCase("partInUseMapKey")) {
                 key = field.getTextContent();
             } else if (field.getNodeName().equalsIgnoreCase("partInUseMapVal")) {
-                value = Double.parseDouble(field.getTextContent());
+                try {
+                    value = Double.parseDouble(field.getTextContent());
+                } catch (NumberFormatException e) {
+                    LOGGER.error("Invalid partInUseMapVal '{}', defaulting to 0", field.getTextContent());
+                }
             }
         }
         if (key != null) {
