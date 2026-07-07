@@ -69,7 +69,7 @@ public class RandomFactionGeneratorTest {
     private Faction clanFaction;
     private Faction peripheryFaction;
     private Faction innerISFaction;
-    private Faction independentFaction;
+    private Faction rebelFaction;
     private FactionBorderTracker borderTracker;
 
     /**
@@ -94,17 +94,17 @@ public class RandomFactionGeneratorTest {
         clanFaction = createTestFaction("Clan", false, true);
         peripheryFaction = createTestFaction("Periphery", true, false);
         innerISFaction = createTestFaction("IS2", false, false);
-        independentFaction = createTestFaction(Faction.INDEPENDENT_FACTION_CODE, false, false);
+        rebelFaction = createTestFaction(Faction.REBEL_FACTION_CODE, true, false);
 
-        allFactions = new ArrayList<>(List.of(isFaction, clanFaction, peripheryFaction, innerISFaction));
+        allFactions = new ArrayList<>(List.of(isFaction, clanFaction, peripheryFaction, innerISFaction, rebelFaction));
         Factions factions = mock(Factions.class);
         when(factions.getFactions()).thenReturn(allFactions);
-        // Resolves by short name against allFactions, plus the synthetic INDEPENDENT fallback faction used by
+        // Resolves by short name against allFactions, plus the synthetic REBEL fallback faction used by
         // RandomFactionGenerator#getEnemy when no employer is supplied or no valid enemy candidate is found.
         when(factions.getFaction(anyString())).thenAnswer(invocation -> {
             String code = invocation.getArgument(0);
-            if (Faction.INDEPENDENT_FACTION_CODE.equals(code)) {
-                return independentFaction;
+            if (Faction.REBEL_FACTION_CODE.equals(code)) {
+                return rebelFaction;
             }
             return allFactions.stream().filter(f -> f.getShortName().equals(code)).findFirst().orElse(null);
         });
@@ -233,6 +233,8 @@ public class RandomFactionGeneratorTest {
     @Test
     public void testGetEmployer() {
         RandomFactionGenerator rfg = createTestRFG();
+        Factions.getInstance();
+        when(Factions.getInstance().getFaction(Faction.REBEL_FACTION_CODE)).thenReturn(rebelFaction);
         ILocation location = createTestLocation(isFaction);
 
         assertNotNull(rfg.getEmployerFaction(location, TEST_DATE));
@@ -286,6 +288,7 @@ public class RandomFactionGeneratorTest {
 
         FactionHints hints = new FactionHints();
         hints.addWar("", null, null, isFaction, warFaction);
+        when(Factions.getInstance().getFaction(Faction.REBEL_FACTION_CODE)).thenReturn(rebelFaction);
         RandomFactionGenerator rfg = new RandomFactionGenerator(tracker, hints);
         ILocation location = mock(ILocation.class);
         when(location.getCurrentSystem()).thenReturn(nearSystem);
@@ -414,7 +417,7 @@ public class RandomFactionGeneratorTest {
     }
 
     /**
-     * Regression test: {@link RandomFactionGenerator#getRandomEnemy} falls back to the INDEPENDENT faction rather than
+     * Regression test: {@link RandomFactionGenerator#getRandomEnemy} falls back to the REBEL faction rather than
      * returning {@code null} when no employer is supplied.
      */
     @Test
@@ -424,7 +427,7 @@ public class RandomFactionGeneratorTest {
 
         Faction enemy = rfg.getRandomEnemy(false, location, TEST_DATE, null);
 
-        assertEquals(independentFaction, enemy, "A null employer should fall back to the INDEPENDENT faction");
+        assertEquals(rebelFaction, enemy, "A null employer should fall back to the REBEL faction");
     }
 
     @Test
@@ -861,12 +864,11 @@ public class RandomFactionGeneratorTest {
      */
     @Test
     public void testGetRandomEnemyProfileRebels() {
-        Faction rebels = createTestFaction(Faction.REBEL_FACTION_CODE, false, false);
-        allFactions.add(rebels);
+        allFactions.add(rebelFaction);
         RandomFactionGenerator rfg = createTestRFG();
         ILocation location = createTestLocation(isFaction);
 
-        assertEquals(rebels, rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.REBELS),
+        assertEquals(rebelFaction, rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.REBELS),
               "A riot-duty enemy should always be the rebel faction");
     }
 
@@ -877,15 +879,14 @@ public class RandomFactionGeneratorTest {
     @Test
     public void testGetRandomEnemyProfileRaidersReturnsPiratesOrRebels() {
         Faction pirates = createTestFaction(Faction.PIRATE_FACTION_CODE, false, false);
-        Faction rebels = createTestFaction(Faction.REBEL_FACTION_CODE, false, false);
         allFactions.add(pirates);
-        allFactions.add(rebels);
+        allFactions.add(rebelFaction);
         RandomFactionGenerator rfg = createTestRFG();
         ILocation location = createTestLocation(isFaction);
 
         Faction enemy = rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.RAIDERS);
 
-        assertTrue(Set.of(pirates, rebels).contains(enemy),
+        assertTrue(Set.of(pirates, rebelFaction).contains(enemy),
               "A cadre-duty enemy should be an irregular force (pirates or rebels), not a peer state");
     }
 
@@ -896,13 +897,12 @@ public class RandomFactionGeneratorTest {
     @Test
     public void testGetRandomEnemyProfileRaidersNeverPicksThePirateEmployerItself() {
         Faction pirates = createTestFaction(Faction.PIRATE_FACTION_CODE, false, false);
-        Faction rebels = createTestFaction(Faction.REBEL_FACTION_CODE, false, false);
         allFactions.add(pirates);
-        allFactions.add(rebels);
+        allFactions.add(rebelFaction);
         RandomFactionGenerator rfg = createTestRFG();
         ILocation location = createTestLocation(pirates);
 
-        assertEquals(rebels, rfg.getRandomEnemy(location, TEST_DATE, pirates, EnemySelectionProfile.RAIDERS),
+        assertEquals(rebelFaction, rfg.getRandomEnemy(location, TEST_DATE, pirates, EnemySelectionProfile.RAIDERS),
               "A pirate employer's rear-area harassers should always be rebels, never the pirate faction itself");
     }
 
@@ -1042,11 +1042,12 @@ public class RandomFactionGeneratorTest {
     @Test
     public void testGetRandomEnemyExcludesSelfWithoutCivilWar() {
         List<PlanetarySystem> systems = List.of(createTestSystem(0, 0, isFaction));
+        when(Factions.getInstance().getFaction(Faction.REBEL_FACTION_CODE)).thenReturn(rebelFaction);
         RandomFactionGenerator rfg = new RandomFactionGenerator(buildTestTracker(systems), mock(FactionHints.class));
         ILocation location = createTestLocation(isFaction);
 
-        assertEquals(independentFaction, rfg.getRandomEnemy(false, location, TEST_DATE, isFaction),
-              "Without a recorded self-war, a faction alone in the area should find no enemy but the INDEPENDENT "
+        assertEquals(rebelFaction, rfg.getRandomEnemy(false, location, TEST_DATE, isFaction),
+              "Without a recorded self-war, a faction alone in the area should find no enemy but the REBEL "
                     + "fallback");
     }
 
@@ -1088,8 +1089,8 @@ public class RandomFactionGeneratorTest {
 
         assertEquals(ally, rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.COVERT),
               "Under covert rules, an ally should be a possible (if rare) target");
-        assertEquals(independentFaction,
+        assertEquals(rebelFaction,
               rfg.getRandomEnemy(location, TEST_DATE, isFaction, EnemySelectionProfile.DEFAULT),
-              "Under default rules, an ally is excluded outright, leaving only the INDEPENDENT fallback here");
+              "Under default rules, an ally is excluded outright, leaving only the REBEL fallback here");
     }
 }
