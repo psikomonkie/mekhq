@@ -109,13 +109,13 @@ public final class RequestedStockLevels {
     /**
      * Parses a {@code <partInUseMap>} element into a new {@code RequestedStockLevels}.
      *
-     * @param wn the {@code <partInUseMap>} node
+     * @param mapNode the {@code <partInUseMap>} node
      *
      * @return a populated instance (never {@code null})
      */
-    public static RequestedStockLevels generateInstanceFromXML(final Node wn) {
+    public static RequestedStockLevels generateInstanceFromXML(final Node mapNode) {
         RequestedStockLevels result = new RequestedStockLevels();
-        NodeList entries = wn.getChildNodes();
+        NodeList entries = mapNode.getChildNodes();
         for (int i = 0; i < entries.getLength(); i++) {
             Node entry = entries.item(i);
             if (entry.getNodeType() != Node.ELEMENT_NODE) {
@@ -130,10 +130,10 @@ public final class RequestedStockLevels {
         return result;
     }
 
-    private static void readEntry(final Map<String, Double> stockMap, final Node wn) {
-        NodeList fields = wn.getChildNodes();
+    private static void readEntry(final Map<String, Double> stockMap, final Node entryNode) {
+        NodeList fields = entryNode.getChildNodes();
         String key = null;
-        double val = 0;
+        double value = 0;
         for (int i = 0; i < fields.getLength(); i++) {
             Node field = fields.item(i);
             if (field.getNodeType() != Node.ELEMENT_NODE) {
@@ -142,11 +142,11 @@ public final class RequestedStockLevels {
             if (field.getNodeName().equalsIgnoreCase("partInUseMapKey")) {
                 key = field.getTextContent();
             } else if (field.getNodeName().equalsIgnoreCase("partInUseMapVal")) {
-                val = Double.parseDouble(field.getTextContent());
+                value = Double.parseDouble(field.getTextContent());
             }
         }
         if (key != null) {
-            stockMap.put(key, val);
+            stockMap.put(key, value);
         }
     }
 }
