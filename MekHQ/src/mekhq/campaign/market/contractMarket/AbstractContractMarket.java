@@ -42,6 +42,7 @@ import static megamek.common.enums.SkillLevel.HEROIC;
 import static megamek.common.enums.SkillLevel.REGULAR;
 import static megamek.common.enums.SkillLevel.VETERAN;
 import static mekhq.campaign.enums.DailyReportType.GENERAL;
+import static mekhq.campaign.mission.newContract.LandlessEmployerExclusion.shouldRejectDefensiveObjectives;
 import static mekhq.campaign.universe.Faction.MERCENARY_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.PIRATE_FACTION_CODE;
 
@@ -580,18 +581,10 @@ public abstract class AbstractContractMarket {
      *                                          defending for an employer that controls no planets to defend
      */
     protected void setSystemId(AtBContract contract, Campaign campaign) throws NoContractLocationFoundException {
-        // A contract where the player defends is a defense of the employer's territory, so an employer with no
-        // planets anywhere - neither its own nor a contained-faction host's worlds to stand on - has nothing to
-        // defend, and the contract fails outright. Contracts where the player attacks stay valid for a landless
-        // employer.
-        Faction employerFaction = contract.getEmployerFaction();
-        if (!contract.isPlayerAttacker() &&
-                  (employerFaction != null) &&
-                  !RandomFactionGenerator.getInstance().hasAnyTerritory(employerFaction, campaign.getLocalDate())) {
-            String errorMessage = "Defensive contract for landless employer " + contract.getEmployerCode() +
-                                        "; nothing to defend";
-            logger.warn(errorMessage);
-            throw new NoContractLocationFoundException(errorMessage);
+        if (shouldRejectDefensiveObjectives(contract.getEmployerFaction(),
+              contract.isPlayerAttacker(),
+              campaign.getLocalDate())) {
+            throw new NoContractLocationFoundException("Defensive contract for landless employer");
         }
 
         MissionLocationProfile profile = MissionLocationProfile.fromContractType(contract.getContractType());
