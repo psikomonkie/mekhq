@@ -34,9 +34,8 @@ package mekhq.campaign.mission.newContract;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -44,63 +43,55 @@ import java.time.LocalDate;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.RandomFactionGenerator;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 class LandlessEmployerExclusionTest {
 
     @Test
     void shouldReturnTrueWhenEmployerIsLandlessAndNotAttacker() {
-        // Arrange
         Faction mockedFaction = mock(Faction.class);
-        RandomFactionGenerator factionGenerator = mock(RandomFactionGenerator.class);
-        when(factionGenerator.hasAnyTerritory(eq(mockedFaction), any(LocalDate.class))).thenReturn(false);
-        LocalDate currentDate = LocalDate.now();
+        when(mockedFaction.getShortName()).thenReturn("TEST");
+        LocalDate currentDate = LocalDate.of(3100, 1, 1);
 
-        // Act
-        boolean result = LandlessEmployerExclusion.shouldRejectDefensiveObjectives(mockedFaction, false, currentDate);
+        try (MockedStatic<RandomFactionGenerator> mocked = mockStatic(RandomFactionGenerator.class)) {
+            RandomFactionGenerator generator = mock(RandomFactionGenerator.class);
+            mocked.when(RandomFactionGenerator::getInstance).thenReturn(generator);
+            when(generator.hasAnyTerritory(mockedFaction, currentDate)).thenReturn(false);
 
-        // Assert
-        assertTrue(result, "Expected 'true' when employer is landless and player is not attacker");
+            assertTrue(LandlessEmployerExclusion.shouldRejectDefensiveObjectives(mockedFaction, false, currentDate));
+        }
     }
 
     @Test
     void shouldReturnFalseWhenEmployerIsNotLandlessAndNotAttacker() {
-        // Arrange
         Faction mockedFaction = mock(Faction.class);
-        RandomFactionGenerator factionGenerator = mock(RandomFactionGenerator.class);
-        when(factionGenerator.hasAnyTerritory(eq(mockedFaction), any(LocalDate.class))).thenReturn(true);
-        LocalDate currentDate = LocalDate.now();
+        LocalDate currentDate = LocalDate.of(3100, 1, 1);
 
-        // Act
-        boolean result = LandlessEmployerExclusion.shouldRejectDefensiveObjectives(mockedFaction, false, currentDate);
+        try (MockedStatic<RandomFactionGenerator> mocked = mockStatic(RandomFactionGenerator.class)) {
+            RandomFactionGenerator generator = mock(RandomFactionGenerator.class);
+            mocked.when(RandomFactionGenerator::getInstance).thenReturn(generator);
+            when(generator.hasAnyTerritory(mockedFaction, currentDate)).thenReturn(true);
 
-        // Assert
-        assertFalse(result, "Expected 'false' when employer is not landless and player is not attacker");
+            assertFalse(LandlessEmployerExclusion.shouldRejectDefensiveObjectives(mockedFaction, false, currentDate));
+        }
     }
 
     @Test
     void shouldReturnFalseWhenPlayerIsAttackerRegardlessOfLandlessStatus() {
-        // Arrange
         Faction mockedFaction = mock(Faction.class);
-        RandomFactionGenerator factionGenerator = mock(RandomFactionGenerator.class);
-        when(factionGenerator.hasAnyTerritory(eq(mockedFaction), any(LocalDate.class))).thenReturn(false);
-        LocalDate currentDate = LocalDate.now();
+        LocalDate currentDate = LocalDate.of(3100, 1, 1);
 
-        // Act
-        boolean result = LandlessEmployerExclusion.shouldRejectDefensiveObjectives(mockedFaction, true, currentDate);
+        try (MockedStatic<RandomFactionGenerator> mocked = mockStatic(RandomFactionGenerator.class)) {
+            RandomFactionGenerator generator = mock(RandomFactionGenerator.class);
+            mocked.when(RandomFactionGenerator::getInstance).thenReturn(generator);
+            when(generator.hasAnyTerritory(mockedFaction, currentDate)).thenReturn(false);
 
-        // Assert
-        assertFalse(result, "Expected 'false' when player is attacker, regardless of employer's landless status");
+            assertFalse(LandlessEmployerExclusion.shouldRejectDefensiveObjectives(mockedFaction, true, currentDate));
+        }
     }
 
     @Test
     void shouldReturnFalseWhenEmployerIsNullRegardlessOfPlayerRole() {
-        // Arrange
-        LocalDate currentDate = LocalDate.now();
-
-        // Act
-        boolean result = LandlessEmployerExclusion.shouldRejectDefensiveObjectives(null, false, currentDate);
-
-        // Assert
-        assertFalse(result, "Expected 'false' when employer is null, regardless of player's role");
+        assertFalse(LandlessEmployerExclusion.shouldRejectDefensiveObjectives(null, false, LocalDate.of(3100, 1, 1)));
     }
 }
