@@ -153,18 +153,12 @@ public class MissionTargetFinder {
             return systemsOf(borders, currentDate);
         }
 
-        // A rebel uprising happens somewhere within the attacking government's own territory, not on a border.
+        // A rebel uprising happens somewhere within the attacking government's own territory, not on a border. The
+        // rebel faction itself owns no systems, so this must search the attacker's side, not the defender's -
+        // findProfileTargets' INTERIOR_POPULATED tier searches the defender and would always come up empty here.
         if (defender.isRebel()) {
-            MissionLocationProfile rebelProfile = MissionLocationProfile.INTERIOR_POPULATED;
-            List<PlanetarySystem> profileTargets = findProfileTargets(rebelProfile,
-                  attacker,
-                  defender,
-                  location,
-                  radius,
-                  currentDate);
-            if (!profileTargets.isEmpty()) {
-                return profileTargets;
-            }
+            FactionBorders borders = borderTracker.getBorders(attacker, location, radius);
+            return systemsOf(borders, currentDate);
         }
 
         // The contract type's preferred geography, when it has one (rear areas for training, deep strikes for

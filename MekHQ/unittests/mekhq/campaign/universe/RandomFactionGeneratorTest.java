@@ -55,6 +55,9 @@ import java.util.Set;
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.mission.mission.contractGeneration.GlobalEmployerTableValue;
 import mekhq.campaign.mission.newContract.EnemySelectionProfile;
+import mekhq.campaign.mission.newContract.MissionLocationProfile;
+import mekhq.campaign.universe.PlanetarySystem.PlanetaryRating;
+import mekhq.campaign.universe.PlanetarySystem.PlanetarySophistication;
 import mekhq.campaign.universe.enums.HPGRating;
 import mekhq.campaign.universe.factionHints.FactionHints;
 import org.junit.jupiter.api.AfterEach;
@@ -838,6 +841,57 @@ public class RandomFactionGeneratorTest {
 
         assertEquals(1, RandomFactionGenerator.populationWeight(barrenWorld, TEST_DATE),
               "A system with no population or HPG data should still carry the minimum weight of 1");
+    }
+
+    /**
+     * {@code industrialWeight} scores only industry and output (production capacity), not raw materials or
+     * agriculture (self-sufficiency): a fully industrialized, high-output world should score the maximum 8, and a
+     * world with none of either should score 0.
+     */
+    @Test
+    public void testIndustrialWeightScoresIndustryAndOutputOnly() {
+        PlanetarySystem factoryWorld = mock(PlanetarySystem.class);
+        when(factoryWorld.getSocioIndustrial(TEST_DATE)).thenReturn(
+              new SocioIndustrialData(PlanetarySophistication.C, PlanetaryRating.A, PlanetaryRating.F,
+                    PlanetaryRating.A, PlanetaryRating.F));
+
+        assertEquals(8, RandomFactionGenerator.industrialWeight(factoryWorld, TEST_DATE),
+              "An A-rated industry and A-rated output world should score the maximum of 8, ignoring raw materials "
+                    + "and agriculture");
+
+        PlanetarySystem barrenWorld = mock(PlanetarySystem.class);
+        when(barrenWorld.getSocioIndustrial(TEST_DATE)).thenReturn(
+              new SocioIndustrialData(PlanetarySophistication.C, PlanetaryRating.F, PlanetaryRating.A,
+                    PlanetaryRating.F, PlanetaryRating.A));
+
+        assertEquals(0, RandomFactionGenerator.industrialWeight(barrenWorld, TEST_DATE),
+              "An F-rated industry and F-rated output world should score 0, even with top raw materials and "
+                    + "agriculture");
+    }
+
+    /**
+     * {@code missionTargetWeight} only adds the industrial score for industrially-weighted profiles (HIGH_VALUE,
+     * INVASION); a profile like INTERIOR_POPULATED should ignore a world's industrial capacity entirely.
+     */
+    @Test
+    public void testMissionTargetWeightAddsIndustrialScoreOnlyForIndustriallyWeightedProfiles() {
+        PlanetarySystem factoryWorld = mock(PlanetarySystem.class);
+        when(factoryWorld.getSocioIndustrial(TEST_DATE)).thenReturn(
+              new SocioIndustrialData(PlanetarySophistication.C, PlanetaryRating.A, PlanetaryRating.C,
+                    PlanetaryRating.A, PlanetaryRating.C));
+
+        int baseWeight = RandomFactionGenerator.populationWeight(factoryWorld, TEST_DATE);
+
+        assertEquals(baseWeight,
+              RandomFactionGenerator.missionTargetWeight(factoryWorld, TEST_DATE,
+                    MissionLocationProfile.INTERIOR_POPULATED),
+              "A non-industrially-weighted profile should ignore industrial capacity entirely");
+        assertEquals(baseWeight + 16,
+              RandomFactionGenerator.missionTargetWeight(factoryWorld, TEST_DATE, MissionLocationProfile.HIGH_VALUE),
+              "HIGH_VALUE should add the industrial score (8) times the industrial weight multiplier (2)");
+        assertEquals(baseWeight + 16,
+              RandomFactionGenerator.missionTargetWeight(factoryWorld, TEST_DATE, MissionLocationProfile.INVASION),
+              "INVASION should add the same industrial bonus as HIGH_VALUE");
     }
 
     /**

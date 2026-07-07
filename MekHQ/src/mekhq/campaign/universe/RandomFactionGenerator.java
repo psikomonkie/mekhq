@@ -69,6 +69,7 @@ import mekhq.campaign.mission.mission.contractGeneration.GlobalEmployerTableValu
 import mekhq.campaign.mission.newContract.EnemySelectionProfile;
 import mekhq.campaign.mission.newContract.MissionLocationProfile;
 import mekhq.campaign.mission.newContract.MissionTargetFinder;
+import mekhq.campaign.universe.PlanetarySystem.PlanetaryRating;
 import mekhq.campaign.universe.enums.HPGRating;
 import mekhq.campaign.universe.factionHints.FactionHints;
 
@@ -942,7 +943,7 @@ public class RandomFactionGenerator {
             return null;
         }
         if (profile.isPopulationWeighted()) {
-            return pickPopulationWeighted(planetList).getId();
+            return pickPopulationWeighted(planetList, profile).getId();
         }
         return ObjectUtility.getRandomItem(planetList).getId();
     }
@@ -954,21 +955,50 @@ public class RandomFactionGenerator {
     private static final int MAJOR_HPG_WEIGHT_BONUS = 3;
 
     /**
-     * Picks a candidate weighted by {@link #populationWeight}, so populous, well-connected worlds are favored without
-     * making them the only possible outcome.
+     * Per-point weight bonus for a system's industrial capacity (see {@link #industrialWeight}), applied for
+     * {@linkplain MissionLocationProfile#isIndustriallyWeighted() industrially-weighted} profiles. Scaled up from the
+     * raw 0-8 industrial score so a heavily industrialized world competes with a populous one rather than being
+     * drowned out by the population term's log scale.
+     */
+    private static final int INDUSTRIAL_WEIGHT_MULTIPLIER = 2;
+
+    /**
+     * Picks a candidate weighted by {@link #populationWeight}, plus {@link #industrialWeight} for
+     * {@linkplain MissionLocationProfile#isIndustriallyWeighted() industrially-weighted} profiles, so the most
+     * valuable world is favored without making it the only possible outcome.
      *
      * @param candidates the candidate systems; must not be empty
+     * @param profile    the location profile driving this pick, used to decide whether industrial capacity counts
      *
      * @return the chosen system
      */
-    private PlanetarySystem pickPopulationWeighted(List<PlanetarySystem> candidates) {
+    private PlanetarySystem pickPopulationWeighted(List<PlanetarySystem> candidates, MissionLocationProfile profile) {
         LocalDate now = getCurrentDate();
         WeightedIntMap<PlanetarySystem> weightedCandidates = new WeightedIntMap<>();
         for (PlanetarySystem system : candidates) {
-            weightedCandidates.add(populationWeight(system, now), system);
+            weightedCandidates.add(missionTargetWeight(system, now, profile), system);
         }
         PlanetarySystem chosen = weightedCandidates.randomItem();
         return (chosen != null) ? chosen : ObjectUtility.getRandomItem(candidates);
+    }
+
+    /**
+     * Combines {@link #populationWeight} with {@link #industrialWeight} for
+     * {@linkplain MissionLocationProfile#isIndustriallyWeighted() industrially-weighted} profiles, into the total
+     * weight {@link #pickPopulationWeighted} uses for a single candidate.
+     *
+     * @param system  the system to score
+     * @param when    the date to check population, HPG, and USILR rating against
+     * @param profile the location profile driving this pick, used to decide whether industrial capacity counts
+     *
+     * @return the system's total weight for this profile, at least 1
+     */
+    static int missionTargetWeight(PlanetarySystem system, LocalDate when, MissionLocationProfile profile) {
+        int weight = populationWeight(system, when);
+        if (profile.isIndustriallyWeighted()) {
+            weight += industrialWeight(system, when) * INDUSTRIAL_WEIGHT_MULTIPLIER;
+        }
+        return weight;
     }
 
     /**
@@ -993,6 +1023,31 @@ public class RandomFactionGenerator {
             weight += MAJOR_HPG_WEIGHT_BONUS;
         }
         return weight;
+    }
+
+    /**
+     * Scores a system's industrial capacity from its USILR rating (see {@link SocioIndustrialData}): its industry and
+     * output ratings, the two fields that directly measure production capacity rather than self-sufficiency. Each
+     * rating contributes 0 (F, no capacity) to 4 (A, fully developed), for a combined range of 0-8 &mdash; a target
+     * worth sabotaging, stealing secrets from, or conquering and holding for its factories.
+     *
+     * @param system the system to score
+     * @param when   the date to check the USILR rating against
+     *
+     * @return the system's industrial score, from 0 to 8
+     */
+    static int industrialWeight(PlanetarySystem system, LocalDate when) {
+        SocioIndustrialData socioIndustrial = system.getSocioIndustrial(when);
+        return ratingScore(socioIndustrial.industry) + ratingScore(socioIndustrial.output);
+    }
+
+    /**
+     * @param rating a USILR rating, where {@link PlanetaryRating#A} is best and {@link PlanetaryRating#F} is worst
+     *
+     * @return the rating's contribution to {@link #industrialWeight}, from 0 (F) to 4 (A)
+     */
+    private static int ratingScore(PlanetaryRating rating) {
+        return PlanetaryRating.F.getIndex() - rating.getIndex();
     }
 
     /**
