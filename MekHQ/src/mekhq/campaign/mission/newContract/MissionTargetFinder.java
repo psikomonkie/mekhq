@@ -157,8 +157,8 @@ public class MissionTargetFinder {
         if (defender.isRebel()) {
             MissionLocationProfile rebelProfile = MissionLocationProfile.INTERIOR_POPULATED;
             List<PlanetarySystem> profileTargets = findProfileTargets(rebelProfile,
-                  defender,
                   attacker,
+                  defender,
                   location,
                   radius,
                   currentDate);
@@ -169,7 +169,7 @@ public class MissionTargetFinder {
 
         // The contract type's preferred geography, when it has one (rear areas for training, deep strikes for
         // raids, occupied territory for guerrillas...). A preference only: an empty result falls through to the
-        // default chain below rather than failing generation.
+        // default chain below rather than failing contract generation.
         List<PlanetarySystem> profileTargets = findProfileTargets(profile, attacker, defender, location, radius,
               currentDate);
         if (!profileTargets.isEmpty()) {
@@ -181,12 +181,12 @@ public class MissionTargetFinder {
         // deep-placement fallback for it - no shared border means no viable invasion target at all.
         if (profile == MissionLocationProfile.INVASION) {
             return Collections.emptyList();
-        }
-
-        List<PlanetarySystem> borderTargets = findSharedBorderTargets(attacker, defender, location, radius,
-              currentDate);
-        if (!borderTargets.isEmpty()) {
-            return borderTargets;
+        } else {
+            List<PlanetarySystem> borderTargets = findSharedBorderTargets(attacker, defender, location, radius,
+                  currentDate);
+            if (!borderTargets.isEmpty()) {
+                return borderTargets;
+            }
         }
 
         // Last resort: neither a direct border nor a contained-faction proxy border exists. Target whichever of
