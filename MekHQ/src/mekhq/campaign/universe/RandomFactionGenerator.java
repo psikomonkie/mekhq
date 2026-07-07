@@ -38,6 +38,7 @@ import static mekhq.MHQConstants.FORTRESS_REPUBLIC_END;
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_START;
 import static mekhq.campaign.universe.Faction.BANDIT_CASTE_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.CLAN_FACTION_CODE;
+import static mekhq.campaign.universe.Faction.COMSTAR_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.INDEPENDENT_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.MERCENARY_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.PIRATE_FACTION_CODE;
@@ -884,7 +885,7 @@ public class RandomFactionGenerator {
          * and tends to fight the Clans too much between Tukayyid and
          * the Jihad.
          */
-        if (employer.getShortName().equals("CS") && enemy.isClan()) {
+        if (employer.getShortName().equals(COMSTAR_FACTION_CODE) && enemy.isClan()) {
             weight /= 12.0;
         }
 
