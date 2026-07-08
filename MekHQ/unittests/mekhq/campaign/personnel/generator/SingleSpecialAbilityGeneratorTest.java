@@ -165,6 +165,21 @@ class SingleSpecialAbilityGeneratorTest {
         when(secondNegative.getCost()).thenReturn(-2);
 
         List<SpecialAbility> result = service.applyAbilityWeighting(List.of(firstNegative, secondNegative),
+              false,
+              true);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void applyAbilityWeightingReturnsEmptyPoolWithAlternateWeightingWhenOnlyNegativeAbilitiesExistAndNoNegativeAbilitiesIsTrue() {
+        SpecialAbility firstNegative = mock(SpecialAbility.class);
+        SpecialAbility secondNegative = mock(SpecialAbility.class);
+
+        when(firstNegative.getCost()).thenReturn(-1);
+        when(secondNegative.getCost()).thenReturn(-2);
+
+        List<SpecialAbility> result = service.applyAbilityWeighting(List.of(firstNegative, secondNegative),
               true,
               true);
 
