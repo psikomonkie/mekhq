@@ -79,11 +79,16 @@ public class LocationSummaryPanel extends JPanel {
 
         setLayout(new BorderLayout());
         setBorder(RoundedLineBorder.createRoundedLineBorder(getText("LocationSummaryPanel.title")));
-        add(new JLabel(html.toString()), BorderLayout.WEST);
+        add(new JLabel(html.toString()), BorderLayout.CENTER);
     }
 
     /** Builds a labeled location line: {@code <label> Name (Planet, System)}. */
     private static String line(String labelKey, String name, String planet, String system) {
-        return getText(labelKey) + ' ' + name + " (" + planet + ", " + system + ')';
+        return getText(labelKey) + ' ' + escapeHtml(name) + " (" + escapeHtml(planet) + ", " + escapeHtml(system) + ')';
+    }
+
+    /** Escapes the HTML metacharacters that would otherwise mis-render inside the Swing {@code <html>} label. */
+    private static String escapeHtml(String text) {
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 }
