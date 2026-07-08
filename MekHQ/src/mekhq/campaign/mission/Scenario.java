@@ -968,6 +968,23 @@ public class Scenario implements IPlayerSettings {
     }
 
     public boolean canStartScenario(Campaign c) {
+        return canPrepareScenario(c);
+    }
+
+    /**
+     * Determines whether this scenario is ready for deployment preparation: it is current, has a deployed force, and
+     * meets its required personnel and unit constraints.
+     *
+     * <p>Unlike {@link #canStartScenario(Campaign)}, this check does not consider whether the scenario may be launched
+     * on the current date. It is therefore suitable for gating preparation actions (adjusting the deployment,
+     * exporting or printing the assigned force) that players should be able to perform ahead of the scenario's
+     * date.</p>
+     *
+     * @param c the campaign this scenario belongs to
+     *
+     * @return {@code true} if the scenario is current and its deployment requirements are met
+     */
+    public boolean canPrepareScenario(Campaign c) {
 
         if (!getStatus().isCurrent()) {
             return false;

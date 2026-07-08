@@ -2495,24 +2495,28 @@ public final class BriefingTab extends CampaignGuiTab {
             return;
         }
 
-        final boolean canStartGame = ((!getCampaign().checkLinkedScenario(scenario.getId())) &&
-                                            (scenario.canStartScenario(getCampaign())));
+        final boolean linkedScenario = getCampaign().checkLinkedScenario(scenario.getId());
+        final boolean canStartGame = !linkedScenario && scenario.canStartScenario(getCampaign());
+        // Preparation actions (adjusting the deployment, exporting or printing the assigned force) do not require the
+        // scenario's date to have arrived - they only need the scenario to be current with a valid deployed force - so
+        // they are gated on the date-free readiness check instead.
+        final boolean canPrepare = !linkedScenario && scenario.canPrepareScenario(getCampaign());
 
         btnStartGame.setEnabled(canStartGame);
         btnJoinGame.setEnabled(canStartGame);
         btnLoadGame.setEnabled(canStartGame);
-        btnGetMul.setEnabled(canStartGame);
+        btnGetMul.setEnabled(canPrepare);
 
         final boolean hasTrack = scenario.getHasTrack();
         if (hasTrack) {
-            btnClearAssignedUnits.setEnabled(canStartGame && getCampaign().isGM());
+            btnClearAssignedUnits.setEnabled(canPrepare && getCampaign().isGM());
         } else {
-            btnClearAssignedUnits.setEnabled(canStartGame);
+            btnClearAssignedUnits.setEnabled(canPrepare);
         }
 
         btnResolveScenario.setEnabled(canStartGame);
         btnAutoResolveScenario.setEnabled(canStartGame);
-        btnPrintRS.setEnabled(canStartGame);
+        btnPrintRS.setEnabled(canPrepare);
         refreshScenarioActionButtonEmphasis();
     }
 
