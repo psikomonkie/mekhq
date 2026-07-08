@@ -1701,14 +1701,17 @@ public class AtBDynamicScenarioFactory {
 
         // if the objective specifies that it's to reach or prevent reaching a map edge
         // and has been set to "force destination edge", set that here
-        if (actualObjective.getDestinationEdge() == OffBoardDirection.NONE &&
+        boolean destinationEdgeIsNone = actualObjective.getDestinationEdge() == OffBoardDirection.NONE;
+        boolean objectiveIsReachMapEdge = actualObjective.getObjectiveCriterion() == ObjectiveCriterion.ReachMapEdge;
+        boolean objectiveIsPreventReachMapEdge = actualObjective.getObjectiveCriterion() ==
+                                                       ObjectiveCriterion.PreventReachMapEdge;
+        boolean objectiveIsMapEdgeRelevant = objectiveIsReachMapEdge || objectiveIsPreventReachMapEdge;
+        if (destinationEdgeIsNone &&
                   calculatedDestinationZone != OffBoardDirection.NONE &&
-                  (actualObjective.getObjectiveCriterion() == ObjectiveCriterion.ReachMapEdge ||
-                         actualObjective.getObjectiveCriterion() == ObjectiveCriterion.PreventReachMapEdge)) {
+                  objectiveIsMapEdgeRelevant) {
             actualObjective.setDestinationEdge(calculatedDestinationZone);
-        } else if (actualObjective.getDestinationEdge() == OffBoardDirection.NONE &&
-                         (actualObjective.getObjectiveCriterion() == ObjectiveCriterion.ReachMapEdge ||
-                                actualObjective.getObjectiveCriterion() == ObjectiveCriterion.PreventReachMapEdge)) {
+        } else if (destinationEdgeIsNone &&
+                         objectiveIsMapEdgeRelevant) {
             // The edge could not be auto-derived (e.g. the associated force deploys from the map center, so there is
             // no "opposite" edge to flee toward). Such an objective can never validate, so warn instead of failing
             // silently; the template should set an explicit <destinationEdge> in this case.
