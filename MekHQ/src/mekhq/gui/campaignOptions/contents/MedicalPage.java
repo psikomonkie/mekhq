@@ -45,6 +45,7 @@ import javax.swing.JSpinner;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import megamek.Version;
 import mekhq.gui.campaignOptions.CampaignOptionFlag;
 import mekhq.gui.campaignOptions.components.CampaignOptionsCheckBox;
 import mekhq.gui.campaignOptions.components.CampaignOptionsFormPanel;
@@ -158,7 +159,8 @@ class MedicalPage {
               1.0,
               0.01,
               10,
-              0.01);
+              0.01,
+              getMetadata(new Version(0, 51, 1), CampaignOptionFlag.IMPORTANT));
         spnAlternativeAdvancedMedicalHealingTimeMultiplier.addMouseListener(createTipPanelUpdater(
               "AlternativeAdvancedMedicalHealingTimeMultiplier"));
 
