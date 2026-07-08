@@ -42,10 +42,12 @@ import java.util.stream.Collectors;
 
 import megamek.common.annotations.Nullable;
 import megamek.logging.MMLogger;
+import mekhq.campaign.AbstractLocation;
 import mekhq.campaign.AbstractMobileLocation;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.CampaignLocationManager;
 import mekhq.campaign.CurrentLocation;
+import mekhq.campaign.GroundTransitLocation;
 import mekhq.campaign.Hangar;
 import mekhq.campaign.JumpPath;
 import mekhq.campaign.Warehouse;
@@ -69,6 +71,9 @@ public final class LocationDispatch {
     private static final String LOG_DISPATCH_PERSONS = "dispatchToLocation";
     private static final String LOG_DISPATCH_UNITS = "dispatchUnitsToLocation";
     private static final String LOG_DISPATCH_PARTS = "dispatchPartsToLocation";
+
+    /** Overland transit time, in days, for a same-planet move to a different root location. */
+    private static final double GROUND_TRANSIT_DAYS = 2.0;
 
     private LocationDispatch() {}
 
@@ -192,6 +197,39 @@ public final class LocationDispatch {
     }
 
     /**
+     * Builds an on-planet overland travel node at {@code system} (a fixed {@link #GROUND_TRANSIT_DAYS}
+     * day journey, no jump path), parented under {@code destination}, and registers it with the
+     * campaign. Used for same-planet moves to a different root location.
+     */
+    private static GroundTransitLocation buildGroundTransitNode(PlanetarySystem system, ILocation destination,
+          Campaign campaign, String logContext) {
+        GroundTransitLocation groundNode = new GroundTransitLocation(system, GROUND_TRANSIT_DAYS);
+        if (!groundNode.setParent(destination)) {
+            LOGGER.warn("{}: setParent failed for groundTransitNode → {}; "
+                  + "items may display as Main Force after save/load",
+                  logContext, destination.getClass().getSimpleName());
+        }
+        campaign.getCampaignLocationManager().addLocation(groundNode);
+        return groundNode;
+    }
+
+    /**
+     * Returns {@code true} if {@code item} and {@code destination} hang under the same root
+     * {@link AbstractLocation} — i.e. they are already at the same location and no travel node is
+     * needed. Each base, campus, and the main force is its own root {@code AbstractLocation}, so
+     * identity comparison distinguishes them. When either root can't be resolved, returns
+     * {@code true} so callers fall back to direct landing (preserving legacy behavior).
+     */
+    private static boolean sharesRootLocation(ILocation item, ILocation destination) {
+        AbstractLocation itemRoot = item.getCurrentLocation();
+        AbstractLocation destinationRoot = destination.getCurrentLocation();
+        if (itemRoot == null || destinationRoot == null) {
+            return true;
+        }
+        return itemRoot == destinationRoot;
+    }
+
+    /**
      * Dispatches {@code people} to {@code destination}, grouping by departure system so that
      * everyone leaving from the same system shares one {@link CurrentLocation} for the journey.
      *
@@ -233,13 +271,19 @@ public final class LocationDispatch {
         dispatch(units, destination, campaign, LOG_DISPATCH_UNITS, arrivalHangar, group -> {
             for (Unit unit : group) {
                 Hangar sourceHangar = unit.getHangar();
+                // Capture the unit's current warehouse BEFORE moving it: Hangar.addUnit reparents the unit's node, after
+                // which each installed part's getWarehouse() (resolved through the unit) would already read the arrival
+                // warehouse and the move below would be skipped.
+                Warehouse sourceWarehouse = unit.getWarehouse();
+                if (sourceWarehouse == null) {
+                    sourceWarehouse = campaign.getWarehouse();
+                }
                 (sourceHangar != null ? sourceHangar : campaign.getHangar()).removeUnit(unit.getId());
                 arrivalHangar.addUnit(unit);
                 // Installed parts live in the warehouse local to their unit; move them along.
-                for (Part part : unit.getParts()) {
-                    Warehouse sourceWarehouse = part.getWarehouse();
-                    if (sourceWarehouse != arrivalWarehouse) {
-                        (sourceWarehouse != null ? sourceWarehouse : campaign.getWarehouse()).removePart(part);
+                if (sourceWarehouse != arrivalWarehouse) {
+                    for (Part part : unit.getParts()) {
+                        sourceWarehouse.removePart(part);
                         arrivalWarehouse.addPart(part);
                     }
                 }
@@ -351,7 +395,21 @@ public final class LocationDispatch {
 
             if (destinationSystem == null || fromSystem.equals(destinationSystem)) {
                 PlanetarySystem system = destinationSystem != null ? destinationSystem : fromSystem;
-                land(group, destination, directLandingTarget, system, campaign.getCampaignLocationManager(), logMarker);
+                // Same planet: items already at the destination's root location land immediately;
+                // items at a different root on the same planet take a GroundTransitLocation overland trip.
+                List<T> alreadyThere = new ArrayList<>();
+                List<T> needGroundTransit = new ArrayList<>();
+                for (T item : group) {
+                    (sharesRootLocation(item, destination) ? alreadyThere : needGroundTransit).add(item);
+                }
+                if (!alreadyThere.isEmpty()) {
+                    land(alreadyThere, destination, directLandingTarget, system,
+                          campaign.getCampaignLocationManager(), logMarker);
+                }
+                if (!needGroundTransit.isEmpty()) {
+                    GroundTransitLocation groundNode = buildGroundTransitNode(system, destination, campaign, logMarker);
+                    needGroundTransit.forEach(item -> reparent(item, groundNode));
+                }
                 continue;
             }
 
