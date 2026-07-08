@@ -91,7 +91,6 @@ import mekhq.campaign.unit.enums.TransporterType;
 import mekhq.gui.baseComponents.immersiveDialogs.ImmersiveDialogSimple;
 import mekhq.gui.baseComponents.roundedComponents.RoundedJButton;
 import mekhq.gui.baseComponents.roundedComponents.RoundedLineBorder;
-import org.jspecify.annotations.NonNull;
 
 /**
  * Dialog for managing salvage operations after a scenario is completed.
@@ -121,6 +120,8 @@ public class SalvagePostScenarioPicker {
 
     private final static int PADDING = scaleForGUI(10);
     private final static Dimension DEFAULT_SIZE = scaleForGUI(1200, 600);
+
+    private final static int UNKNOWN_UNIT_WEIGHT = -1;
 
     private final boolean isInSpace;
     private int maximumSalvageTime = 0;
@@ -610,9 +611,13 @@ public class SalvagePostScenarioPicker {
             rowPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
             rowPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, scaleForGUI(60)));
 
+            int unitWeight = getUnitWeight(unit);
+            String unitWeightString = unitWeight == UNKNOWN_UNIT_WEIGHT ? "?" : String.valueOf(unitWeight);
+            int plural = unitWeight == 0 ? 0 : 1;
+
             JLabel unitLabel = new JLabel();
             unitLabel.setText(getFormattedTextAt(RESOURCE_BUNDLE, "SalvagePostScenarioPicker.unitLabel.unit",
-                  unitName, sellValue.toAmountString(), getUnitWeightString(unit)));
+                  unitName, sellValue.toAmountString(), unitWeightString, plural));
 
             RecoveryTimeData data = recoveryTimeData.get(unit.getId());
             if (data != null) {
@@ -724,16 +729,14 @@ public class SalvagePostScenarioPicker {
         return confirmed[0] ? resultHolder.groups : null;
     }
 
-    private static @NonNull String getUnitWeightString(TestUnit unit) {
-        int UNKNOWN_WEIGHT = -1;
-
+    private static int getUnitWeight(TestUnit unit) {
         Entity entity = unit.getEntity();
-        int unitWeight = UNKNOWN_WEIGHT;
+        int unitWeight = UNKNOWN_UNIT_WEIGHT;
         if (entity != null) {
             unitWeight = (int) round(entity.getWeight());
         }
 
-        return unitWeight == UNKNOWN_WEIGHT ? "?" : String.valueOf(unitWeight);
+        return unitWeight;
     }
 
     private static void confirmationAction(Campaign campaign, JDialog dialog, boolean[] confirmed,
