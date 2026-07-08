@@ -84,6 +84,18 @@ public class FactionHints {
     private static final String TEST_DIPLOMACY_DIR = "testresources/"
           + FACTION_DIPLOMACY_DIRECTORY_PATH.replace("factionDiplomacy", "factionDiplomacy_test");
 
+    /**
+     * Field separator and entry-type labels used by {@link #diplomaticSignatures()} to build the normalized text
+     * signatures that {@link #hasSameDiplomaticData(FactionHints)} compares.
+     */
+    private static final String SIGNATURE_SEPARATOR = "|";
+    private static final String SIGNATURE_TYPE_WAR = "war";
+    private static final String SIGNATURE_TYPE_ALLIANCE = "alliance";
+    private static final String SIGNATURE_TYPE_RIVALRY = "rivalry";
+    private static final String SIGNATURE_TYPE_NEUTRAL_EXCEPTION = "neutralException";
+    private static final String SIGNATURE_TYPE_NEUTRAL = "neutral";
+    private static final String SIGNATURE_TYPE_CONTAINED = "contained";
+
     private static volatile FactionHints instance;
 
     private boolean customLegacyDataDetected;
@@ -202,13 +214,16 @@ public class FactionHints {
         try {
             File diplomacyDirectory = new File(useTestDirectory ? TEST_DIPLOMACY_DIR
                                                      : FACTION_DIPLOMACY_DIRECTORY_PATH);
+            boolean yamlDataLoaded = false;
             if (diplomacyDirectory.isDirectory()) {
                 LOGGER.info("[FactionDiplomacy] Loading faction diplomacy data from {}",
                       diplomacyDirectory.getPath());
-                FactionDiplomacyLoader.load(this, diplomacyDirectory);
+                yamlDataLoaded = FactionDiplomacyLoader.load(this, diplomacyDirectory);
+            }
+            if (yamlDataLoaded) {
                 checkForCustomLegacyXml(new File(useTestDirectory ? TEST_DIR : FACTION_HINTS_FILE));
             } else {
-                LOGGER.warn("[FactionDiplomacy] Directory {} not found - falling back to legacy XML {}",
+                LOGGER.warn("[FactionDiplomacy] No faction diplomacy YAML data in {} - falling back to legacy XML {}",
                       diplomacyDirectory.getPath(), FACTION_HINTS_FILE);
                 loadFactionHints(useTestDirectory);
             }
@@ -609,7 +624,8 @@ public class FactionHints {
         try {
             legacyHints.loadFactionHintsFromXmlFile(legacyXmlFile);
         } catch (RuntimeException exception) {
-            LOGGER.error(exception, "[FactionDiplomacy] Could not parse {} for comparison", legacyXmlFile.getPath());
+            LOGGER.error(exception,
+                  "[FactionDiplomacy] Could not parse " + legacyXmlFile.getPath() + " for comparison");
             return true;
         }
         return !hasSameDiplomaticData(legacyHints);
@@ -631,12 +647,12 @@ public class FactionHints {
      */
     private List<String> diplomaticSignatures() {
         List<String> signatures = new ArrayList<>();
-        appendHintSignatures(signatures, "war", wars);
-        appendHintSignatures(signatures, "alliance", alliances);
-        appendHintSignatures(signatures, "rivalry", rivals);
-        appendHintSignatures(signatures, "neutralException", neutralExceptions);
+        appendHintSignatures(signatures, SIGNATURE_TYPE_WAR, wars);
+        appendHintSignatures(signatures, SIGNATURE_TYPE_ALLIANCE, alliances);
+        appendHintSignatures(signatures, SIGNATURE_TYPE_RIVALRY, rivals);
+        appendHintSignatures(signatures, SIGNATURE_TYPE_NEUTRAL_EXCEPTION, neutralExceptions);
         for (Faction faction : neutralFactions) {
-            signatures.add("neutral|" + faction.getShortName());
+            signatures.add(SIGNATURE_TYPE_NEUTRAL + SIGNATURE_SEPARATOR + faction.getShortName());
         }
         for (Faction host : containedFactions.keySet()) {
             for (Faction contained : containedFactions.get(host).keySet()) {
@@ -645,9 +661,10 @@ public class FactionHints {
                                                        .map(Faction::getShortName)
                                                        .sorted()
                                                        .toList();
-                    signatures.add("contained|" + host.getShortName() + "|" + contained.getShortName()
-                                         + "|" + location.getStart() + "|" + location.getEnd()
-                                         + "|" + location.getFraction() + "|" + opponentCodes);
+                    signatures.add(String.join(SIGNATURE_SEPARATOR, SIGNATURE_TYPE_CONTAINED,
+                          host.getShortName(), contained.getShortName(),
+                          String.valueOf(location.getStart()), String.valueOf(location.getEnd()),
+                          String.valueOf(location.getFraction()), opponentCodes.toString()));
                 }
             }
         }
@@ -665,8 +682,8 @@ public class FactionHints {
                                     ? firstCode + "," + secondCode
                                     : secondCode + "," + firstCode;
                 for (FactionHint hint : hints.get(firstFaction).get(secondFaction)) {
-                    signatures.add(type + "|" + pair + "|" + hint.getName() + "|" + hint.getStart()
-                                         + "|" + hint.getEnd());
+                    signatures.add(String.join(SIGNATURE_SEPARATOR, type, pair, hint.getName(),
+                          String.valueOf(hint.getStart()), String.valueOf(hint.getEnd())));
                 }
             }
         }

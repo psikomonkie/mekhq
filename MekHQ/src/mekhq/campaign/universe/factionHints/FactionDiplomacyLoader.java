@@ -127,12 +127,15 @@ final class FactionDiplomacyLoader {
      *
      * @param hints     the instance to populate
      * @param directory the faction diplomacy data directory
+     *
+     * @return {@code true} if at least one YAML file was loaded; {@code false} if the directory holds no readable
+     *       YAML data, so the caller can fall back to the legacy XML file
      */
-    static void load(FactionHints hints, File directory) {
+    static boolean load(FactionHints hints, File directory) {
         File[] files = directory.listFiles((unusedDirectory, fileName) -> fileName.toLowerCase().endsWith(".yml"));
         if ((files == null) || (files.length == 0)) {
             LOGGER.error("[FactionDiplomacy] No YAML files found in {}", directory.getPath());
-            return;
+            return false;
         }
         Arrays.sort(files, Comparator.comparing(File::getName));
 
@@ -146,12 +149,13 @@ final class FactionDiplomacyLoader {
                 loadedFileCount++;
             } catch (IOException | RuntimeException exception) {
                 // A malformed file must not take down the remaining diplomacy data
-                LOGGER.error(exception, "[FactionDiplomacy] Failed to load {}", file.getName());
+                LOGGER.error(exception, "[FactionDiplomacy] Failed to load " + file.getName());
                 failedFileCount++;
             }
         }
         LOGGER.info("[FactionDiplomacy] Loaded {} files from {} ({} failed)",
               loadedFileCount, directory.getPath(), failedFileCount);
+        return loadedFileCount > 0;
     }
 
     private static void applyFile(FactionHints hints, DiplomacyFileData fileData, String fileName) {

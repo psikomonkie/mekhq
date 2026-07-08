@@ -1,4 +1,4 @@
-package mekhq.campaign.universe.factionHints;/*
+/*
  * Copyright (C) 2018-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
@@ -30,6 +30,7 @@ package mekhq.campaign.universe.factionHints;/*
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
+package mekhq.campaign.universe.factionHints;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

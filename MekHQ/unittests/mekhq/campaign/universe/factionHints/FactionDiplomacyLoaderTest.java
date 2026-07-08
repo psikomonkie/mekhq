@@ -47,6 +47,7 @@ import mekhq.campaign.universe.Factions;
 import mekhq.campaign.universe.RegionPerimeter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Tests loading the per-conflict faction diplomacy YAML files from
@@ -269,6 +270,21 @@ class FactionDiplomacyLoaderTest {
         Faction federatedSuns = getFaction("FS");
         Faction capellans = getFaction("CC");
         assertFalse(emptyHints.isAtWarWith(federatedSuns, capellans, LocalDate.of(3028, 6, 1)));
+    }
+
+    @Test
+    void testLoadReportsWhetherAnyYamlDataWasFound() {
+        assertTrue(FactionDiplomacyLoader.load(new FactionHints(), new File(LOADER_TEST_DIR)),
+              "A directory with readable YAML files must report success");
+        assertFalse(FactionDiplomacyLoader.load(new FactionHints(),
+                    new File("testresources/data/universe/factionDiplomacy_does_not_exist")),
+              "A missing directory must report no data so the caller can fall back to the legacy XML");
+    }
+
+    @Test
+    void testLoadReportsNoDataForDirectoryWithoutYamlFiles(@TempDir File emptyDirectory) {
+        assertFalse(FactionDiplomacyLoader.load(new FactionHints(), emptyDirectory),
+              "A directory without any YAML files must report no data so the caller can fall back to the legacy XML");
     }
 
     @Test
