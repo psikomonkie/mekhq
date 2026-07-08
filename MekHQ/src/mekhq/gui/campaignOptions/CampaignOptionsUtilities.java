@@ -43,7 +43,9 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -152,6 +154,23 @@ public class CampaignOptionsUtilities {
 
     public static @Nonnull String getCampaignOptionsResourceBundle() {
         return RESOURCE_BUNDLE;
+    }
+
+    /**
+     * The legend entries shown for the Campaign Options dialog: the four option-flag markers plus the "added since"
+     * version badges. Shared by the dialog's footer legend button and the General page's inline legend so both list
+     * the same markers.
+     *
+     * @return the Campaign Options legend rows, in display order
+     */
+    public static List<CampaignOptionsIconLegend.Entry> campaignOptionsLegendEntries() {
+        List<CampaignOptionsIconLegend.Entry> entries = new ArrayList<>(List.of(
+              CampaignOptionsIconLegend.flagEntry(CampaignOptionFlag.CUSTOM_SYSTEM),
+              CampaignOptionsIconLegend.flagEntry(CampaignOptionFlag.DOCUMENTED),
+              CampaignOptionsIconLegend.flagEntry(CampaignOptionFlag.IMPORTANT),
+              CampaignOptionsIconLegend.flagEntry(CampaignOptionFlag.RECOMMENDED)));
+        entries.addAll(CampaignOptionsIconLegend.versionBadgeEntries());
+        return entries;
     }
 
     /**

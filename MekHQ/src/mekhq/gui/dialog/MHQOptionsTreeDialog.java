@@ -32,9 +32,11 @@
  */
 package mekhq.gui.dialog;
 
+import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -43,6 +45,8 @@ import megamek.client.ui.dialogs.buttonDialogs.AbstractButtonDialog;
 import megamek.client.ui.util.UIUtil;
 import mekhq.MHQOptionsChangedEvent;
 import mekhq.MekHQ;
+import mekhq.gui.campaignOptions.CampaignOptionFlag;
+import mekhq.gui.campaignOptions.CampaignOptionsIconLegend;
 import mekhq.gui.campaignOptions.MHQOptionsPane;
 
 /**
@@ -56,7 +60,7 @@ public class MHQOptionsTreeDialog extends AbstractButtonDialog {
     private MHQOptionsPane optionsPane;
 
     public MHQOptionsTreeDialog(final JFrame frame) {
-        super(frame, true, MekHQ.getDefaultResourceBundle(), "MHQOptionsTreeDialog", "MHQOptionsDialog.title");
+        super(frame, true, MekHQ.getDefaultResourceBundle(), "MHQOptionsTreeDialog", "MHQOptionsTreeDialog.title");
         initialize();
     }
 
@@ -93,9 +97,26 @@ public class MHQOptionsTreeDialog extends AbstractButtonDialog {
         okButton.setPreferredSize(buttonSize);
         cancelButton.setPreferredSize(buttonSize);
 
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, BUTTON_GAP, BUTTON_GAP));
-        panel.add(okButton);
-        panel.add(cancelButton);
+        JPanel actionButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, BUTTON_GAP, BUTTON_GAP));
+        actionButtons.add(okButton);
+        actionButtons.add(cancelButton);
+
+        // Icons legend on the left, as a reference aid rather than a dialog action (matching the Campaign Options
+        // dialog). The right spacer mirrors its width so the Ok/Cancel buttons stay centred on the whole footer.
+        List<CampaignOptionsIconLegend.Entry> legendEntries = List.of(
+              CampaignOptionsIconLegend.flagEntry(CampaignOptionFlag.IMPORTANT),
+              CampaignOptionsIconLegend.flagEntry(CampaignOptionFlag.UNIMPLEMENTED));
+        JButton legendButton = CampaignOptionsIconLegend.createLegendButton(legendEntries);
+        JPanel legendPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, BUTTON_GAP, BUTTON_GAP));
+        legendPanel.add(legendButton);
+        JPanel rightSpacer = new JPanel();
+        rightSpacer.setOpaque(false);
+        rightSpacer.setPreferredSize(new Dimension(legendPanel.getPreferredSize().width, 0));
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(legendPanel, BorderLayout.WEST);
+        panel.add(actionButtons, BorderLayout.CENTER);
+        panel.add(rightSpacer, BorderLayout.EAST);
         return panel;
     }
 

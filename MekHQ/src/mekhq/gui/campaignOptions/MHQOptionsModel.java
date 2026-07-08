@@ -262,6 +262,8 @@ class MHQOptionsModel {
         statusColours.put("optionAbsentBackground", options.getAbsentBackground());
         statusColours.put("optionFatiguedForeground", options.getFatiguedForeground());
         statusColours.put("optionFatiguedBackground", options.getFatiguedBackground());
+        statusColours.put("optionAwayFromMainForceForeground", options.getAwayFromMainForceForeground());
+        statusColours.put("optionAwayFromMainForceBackground", options.getAwayFromMainForceBackground());
         statusColours.put("optionStratConHexCoordForeground", options.getStratConHexCoordForeground());
         statusColours.put("optionFontColorNegative", options.getFontColorNegative());
         statusColours.put("optionFontColorWarning", options.getFontColorWarning());
@@ -427,6 +429,8 @@ class MHQOptionsModel {
         options.setAbsentBackground(statusColours.get("optionAbsentBackground"));
         options.setFatiguedForeground(statusColours.get("optionFatiguedForeground"));
         options.setFatiguedBackground(statusColours.get("optionFatiguedBackground"));
+        options.setAwayFromMainForceForeground(statusColours.get("optionAwayFromMainForceForeground"));
+        options.setAwayFromMainForceBackground(statusColours.get("optionAwayFromMainForceBackground"));
         options.setStratConHexCoordForeground(statusColours.get("optionStratConHexCoordForeground"));
         options.setFontColorNegative(statusColours.get("optionFontColorNegative"));
         options.setFontColorWarning(statusColours.get("optionFontColorWarning"));

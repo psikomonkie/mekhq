@@ -33,13 +33,22 @@
 package mekhq.gui.campaignOptions;
 
 import static megamek.client.ui.util.FlatLafStyleBuilder.setFontScaling;
+import static megamek.client.ui.util.FontHandler.symbolIcon;
+import static mekhq.gui.campaignOptions.CampaignOptionsUtilities.getImageDirectory;
+import static mekhq.gui.campaignOptions.CampaignOptionsUtilities.getMetadata;
+import static mekhq.gui.campaignOptions.CampaignOptionsUtilities.sendTipToDetailsPanel;
+import static mekhq.gui.campaignOptions.CampaignOptionsUtilities.setSmallSizeVariant;
 import static mekhq.utilities.MHQInternationalization.getTextAt;
+import static mekhq.utilities.MHQInternationalization.isResourceKeyValid;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -52,6 +61,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
@@ -65,10 +77,10 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
-import megamek.MMConstants;
+import jakarta.annotation.Nullable;
 import megamek.client.ui.Messages;
 import megamek.client.ui.buttons.ColourSelectorButton;
 import megamek.client.ui.comboBoxes.FontComboBox;
@@ -101,10 +113,23 @@ import mekhq.gui.enums.PersonnelFilterStyle;
  */
 public class MHQOptionsPane extends JPanel {
     private static final String RESOURCE_BUNDLE = "mekhq.resources.GUI";
-    private static final int HEADER_IMAGE_SIZE = 200;
+    private static final int CONTENT_MARGIN = UIUtil.scaleForGUI(4);
     private static final int FORM_LABEL_WIDTH = CampaignOptionsFormPanel.DEFAULT_LABEL_WIDTH;
     private static final int FORM_CONTROL_WIDTH = CampaignOptionsFormPanel.DEFAULT_CONTROL_WIDTH;
     private static final MMLogger LOGGER = MMLogger.create(MHQOptionsPane.class);
+
+    /**
+     * Faction emblem shown in each page's header, hardcoded per page (chosen arbitrarily) so a page always shows the
+     * same logo - mirroring how the Campaign Options pages each use a fixed faction logo instead of the MekHQ logo.
+     */
+    private static final Map<String, String> PAGE_FACTION_LOGOS = Map.ofEntries(
+          Map.entry("MHQDisplayPage", "logo_federated_suns.png"),
+          Map.entry("MHQColoursPage", "logo_taurian_concordat.png"),
+          Map.entry("MHQFontsPage", "logo_rasalhague_dominion.png"),
+          Map.entry("MHQSaveOptionsPage", "logo_clan_ghost_bear.png"),
+          Map.entry("MHQNewDayPage", "logo_outworld_alliance.png"),
+          Map.entry("MHQRemindersPage", "logo_rim_worlds_republic.png"),
+          Map.entry("MHQAdvancedPage", "logo_republic_of_the_sphere.png"));
 
     private final JFrame frame;
     private final MHQOptions options;
@@ -217,25 +242,12 @@ public class MHQOptionsPane extends JPanel {
     }
 
     private void registerRoutes() {
-        registerRoute("display.general", this::createDisplayGeneralPage, "displayCategory", "displayGeneralPage");
-        registerRoute("display.interstellar", this::createDisplayInterstellarPage,
-              "displayCategory", "displayInterstellarPage");
-        registerRoute("display.personnel", this::createDisplayPersonnelPage, "displayCategory", "displayPersonnelPage");
-        registerRoute("colours.unitStatus", this::createColoursUnitStatusPage,
-              "coloursCategory", "coloursUnitStatusPage");
-        registerRoute("colours.skillFeedback", this::createColoursSkillFeedbackPage,
-              "coloursCategory", "coloursSkillFeedbackPage");
-        registerRoute("fonts", this::createFontsPage, "fontsTab");
-        registerRoute("autosave", this::createAutosavePage, "autosaveTab");
-        registerRoute("newDay.pools", this::createNewDayPoolsPage, "newDayCategory", "newDayPoolsPage");
-        registerRoute("newDay.automation", this::createNewDayAutomationPage,
-              "newDayCategory", "newDayAutomationPage");
-        registerRoute("newDay.training", this::createNewDayTrainingPage, "newDayCategory", "newDayTrainingPage");
-        registerRoute("newDay.formation", this::createNewDayFormationPage, "newDayCategory", "newDayFormationPage");
-        registerRoute("campaignSave", this::createCampaignSavePage, "campaignXMLSaveTab");
-        registerRoute("reminders.nags", this::createRemindersNagsPage, "remindersCategory", "remindersNagsPage");
-        registerRoute("reminders.confirmations", this::createRemindersConfirmationsPage,
-              "remindersCategory", "remindersConfirmationsPage");
+        registerRoute("display", this::createDisplayPage, "displayPage");
+        registerRoute("colours", this::createColoursPage, "coloursPage");
+        registerRoute("fonts", this::createFontsPage, "fontsPage");
+        registerRoute("saveOptions", this::createSaveOptionsPage, "saveOptionsPage");
+        registerRoute("newDay", this::createNewDayPage, "newDayPage");
+        registerRoute("reminders", this::createRemindersPage, "remindersPage");
         registerRoute("advanced", this::createAdvancedPage, "advancedPage");
     }
 
@@ -254,12 +266,15 @@ public class MHQOptionsPane extends JPanel {
         contentHost = new CampaignOptionsContentHost(initialContent, null, false, RESOURCE_BUNDLE);
         navigationPanel = new CampaignOptionsNavigationPanel(routes, this::selectRoute, RESOURCE_BUNDLE);
 
+        // Match the Campaign Options pane: a small content margin (0 at the bottom, since the footer adds its own top
+        // padding) and no fixed preferred size, so the dialog packs to its content the same way Campaign Options does.
+        setBorder(BorderFactory.createEmptyBorder(CONTENT_MARGIN, CONTENT_MARGIN, 0, CONTENT_MARGIN));
+
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, navigationPanel, contentHost);
         splitPane.setName("mhqOptionsSplitPane");
         splitPane.setResizeWeight(0.0);
         splitPane.setDividerLocation(UIUtil.scaleForGUI(CampaignOptionsNavigationPanel.NAVIGATION_WIDTH));
         add(splitPane, BorderLayout.CENTER);
-        setPreferredSize(new Dimension(UIUtil.scaleForGUI(1000), UIUtil.scaleForGUI(700)));
 
         navigationPanel.selectRoute(initialRoute);
     }
@@ -296,18 +311,30 @@ public class MHQOptionsPane extends JPanel {
         model.medicalViewDialogHandwritingFont = comboMedicalViewDialogHandwritingFont.getFont().getFamily();
     }
 
-    private Component createCampaignSavePage() {
+    private Component createSaveOptionsPage() {
+        JComponent autosaveContent = createAutosaveSection();
+        JComponent campaignSaveContent = createCampaignSaveSection();
+        // Non-short-circuit | so tips are registered for both section bodies before the page is built.
+        boolean hasTooltips = registerDetailsTips(autosaveContent) | registerDetailsTips(campaignSaveContent);
+        return pageBuilder("MHQSaveOptionsPage", hasTooltips)
+                     .section("lblMHQAutosaveSection.text", "lblMHQAutosaveSection.summary", autosaveContent)
+                     .section("lblMHQCampaignSaveSection.text", "lblMHQCampaignSaveSection.summary",
+                           campaignSaveContent)
+                     .build();
+    }
+
+    private JPanel createCampaignSaveSection() {
         chkPreferGzippedOutput = checkBox("optionPreferGzippedOutput", model.preferGzippedOutput);
         chkWriteCustomsToXML = checkBox("optionWriteCustomsToXML", model.writeCustomsToXML);
-        chkWriteAllUnitsToXML = checkBox("optionWriteAllUnitsToXML", model.writeAllUnitsToXML);
+        chkWriteAllUnitsToXML = checkBox("optionWriteAllUnitsToXML", model.writeAllUnitsToXML,
+              getMetadata(null, CampaignOptionFlag.IMPORTANT));
         chkSaveMothballState = checkBox("optionSaveMothballState", model.saveMothballState);
 
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQCampaignSaveContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
         panel.addCheckBoxGrid(2, chkPreferGzippedOutput, chkWriteCustomsToXML, chkWriteAllUnitsToXML,
               chkSaveMothballState);
-        return buildMHQPage("MHQCampaignSavePage", "lblMHQCampaignSaveSection.text",
-              "lblMHQCampaignSaveSection.summary", panel);
+        return panel;
     }
 
     private void writeCampaignSaveToModel() {
@@ -320,7 +347,7 @@ public class MHQOptionsPane extends JPanel {
         model.saveMothballState = chkSaveMothballState.isSelected();
     }
 
-    private Component createAutosavePage() {
+    private JPanel createAutosaveSection() {
         ButtonGroup saveFrequencyGroup = new ButtonGroup();
         optionNoSave = createAutosaveFrequencyOption("optionNoSave", saveFrequencyGroup);
         optionNoSave.setSelected(model.noAutosave);
@@ -346,7 +373,7 @@ public class MHQOptionsPane extends JPanel {
         panel.addComponentGrid(1, optionNoSave, optionSaveDaily, optionSaveWeekly, optionSaveMonthly, optionSaveYearly);
         panel.addCheckBoxGrid(2, chkSaveBeforeScenarios, chkSaveBeforeMissionEnd);
         panel.addRow(labelSavedGamesCount, spinnerSavedGamesCount);
-        return buildMHQPage("MHQAutosavePage", "lblMHQAutosaveSection.text", "lblMHQAutosaveSection.summary", panel);
+        return panel;
     }
 
     private void writeAutosaveToModel() {
@@ -377,18 +404,122 @@ public class MHQOptionsPane extends JPanel {
     }
 
     /**
-     * Builds a standard single-section MekHQ option page: the shared MekHQ header image, no details/help panel, and
-     * one collapsible section wrapping {@code content}.
+     * Builds a standard single-section MekHQ option page: a per-page faction emblem header (matching the Campaign
+     * Options pages), a shared "Option Details" help box for its tip-bearing controls, and one collapsible section
+     * wrapping {@code content}. The lone section starts expanded, since collapsing the only section on a page would
+     * hide everything for no benefit.
      */
     private Component buildMHQPage(String pageName, String sectionTitleKey, String sectionSummaryKey,
           JComponent content) {
-        return CampaignOptionsPagePanel.builder(pageName, pageName, "data/images/misc/MekHQ.png")
+        return buildMHQPage(pageName, null, sectionTitleKey, sectionSummaryKey, content);
+    }
+
+    /**
+     * Builds a single-section MekHQ option page as {@link #buildMHQPage(String, String, String, JComponent)} does, but
+     * with an intro paragraph (resolved from {@code introKey}) shown above the section - used for pages that need a
+     * note at the top, such as the colours disclaimer.
+     */
+    private Component buildMHQPage(String pageName, @Nullable String introKey, String sectionTitleKey,
+          String sectionSummaryKey, JComponent content) {
+        // Route each control's tooltip to the shared "Option Details" box (like Campaign Options) and drop the floating
+        // tooltip. Only pages that actually have tip-bearing controls get the box, so tooltip-free pages (the colour
+        // grids) are not saddled with an empty details area.
+        CampaignOptionsPagePanel.Builder builder = pageBuilder(pageName, registerDetailsTips(content))
+                                                         .sectionsExpandedByDefault(true);
+        if (introKey != null) {
+            builder.intro(introKey);
+        }
+        return builder.section(sectionTitleKey, sectionSummaryKey, content).build();
+    }
+
+    /**
+     * Creates the shared page builder used by every MekHQ option page: the per-page faction emblem header (matching
+     * Campaign Options), the GUI resource bundle, whether to show the "Option Details" help box, and sections collapsed
+     * by default. Multi-section pages keep that collapsed default; the single-section {@link #buildMHQPage} wrapper
+     * re-expands its lone section. Callers add their section(s) and call {@code build()}.
+     */
+    private CampaignOptionsPagePanel.Builder pageBuilder(String pageName, boolean showDetailsPanel) {
+        return CampaignOptionsPagePanel.builder(pageName, pageName, getImageDirectory() + factionLogo(pageName))
                      .resourceBundle(RESOURCE_BUNDLE)
-                     .headerImageSize(HEADER_IMAGE_SIZE)
-                     .tintHeaderImage(false)
-                     .showDetailsPanel(false)
-                     .section(sectionTitleKey, sectionSummaryKey, content)
-                     .build();
+                     .showDetailsPanel(showDetailsPanel)
+                     .sectionsExpandedByDefault(false);
+    }
+
+    /**
+     * Recursively wires every tip-bearing control under {@code component} to the shared "Option Details" help box: on
+     * mouse-over the control sends its tooltip text there, and its floating Swing tooltip is removed so the help shows
+     * only in the box, mirroring the Campaign Options behaviour. Buttons are skipped so their action tooltips (such as
+     * the user-directory chooser and help buttons) keep working as ordinary tooltips.
+     *
+     * @param component the subtree to process
+     *
+     * @return {@code true} if at least one control was wired, so the caller shows the details box only when the page
+     *       actually has tips
+     */
+    private static boolean registerDetailsTips(Component component) {
+        boolean anyTip = false;
+        if (component instanceof JComponent jComponent && !(component instanceof JButton)) {
+            String tooltip = jComponent.getToolTipText();
+            if (tooltip != null && !tooltip.isBlank()) {
+                String detailsText = detailsTextFor(jComponent, tooltip);
+                jComponent.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent event) {
+                        sendTipToDetailsPanel(detailsText);
+                    }
+                });
+                jComponent.setToolTipText(null);
+                anyTip = true;
+            }
+        }
+        if (component instanceof Container container) {
+            for (Component child : container.getComponents()) {
+                anyTip |= registerDetailsTips(child);
+            }
+        }
+        return anyTip;
+    }
+
+    /**
+     * Resolves the text a control should show in the "Option Details" box. The shared checkbox, spinner, and label
+     * components word-wrap their Swing tooltip at a fixed character count; for those the raw bundle text is re-resolved
+     * from the control's name so the box can soft-wrap it to its own width (and so intentional line breaks are kept),
+     * matching Campaign Options. Other controls (combo boxes, text fields) already carry raw tooltip text, so their
+     * tooltip is used as-is.
+     *
+     * @param component the tip-bearing control
+     * @param tooltip   the control's current Swing tooltip, used as-is when the raw text cannot be re-resolved
+     *
+     * @return the help text to show in the details box
+     */
+    private static String detailsTextFor(JComponent component, String tooltip) {
+        boolean wordWrapsTooltip = component instanceof CampaignOptionsCheckBox
+              || component instanceof CampaignOptionsSpinner
+              || component instanceof CampaignOptionsLabel;
+        if (wordWrapsTooltip) {
+            // These components set their Swing name to a 3-character prefix ("chk"/"spn"/"lbl") plus the resource base
+            // name, so stripping the prefix recovers the base used for the ".tooltip"/".toolTipText" keys.
+            String name = component.getName();
+            if (name != null && name.length() > 3) {
+                String base = name.substring(3);
+                String raw = getTextAt(RESOURCE_BUNDLE, base + ".tooltip");
+                if (!isResourceKeyValid(raw)) {
+                    raw = getTextAt(RESOURCE_BUNDLE, base + ".toolTipText");
+                }
+                if (isResourceKeyValid(raw)) {
+                    return raw;
+                }
+            }
+        }
+        return tooltip;
+    }
+
+    /**
+     * Returns the faction emblem file name hardcoded for {@code pageName} (see {@link #PAGE_FACTION_LOGOS}), falling
+     * back to a default so a page without an explicit mapping still shows a faction logo rather than failing.
+     */
+    private static String factionLogo(String pageName) {
+        return PAGE_FACTION_LOGOS.getOrDefault(pageName, "logo_star_league.png");
     }
 
     /**
@@ -397,7 +528,16 @@ public class MHQOptionsPane extends JPanel {
      * {@code writeXToModel} method.
      */
     private CampaignOptionsCheckBox checkBox(String resourceName, boolean selected) {
-        CampaignOptionsCheckBox checkBox = new CampaignOptionsCheckBox(RESOURCE_BUNDLE, resourceName);
+        return checkBox(resourceName, selected, null);
+    }
+
+    /**
+     * Creates a {@link CampaignOptionsCheckBox} as {@link #checkBox(String, boolean)} does, but with badge metadata
+     * (such as the "important information" flag) shown after the text.
+     */
+    private CampaignOptionsCheckBox checkBox(String resourceName, boolean selected,
+          @Nullable CampaignOptionsMetadata metadata) {
+        CampaignOptionsCheckBox checkBox = new CampaignOptionsCheckBox(RESOURCE_BUNDLE, resourceName, metadata);
         checkBox.setSelected(selected);
         return checkBox;
     }
@@ -414,7 +554,19 @@ public class MHQOptionsPane extends JPanel {
         return button;
     }
 
-    private Component createRemindersNagsPage() {
+    private Component createRemindersPage() {
+        JComponent nagsContent = createRemindersNagsSection();
+        JComponent confirmationsContent = createRemindersConfirmationsSection();
+        // Non-short-circuit | so tips are registered for both section bodies before the page is built.
+        boolean hasTooltips = registerDetailsTips(nagsContent) | registerDetailsTips(confirmationsContent);
+        return pageBuilder("MHQRemindersPage", hasTooltips)
+                     .section("lblMHQNagSection.text", "lblMHQNagSection.summary", nagsContent)
+                     .section("lblMHQConfirmationSection.text", "lblMHQConfirmationSection.summary",
+                           confirmationsContent)
+                     .build();
+    }
+
+    private JPanel createRemindersNagsSection() {
         // Each entry is a {resourceName, nagIgnoreKey} pair. The resource name resolves the check box text/tooltip in
         // the GUI bundle; the ignore key is the MHQConstants key the state is stored under. A few resource names differ
         // from the stored key (e.g. AdminStrain vs HR_STRAIN, Astechs vs AS_TECHS), so they are kept explicit here.
@@ -447,11 +599,10 @@ public class MHQOptionsPane extends JPanel {
               { "optionSomeoneRandomlyDiedCampFollowerNag", MHQConstants.NAG_SOMEONE_RANDOMLY_DIED_CAMP_FOLLOWER },
               { "optionSomeoneRandomlyDiedRetiredNag", MHQConstants.NAG_SOMEONE_RANDOMLY_DIED_RETIREE },
         };
-        return buildMHQPage("MHQNagPage", "lblMHQNagSection.text", "lblMHQNagSection.summary",
-              nagCheckBoxGrid("MHQNagContent", nagOptions));
+        return nagCheckBoxGrid("MHQNagContent", nagOptions);
     }
 
-    private Component createRemindersConfirmationsPage() {
+    private JPanel createRemindersConfirmationsSection() {
         String[][] confirmationOptions = {
               { "optionContractRentalConfirmation", MHQConstants.CONFIRMATION_CONTRACT_RENTAL },
               { "optionFactionStandingsUltimatumConfirmation", MHQConstants.CONFIRMATION_FACTION_STANDINGS_ULTIMATUM },
@@ -462,9 +613,7 @@ public class MHQOptionsPane extends JPanel {
               { "optionAbandonUnitsConfirmation", MHQConstants.CONFIRMATION_ABANDON_UNITS },
               { "optionAssignTechsConfirmation", MHQConstants.CONFIRMATION_ASSIGN_TECHS },
         };
-        return buildMHQPage("MHQConfirmationPage", "lblMHQConfirmationSection.text",
-              "lblMHQConfirmationSection.summary",
-              nagCheckBoxGrid("MHQConfirmationContent", confirmationOptions));
+        return nagCheckBoxGrid("MHQConfirmationContent", confirmationOptions);
     }
 
     /**
@@ -490,24 +639,24 @@ public class MHQOptionsPane extends JPanel {
         nagCheckBoxes.forEach((key, checkBox) -> model.nagIgnores.put(key, checkBox.isSelected()));
     }
 
-    private Component createNewDayPoolsPage() {
-        return buildMHQPage("MHQNewDayPoolPage", "lblMHQNewDayPoolSection.text", "lblMHQNewDayPoolSection.summary",
-              createNewDayPoolSection());
-    }
-
-    private Component createNewDayAutomationPage() {
-        return buildMHQPage("MHQNewDayAutomationPage", "lblMHQNewDayTasksSection.text",
-              "lblMHQNewDayTasksSection.summary", createNewDayTasksSection());
-    }
-
-    private Component createNewDayTrainingPage() {
-        return buildMHQPage("MHQNewDayTrainingPage", "lblMHQNewDayTrainingSection.text",
-              "lblMHQNewDayTrainingSection.summary", createNewDayTrainingSection());
-    }
-
-    private Component createNewDayFormationPage() {
-        return buildMHQPage("MHQNewDayFormationPage", "lblMHQNewDayFormationSection.text",
-              "lblMHQNewDayFormationSection.summary", createNewDayFormationSection());
+    private Component createNewDayPage() {
+        JComponent poolContent = createNewDayPoolSection();
+        JComponent tasksContent = createNewDayTasksSection();
+        JComponent trainingContent = createNewDayTrainingSection();
+        JComponent formationContent = createNewDayFormationSection();
+        // Non-short-circuit | so tips are registered for every section body before the page is built.
+        boolean hasTooltips = registerDetailsTips(poolContent)
+              | registerDetailsTips(tasksContent)
+              | registerDetailsTips(trainingContent)
+              | registerDetailsTips(formationContent);
+        return pageBuilder("MHQNewDayPage", hasTooltips)
+                     .section("lblMHQNewDayPoolSection.text", "lblMHQNewDayPoolSection.summary", poolContent)
+                     .section("lblMHQNewDayTasksSection.text", "lblMHQNewDayTasksSection.summary", tasksContent)
+                     .section("lblMHQNewDayTrainingSection.text", "lblMHQNewDayTrainingSection.summary",
+                           trainingContent)
+                     .section("lblMHQNewDayFormationSection.text", "lblMHQNewDayFormationSection.summary",
+                           formationContent)
+                     .build();
     }
 
     private JPanel createNewDayPoolSection() {
@@ -648,7 +797,25 @@ public class MHQOptionsPane extends JPanel {
               Objects.requireNonNull(comboNewDayFormationIconOperationalStatusStyle.getSelectedItem());
     }
 
-    private Component createDisplayGeneralPage() {
+    private Component createDisplayPage() {
+        JComponent generalContent = createDisplayGeneralSection();
+        JComponent interstellarContent = createDisplayInterstellarSection();
+        JComponent personnelContent = createDisplayPersonnelSection();
+        // Non-short-circuit | so tips are registered for every section body before the page is built.
+        boolean hasTooltips = registerDetailsTips(generalContent)
+              | registerDetailsTips(interstellarContent)
+              | registerDetailsTips(personnelContent);
+        return pageBuilder("MHQDisplayPage", hasTooltips)
+                     .section("lblMHQDisplayGeneralSection.text", "lblMHQDisplayGeneralSection.summary",
+                           generalContent)
+                     .section("lblMHQDisplayInterstellarSection.text", "lblMHQDisplayInterstellarSection.summary",
+                           interstellarContent)
+                     .section("lblMHQDisplayPersonnelSection.text", "lblMHQDisplayPersonnelSection.summary",
+                           personnelContent)
+                     .build();
+    }
+
+    private JPanel createDisplayGeneralSection() {
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQDisplayGeneralContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
 
@@ -679,14 +846,14 @@ public class MHQOptionsPane extends JPanel {
 
         chkHideUnitFluff = checkBox("optionHideUnitFluff", model.hideUnitFluff);
         chkHistoricalDailyLog = checkBox("optionHistoricalDailyLog", model.historicalDailyLog);
-        chkCompanyGeneratorStartup = checkBox("chkCompanyGeneratorStartup", model.companyGeneratorStartup);
+        chkCompanyGeneratorStartup = checkBox("chkCompanyGeneratorStartup", model.companyGeneratorStartup,
+              getMetadata(null, CampaignOptionFlag.UNIMPLEMENTED));
         chkShowCompanyGenerator = checkBox("chkShowCompanyGenerator", model.showCompanyGenerator);
         chkShowUnitPicturesOnTOE = checkBox("chkShowUnitPicturesOnTOE", model.showUnitPicturesOnTOE);
         panel.addCheckBoxGrid(2, chkHideUnitFluff, chkHistoricalDailyLog, chkCompanyGeneratorStartup,
               chkShowCompanyGenerator, chkShowUnitPicturesOnTOE);
 
-        return buildMHQPage("MHQDisplayGeneralPage", "lblMHQDisplayGeneralSection.text",
-              "lblMHQDisplayGeneralSection.summary", panel);
+        return panel;
     }
 
     private void writeDisplayGeneralToModel() {
@@ -739,7 +906,7 @@ public class MHQOptionsPane extends JPanel {
         return true;
     }
 
-    private Component createDisplayInterstellarPage() {
+    private JPanel createDisplayInterstellarSection() {
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQDisplayInterstellarContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
 
@@ -754,9 +921,6 @@ public class MHQOptionsPane extends JPanel {
               colourButton("btnInterstellarMapJumpRadiusColour", model.interstellarMapJumpRadiusColour);
         bindRadiusGating(chkInterstellarMapShowJumpRadius, jumpZoomLabel,
               spinnerInterstellarMapShowJumpRadiusMinimumZoom, btnInterstellarMapJumpRadiusColour);
-        panel.addCheckBox(chkInterstellarMapShowJumpRadius);
-        panel.addRow(jumpZoomLabel, spinnerInterstellarMapShowJumpRadiusMinimumZoom);
-        panel.addComponentGrid(1, btnInterstellarMapJumpRadiusColour);
 
         chkInterstellarMapShowPlanetaryAcquisitionRadius = checkBox(
               "chkInterstellarMapShowPlanetaryAcquisitionRadius", model.interstellarMapShowPlanetaryAcquisitionRadius);
@@ -772,35 +936,47 @@ public class MHQOptionsPane extends JPanel {
         bindRadiusGating(chkInterstellarMapShowPlanetaryAcquisitionRadius, acquisitionZoomLabel,
               spinnerInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom,
               btnInterstellarMapPlanetaryAcquisitionRadiusColour);
-        panel.addCheckBox(chkInterstellarMapShowPlanetaryAcquisitionRadius);
-        panel.addRow(acquisitionZoomLabel, spinnerInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom);
-        panel.addComponentGrid(1, btnInterstellarMapPlanetaryAcquisitionRadiusColour);
 
         chkInterstellarMapShowContractSearchRadius = checkBox("chkInterstellarMapShowContractSearchRadius",
               model.interstellarMapShowContractSearchRadius);
         btnInterstellarMapContractSearchRadiusColour = colourButton("btnInterstellarMapContractSearchRadiusColour",
               model.interstellarMapContractSearchRadiusColour);
-        Runnable syncContract = () -> btnInterstellarMapContractSearchRadiusColour.setEnabled(
-              chkInterstellarMapShowContractSearchRadius.isSelected());
-        chkInterstellarMapShowContractSearchRadius.addActionListener(evt -> syncContract.run());
-        syncContract.run();
-        panel.addCheckBox(chkInterstellarMapShowContractSearchRadius);
-        panel.addComponentGrid(1, btnInterstellarMapContractSearchRadiusColour);
+        bindRadiusGating(chkInterstellarMapShowContractSearchRadius, btnInterstellarMapContractSearchRadiusColour);
 
-        return buildMHQPage("MHQDisplayInterstellarPage", "lblMHQDisplayInterstellarSection.text",
-              "lblMHQDisplayInterstellarSection.summary", panel);
+        // The "Show ..." toggles share the left column with the "Minimum Zoom" labels, so keep their box and text packed
+        // to the start instead of centred when the grid stretches that column to the shared label width.
+        for (JCheckBox toggle : List.of(chkInterstellarMapShowJumpRadius,
+              chkInterstellarMapShowPlanetaryAcquisitionRadius, chkInterstellarMapShowContractSearchRadius)) {
+            toggle.setHorizontalAlignment(SwingConstants.LEADING);
+        }
+        // One shared width for the three swatch buttons so they line up in the right-hand column.
+        setUniformWidth(List.of(btnInterstellarMapJumpRadiusColour, btnInterstellarMapPlanetaryAcquisitionRadiusColour,
+              btnInterstellarMapContractSearchRadiusColour));
+
+        // Each overlay is a "[Show X] [colour]" row, then a "[Minimum Zoom] [spinner]" row where one applies, reusing
+        // the standard two-column grid so the swatches align under one another and with the spinners.
+        panel.addComponentGrid(2, chkInterstellarMapShowJumpRadius, btnInterstellarMapJumpRadiusColour);
+        panel.addRow(jumpZoomLabel, spinnerInterstellarMapShowJumpRadiusMinimumZoom);
+        panel.addComponentGrid(2, chkInterstellarMapShowPlanetaryAcquisitionRadius,
+              btnInterstellarMapPlanetaryAcquisitionRadiusColour);
+        panel.addRow(acquisitionZoomLabel, spinnerInterstellarMapShowPlanetaryAcquisitionRadiusMinimumZoom);
+        panel.addComponentGrid(2, chkInterstellarMapShowContractSearchRadius,
+              btnInterstellarMapContractSearchRadiusColour);
+
+        return panel;
     }
 
     /**
-     * Enables {@code label}, {@code spinner}, and {@code colour} only while {@code checkBox} is selected, and keeps them
-     * in sync when it is toggled - matching the original dialog's gating of each interstellar-map radius group.
+     * Enables every component in {@code gated} only while {@code checkBox} is selected, and keeps them in sync when it
+     * is toggled - matching the original dialog's gating of each interstellar-map radius group. The gated set varies by
+     * group; the contract-search overlay has no minimum-zoom control.
      */
-    private void bindRadiusGating(JCheckBox checkBox, JComponent label, JComponent spinner, JComponent colour) {
+    private void bindRadiusGating(JCheckBox checkBox, JComponent... gated) {
         Runnable sync = () -> {
             boolean enabled = checkBox.isSelected();
-            label.setEnabled(enabled);
-            spinner.setEnabled(enabled);
-            colour.setEnabled(enabled);
+            for (JComponent component : gated) {
+                component.setEnabled(enabled);
+            }
         };
         checkBox.addActionListener(evt -> sync.run());
         sync.run();
@@ -824,7 +1000,7 @@ public class MHQOptionsPane extends JPanel {
         model.interstellarMapContractSearchRadiusColour = btnInterstellarMapContractSearchRadiusColour.getColour();
     }
 
-    private Component createDisplayPersonnelPage() {
+    private JPanel createDisplayPersonnelSection() {
         CampaignOptionsLabel filterStyleLabel =
               new CampaignOptionsLabel(RESOURCE_BUNDLE, "optionPersonnelFilterStyle");
         comboPersonnelFilterStyle = new JComboBox<>(PersonnelFilterStyle.values());
@@ -845,7 +1021,8 @@ public class MHQOptionsPane extends JPanel {
         chkPersonnelFilterOnPrimaryRole =
               checkBox("optionPersonnelFilterOnPrimaryRole", model.personnelFilterOnPrimaryRole);
         chkUnifiedDailyReport = checkBox("chkUnifiedDailyReport", model.unifiedDailyReport);
-        chkEnableDailyReportAggregateTab = checkBox("chkEnableDailyReportAggregateTab", model.aggregateDailyReport);
+        chkEnableDailyReportAggregateTab = checkBox("chkEnableDailyReportAggregateTab", model.aggregateDailyReport,
+              getMetadata(null, CampaignOptionFlag.IMPORTANT));
 
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQDisplayPersonnelContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
@@ -853,8 +1030,7 @@ public class MHQOptionsPane extends JPanel {
         panel.addCheckBoxGrid(2, chkPersonnelFilterOnPrimaryRole, chkUnifiedDailyReport,
               chkEnableDailyReportAggregateTab);
 
-        return buildMHQPage("MHQDisplayPersonnelPage", "lblMHQDisplayPersonnelSection.text",
-              "lblMHQDisplayPersonnelSection.summary", panel);
+        return panel;
     }
 
     private void writeDisplayPersonnelToModel() {
@@ -868,70 +1044,128 @@ public class MHQOptionsPane extends JPanel {
         model.aggregateDailyReport = chkEnableDailyReportAggregateTab.isSelected();
     }
 
-    private Component createColoursUnitStatusPage() {
-        List<JComponent> buttons = buildColourButtons(
+    private Component createColoursPage() {
+        List<JComponent> unitStatusButtons = createColoursUnitStatusButtons();
+        List<JComponent> personnelStatusButtons = createColoursPersonnelStatusButtons();
+        List<JComponent> otherButtons = createColoursOtherButtons();
+        List<JComponent> skillFeedbackButtons = createColoursSkillFeedbackButtons();
+        // Size every colour button on the page to one shared width (across all sections) so all the 2-column grids
+        // line their columns up at the same x - the way the checkbox grids do through a shared label-column width.
+        // Letting each section size its own buttons would let their differing longest labels push the columns to
+        // different positions.
+        List<JComponent> allButtons = new ArrayList<>(unitStatusButtons);
+        allButtons.addAll(personnelStatusButtons);
+        allButtons.addAll(otherButtons);
+        allButtons.addAll(skillFeedbackButtons);
+        setUniformWidth(allButtons);
+
+        JComponent unitStatusContent = colourButtonGrid("MHQColoursUnitStatusContent", unitStatusButtons);
+        JComponent personnelStatusContent = colourButtonGrid("MHQColoursPersonnelStatusContent", personnelStatusButtons);
+        JComponent otherContent = colourButtonGrid("MHQColoursOtherContent", otherButtons);
+        JComponent skillFeedbackContent = colourButtonGrid("MHQColoursSkillFeedbackContent", skillFeedbackButtons);
+        // Register each section body's tips before the page is built; |= always evaluates its right side, so no
+        // section's registration is skipped.
+        boolean hasTooltips = registerDetailsTips(unitStatusContent);
+        hasTooltips |= registerDetailsTips(personnelStatusContent);
+        hasTooltips |= registerDetailsTips(otherContent);
+        hasTooltips |= registerDetailsTips(skillFeedbackContent);
+        // The disclaimer that some colours live in MegaMek's Client Options is shown as the page intro, above the
+        // sections.
+        return pageBuilder("MHQColoursPage", hasTooltips)
+                     .intro("coloursTab.disclaimer")
+                     .section("lblMHQColoursUnitStatusSection.text", "lblMHQColoursUnitStatusSection.summary",
+                           unitStatusContent)
+                     .section("lblMHQColoursPersonnelStatusSection.text",
+                           "lblMHQColoursPersonnelStatusSection.summary", personnelStatusContent)
+                     .section("lblMHQColoursOtherSection.text", "lblMHQColoursOtherSection.summary", otherContent)
+                     .section("lblMHQColoursSkillFeedbackSection.text", "lblMHQColoursSkillFeedbackSection.summary",
+                           skillFeedbackContent)
+                     .build();
+    }
+
+    private List<JComponent> createColoursUnitStatusButtons() {
+        // Order follows Unit#determineForegroundColor so the swatches read in the same priority the app applies them.
+        // Deployed is shared with personnel (Unit and the personnel list both use it) and lives here as a unit state.
+        return buildColourButtons(
               "optionDeployedForeground", "optionDeployedBackground",
-              "optionBelowContractMinimumForeground", "optionBelowContractMinimumBackground",
               "optionInTransitForeground", "optionInTransitBackground",
               "optionRefittingForeground", "optionRefittingBackground",
               "optionMothballingForeground", "optionMothballingBackground",
               "optionMothballedForeground", "optionMothballedBackground",
+              "optionUnmaintainedForeground", "optionUnmaintainedBackground",
               "optionNotRepairableForeground", "optionNotRepairableBackground",
               "optionNonFunctionalForeground", "optionNonFunctionalBackground",
               "optionNeedsPartsFixedForeground", "optionNeedsPartsFixedBackground",
-              "optionUnmaintainedForeground", "optionUnmaintainedBackground",
-              "optionUncrewedForeground", "optionUncrewedBackground",
-              "optionLoanOverdueForeground", "optionLoanOverdueBackground",
-              "optionInjuredForeground", "optionInjuredBackground",
-              "optionHealedInjuriesForeground", "optionHealedInjuriesBackground",
-              "optionPregnantForeground", "optionPregnantBackground",
-              "optionGoneForeground", "optionGoneBackground",
-              "optionAbsentForeground", "optionAbsentBackground",
-              "optionFatiguedForeground", "optionFatiguedBackground",
-              "optionStratConHexCoordForeground");
-
-        CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQColoursUnitStatusContent");
-        panel.addComponentGrid(2, buttons.toArray(new JComponent[0]));
-        return buildMHQPage("MHQColoursUnitStatusPage", "lblMHQColoursUnitStatusSection.text",
-              "lblMHQColoursUnitStatusSection.summary", panel);
+              "optionUncrewedForeground", "optionUncrewedBackground");
     }
 
-    private Component createColoursSkillFeedbackPage() {
-        List<JComponent> buttons = buildColourButtons(
+    private List<JComponent> createColoursPersonnelStatusButtons() {
+        // Order follows PersonnelTableModel's status priority.
+        return buildColourButtons(
+              "optionAbsentForeground", "optionAbsentBackground",
+              "optionGoneForeground", "optionGoneBackground",
+              "optionAwayFromMainForceForeground", "optionAwayFromMainForceBackground",
+              "optionInjuredForeground", "optionInjuredBackground",
+              "optionPregnantForeground", "optionPregnantBackground",
+              "optionFatiguedForeground", "optionFatiguedBackground",
+              "optionHealedInjuriesForeground", "optionHealedInjuriesBackground");
+    }
+
+    private List<JComponent> createColoursOtherButtons() {
+        // Colours used outside the unit and personnel lists: contract deployment coverage, the finances loan table,
+        // and StratCon map hex coordinates.
+        return buildColourButtons(
+              "optionBelowContractMinimumForeground", "optionBelowContractMinimumBackground",
+              "optionLoanOverdueForeground", "optionLoanOverdueBackground",
+              "optionStratConHexCoordForeground");
+    }
+
+    private List<JComponent> createColoursSkillFeedbackButtons() {
+        return buildColourButtons(
               "optionFontColorNegative", "optionFontColorWarning",
               "optionFontColorPositive", "optionFontColorAmazing",
               "optionFontColorSkillUltraGreen", "optionFontColorSkillGreen",
               "optionFontColorSkillRegular", "optionFontColorSkillVeteran",
               "optionFontColorSkillElite");
-
-        CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQColoursSkillFeedbackContent");
-        panel.addComponentGrid(2, buttons.toArray(new JComponent[0]));
-
-        JTextArea disclaimer = new JTextArea(getTextAt(RESOURCE_BUNDLE, "coloursTab.disclaimer"));
-        disclaimer.setName("txtColoursDisclaimer");
-        disclaimer.setEditable(false);
-        disclaimer.setLineWrap(true);
-        disclaimer.setWrapStyleWord(true);
-        disclaimer.setOpaque(false);
-        panel.addFullWidthComponent(disclaimer);
-
-        return buildMHQPage("MHQColoursSkillFeedbackPage", "lblMHQColoursSkillFeedbackSection.text",
-              "lblMHQColoursSkillFeedbackSection.summary", panel);
     }
 
     /**
      * Creates a colour button for each of {@code keys} (loading its initial colour from
      * {@link MHQOptionsModel#statusColours}), registers it in {@link #colourButtons} under its key so
-     * {@link #writeColoursToModel()} can read it back, and returns them in order for placement in a grid.
+     * {@link #writeColoursToModel()} can read it back, left-aligns its swatch and text, and returns the buttons in
+     * order for placement in a grid. Button widths are equalised later, once every section's buttons exist (see
+     * {@link #setUniformWidth(List)}), so the sections' grid columns line up with each other.
      */
     private List<JComponent> buildColourButtons(String... keys) {
         List<JComponent> buttons = new ArrayList<>();
         for (String key : keys) {
             ColourSelectorButton button = colourButton(key, model.statusColours.get(key));
+            button.setHorizontalAlignment(SwingConstants.LEFT);
             colourButtons.put(key, button);
             buttons.add(button);
         }
         return buttons;
+    }
+
+    /** Lays {@code buttons} out in a 2-column colour grid panel named {@code name}. */
+    private JPanel colourButtonGrid(String name, List<JComponent> buttons) {
+        CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel(name);
+        panel.addComponentGrid(2, buttons.toArray(new JComponent[0]));
+        return panel;
+    }
+
+    /**
+     * Sizes every component in {@code components} to the widest one's preferred width (heights unchanged) so they line
+     * up in even columns when laid out in a grid - used across a page's colour buttons at once so their columns match.
+     */
+    private static void setUniformWidth(List<? extends JComponent> components) {
+        int width = 0;
+        for (JComponent component : components) {
+            width = Math.max(width, component.getPreferredSize().width);
+        }
+        for (JComponent component : components) {
+            component.setPreferredSize(new Dimension(width, component.getPreferredSize().height));
+        }
     }
 
     private void writeColoursToModel() {
@@ -943,24 +1177,52 @@ public class MHQOptionsPane extends JPanel {
         userDirField = new JTextField(model.userDir, 20);
         userDirField.setName("txtUserDir");
         userDirField.setToolTipText(getTextAt(RESOURCE_BUNDLE, "lblUserDir.toolTipText"));
-        JButton userDirChooser = new JButton("...");
+        JButton userDirChooser = new JButton();
         userDirChooser.setName("btnUserDirChooser");
         userDirChooser.setToolTipText(getTextAt(RESOURCE_BUNDLE, "userDirChooser.title"));
+        // Material Symbols "folder_open" glyph (https://fonts.google.com/icons), matching the icon buttons elsewhere in
+        // the dialog, in place of a "..." text button. Sized a little above the label font so it fills the enlarged
+        // square chooser button.
+        userDirChooser.setIcon(symbolIcon(0xE2C8, userDirChooser.getFont().getSize() + UIUtil.scaleForGUI(2),
+              userDirChooser.getForeground()));
         userDirChooser.addActionListener(evt -> CommonSettingsDialog.fileChooseUserDir(userDirField, frame));
+
         JButton userDirHelp = new JButton("Help");
         userDirHelp.setName("btnUserDirHelp");
+        // MekHQ ships its own copy of the user-directory help under docs/Customization/MekHQ; MMConstants points at
+        // MegaMek's docs/Customization/UserDir path, which is absent from MekHQ's working directory.
+        String userDirHelpPath = "docs/Customization/MekHQ/UserDirHelp.html";
         try {
             String helpTitle = Messages.getString("UserDirHelpDialog.title");
-            URL helpFile = new File(MMConstants.USER_DIR_README_FILE).toURI().toURL();
+            URL helpFile = new File(userDirHelpPath).toURI().toURL();
             userDirHelp.addActionListener(evt -> new HelpDialog(helpTitle, helpFile, frame).setVisible(true));
         } catch (MalformedURLException ex) {
-            LOGGER.error("Could not find the user data directory readme file at {}", MMConstants.USER_DIR_README_FILE);
+            LOGGER.error("Could not find the user data directory help file at {}", userDirHelpPath);
         }
-        JPanel userDirControls = new JPanel(new FlowLayout(FlowLayout.LEFT, UIUtil.scaleForGUI(6), 0));
+
+        // Render Help a touch more compact, and enlarge the icon-only chooser to a square as tall as the path field so
+        // it is an easier click target.
+        setSmallSizeVariant(userDirHelp);
+        int chooserSide = userDirField.getPreferredSize().height;
+        Dimension chooserSize = new Dimension(chooserSide, chooserSide);
+        userDirChooser.setPreferredSize(chooserSize);
+        userDirChooser.setMinimumSize(chooserSize);
+        userDirChooser.setMaximumSize(chooserSize);
+
+        // Let the path field fill the control column so its left edge lines up with the spinners below (and its right
+        // edge, past the buttons, with theirs) instead of sitting at a fixed width nudged over by FlowLayout's leading
+        // gap. The chooser and help buttons sit at the row's right end.
+        JPanel userDirButtons = new JPanel();
+        userDirButtons.setLayout(new BoxLayout(userDirButtons, BoxLayout.LINE_AXIS));
+        userDirButtons.setOpaque(false);
+        userDirButtons.add(userDirChooser);
+        userDirButtons.add(Box.createHorizontalStrut(UIUtil.scaleForGUI(6)));
+        userDirButtons.add(userDirHelp);
+
+        JPanel userDirControls = new JPanel(new BorderLayout(UIUtil.scaleForGUI(6), 0));
         userDirControls.setOpaque(false);
-        userDirControls.add(userDirField);
-        userDirControls.add(userDirChooser);
-        userDirControls.add(userDirHelp);
+        userDirControls.add(userDirField, BorderLayout.CENTER);
+        userDirControls.add(userDirButtons, BorderLayout.LINE_END);
 
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQAdvancedContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
