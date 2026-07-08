@@ -32,6 +32,7 @@
  */
 package mekhq.campaign.location;
 
+import mekhq.campaign.CampaignLocationManager;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.personnel.Person;
 import mekhq.campaign.unit.Unit;
@@ -52,4 +53,19 @@ public interface ILocatable extends ILocation {
      * @return {@code true} if the item is free to be dispatched, otherwise {@code false}
      */
     boolean canBeManuallyDispatched();
+
+    /**
+     * Whether this item is currently sitting in the pending-travel queue, awaiting dispatch on the next new day.
+     *
+     * <p>This is the pre-dispatch state — the item is still at its origin, queued for travel but not yet moved into
+     * active transit (contrast with {@link #isInTransit()}). The queue lives on the
+     * {@link CampaignLocationManager} rather than in the location tree, so the manager must be supplied.</p>
+     *
+     * @param locationManager the campaign's location manager holding the pending-travel queue
+     *
+     * @return {@code true} if this item is queued for travel but not yet dispatched, otherwise {@code false}
+     */
+    default boolean isQueuedForTravel(CampaignLocationManager locationManager) {
+        return locationManager.isQueuedForTravel(this);
+    }
 }

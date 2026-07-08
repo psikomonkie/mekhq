@@ -4767,6 +4767,8 @@ public class Unit implements ITechnology, ILocatable {
             return MekHQ.getMHQOptions().getDeployedForeground();
         } else if (!isPresent()) {
             return MekHQ.getMHQOptions().getInTransitForeground();
+        } else if (isQueuedForTravel(getCampaign().getCampaignLocationManager())) {
+            return MekHQ.getMHQOptions().getQueuedForTravelForeground();
         } else if (isRefitting()) {
             return MekHQ.getMHQOptions().getRefittingForeground();
         } else if (isMothballing()) {
@@ -4793,6 +4795,8 @@ public class Unit implements ITechnology, ILocatable {
             return MekHQ.getMHQOptions().getDeployedBackground();
         } else if (!isPresent()) {
             return MekHQ.getMHQOptions().getInTransitBackground();
+        } else if (isQueuedForTravel(getCampaign().getCampaignLocationManager())) {
+            return MekHQ.getMHQOptions().getQueuedForTravelBackground();
         } else if (isRefitting()) {
             return MekHQ.getMHQOptions().getRefittingBackground();
         } else if (isMothballing()) {
@@ -4828,6 +4832,9 @@ public class Unit implements ITechnology, ILocatable {
         }
         if (!isPresent()) {
             reasons.add("colorReason.unit.inTransit");
+        }
+        if (isQueuedForTravel(getCampaign().getCampaignLocationManager())) {
+            reasons.add("colorReason.unit.queuedForTravel");
         }
         if (isRefitting()) {
             reasons.add("colorReason.unit.refitting");
