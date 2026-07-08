@@ -50,9 +50,8 @@ import mekhq.gui.campaignOptions.CampaignOptionsIconLegend;
 import mekhq.gui.campaignOptions.MHQOptionsPane;
 
 /**
- * Hosting dialog for {@link MHQOptionsPane}, the pilot MekHQ Client Options screen built on the reusable Campaign
- * Options tree-navigation framework. It is presented alongside the existing {@link MHQOptionsDialog} while the
- * migration to the shared framework is validated.
+ * Hosting dialog for {@link MHQOptionsPane}, the MekHQ Client Options screen built on the reusable Campaign Options
+ * tree-navigation framework.
  */
 public class MHQOptionsTreeDialog extends AbstractButtonDialog {
     private static final int BUTTON_GAP = UIUtil.scaleForGUI(8);

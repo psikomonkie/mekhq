@@ -79,6 +79,7 @@ import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 
 import jakarta.annotation.Nullable;
 import megamek.client.ui.Messages;
@@ -660,21 +661,22 @@ public class MHQOptionsPane extends JPanel {
     }
 
     private JPanel createNewDayPoolSection() {
-        List<JCheckBox> checkBoxes = new ArrayList<>();
-        addPoolPair(checkBoxes, "chkNewDayAstechPoolFill", "chkNewDayAstechPoolNoRelease");
-        addPoolPair(checkBoxes, "chkNewDayMedicPoolFill", "chkNewDayMedicPoolNoRelease");
-        addPoolPair(checkBoxes, "chkNewDaySoldierPoolFill", "chkNewDaySoldierPoolNoRelease");
-        addPoolPair(checkBoxes, "chkNewDayBattleArmorPoolFill", "chkNewDayBattleArmorPoolNoRelease");
-        addPoolPair(checkBoxes, "chkNewDayVehicleCrewGroundPoolFill", "chkNewDayVehicleCrewGroundPoolNoRelease");
-        addPoolPair(checkBoxes, "chkNewDayVehicleCrewVTOLPoolFill", "chkNewDayVehicleCrewVTOLPoolNoRelease");
-        addPoolPair(checkBoxes, "chkNewDayVehicleCrewNavalPoolFill", "chkNewDayVehicleCrewNavalPoolNoRelease");
-        addPoolPair(checkBoxes, "chkNewDayVesselPilotPoolFill", "chkNewDayVesselPilotPoolNoRelease");
-        addPoolPair(checkBoxes, "chkNewDayVesselGunnerPoolFill", "chkNewDayVesselGunnerPoolNoRelease");
-        addPoolPair(checkBoxes, "chkNewDayVesselCrewPoolFill", "chkNewDayVesselCrewPoolNoRelease");
-
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQNewDayPoolContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
-        panel.addCheckBoxGrid(2, checkBoxes.toArray(new JCheckBox[0]));
+        // Two columns of parent/child groups: each "Fill X Pool" parent sits above its indented "Do Not Release
+        // Surplus X" child (joined by a subdirectory-arrow connector), and the groups flow two-across so the section
+        // stays compact instead of one tall scrolling column. The child is gated on the parent.
+        panel.addComponentGrid(2,
+              poolPair("chkNewDayAstechPoolFill", "chkNewDayAstechPoolNoRelease"),
+              poolPair("chkNewDayMedicPoolFill", "chkNewDayMedicPoolNoRelease"),
+              poolPair("chkNewDaySoldierPoolFill", "chkNewDaySoldierPoolNoRelease"),
+              poolPair("chkNewDayBattleArmorPoolFill", "chkNewDayBattleArmorPoolNoRelease"),
+              poolPair("chkNewDayVehicleCrewGroundPoolFill", "chkNewDayVehicleCrewGroundPoolNoRelease"),
+              poolPair("chkNewDayVehicleCrewVTOLPoolFill", "chkNewDayVehicleCrewVTOLPoolNoRelease"),
+              poolPair("chkNewDayVehicleCrewNavalPoolFill", "chkNewDayVehicleCrewNavalPoolNoRelease"),
+              poolPair("chkNewDayVesselPilotPoolFill", "chkNewDayVesselPilotPoolNoRelease"),
+              poolPair("chkNewDayVesselGunnerPoolFill", "chkNewDayVesselGunnerPoolNoRelease"),
+              poolPair("chkNewDayVesselCrewPoolFill", "chkNewDayVesselCrewPoolNoRelease"));
         return panel;
     }
 
@@ -1289,21 +1291,51 @@ public class MHQOptionsPane extends JPanel {
     }
 
     /**
-     * Builds a pool fill / no-release check box pair, registers both in {@link #poolCheckBoxes} under their resource
-     * names (matching {@link MHQOptionsModel#newDayPools}), and appends them to {@code target}. The "no release" box is
-     * enabled only while the "fill" box is selected.
+     * Builds a "Fill Pool" / "Do Not Release Surplus" parent/child group as a small vertical panel: the parent check
+     * box above its indented child, joined by a Material "subdirectory_arrow_right" connector. Both boxes are
+     * registered in {@link #poolCheckBoxes} under their resource names (matching {@link MHQOptionsModel#newDayPools}),
+     * and the child is enabled only while the parent is selected. The caller lays the groups out two-across.
      */
-    private void addPoolPair(List<JCheckBox> target, String fillKey, String noReleaseKey) {
+    private JComponent poolPair(String fillKey, String noReleaseKey) {
         CampaignOptionsCheckBox fill = checkBox(fillKey, Boolean.TRUE.equals(model.newDayPools.get(fillKey)));
         CampaignOptionsCheckBox noRelease =
               checkBox(noReleaseKey, Boolean.TRUE.equals(model.newDayPools.get(noReleaseKey)));
         poolCheckBoxes.put(fillKey, fill);
         poolCheckBoxes.put(noReleaseKey, noRelease);
-        // The "no release" option only applies while the pool is being filled, so it follows the fill check box.
-        noRelease.setEnabled(fill.isSelected());
-        fill.addItemListener(evt -> noRelease.setEnabled(fill.isSelected()));
-        target.add(fill);
-        target.add(noRelease);
+
+        JLabel connector = new JLabel();
+        fill.addItemListener(evt -> syncPoolChild(fill, noRelease, connector));
+        syncPoolChild(fill, noRelease, connector);
+
+        // Indent the child under its parent, prefixed by the subdirectory-arrow connector, so the pair reads as one
+        // parent-with-sub-option group.
+        JPanel childRow = new JPanel(new FlowLayout(FlowLayout.LEFT, UIUtil.scaleForGUI(4), 0));
+        childRow.setOpaque(false);
+        childRow.setBorder(BorderFactory.createEmptyBorder(0, UIUtil.scaleForGUI(12), 0, 0));
+        childRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        childRow.add(connector);
+        childRow.add(noRelease);
+
+        JPanel pairPanel = new JPanel();
+        pairPanel.setOpaque(false);
+        pairPanel.setLayout(new BoxLayout(pairPanel, BoxLayout.PAGE_AXIS));
+        fill.setAlignmentX(Component.LEFT_ALIGNMENT);
+        pairPanel.add(fill);
+        pairPanel.add(childRow);
+        return pairPanel;
+    }
+
+    /**
+     * Keeps a pool group's child in step with its parent: the "Do Not Release Surplus" child is enabled only while the
+     * "Fill Pool" parent is selected, and the connector icon is tinted to match (muted while the child is disabled).
+     */
+    private void syncPoolChild(JCheckBox parent, JCheckBox child, JLabel connector) {
+        boolean enabled = parent.isSelected();
+        child.setEnabled(enabled);
+        Color color = enabled
+              ? child.getForeground()
+              : Objects.requireNonNullElse(UIManager.getColor("Label.disabledForeground"), child.getForeground());
+        connector.setIcon(symbolIcon(0xE5DA, child.getFont().getSize(), color));
     }
 
     /**

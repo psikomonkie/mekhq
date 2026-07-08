@@ -244,15 +244,12 @@ public class MekHQMenuBar extends JMenuBar {
               Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | InputEvent.SHIFT_DOWN_MASK));
         menuFile.add(menuOptions);
 
-        JMenuItem miMHQOptions = createMenuItem("miMHQOptions.text", KeyEvent.VK_H,
-              evt -> new MHQOptionsDialog(getFrame()).setVisible(true));
+        JMenuItem miMHQOptions = createMenuItem("miMHQOptions.text", KeyEvent.VK_UNDEFINED,
+              evt -> new MHQOptionsTreeDialog(getFrame()).setVisible(true));
+        miMHQOptions.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q,
+              Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | InputEvent.SHIFT_DOWN_MASK));
         miMHQOptions.setToolTipText(getTextAt("miMHQOptions.toolTipText"));
         menuFile.add(miMHQOptions);
-
-        JMenuItem miMHQOptionsPreview = createMenuItem("miMHQOptionsPreview.text", KeyEvent.VK_UNDEFINED,
-              evt -> new MHQOptionsTreeDialog(getFrame()).setVisible(true));
-        miMHQOptionsPreview.setToolTipText(getTextAt("miMHQOptionsPreview.toolTipText"));
-        menuFile.add(miMHQOptionsPreview);
 
         final JMenuItem miGameOptions = createMenuItem("miGameOptions.text", KeyEvent.VK_M, evt -> {
             final GameOptionsDialog god = new GameOptionsDialog(getFrame(), getCampaign().getGameOptions(), false);
