@@ -45,7 +45,6 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -53,17 +52,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.swing.*;
-import javax.swing.RowSorter.SortKey;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.table.DefaultTableColumnModel;
-import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableRowSorter;
 
 import megamek.client.ui.clientGUI.GUIPreferences;
 import megamek.client.ui.comboBoxes.MMComboBox;
-import megamek.client.ui.models.XTableColumnModel;
 import megamek.client.ui.preferences.JComboBoxPreference;
 import megamek.client.ui.preferences.JTablePreference;
 import megamek.client.ui.preferences.JToggleButtonPreference;
@@ -90,6 +84,7 @@ import mekhq.campaign.personnel.skills.QuickTrain;
 import mekhq.gui.adapter.PersonnelTableMouseAdapter;
 import mekhq.gui.baseComponents.roundedComponents.RoundedJButton;
 import mekhq.gui.baseComponents.roundedComponents.RoundedLineBorder;
+import mekhq.gui.baseComponents.tables.MHQTable;
 import mekhq.gui.dialog.BatchXPDialog;
 import mekhq.gui.dialog.QuickTrainDialog;
 import mekhq.gui.enums.MHQTabType;
@@ -111,15 +106,18 @@ public final class PersonnelTab extends CampaignGuiTab {
     public static final int PERSON_VIEW_MIN_WIDTH = 450;
     public static final int PERSON_VIEW_PREFERRED_WIDTH = 650;
 
-    private JTable personnelTable;
+    private MHQTable<Person, PersonnelTableModelColumn, PersonnelTableModel> personnelTable;
     private MMComboBox<PersonnelFilter> personnelFilter;
     private MMComboBox<PersonnelTabView> personnelView;
     private JTextField searchField;
     private JScrollPane scrollPersonnelView;
     private JCheckBox chkGroupByUnit;
 
-    private PersonnelTableModel personnelTableModel;
-    private TableRowSorter<PersonnelTableModel> personnelSorter;
+    /**
+     * A person shown in the detail panel while not present in the grid, e.g. when a link targets someone outside the
+     * active location scope. Kept so table refreshes that clear the grid selection do not blank the detail panel.
+     */
+    private Person pinnedPerson;
 
     private final IPreferenceChangeListener scalingChangeListener = e -> changePersonnelView();
 
@@ -266,8 +264,8 @@ public final class PersonnelTab extends CampaignGuiTab {
         chkGroupByUnit = new JCheckBox(resourceMap.getString("chkGroupByUnit.text"));
         chkGroupByUnit.setToolTipText(resourceMap.getString("chkGroupByUnit.toolTipText"));
         chkGroupByUnit.addActionListener(e -> {
-            personnelTableModel.setGroupByUnit(chkGroupByUnit.isSelected());
-            personnelTableModel.refreshData();
+            getPersonnelTableModel().setGroupByUnit(chkGroupByUnit.isSelected());
+            getPersonnelTableModel().refreshData();
             changePersonnelView();
         });
         gridBagConstraints = new GridBagConstraints();
@@ -322,29 +320,8 @@ public final class PersonnelTab extends CampaignGuiTab {
         gridBagConstraints.insets = new Insets(5, 5, 0, 0);
         add(btnMassTraining, gridBagConstraints);
 
-        personnelTableModel = new PersonnelTableModel(getCampaign());
-        personnelTable = new JTable(personnelTableModel);
+        personnelTable = new MHQTable<>(new PersonnelTableModel(getCampaign()));
         personnelTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        XTableColumnModel personColumnModel = new XTableColumnModel();
-        personnelTable.setColumnModel(personColumnModel);
-        personnelTable.createDefaultColumnsFromModel();
-        personnelSorter = new TableRowSorter<>(personnelTableModel);
-        final ArrayList<SortKey> sortKeys = new ArrayList<>();
-        for (final PersonnelTableModelColumn column : PersonnelTableModel.PERSONNEL_COLUMNS) {
-            TableColumn tableColumn = personColumnModel.getColumnByModelIndex(column.ordinal());
-            tableColumn.setCellRenderer(personnelTableModel.getRenderer());
-
-            final Comparator<?> comparator = column.getComparator();
-            personnelSorter.setComparator(column.ordinal(), comparator);
-            final SortOrder sortOrder = column.getDefaultSortOrder();
-            if (sortOrder != null) {
-                sortKeys.add(new SortKey(column.ordinal(), sortOrder));
-            }
-        }
-        personnelSorter.setSortKeys(sortKeys);
-        personnelTable.setRowSorter(personnelSorter);
-        personnelTable.setIntercellSpacing(new Dimension(0, 0));
-        personnelTable.setShowGrid(false);
         personnelTable.getSelectionModel().addListSelectionListener(ev -> refreshPersonnelView());
 
         scrollPersonnelView = new FastJScrollPane();
@@ -379,7 +356,7 @@ public final class PersonnelTab extends CampaignGuiTab {
 
         registerSearchShortcut();
 
-        PersonnelTableMouseAdapter.connect(getCampaignGui(), personnelTable, personnelTableModel, splitPersonnel);
+        PersonnelTableMouseAdapter.connect(getCampaignGui(), personnelTable, getPersonnelTableModel(), splitPersonnel);
 
         refreshAll();
         updateUIScaling();
@@ -439,7 +416,7 @@ public final class PersonnelTab extends CampaignGuiTab {
     }
 
     public PersonnelTableModel getPersonnelTableModel() {
-        return personnelTableModel;
+        return personnelTable.getModel();
     }
 
     /*
@@ -458,11 +435,11 @@ public final class PersonnelTab extends CampaignGuiTab {
                                              PersonnelFilter.ACTIVE :
                                              personnelFilter.getSelectedItem();
         String searchText = searchField.getText();
-        personnelTableModel.getRenderer().setHighlight(searchText);
-        personnelSorter.setRowFilter(new RowFilter<>() {
+        getPersonnelTableModel().setHighlight(searchText);
+        personnelTable.setRowFilter(new RowFilter<>() {
             @Override
             public boolean include(Entry<? extends PersonnelTableModel, ? extends Integer> entry) {
-                Person person = entry.getModel().getPerson(entry.getIdentifier());
+                Person person = entry.getModel().getRow(entry.getIdentifier());
                 if (!filter.getFilteredInformation(person, getCampaignGui().getCampaign().getLocalDate())) {
                     return false;
                 }
@@ -476,7 +453,7 @@ public final class PersonnelTab extends CampaignGuiTab {
 
                 for (int i = 0; i < visibleColumnCount; i++) {
                     int modelIndex = columnModel.getColumn(i).getModelIndex();
-                    PersonnelTableModelColumn column = PersonnelTableModel.PERSONNEL_COLUMNS[modelIndex];
+                    PersonnelTableModelColumn column = getPersonnelTableModel().getAllColumns().get(modelIndex);
                     String cellText = column.getText(column.getCellValue(getCampaign(), person));
                     if (cellText != null && cellText.toLowerCase(Locale.ROOT).contains(searchAsLowerCase)) {
                         return true;
@@ -504,28 +481,15 @@ public final class PersonnelTab extends CampaignGuiTab {
             }).collect(Collectors.toSet());
         }
 
-        XTableColumnModel columnModel = (XTableColumnModel) getPersonnelTable().getColumnModel();
-        // replace the model with a dummy to suspend UI repaints
-        getPersonnelTable().setColumnModel(new DefaultTableColumnModel());
-
-        for (PersonnelTableModelColumn column : PersonnelTableModel.PERSONNEL_COLUMNS) {
-            TableColumn tableColumn = columnModel.getColumnByModelIndex(column.ordinal());
-            Integer width = column.getPreferredWidth();
-            if (width != null) {
-                tableColumn.setPreferredWidth(width);
-            }
-            columnModel.setColumnVisible(tableColumn, visibleColumns.contains(column));
-        }
+        personnelTable.setView(visibleColumns);
         personnelTable.setRowHeight(UIUtil.scaleForGUI((view == PersonnelTabView.GRAPHIC) ? 60 : 15));
-        // reattach the updated model
-        personnelTable.setColumnModel(columnModel);
         filterPersonnel();
     }
 
     public void focusOnPerson(UUID id) {
         int row = -1;
         for (int i = 0; i < personnelTable.getRowCount(); i++) {
-            if (personnelTableModel.getPerson(personnelTable.convertRowIndexToModel(i)).getId().equals(id)) {
+            if (getPersonnelTableModel().getRow(personnelTable.convertRowIndexToModel(i)).getId().equals(id)) {
                 row = i;
                 break;
             }
@@ -534,7 +498,7 @@ public final class PersonnelTab extends CampaignGuiTab {
             // try expanding the filter to all units
             personnelFilter.setSelectedIndex(0);
             for (int i = 0; i < personnelTable.getRowCount(); i++) {
-                if (personnelTableModel.getPerson(personnelTable.convertRowIndexToModel(i)).getId().equals(id)) {
+                if (getPersonnelTableModel().getRow(personnelTable.convertRowIndexToModel(i)).getId().equals(id)) {
                     row = i;
                     break;
                 }
@@ -544,6 +508,15 @@ public final class PersonnelTab extends CampaignGuiTab {
         if (row != -1) {
             personnelTable.setRowSelectionInterval(row, row);
             personnelTable.scrollRectToVisible(personnelTable.getCellRect(row, 0, true));
+            return;
+        }
+        // The person is outside the active location scope, so the grid does not contain them. Pin them to the detail
+        // panel so it shows them without forcing them onto the grid, surviving later table refreshes.
+        Person person = getCampaign().getPerson(id);
+        if (person != null) {
+            pinnedPerson = person;
+            personnelTable.clearSelection();
+            refreshPersonnelView();
         }
     }
 
@@ -559,7 +532,7 @@ public final class PersonnelTab extends CampaignGuiTab {
         UUID selectedUUID = null;
         int selectedRow = personnelTable.getSelectedRow();
         if (selectedRow != -1) {
-            Person person = personnelTableModel.getPerson(personnelTable.convertRowIndexToModel(selectedRow));
+            Person person = getPersonnelTableModel().getRow(personnelTable.convertRowIndexToModel(selectedRow));
             if (null != person) {
                 selectedUUID = person.getId();
             }
@@ -568,10 +541,10 @@ public final class PersonnelTab extends CampaignGuiTab {
         LocationFilterItem locationFilter = getCampaignGui().getActiveLocation();
 
         List<Person> people = locationFilter.selectPersonnel(getCampaign());
-        personnelTableModel.setData(people);
+        getPersonnelTableModel().setData(people);
 
         for (int row = 0; row < personnelTable.getRowCount(); row++) {
-            Person person = personnelTableModel.getPerson(personnelTable.convertRowIndexToModel(row));
+            Person person = getPersonnelTableModel().getRow(personnelTable.convertRowIndexToModel(row));
             if (person != null && person.getId().equals(selectedUUID)) {
                 personnelTable.setRowSelectionInterval(row, row);
                 refreshPersonnelView();
@@ -584,10 +557,16 @@ public final class PersonnelTab extends CampaignGuiTab {
     public void refreshPersonnelView() {
         int row = personnelTable.getSelectedRow();
         if (row < 0) {
-            scrollPersonnelView.setViewportView(null);
+            if (pinnedPerson != null) {
+                scrollPersonnelView.setViewportView(new PersonViewPanel(pinnedPerson, getCampaign(), getCampaignGui()));
+                SwingUtilities.invokeLater(() -> scrollPersonnelView.getVerticalScrollBar().setValue(0));
+            } else {
+                scrollPersonnelView.setViewportView(null);
+            }
             return;
         }
-        Person selectedPerson = personnelTableModel.getPerson(personnelTable.convertRowIndexToModel(row));
+        pinnedPerson = null;
+        Person selectedPerson = getPersonnelTableModel().getRow(personnelTable.convertRowIndexToModel(row));
         scrollPersonnelView.setViewportView(new PersonViewPanel(selectedPerson, getCampaign(), getCampaignGui()));
         // This odd code is to make sure that the scrollbar stays at the top
         // I can't just call it here, because it ends up getting reset somewhere later
@@ -599,7 +578,7 @@ public final class PersonnelTab extends CampaignGuiTab {
         List<Person> selectedPersons = new ArrayList<>();
         for (int viewRow : selectedRows) {
             int modelRow = personnelTable.convertRowIndexToModel(viewRow);
-            Person person = personnelTableModel.getPerson(modelRow);
+            Person person = getPersonnelTableModel().getRow(modelRow);
             if (person != null) {
                 selectedPersons.add(person);
             }
