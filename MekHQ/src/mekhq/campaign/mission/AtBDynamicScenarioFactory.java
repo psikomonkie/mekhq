@@ -1655,7 +1655,7 @@ public class AtBDynamicScenarioFactory {
                              templateObjective.getAssociatedForceNames()
                                    .contains(ScenarioObjective.FORCE_SHORTCUT_ALL_ENEMY_FORCES))) {
                 objectiveForceNames.add(botForce.getName());
-                calculatedDestinationZone = OffBoardDirection.translateBoardStart(getOppositeEdge(forceTemplate.getActualDeploymentZone()));
+                calculatedDestinationZone = OffBoardDirection.translateStartPosition(getOppositeEdge(forceTemplate.getActualDeploymentZone()));
             }
         }
 
@@ -1666,7 +1666,7 @@ public class AtBDynamicScenarioFactory {
                       templateObjective.getAssociatedForceNames()
                             .contains(ScenarioObjective.FORCE_SHORTCUT_ALL_PRIMARY_PLAYER_FORCES)) {
                 objectiveForceNames.add(campaign.getFormation(forceID).getName());
-                calculatedDestinationZone = OffBoardDirection.translateBoardStart(getOppositeEdge(playerForceTemplate.getActualDeploymentZone()));
+                calculatedDestinationZone = OffBoardDirection.translateStartPosition(getOppositeEdge(playerForceTemplate.getActualDeploymentZone()));
             }
         }
 
@@ -1677,7 +1677,7 @@ public class AtBDynamicScenarioFactory {
                       templateObjective.getAssociatedForceNames()
                             .contains(ScenarioObjective.FORCE_SHORTCUT_ALL_PRIMARY_PLAYER_FORCES)) {
                 objectiveUnitIDs.add(unitID.toString());
-                calculatedDestinationZone = OffBoardDirection.translateBoardStart(getOppositeEdge(playerForceTemplate.getActualDeploymentZone()));
+                calculatedDestinationZone = OffBoardDirection.translateStartPosition(getOppositeEdge(playerForceTemplate.getActualDeploymentZone()));
             }
         }
 
@@ -1687,7 +1687,7 @@ public class AtBDynamicScenarioFactory {
 
             if (templateObjective.isApplicableToForceTemplate(botForceTemplate, scenario)) {
                 objectiveUnitIDs.add(unitID.toString());
-                calculatedDestinationZone = OffBoardDirection.translateBoardStart(getOppositeEdge(botForceTemplate.getActualDeploymentZone()));
+                calculatedDestinationZone = OffBoardDirection.translateStartPosition(getOppositeEdge(botForceTemplate.getActualDeploymentZone()));
             }
         }
 
@@ -1701,11 +1701,23 @@ public class AtBDynamicScenarioFactory {
 
         // if the objective specifies that it's to reach or prevent reaching a map edge
         // and has been set to "force destination edge", set that here
-        if (actualObjective.getDestinationEdge() == OffBoardDirection.NONE &&
+        boolean destinationEdgeIsNone = actualObjective.getDestinationEdge() == OffBoardDirection.NONE;
+        boolean objectiveIsReachMapEdge = actualObjective.getObjectiveCriterion() == ObjectiveCriterion.ReachMapEdge;
+        boolean objectiveIsPreventReachMapEdge = actualObjective.getObjectiveCriterion() ==
+                                                       ObjectiveCriterion.PreventReachMapEdge;
+        boolean objectiveIsMapEdgeRelevant = objectiveIsReachMapEdge || objectiveIsPreventReachMapEdge;
+        if (destinationEdgeIsNone &&
                   calculatedDestinationZone != OffBoardDirection.NONE &&
-                  (actualObjective.getObjectiveCriterion() == ObjectiveCriterion.ReachMapEdge ||
-                         actualObjective.getObjectiveCriterion() == ObjectiveCriterion.PreventReachMapEdge)) {
+                  objectiveIsMapEdgeRelevant) {
             actualObjective.setDestinationEdge(calculatedDestinationZone);
+        } else if (destinationEdgeIsNone &&
+                         objectiveIsMapEdgeRelevant) {
+            // The edge could not be auto-derived (e.g. the associated force deploys from the map center, so there is
+            // no "opposite" edge to flee toward). Such an objective can never validate, so warn instead of failing
+            // silently; the template should set an explicit <destinationEdge> in this case.
+            LOGGER.warn("Reach/prevent-edge objective '{}' could not auto-resolve a destination edge; " +
+                              "it will never complete unless the scenario template sets an explicit <destinationEdge>.",
+                  actualObjective.getDescription());
         }
 
         return actualObjective;
