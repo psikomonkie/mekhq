@@ -967,6 +967,15 @@ public class Scenario implements IPlayerSettings {
 
     }
 
+    /**
+     * Determines whether this scenario can be started now. The base implementation applies only the readiness checks in
+     * {@link #canPrepareScenario(Campaign)}; subclasses may override it to impose additional restrictions, such as
+     * requiring the current date to match the scenario's scheduled date (see {@link AtBScenario}).
+     *
+     * @param c the campaign this scenario belongs to
+     *
+     * @return {@code true} if the scenario can be started
+     */
     public boolean canStartScenario(Campaign c) {
         return canPrepareScenario(c);
     }
@@ -975,10 +984,12 @@ public class Scenario implements IPlayerSettings {
      * Determines whether this scenario is ready for deployment preparation: it is current, has a deployed force, and
      * meets its required personnel and unit constraints.
      *
-     * <p>Unlike {@link #canStartScenario(Campaign)}, this check does not consider whether the scenario may be launched
-     * on the current date. It is therefore suitable for gating preparation actions (adjusting the deployment,
-     * exporting or printing the assigned force) that players should be able to perform ahead of the scenario's
-     * date.</p>
+     * <p>This readiness check intentionally excludes any date-based restriction. In the base {@link Scenario}
+     * implementation {@link #canStartScenario(Campaign)} simply delegates to this method, but subclasses such as
+     * {@link AtBScenario} may override {@code canStartScenario} to additionally require that the scenario be launched on
+     * its scheduled date. Because {@code canPrepareScenario} never applies such a restriction, it is suitable for gating
+     * preparation actions (adjusting the deployment, exporting or printing the assigned force) that players should be
+     * able to perform ahead of the scenario's date.</p>
      *
      * @param c the campaign this scenario belongs to
      *
