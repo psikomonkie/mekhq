@@ -507,9 +507,6 @@ public final class BriefingTab extends CampaignGuiTab {
 
     private void styleSecondaryButton(AbstractButton button) {
         styleBriefingButton(button);
-        // Reset to the default button background (rather than null, which renders flat) so these buttons match the
-        // standard look of every other button - including the danger buttons - and so a button that was previously
-        // emphasized as primary reverts correctly.
         button.setBackground(UIManager.getColor("Button.background"));
         button.setForeground(null);
         button.setFont(button.getFont().deriveFont(Font.PLAIN));
