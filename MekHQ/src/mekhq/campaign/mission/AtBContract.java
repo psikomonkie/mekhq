@@ -1096,18 +1096,9 @@ public class AtBContract extends Contract {
      * Calculates the number of required Victory Points (VP) needed to achieve overall success for this StratCon
      * contract.
      *
-     * <p>The calculation is based on several averaged campaign parameters:
-     * <ul>
-     *     <li><b>Base requirement</b> — Required number of combat teams multiplied by the contract length.</li>
-     *     <li><b>Scenario odds</b> — The mean scenario-odds percentage across all StratCon tracks, converted to a
-     *     probability.</li>
-     *     <li><b>Turning point chance</b> — A scaling factor based on command rights: {@code INTEGRATED} contracts
-     *     assume a 100% chance, while all others use a one-third chance.</li>
-     * </ul>
-     *
      * <p>The final result estimates the expected number of Turning Points the player must win for overall contract
-     * success. If the player loses a handful of Turning Points, they should still be able to win the contract by
-     * being proactive in the Area of Operations.</p>
+     * success. If the player loses a handful of Turning Points, they should still be able to win the contract by being
+     * proactive in the Area of Operations.</p>
      *
      * @return the required number of Victory Points, rounded up to the nearest integer
      *
@@ -1115,7 +1106,7 @@ public class AtBContract extends Contract {
      * @since 0.50.10
      */
     public int getRequiredVictoryPoints() {
-        if (getStratConCampaignState() == null) {
+        if (getStratConCampaignState() == null || getCommandRights().isIndependent()) {
             return 0;
         }
 

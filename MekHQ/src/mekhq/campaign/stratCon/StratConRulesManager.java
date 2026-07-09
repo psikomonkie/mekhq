@@ -735,19 +735,7 @@ public class StratConRulesManager {
      * should be flagged as a "turning point." Turning Point scenarios can cause CVP to be increased or decreased.
      * </p>
      *
-     * <p>
-     * The logic follows these rules:
-     * <ul>
-     *     <li>If the scenario template or its type is not related to resupply operations, the
-     *     method evaluates the contract's command rights.</li>
-     *     <li>For <strong>INTEGRATED</strong> or <strong>HOUSE</strong> command rights:
-     *     non-resupply scenarios are always marked as required.</li>
-     *     <li>For <strong>LIAISON</strong> or <strong>INDEPENDENT</strong> command rights:
-     *     non-resupply scenarios have a 25% chance (1 in 4) to be marked as required. An attached
-     *     units modifier is also set if the scenario becomes required.</li>
-     * </ul>
-     *  @param contract The {@link AtBContract} representing the current contract.
-     *
+     * @param contract          The {@link AtBContract} representing the current contract.
      * @param scenario          The {@link StratConScenario} being evaluated to determine if it is a Turning Point.
      * @param isCombatChallenge {@code true} if attached units should be skipped, and if the scenario is barred from
      *                          being a Turning Point
@@ -776,7 +764,7 @@ public class StratConRulesManager {
                 }
             }
             case INDEPENDENT -> {
-                if (randomInt(3) == 0) {
+                if (contract.getStratConCampaignState().getVictoryPoints() < 0) {
                     scenario.setTurningPoint(true);
                 }
             }
@@ -2908,27 +2896,11 @@ public class StratConRulesManager {
         AtBDynamicScenario backingScenario = scenario.getBackingScenario();
         boolean airBattle = (backingScenario.getTemplate().mapParameters.getMapLocation() == LowAtmosphere) ||
                                   (backingScenario.getTemplate().mapParameters.getMapLocation() == Space);
-        // if we're under non-independent command rights, a supervisor may come along
-        switch (contract.getCommandRights()) {
-            case INTEGRATED:
-                backingScenario.addScenarioModifier(AtBScenarioModifier.getScenarioModifier(airBattle ?
-                                                                                                  MHQConstants.SCENARIO_MODIFIER_INTEGRATED_UNITS_AIR :
-                                                                                                  MHQConstants.SCENARIO_MODIFIER_INTEGRATED_UNITS_GROUND));
-                break;
-            case HOUSE:
-                backingScenario.addScenarioModifier(AtBScenarioModifier.getScenarioModifier(airBattle ?
-                                                                                                  MHQConstants.SCENARIO_MODIFIER_HOUSE_CO_AIR :
-                                                                                                  MHQConstants.SCENARIO_MODIFIER_HOUSE_CO_GROUND));
-                break;
-            case LIAISON:
-                if (scenario.isTurningPoint()) {
-                    backingScenario.addScenarioModifier(AtBScenarioModifier.getScenarioModifier(airBattle ?
-                                                                                                      MHQConstants.SCENARIO_MODIFIER_LIAISON_AIR :
-                                                                                                      MHQConstants.SCENARIO_MODIFIER_LIAISON_GROUND));
-                }
-                break;
-            default:
-                break;
+
+        if (contract.getCommandRights().isHouse()) {
+            backingScenario.addScenarioModifier(AtBScenarioModifier.getScenarioModifier(airBattle ?
+                                                                                              MHQConstants.SCENARIO_MODIFIER_HOUSE_CO_AIR :
+                                                                                              MHQConstants.SCENARIO_MODIFIER_HOUSE_CO_GROUND));
         }
     }
 
