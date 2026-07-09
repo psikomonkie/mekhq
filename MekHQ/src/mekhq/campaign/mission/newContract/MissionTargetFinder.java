@@ -487,18 +487,14 @@ public class MissionTargetFinder {
             Set<Faction> factionSet = system.getFactionSet(currentDate);
             boolean isRepublicOwned = factionSet.contains(republicOfTheSphere);
             boolean isContested = factionSet.size() > 1;
+            boolean isTerra = system.getId().equalsIgnoreCase("Terra");
 
             if (!isRepublicOwned || isContested) {
                 filteredSystems.add(system);
                 continue;
             }
 
-            boolean isTerra = system.getId().equalsIgnoreCase("Terra");
-            if (isDuringFortressRepublic && !isDuringFortressRepublicTerraOnly) {
-                continue;
-            }
-
-            if (isTerra) {
+            if (!isTerra && isDuringFortressRepublicTerraOnly) {
                 filteredSystems.add(system);
             }
         }

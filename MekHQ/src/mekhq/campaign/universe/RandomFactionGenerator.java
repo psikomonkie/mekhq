@@ -33,6 +33,7 @@
  */
 package mekhq.campaign.universe;
 
+import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_END;
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_START;
@@ -390,7 +391,9 @@ public class RandomFactionGenerator {
 
             for (Faction containedFaction : factionHints.getContainedFactions(faction, date)) {
                 if (!checkForEarlyExit(containedFaction, date, currentYear, employerType, isMercenaryCampaign)) {
-                    finalWeights.merge(containedFaction, weight, Integer::sum);
+                    double fractionalPresence = factionHints.getAltLocationFraction(faction, containedFaction, date);
+                    int adjustedWeight = (int) ceil(weight * fractionalPresence);
+                    finalWeights.merge(containedFaction, adjustedWeight, Integer::sum);
                 }
             }
         }
@@ -695,6 +698,13 @@ public class RandomFactionGenerator {
 
         for (Faction enemy : candidates) {
             if (FactionHints.isEmptyFaction(enemy)) {
+                continue;
+            }
+
+            // A neutral faction is one that is never normally considered a valid target under any circumstances and
+            // therefore is entirely skipped.
+            boolean isNeutral = factionHints.isNeutral(employer, enemy, date);
+            if (isNeutral) {
                 continue;
             }
 

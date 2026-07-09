@@ -42,6 +42,7 @@ import java.util.Set;
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.FactionBorderTracker;
+import mekhq.campaign.universe.Planet;
 import mekhq.campaign.universe.PlanetarySystem;
 import mekhq.campaign.universe.RandomFactionGenerator;
 import mekhq.campaign.universe.enums.PlanetaryType;
@@ -112,13 +113,13 @@ class PirateMissionTargetFinder {
      * Finds systems within {@code radius} light years of {@code location}'s current system that have no real
      * controlling faction &mdash; that is, genuinely lawless, uncontested space, as opposed to a system some real
      * faction happens to also claim. This includes systems with no faction data at all (many real, populated systems
-     * have no owner tagged in the data at all, not even a placeholder) as well as ones whose only controlling
-     * "faction" is an empty/placeholder faction (see {@link FactionHints#isEmptyFaction(Faction)}).
+     * have no owner tagged in the data at all, not even a placeholder) as well as ones whose only controlling "faction"
+     * is an empty/placeholder faction (see {@link FactionHints#isEmptyFaction(Faction)}).
      * <p>Connector systems ({@link PlanetarySystem#isConnector()}) are synthetic jump-path waypoints with no lore
      * behind them, so they're excluded from mission targeting generally. Pirates are the one exception: a raiding band
      * hiding out at an otherwise-uncharted waypoint is plausible as long as it has a proper world to hide on, so a
-     * connector system still qualifies here if its primary planet is {@link PlanetaryType#TERRESTRIAL} (as opposed to
-     * a gas giant, asteroid belt, or similar place no one could actually raid).</p>
+     * connector system still qualifies here if its primary planet is {@link PlanetaryType#TERRESTRIAL} (as opposed to a
+     * gas giant, asteroid belt, or similar place no one could actually raid).</p>
      *
      * @param location the location to center the search on
      * @param radius   the search radius in light years from {@code location}'s current system; a negative radius
@@ -137,9 +138,15 @@ class PirateMissionTargetFinder {
         List<PlanetarySystem> emptySystems = new ArrayList<>();
         for (PlanetarySystem system : borderTracker.getSystemList()) {
             if ((radius < 0) || (system.getDistanceTo(origin) <= radius)) {
-                if (system.isConnector() && system.getPrimaryPlanet().getPlanetType() != PlanetaryType.TERRESTRIAL) {
+                boolean isConnector = system.isConnector();
+                Planet primaryPlanet = system.getPrimaryPlanet();
+
+                boolean isTerrestrial = primaryPlanet != null &&
+                                              primaryPlanet.getPlanetType() == PlanetaryType.TERRESTRIAL;
+                if (isConnector && isTerrestrial) {
                     continue;
                 }
+
                 Set<Faction> factions = system.getFactionSet(date);
                 if (factions.isEmpty() ||
                           (factions.size() == 1 && FactionHints.isEmptyFaction(factions.iterator().next()))) {
