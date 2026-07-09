@@ -2463,27 +2463,38 @@ public class StratConRulesManager {
      * @param contract          the {@link AtBContract} governing the StratCon campaign
      * @param track             the {@link StratConTrackState} where the scenario is placed
      * @param forceID           the ID of the force for which the scenario is generated
-     * @param coords            the {@link StratConCoords} specifying where the scenario will be generated
+     * @param scenarioCoords    the {@link StratConCoords} specifying where the scenario will be generated
      * @param daysTilDeployment the number of days until the scenario is deployed; if {@code null}, deployment dates are
      *                          determined dynamically
      *
      * @return the generated {@link StratConScenario}, or {@code null} if scenario generation fails
      */
     private static @Nullable StratConScenario generateScenario(Campaign campaign, AtBContract contract,
-          StratConTrackState track, @Nullable Integer forceID, StratConCoords coords,
+          StratConTrackState track, @Nullable Integer forceID, StratConCoords scenarioCoords,
           @Nullable Integer daysTilDeployment) {
         int unitType = MEK;
 
         if (forceID != null) {
-            unitType = campaign.getFormation(forceID).getPrimaryUnitType(campaign);
+            Formation formation = campaign.getFormation(forceID);
+            if (formation != null) {
+                unitType = formation.getPrimaryUnitType(campaign);
+            }
         }
 
-        ScenarioTemplate template = StratConScenarioFactory.getRandomScenario(unitType);
+        CombatTeam combatTeam = campaign.getCombatTeamsAsMap().get(forceID);
+        boolean isPatrol = combatTeam != null && combatTeam.getRole().isPatrol();
+
+        StratConCoords deployedCoords = track.getAssignedForceCoords().get(forceID);
+        boolean isAmbushed = deployedCoords != null && deployedCoords.equals(scenarioCoords);
+
+        boolean isBungledPatrol = isPatrol && isAmbushed;
+
+        ScenarioTemplate template = StratConScenarioFactory.getRandomScenario(unitType, isAmbushed, isBungledPatrol);
         // useful for debugging specific scenario types
         // template = StratConScenarioFactory.getSpecificScenario("Defend Grounded
         // Dropship.xml");
 
-        return generateScenario(campaign, contract, track, forceID, coords, template, daysTilDeployment);
+        return generateScenario(campaign, contract, track, forceID, scenarioCoords, template, daysTilDeployment);
     }
 
     /**
@@ -2535,7 +2546,7 @@ public class StratConRulesManager {
                 // This just means the player has no units
             }
 
-            template = StratConScenarioFactory.getRandomScenario(unitType);
+            template = StratConScenarioFactory.getRandomScenario(unitType, false, false);
         }
 
         if (template == null) {

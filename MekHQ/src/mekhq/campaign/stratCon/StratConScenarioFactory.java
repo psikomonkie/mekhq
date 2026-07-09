@@ -35,8 +35,10 @@ package mekhq.campaign.stratCon;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import megamek.codeUtilities.ObjectUtility;
 import megamek.common.annotations.Nullable;
@@ -158,14 +160,20 @@ public class StratConScenarioFactory {
     }
 
     /**
-     * Retrieves a random scenario template appropriate for the given unit type. This includes the more general ATB_MIX
-     * and ATB_AERO_MIX where appropriate
+     * Retrieves a random scenario template based on the given unit type and additional parameters.
      *
-     * @param unitType The desired unit type, as per megamek.common.units.UnitType
+     * <p>Filters applicable scenarios and randomly selects a viable option, ensuring that facility scenarios
+     * are excluded to prevent facility overpopulation.</p>
      *
-     * @return Random scenario template.
+     * @param unitType        The specific unit type that the scenario should be associated with.
+     * @param isAmbushed      A boolean flag indicating whether the unit is ambushed.
+     * @param isBungledPatrol A boolean flag indicating whether the scenario involves a bungled patrol.
+     *
+     * @return A randomly selected {@code ScenarioTemplate} that fits the specified criteria, or {@code null} if no
+     *       suitable scenarios are configured for the unit type.
      */
-    public static ScenarioTemplate getRandomScenario(int unitType) {
+    public static @Nullable ScenarioTemplate getRandomScenario(int unitType, boolean isAmbushed,
+          boolean isBungledPatrol) {
         int generalUnitType = convertSpecificUnitTypeToGeneral(unitType);
 
         // if the specific unit type doesn't have any scenario templates for it
@@ -176,20 +184,45 @@ public class StratConScenarioFactory {
             return null;
         }
 
-        List<ScenarioTemplate> jointList = new ArrayList<>();
+        Set<ScenarioTemplate> jointList = new HashSet<>();
 
         if (dynamicScenarioUnitTypeMap.containsKey(unitType)) {
-            jointList.addAll(dynamicScenarioUnitTypeMap.get(unitType));
+            getViableScenarioTemplates(unitType, isAmbushed, isBungledPatrol, jointList);
         }
 
         if (dynamicScenarioUnitTypeMap.containsKey(generalUnitType)) {
-            jointList.addAll(dynamicScenarioUnitTypeMap.get(generalUnitType));
+            getViableScenarioTemplates(generalUnitType, isAmbushed, isBungledPatrol, jointList);
         }
 
         // We don't want facilities spawning mid-contract; this stops facility count getting out of control
         jointList.removeIf(ScenarioTemplate::isFacilityScenario);
+        
+        if (jointList.isEmpty()) {
+            logger.warn("No scenarios configured for unit type {}, ({}) and ambushed status {}", unitType,
+                  generalUnitType, isAmbushed);
+            return null;
+        }
 
         return ObjectUtility.getRandomItem(jointList).clone();
+    }
+
+    private static void getViableScenarioTemplates(int unitType, boolean isAmbushed, boolean isBungledPatrol,
+          Set<ScenarioTemplate> jointList) {
+        if (!isAmbushed && !isBungledPatrol) {
+            jointList.addAll(dynamicScenarioUnitTypeMap.get(unitType));
+        }
+
+        for (ScenarioTemplate template : dynamicScenarioUnitTypeMap.get(unitType)) {
+            // If bungled patrol is true, so is isAmbushed so we need to parse isBungledPatrol first
+            if (template.isSuitedForBungledPatrols() && isBungledPatrol) {
+                jointList.add(template);
+                continue;
+            }
+
+            if (template.isSuitedForAmbushes() && isAmbushed) {
+                jointList.add(template);
+            }
+        }
     }
 
     /**
