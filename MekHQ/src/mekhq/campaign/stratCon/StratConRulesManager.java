@@ -1191,6 +1191,11 @@ public class StratConRulesManager {
      */
     public static void deployForceToCoords(StratConCoords coords, int forceID, Campaign campaign, AtBContract contract,
           StratConTrackState track, boolean sticky) {
+        // Ocean hexes are barred entirely - a force cannot deploy there, so no scenario can spawn there.
+        if (StratConBiomeManifest.isOceanTerrain(track.getTerrainTile(coords))) {
+            return;
+        }
+
         CombatTeam combatTeam = campaign.getCombatTeamsAsMap().get(forceID);
 
         // This shouldn't be possible, but never hurts to have a little insurance
@@ -1358,6 +1363,11 @@ public class StratConRulesManager {
         List<StratConCoords> suitableCoords = new ArrayList<>();
         for (int direction : ALL_DIRECTIONS) {
             StratConCoords newCoords = originCoords.translate(direction);
+
+            // Ocean hexes never host scenarios.
+            if (StratConBiomeManifest.isOceanTerrain(trackState.getTerrainTile(newCoords))) {
+                continue;
+            }
 
             if (trackState.getScenario(newCoords) != null) {
                 continue;
@@ -3508,8 +3518,13 @@ public class StratConRulesManager {
     /**
      * Can any force be manually deployed to the given coordinates on the given track for the given contract?
      */
-    public static boolean canManuallyDeployAnyForce(StratConCoords coords, StratConTrackState track,
-          AtBContract contract) {
+    public static boolean canManuallyDeployAnyForce(StratConCoords coords, StratConTrackState track) {
+        // Ocean hexes are barred entirely - forces can never be deployed onto open water.
+        // TODO if we ever add ocean battles to the scenario generator we should consider retiring this conditional
+        if (StratConBiomeManifest.isOceanTerrain(track.getTerrainTile(coords))) {
+            return false;
+        }
+
         // Rules: can't manually deploy if there's already a force deployed there
         // exception: on allied facilities
         // can't manually deploy if there's a non-cloaked scenario
