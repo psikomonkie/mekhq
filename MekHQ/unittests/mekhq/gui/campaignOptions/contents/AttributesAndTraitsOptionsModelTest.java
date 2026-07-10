@@ -33,23 +33,27 @@
 package mekhq.gui.campaignOptions.contents;
 
 import mekhq.campaign.campaignOptions.CampaignOptions;
+import mekhq.campaign.personnel.skills.RandomSkillPreferences;
 import org.junit.jupiter.api.Test;
 
 /**
- * Exhaustive round-trip test for {@link SystemsOptionsModel}, whose fields all live on {@link CampaignOptions}. Every
- * scalar field is mutated and verified through a save/reload. {@code resetCriminalRecord} is a transient action flag
- * that {@code applyTo} never persists, so it is excluded.
+ * Exhaustive round-trip test for {@link AttributesAndTraitsOptionsModel}, whose fields live partly on
+ * {@link CampaignOptions} and partly on {@link RandomSkillPreferences}. Every scalar field is mutated and verified
+ * through a save/reload, catching any field that loads from one source but saves to another.
  */
-class SystemsOptionsModelTest {
+class AttributesAndTraitsOptionsModelTest {
     @Test
     void applyToRoundTripsEveryField() {
-        SystemsOptionsModel model = new SystemsOptionsModel(new CampaignOptions());
-        OptionsModelTestSupport.mutateScalarFields(model, "resetCriminalRecord");
+        AttributesAndTraitsOptionsModel model = new AttributesAndTraitsOptionsModel(new CampaignOptions(),
+              new RandomSkillPreferences());
+        OptionsModelTestSupport.mutateScalarFields(model);
 
         CampaignOptions destinationOptions = new CampaignOptions();
-        model.applyTo(destinationOptions);
-        SystemsOptionsModel roundTripped = new SystemsOptionsModel(destinationOptions);
+        RandomSkillPreferences destinationPreferences = new RandomSkillPreferences();
+        model.applyTo(destinationOptions, destinationPreferences);
+        AttributesAndTraitsOptionsModel roundTripped = new AttributesAndTraitsOptionsModel(destinationOptions,
+              destinationPreferences);
 
-        OptionsModelTestSupport.assertAllFieldsMatch(model, roundTripped, "resetCriminalRecord");
+        OptionsModelTestSupport.assertAllFieldsMatch(model, roundTripped);
     }
 }
