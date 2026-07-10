@@ -76,7 +76,7 @@ public class StratConBiomeManifest {
      * @return {@code true} if the given terrain type is open water (ocean)
      */
     public static boolean isOceanTerrain(String terrainType) {
-        return OCEAN_TERRAIN_TYPES.contains(terrainType);
+        return terrainType != null && OCEAN_TERRAIN_TYPES.contains(terrainType);
     }
 
     // these constants will eventually be driven by planetary or track data
