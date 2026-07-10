@@ -8608,6 +8608,15 @@ public class Campaign implements ITechManager, IPlace {
     }
 
     @Override
+    public List<Integer> getTechAvailabilityYears() {
+        // Availability checks (introduction, extinction, and era-based tech level) are evaluated at the tech intro
+        // year cutoff rather than the raw game year. This ensures that disabling "Limit Tech Purchases by Game Year"
+        // - which makes getTechIntroYear() return Integer.MAX_VALUE - also lifts the era-based tech-level restriction,
+        // so designs introduced after the current campaign year remain purchasable.
+        return List.of(getTechIntroYear());
+    }
+
+    @Override
     public int getGameYear() {
         return getLocalDate().getYear();
     }
