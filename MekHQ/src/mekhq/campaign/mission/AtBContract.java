@@ -56,6 +56,7 @@ import static mekhq.campaign.mission.enums.AtBMoraleLevel.OVERWHELMING;
 import static mekhq.campaign.mission.enums.AtBMoraleLevel.STALEMATE;
 import static mekhq.campaign.randomEvents.prisoners.PrisonerStatus.FREE;
 import static mekhq.campaign.stratCon.StratConContractDefinition.getContractDefinition;
+import static mekhq.campaign.stratCon.StratConRulesManager.INDEPENDENT_COMMAND_RIGHTS_REQUIRED_VICTORY_POINTS;
 import static mekhq.campaign.universe.Faction.PIRATE_FACTION_CODE;
 import static mekhq.utilities.MHQInternationalization.getFormattedTextAt;
 import static mekhq.utilities.MHQInternationalization.getTextAt;
@@ -1106,8 +1107,12 @@ public class AtBContract extends Contract {
      * @since 0.50.10
      */
     public int getRequiredVictoryPoints() {
-        if (getStratConCampaignState() == null || getCommandRights().isIndependent()) {
+        if (getStratConCampaignState() == null) {
             return 0;
+        }
+
+        if (getCommandRights().isIndependent()) {
+            return INDEPENDENT_COMMAND_RIGHTS_REQUIRED_VICTORY_POINTS;
         }
 
         double baseRequirement = getRequiredCombatTeams();

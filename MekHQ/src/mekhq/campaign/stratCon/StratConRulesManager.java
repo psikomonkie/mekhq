@@ -145,6 +145,7 @@ public class StratConRulesManager {
 
     private static final int NO_FACILITY_MODIFIER = 0;
     private static final int AUTOMATIC_FACILITY_MODIFIER = 1;
+    public static final int INDEPENDENT_COMMAND_RIGHTS_REQUIRED_VICTORY_POINTS = 1;
 
     /**
      * What makes a particular lance eligible to be reinforcements for a scenario
@@ -764,7 +765,8 @@ public class StratConRulesManager {
                 }
             }
             case INDEPENDENT -> {
-                if (contract.getStratConCampaignState().getVictoryPoints() < 0) {
+                if (contract.getStratConCampaignState().getVictoryPoints() <
+                          INDEPENDENT_COMMAND_RIGHTS_REQUIRED_VICTORY_POINTS) {
                     scenario.setTurningPoint(true);
                 }
             }
@@ -2886,11 +2888,15 @@ public class StratConRulesManager {
         }
     }
 
+
     /**
-     * Set the 'attached' units modifier for the current scenario (integrated, house, liaison), and make sure we're not
-     * deploying ground units to an air scenario
+     * Sets the attached units modifier for the specified scenario based on the contract's type and map location of the
+     * backing scenario.
      *
-     * @param contract The scenario's contract
+     * @param scenario The strategic scenario to which the modifier will be applied. This scenario includes details
+     *                 about the current operation.
+     * @param contract The AtB (Against the Bot) contract which defines the command rights and governs how the scenario
+     *                 should be modified.
      */
     public static void setAttachedUnitsModifier(StratConScenario scenario, AtBContract contract) {
         AtBDynamicScenario backingScenario = scenario.getBackingScenario();
