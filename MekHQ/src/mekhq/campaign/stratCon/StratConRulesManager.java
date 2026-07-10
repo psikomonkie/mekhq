@@ -127,6 +127,7 @@ import mekhq.campaign.stratCon.StratConContractDefinition.StrategicObjectiveType
 import mekhq.campaign.stratCon.StratConScenario.ScenarioState;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.Planet;
+import mekhq.gui.dialog.StratConAmbushedDialog;
 import mekhq.gui.dialog.nagDialogs.CombatChallengeNagDialog;
 import mekhq.utilities.ReportingUtilities;
 import org.apache.commons.math3.util.Pair;
@@ -1197,6 +1198,12 @@ public class StratConRulesManager {
         boolean isPatrol = combatRole.isPatrol();
         boolean isTraining = combatRole.isTraining();
 
+        // A force that deploys into an unexplored hex is walking in blind. If that deployment trips a scenario, the
+        // force is caught off-guard: the scenario is pinned to the deployed hex (bypassing the patrol adjacent-shift)
+        // and counts as an ambush - or a bungled patrol, if the force was on patrol. This must be captured *before*
+        // processForceDeployment, which reveals the hex.
+        boolean deployedToUnexploredHex = !track.getRevealedCoords().contains(coords);
+
         // the following things should happen:
         // 1. call to "process force deployment", which reveals fog of war in or around the coords,
         // depending on force role
@@ -1231,8 +1238,14 @@ public class StratConRulesManager {
         if (isNonAlliedFacility || spawnScenario) {
             StratConScenario scenario;
 
-            // If we're not deploying on top of an enemy facility, migrate the scenario
-            if (!isNonAlliedFacility && isPatrol) {
+            // A blind deployment into an unexplored, empty hex is an ambush (a bungled patrol, if the force was
+            // patrolling). Facility scenarios are never ambushes.
+            boolean isAmbushed = spawnScenario && deployedToUnexploredHex;
+            boolean isBungledPatrol = isAmbushed && isPatrol;
+
+            // If we're not deploying on top of an enemy facility, migrate the scenario. An ambush/bungled patrol
+            // pins the scenario to the deployed hex, so it is not migrated.
+            if (!isNonAlliedFacility && isPatrol && !isAmbushed) {
                 StratConCoords newCoords = getUnoccupiedAdjacentCoords(coords, track);
 
                 if (newCoords != null) {
@@ -1240,8 +1253,21 @@ public class StratConRulesManager {
                 }
             }
 
-            // Patrols only get autoAssigned to the scenario if they're dropped on top of a non-allied facility
-            boolean autoAssignLances = !isPatrol || isNonAlliedFacility;
+            // Patrols only get autoAssigned to the scenario if they're dropped on top of a non-allied facility, or
+            // if they bungled a patrol into an ambush.
+            boolean autoAssignLances = !isPatrol || isNonAlliedFacility || isAmbushed;
+
+            // An ambush restricts the scenario to templates flagged as suitable for that context; the deploying force
+            // is always pinned to (and present at) the deployed hex, so template selection uses its unit type.
+            ScenarioTemplate ambushTemplate = null;
+            if (isAmbushed) {
+                int unitType = MEK;
+                Formation formation = campaign.getFormation(forceID);
+                if (formation != null) {
+                    unitType = formation.getPrimaryUnitType(campaign);
+                }
+                ambushTemplate = StratConScenarioFactory.getRandomScenario(unitType, true, isBungledPatrol);
+            }
 
             // Do we already have forces deployed to the target coordinates?
             // If so, assign them to the scenario.
@@ -1252,7 +1278,9 @@ public class StratConRulesManager {
                       track.getAssignedCoordForces().get(coords),
                       contract,
                       campaign,
-                      track);
+                      track,
+                      ambushTemplate,
+                      null);
                 // Otherwise, pick a random force from those available
             } else {
                 List<Integer> availableForceIDs = getAvailableForceIDs(campaign, contract, false);
@@ -1275,7 +1303,18 @@ public class StratConRulesManager {
                 scenario = setupScenario(coords, forceID, campaign, contract, track);
             }
 
-            finalizeBackingScenario(campaign, contract, track, autoAssignLances, scenario);
+            if (scenario != null) {
+                finalizeBackingScenario(campaign, contract, track, autoAssignLances, scenario);
+
+                if (isAmbushed) {
+                    // Ambushes are always Crisis scenarios, this stop
+                    scenario.getBackingScenario().setIsCrisis(true);
+                    scenario.setTurningPoint(false);
+
+                    new StratConAmbushedDialog(campaign, forceID, isBungledPatrol);
+                }
+            }
+
             return;
         }
 
@@ -2463,27 +2502,33 @@ public class StratConRulesManager {
      * @param contract          the {@link AtBContract} governing the StratCon campaign
      * @param track             the {@link StratConTrackState} where the scenario is placed
      * @param forceID           the ID of the force for which the scenario is generated
-     * @param coords            the {@link StratConCoords} specifying where the scenario will be generated
+     * @param scenarioCoords    the {@link StratConCoords} specifying where the scenario will be generated
      * @param daysTilDeployment the number of days until the scenario is deployed; if {@code null}, deployment dates are
      *                          determined dynamically
      *
      * @return the generated {@link StratConScenario}, or {@code null} if scenario generation fails
      */
     private static @Nullable StratConScenario generateScenario(Campaign campaign, AtBContract contract,
-          StratConTrackState track, @Nullable Integer forceID, StratConCoords coords,
+          StratConTrackState track, @Nullable Integer forceID, StratConCoords scenarioCoords,
           @Nullable Integer daysTilDeployment) {
         int unitType = MEK;
 
         if (forceID != null) {
-            unitType = campaign.getFormation(forceID).getPrimaryUnitType(campaign);
+            Formation formation = campaign.getFormation(forceID);
+            if (formation != null) {
+                unitType = formation.getPrimaryUnitType(campaign);
+            }
         }
 
-        ScenarioTemplate template = StratConScenarioFactory.getRandomScenario(unitType);
+        // Ambush and bungled-patrol scenarios are determined and pre-selected up-front in deployForceToCoords, where
+        // the pre-deployment fog-of-war state is still known. Scenarios reaching this random-selection path (auto
+        // generation, deployments into already-explored hexes) are never ambushes.
+        ScenarioTemplate template = StratConScenarioFactory.getRandomScenario(unitType, false, false);
         // useful for debugging specific scenario types
         // template = StratConScenarioFactory.getSpecificScenario("Defend Grounded
         // Dropship.xml");
 
-        return generateScenario(campaign, contract, track, forceID, coords, template, daysTilDeployment);
+        return generateScenario(campaign, contract, track, forceID, scenarioCoords, template, daysTilDeployment);
     }
 
     /**
@@ -2535,7 +2580,7 @@ public class StratConRulesManager {
                 // This just means the player has no units
             }
 
-            template = StratConScenarioFactory.getRandomScenario(unitType);
+            template = StratConScenarioFactory.getRandomScenario(unitType, false, false);
         }
 
         if (template == null) {

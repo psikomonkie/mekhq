@@ -638,6 +638,10 @@ public class Formation {
         return formationCommanderID;
     }
 
+    public @Nullable Person getFormationCommander(Campaign campaign) {
+        return formationCommanderID == null ? null : campaign.getPerson(formationCommanderID);
+    }
+
     /**
      * Sets the formation commander ID to the provided UUID. You probably want to use
      * setOverrideFormationCommanderID(UUID) followed by updateCommander(campaign).

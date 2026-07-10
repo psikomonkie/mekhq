@@ -45,6 +45,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -84,12 +85,14 @@ import mekhq.campaign.stratCon.StratConContractDefinition.StrategicObjectiveType
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.Atmosphere;
 import mekhq.campaign.universe.Planet;
+import mekhq.gui.dialog.StratConAmbushedDialog;
 import mekhq.utilities.EntityUtilities;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 
 /**
@@ -259,8 +262,8 @@ class StratConRulesManagerTest {
     }
 
     /**
-     * Creates the common mock infrastructure needed for deployForceToCoords tests.
-     * processForceDeployment -> scanNeighboringCoords touches many objects.
+     * Creates the common mock infrastructure needed for deployForceToCoords tests. processForceDeployment ->
+     * scanNeighboringCoords touches many objects.
      */
     private void setupProcessForceDeploymentMocks(Campaign campaign, CampaignOptions options,
           StratConTrackState track, int forceID) {
@@ -345,8 +348,8 @@ class StratConRulesManagerTest {
     }
 
     /**
-     * Verifies that when a force deploys to coordinates containing a non-challenge scenario
-     * (e.g., a fixed objective), the force IS auto-assigned as before.
+     * Verifies that when a force deploys to coordinates containing a non-challenge scenario (e.g., a fixed objective),
+     * the force IS auto-assigned as before.
      */
     @Test
     void deployForceToCoords_nonChallengeScenario_autoAssignsForce() {
@@ -387,6 +390,156 @@ class StratConRulesManagerTest {
 
         // Assert: force SHOULD be added to the regular scenario
         verify(regularScenario).addPrimaryForce(forceID);
+    }
+
+    /**
+     * Bundles the mocks a {@link StratConRulesManager#deployForceToCoords} ambush test needs.
+     */
+    private record AmbushFixture(Campaign campaign, AtBContract contract, StratConTrackState track,
+          StratConCoords coords, int forceID) {}
+
+    /**
+     * Builds the mock infrastructure for a deployment that trips a randomly-spawned scenario on an empty hex.
+     *
+     * @param isPatrol whether the deploying force is on a patrol role
+     * @param explored whether the target hex has already been revealed (an explored hex is never an ambush)
+     */
+    private AmbushFixture buildAmbushFixture(boolean isPatrol, boolean explored) {
+        Campaign campaign = mock(Campaign.class);
+        CampaignOptions options = mock(CampaignOptions.class);
+        when(campaign.getCampaignOptions()).thenReturn(options);
+
+        AtBContract contract = mock(AtBContract.class);
+        StratConTrackState track = mock(StratConTrackState.class);
+        StratConCoords coords = new StratConCoords(2, 3);
+        int forceID = 1;
+
+        CombatTeam combatTeam = mock(CombatTeam.class);
+        CombatRole combatRole = mock(CombatRole.class);
+        when(combatRole.isPatrol()).thenReturn(isPatrol);
+        when(combatRole.isTraining()).thenReturn(false);
+        when(combatTeam.getRole()).thenReturn(combatRole);
+        var combatTeamsMap = new Hashtable<Integer, CombatTeam>();
+        combatTeamsMap.put(forceID, combatTeam);
+        when(campaign.getCombatTeamsAsMap()).thenReturn(combatTeamsMap);
+
+        setupProcessForceDeploymentMocks(campaign, options, track, forceID);
+
+        // No fixed scenario or facility at the target hex, so a random scenario may spawn there.
+        when(track.getScenario(coords)).thenReturn(null);
+        when(track.getFacility(coords)).thenReturn(null);
+
+        // Revealed state decides whether the deployment is "blind" (into an unexplored hex).
+        Set<StratConCoords> revealed = new HashSet<>();
+        if (explored) {
+            revealed.add(coords);
+        }
+        when(track.getRevealedCoords()).thenReturn(revealed);
+        when(track.getAssignedForceCoords()).thenReturn(new HashMap<>());
+
+        // The deploying force is present at the hex it deployed into, so the "existing forces" branch is taken.
+        Map<StratConCoords, Set<Integer>> assignedCoordForces = new HashMap<>();
+        assignedCoordForces.put(coords, new HashSet<>(Set.of(forceID)));
+        when(track.getAssignedCoordForces()).thenReturn(assignedCoordForces);
+
+        return new AmbushFixture(campaign, contract, track, coords, forceID);
+    }
+
+    /**
+     * Stubs the scenario-generation collaborators so {@code deployForceToCoords} runs to completion: a scenario always
+     * spawns ({@code calculateScenarioOdds} returns 100), and template selection, existing-force generation, and
+     * finalization are neutralized so only the ambush decision logic is exercised.
+     */
+    private void stubScenarioGeneration(MockedStatic<StratConScenarioFactory> scenarioFactory,
+          MockedStatic<StratConRulesManager> rulesManager) {
+        scenarioFactory.when(() -> StratConScenarioFactory.getRandomScenario(anyInt(), anyBoolean(), anyBoolean()))
+              .thenReturn(mock(ScenarioTemplate.class));
+        rulesManager.when(() -> StratConRulesManager.calculateScenarioOdds(any(), any(), anyBoolean()))
+              .thenReturn(100);
+        // The ambush branch marks the generated scenario as a crisis via its backing scenario, so it must be present.
+        StratConScenario generatedScenario = mock(StratConScenario.class);
+        when(generatedScenario.getBackingScenario()).thenReturn(mock(AtBDynamicScenario.class));
+        rulesManager.when(() -> StratConRulesManager.generateScenarioForExistingForces(any(), any(), any(), any(),
+              any(), any(), any())).thenReturn(generatedScenario);
+        rulesManager.when(() -> StratConRulesManager.finalizeBackingScenario(any(), any(), any(), anyBoolean(),
+              any())).thenAnswer(invocation -> null);
+    }
+
+    /**
+     * A non-patrol force that deploys blind into an unexplored hex and trips a scenario is ambushed: the scenario is
+     * restricted to ambush-suited templates and the player is notified. It is not a bungled patrol.
+     */
+    @Test
+    void deployForceToCoords_blindDeployment_isAmbush() {
+        AmbushFixture fixture = buildAmbushFixture(false, false);
+        List<Boolean> dialogBungledArgs = new ArrayList<>();
+
+        try (MockedConstruction<StratConAmbushedDialog> dialogs = mockConstruction(StratConAmbushedDialog.class,
+              (dialog, context) -> dialogBungledArgs.add((Boolean) context.arguments().get(2)));
+              MockedStatic<StratConScenarioFactory> scenarioFactory = mockStatic(StratConScenarioFactory.class);
+              MockedStatic<StratConRulesManager> rulesManager = mockStatic(StratConRulesManager.class,
+                    CALLS_REAL_METHODS)) {
+            stubScenarioGeneration(scenarioFactory, rulesManager);
+
+            StratConRulesManager.deployForceToCoords(fixture.coords(), fixture.forceID(), fixture.campaign(),
+                  fixture.contract(), fixture.track(), false);
+
+            scenarioFactory.verify(() -> StratConScenarioFactory.getRandomScenario(anyInt(), eq(true), eq(false)));
+            assertEquals(List.of(false), dialogBungledArgs);
+        }
+    }
+
+    /**
+     * A patrol force that deploys blind into an unexplored hex bungles the patrol: the scenario is restricted to
+     * bungled-patrol templates, is pinned to the deployed hex (not migrated to an adjacent hex), and the player is
+     * notified that it was a bungled patrol.
+     */
+    @Test
+    void deployForceToCoords_blindPatrolDeployment_isBungledPatrolPinnedToHex() {
+        AmbushFixture fixture = buildAmbushFixture(true, false);
+        List<Boolean> dialogBungledArgs = new ArrayList<>();
+
+        try (MockedConstruction<StratConAmbushedDialog> dialogs = mockConstruction(StratConAmbushedDialog.class,
+              (dialog, context) -> dialogBungledArgs.add((Boolean) context.arguments().get(2)));
+              MockedStatic<StratConScenarioFactory> scenarioFactory = mockStatic(StratConScenarioFactory.class);
+              MockedStatic<StratConRulesManager> rulesManager = mockStatic(StratConRulesManager.class,
+                    CALLS_REAL_METHODS)) {
+            stubScenarioGeneration(scenarioFactory, rulesManager);
+
+            StratConRulesManager.deployForceToCoords(fixture.coords(), fixture.forceID(), fixture.campaign(),
+                  fixture.contract(), fixture.track(), false);
+
+            scenarioFactory.verify(() -> StratConScenarioFactory.getRandomScenario(anyInt(), eq(true), eq(true)));
+            assertEquals(List.of(true), dialogBungledArgs);
+            // Pinned to the deployed hex: the scenario is built for the force already there, not migrated away.
+            rulesManager.verify(() -> StratConRulesManager.generateScenarioForExistingForces(eq(fixture.coords()),
+                  any(), any(), any(), any(), any(), any()));
+        }
+    }
+
+    /**
+     * A patrol force deploying into an already-explored hex is never ambushed or bungled: no ambush template is
+     * requested and the player is not notified.
+     */
+    @Test
+    void deployForceToCoords_deploymentIntoExploredHex_isNotAmbush() {
+        AmbushFixture fixture = buildAmbushFixture(true, true);
+        List<Boolean> dialogBungledArgs = new ArrayList<>();
+
+        try (MockedConstruction<StratConAmbushedDialog> dialogs = mockConstruction(StratConAmbushedDialog.class,
+              (dialog, context) -> dialogBungledArgs.add((Boolean) context.arguments().get(2)));
+              MockedStatic<StratConScenarioFactory> scenarioFactory = mockStatic(StratConScenarioFactory.class);
+              MockedStatic<StratConRulesManager> rulesManager = mockStatic(StratConRulesManager.class,
+                    CALLS_REAL_METHODS)) {
+            stubScenarioGeneration(scenarioFactory, rulesManager);
+
+            StratConRulesManager.deployForceToCoords(fixture.coords(), fixture.forceID(), fixture.campaign(),
+                  fixture.contract(), fixture.track(), false);
+
+            scenarioFactory.verify(() -> StratConScenarioFactory.getRandomScenario(anyInt(), eq(true), anyBoolean()),
+                  never());
+            assertTrue(dialogBungledArgs.isEmpty());
+        }
     }
 
     /**
@@ -431,12 +584,11 @@ class StratConRulesManagerTest {
     }
 
     /**
-     * Verifies that when an Official Challenge scenario spawns on a hex that already has a deployed
-     * force (the {@code generateScenarioForExistingForces} path), the scenario does NOT override
-     * force auto-assignment. This means {@code finalizeBackingScenario} (called with
-     * {@code autoAssignLances=false} in {@code generateDailyScenariosForTrack}) will remove the
-     * forces from the backing scenario and set the scenario to UNRESOLVED, preventing
-     * auto-assignment.
+     * Verifies that when an Official Challenge scenario spawns on a hex that already has a deployed force (the
+     * {@code generateScenarioForExistingForces} path), the scenario does NOT override force auto-assignment. This means
+     * {@code finalizeBackingScenario} (called with {@code autoAssignLances=false} in
+     * {@code generateDailyScenariosForTrack}) will remove the forces from the backing scenario and set the scenario to
+     * UNRESOLVED, preventing auto-assignment.
      *
      * <p>Regression test for
      * <a href="https://github.com/MegaMek/mekhq/issues/8612">issue #8612</a>
@@ -481,8 +633,8 @@ class StratConRulesManagerTest {
     }
 
     /**
-     * Verifies that when a non-challenge scenario spawns on a hex with an existing force,
-     * the scenario DOES override force auto-assignment (so forces are committed as usual).
+     * Verifies that when a non-challenge scenario spawns on a hex with an existing force, the scenario DOES override
+     * force auto-assignment (so forces are committed as usual).
      */
     @Test
     void generateScenarioForExistingForces_nonChallenge_overridesAutoAssignment() {
@@ -526,11 +678,11 @@ class StratConRulesManagerTest {
     /**
      * Creates common mock infrastructure for isValidUnitForScenario tests.
      *
-     * @param unitType the unit type to return from the entity
+     * @param unitType              the unit type to return from the entity
      * @param hasUnstreamlinedQuirk whether the entity has the unstreamlined quirk
-     * @param atmosphere the planet's atmosphere (null to simulate missing planet data)
-     * @param isUseDropShips whether campaign options allow player dropships
-     * @param allowedUnitType the allowed unit type on the scenario force template (-2 for ATB_MIX)
+     * @param atmosphere            the planet's atmosphere (null to simulate missing planet data)
+     * @param isUseDropShips        whether campaign options allow player dropships
+     * @param allowedUnitType       the allowed unit type on the scenario force template (-2 for ATB_MIX)
      *
      * @return an Object array: [Unit, ScenarioForceTemplate, Campaign]
      */
@@ -703,7 +855,7 @@ class StratConRulesManagerTest {
         }
 
         @ParameterizedTest
-        @CsvSource({ "false, false, 0", "true, false, -1",  "false, true, 0",  "true, true, 0" })
+        @CsvSource({ "false, false, 0", "true, false, -1", "false, true, 0", "true, true, 0" })
         void testGetScoutComplementarySPAModifier(boolean hasEagleEyes, boolean hasSensorEquipment,
               int expectedModifier) {
             TargetRollModifier modifier =
@@ -935,7 +1087,8 @@ class StratConRulesManagerTest {
                     scenarioFactory.when(() -> AtBDynamicScenarioFactory.calculateAtBSpeed(entity)).thenReturn(5);
                     entityUtils.when(() -> EntityUtilities.hasImprovedSensors(entity)).thenReturn(hasImprovedSensors);
                     entityUtils.when(() -> EntityUtilities.hasActiveProbe(entity)).thenReturn(hasActiveProbe);
-                    scoutingSkills.when(() -> ScoutingSkills.getBestScoutingSkill(crew)).thenReturn(S_SENSOR_OPERATIONS);
+                    scoutingSkills.when(() -> ScoutingSkills.getBestScoutingSkill(crew))
+                          .thenReturn(S_SENSOR_OPERATIONS);
                     return unit;
                 }).toList();
                 when(formation.getAllUnitsAsUnits(hangar, false)).thenReturn(units);
