@@ -1827,12 +1827,11 @@ public class Campaign implements ITechManager, IPlace {
         // Units queued for travel elsewhere (e.g. left behind at a base via the jump-blocker prompt) still sit in
         // the hangar until the queue is dispatched next day, but must not be billed as traveling with the campaign.
         List<Unit> travelingUnits = getHangar().getUnits().stream()
-              .filter(unit -> !getCampaignLocationManager().isQueuedForTravel(unit))
-              .toList();
+                                          .filter(unit -> !getCampaignLocationManager().isQueuedForTravel(unit))
+                                          .toList();
         return new TransportCostCalculations(travelingUnits,
+              Warehouse.getSpareParts(getParts()),
               getPersonnelFilteringOutDepartedAndAbsent(),
-              getCargoStatistics(),
-              getHangarStatistics(),
               crewExperienceLevel);
     }
 
@@ -2074,7 +2073,7 @@ public class Campaign implements ITechManager, IPlace {
 
     /**
      * @return all hangars across all locations associated with this campaign.
-     *                                                                                           TODO: This won't work once we support multiple hangars. Method separated from getHangar() for future refactor
+     *                                                                                                             TODO: This won't work once we support multiple hangars. Method separated from getHangar() for future refactor
      */
     public Hangar getAllHangar() {
         return units;
@@ -2722,7 +2721,7 @@ public class Campaign implements ITechManager, IPlace {
 
     /**
      * @return all warehouses across all locations associated with this campaign.
-     *                                                                                           TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+     *                                                                                                             TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
      */
     public Warehouse getAllWarehouse() {
         return parts;
@@ -8937,7 +8936,8 @@ public class Campaign implements ITechManager, IPlace {
     }
 
     /**
-     * Selects a starting planet for mercenary or pirate campaigns based on the player's {@link StartingLocationChoice}.
+     * Selects a starting planet for mercenary or pirate campaigns based on the player's
+     * {@link StartingLocationChoice}.
      *
      * <p>The mercenary faction (or, for pirates, the Tortuga Dominions, falling back to the configured default
      * faction if they are not active at the campaign's start date) is used both as the "mercenary capital" option and
@@ -8998,7 +8998,7 @@ public class Campaign implements ITechManager, IPlace {
             }
             default -> {
                 List<Faction> pool = buildStartingFactionPool(
-                    factions, choice.mode(), choice.includeDeepPeriphery());
+                      factions, choice.mode(), choice.includeDeepPeriphery());
                 Faction randomFaction = ObjectUtility.getRandomItem(pool);
                 return (randomFaction != null) ? randomFaction : fallbackFaction;
             }
