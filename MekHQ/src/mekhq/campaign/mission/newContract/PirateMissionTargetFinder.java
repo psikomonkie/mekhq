@@ -136,22 +136,20 @@ class PirateMissionTargetFinder {
         }
 
         List<PlanetarySystem> emptySystems = new ArrayList<>();
-        for (PlanetarySystem system : borderTracker.getSystemList()) {
-            if ((radius < 0) || (system.getDistanceTo(origin) <= radius)) {
-                boolean isConnector = system.isConnector();
-                Planet primaryPlanet = system.getPrimaryPlanet();
+        for (PlanetarySystem system : borderTracker.systemsNear(origin, radius)) {
+            boolean isConnector = system.isConnector();
+            Planet primaryPlanet = system.getPrimaryPlanet();
 
-                boolean isTerrestrial = primaryPlanet != null &&
-                                              primaryPlanet.getPlanetType() == PlanetaryType.TERRESTRIAL;
-                if (isConnector && isTerrestrial) {
-                    continue;
-                }
+            boolean isTerrestrial = primaryPlanet != null &&
+                                          primaryPlanet.getPlanetType() == PlanetaryType.TERRESTRIAL;
+            if (isConnector && !isTerrestrial) {
+                continue;
+            }
 
-                Set<Faction> factions = system.getFactionSet(date);
-                if (factions.isEmpty() ||
-                          (factions.size() == 1 && FactionHints.isEmptyFaction(factions.iterator().next()))) {
-                    emptySystems.add(system);
-                }
+            Set<Faction> factions = system.getFactionSet(date);
+            if (factions.isEmpty() ||
+                      (factions.size() == 1 && FactionHints.isEmptyFaction(factions.iterator().next()))) {
+                emptySystems.add(system);
             }
         }
         return emptySystems;
