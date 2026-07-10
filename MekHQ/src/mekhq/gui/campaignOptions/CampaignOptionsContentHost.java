@@ -221,9 +221,8 @@ class CampaignOptionsContentHost extends JPanel {
 
         @Override
         public boolean getScrollableTracksViewportWidth() {
-            // PROTOTYPE (#9578 high-zoom clipping): stretch to the viewport only when the content actually fits. When
-            // the scaled content is wider than the viewport (high GUI scale), report false so the scroll pane shows a
-            // horizontal scrollbar instead of clipping the right edge (section controls, wide fields).
+            // When the scaled content is wider than the viewport (high GUI scale), report false so the scroll pane
+            // shows a horizontal scrollbar instead of clipping the right edge (section controls, wide fields).
             Container parent = getParent();
             if (parent instanceof JViewport viewport) {
                 return viewport.getWidth() >= getPreferredSize().width;
