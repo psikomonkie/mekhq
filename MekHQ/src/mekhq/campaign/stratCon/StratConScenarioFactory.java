@@ -196,7 +196,7 @@ public class StratConScenarioFactory {
 
         // We don't want facilities spawning mid-contract; this stops facility count getting out of control
         jointList.removeIf(ScenarioTemplate::isFacilityScenario);
-        
+
         if (jointList.isEmpty()) {
             logger.warn("No scenarios configured for unit type {}, ({}) and ambushed status {}", unitType,
                   generalUnitType, isAmbushed);
@@ -206,6 +206,15 @@ public class StratConScenarioFactory {
         return ObjectUtility.getRandomItem(jointList).clone();
     }
 
+    /**
+     * Filters and collects viable scenario templates based on the specified unit type and additional parameters, such
+     * as ambush or bungled patrol conditions, and adds them to the provided set of scenario templates.
+     *
+     * @param unitType        The specific unit type that the scenarios should be associated with.
+     * @param isAmbushed      A boolean flag indicating whether the scenarios should be suitable for ambushes.
+     * @param isBungledPatrol A boolean flag indicating whether the scenarios should be suitable for bungled patrols.
+     * @param jointList       A set to which viable scenario templates will be added.
+     */
     private static void getViableScenarioTemplates(int unitType, boolean isAmbushed, boolean isBungledPatrol,
           Set<ScenarioTemplate> jointList) {
         if (!isAmbushed && !isBungledPatrol) {
