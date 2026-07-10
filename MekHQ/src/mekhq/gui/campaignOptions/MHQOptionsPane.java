@@ -1091,6 +1091,7 @@ public class MHQOptionsPane extends JPanel {
         return buildColourButtons(
               "optionDeployedForeground", "optionDeployedBackground",
               "optionInTransitForeground", "optionInTransitBackground",
+              "optionQueuedForTravelForeground", "optionQueuedForTravelBackground",
               "optionRefittingForeground", "optionRefittingBackground",
               "optionMothballingForeground", "optionMothballingBackground",
               "optionMothballedForeground", "optionMothballedBackground",

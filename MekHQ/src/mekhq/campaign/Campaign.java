@@ -177,6 +177,7 @@ import mekhq.campaign.log.LogEntry;
 import mekhq.campaign.log.ServiceLogger;
 import mekhq.campaign.market.PartsStore;
 import mekhq.campaign.market.PersonnelMarket;
+import mekhq.campaign.market.RequestedStockLevels;
 import mekhq.campaign.market.ShoppingList;
 import mekhq.campaign.market.contractMarket.AbstractContractMarket;
 import mekhq.campaign.market.personnelMarket.markets.NewPersonnelMarket;
@@ -307,10 +308,9 @@ public class Campaign implements ITechManager, IPlace {
     private final TreeMap<Integer, Scenario> scenarios = new TreeMap<>();
     private final Map<UUID, List<Kill>> kills = new HashMap<>();
 
-    // This maps PartInUse ToString() results to doubles, representing a mapping
-    // of parts in use to their requested stock percentages to make these values
-    // persistent
-    private Map<String, Double> partsInUseRequestedStockMap = new LinkedHashMap<>();
+    // The main force's per-part requested stock percentages. Each player base owns its own instance; see
+    // IPlace.getRequestedStockLevels().
+    private final RequestedStockLevels requestedStockLevels = new RequestedStockLevels();
 
     private transient final UnitNameTracker unitNameTracker = new UnitNameTracker();
 
@@ -1827,12 +1827,11 @@ public class Campaign implements ITechManager, IPlace {
         // Units queued for travel elsewhere (e.g. left behind at a base via the jump-blocker prompt) still sit in
         // the hangar until the queue is dispatched next day, but must not be billed as traveling with the campaign.
         List<Unit> travelingUnits = getHangar().getUnits().stream()
-              .filter(unit -> !getCampaignLocationManager().isQueuedForTravel(unit))
-              .toList();
+                                          .filter(unit -> !getCampaignLocationManager().isQueuedForTravel(unit))
+                                          .toList();
         return new TransportCostCalculations(travelingUnits,
+              Warehouse.getSpareParts(getParts()),
               getPersonnelFilteringOutDepartedAndAbsent(),
-              getCargoStatistics(),
-              getHangarStatistics(),
               crewExperienceLevel);
     }
 
@@ -2074,7 +2073,7 @@ public class Campaign implements ITechManager, IPlace {
 
     /**
      * @return all hangars across all locations associated with this campaign.
-     *                                                                                           TODO: This won't work once we support multiple hangars. Method separated from getHangar() for future refactor
+     *                                                                                                             TODO: This won't work once we support multiple hangars. Method separated from getHangar() for future refactor
      */
     public Hangar getAllHangar() {
         return units;
@@ -2722,7 +2721,7 @@ public class Campaign implements ITechManager, IPlace {
 
     /**
      * @return all warehouses across all locations associated with this campaign.
-     *                                                                                           TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+     *                                                                                                             TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
      */
     public Warehouse getAllWarehouse() {
         return parts;
@@ -8609,6 +8608,15 @@ public class Campaign implements ITechManager, IPlace {
     }
 
     @Override
+    public List<Integer> getTechAvailabilityYears() {
+        // Availability checks (introduction, extinction, and era-based tech level) are evaluated at the tech intro
+        // year cutoff rather than the raw game year. This ensures that disabling "Limit Tech Purchases by Game Year"
+        // - which makes getTechIntroYear() return Integer.MAX_VALUE - also lifts the era-based tech-level restriction,
+        // so designs introduced after the current campaign year remain purchasable.
+        return List.of(getTechIntroYear());
+    }
+
+    @Override
     public int getGameYear() {
         return getLocalDate().getYear();
     }
@@ -8757,13 +8765,20 @@ public class Campaign implements ITechManager, IPlace {
         this.processProcurement = processProcurement;
     }
 
+    @Override
+    public RequestedStockLevels getRequestedStockLevels() {
+        return requestedStockLevels;
+    }
+
     // Simple getters and setters for our stock map
     public Map<String, Double> getPartsInUseRequestedStockMap() {
-        return partsInUseRequestedStockMap;
+        return requestedStockLevels.getStockMap();
     }
 
     public void setPartsInUseRequestedStockMap(Map<String, Double> partsInUseRequestedStockMap) {
-        this.partsInUseRequestedStockMap = partsInUseRequestedStockMap;
+        Map<String, Double> stockMap = requestedStockLevels.getStockMap();
+        stockMap.clear();
+        stockMap.putAll(partsInUseRequestedStockMap);
     }
 
     public boolean getIgnoreMothballed() {
@@ -8794,25 +8809,14 @@ public class Campaign implements ITechManager, IPlace {
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "ignoreMothBalled", ignoreMothballed);
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "topUpWeekly", topUpWeekly);
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "ignoreSparesUnderQuality", ignoreSparesUnderQuality.name());
-        MHQXMLUtility.writeSimpleXMLOpenTag(pw, indent++, "partInUseMap");
-        writePartInUseMapToXML(pw, indent);
-        MHQXMLUtility.writeSimpleXMLCloseTag(pw, --indent, "partInUseMap");
-    }
-
-    public void writePartInUseMapToXML(final PrintWriter pw, int indent) {
-        for (String key : partsInUseRequestedStockMap.keySet()) {
-            MHQXMLUtility.writeSimpleXMLOpenTag(pw, indent++, "partInUseMapEntry");
-            MHQXMLUtility.writeSimpleXMLTag(pw, indent, "partInUseMapKey", key);
-            MHQXMLUtility.writeSimpleXMLTag(pw, indent, "partInUseMapVal", partsInUseRequestedStockMap.get(key));
-            MHQXMLUtility.writeSimpleXMLCloseTag(pw, --indent, "partInUseMapEntry");
-        }
+        requestedStockLevels.writeToXML(pw, indent);
     }
 
     /**
      * Wipes the Parts in use map for the purpose of resetting all values to their default
      */
     public void wipePartsInUseMap() {
-        this.partsInUseRequestedStockMap.clear();
+        this.requestedStockLevels.clear();
     }
 
     /** Discriminator identifying the main campaign as a serialized {@link ILocation} reference. */
@@ -8941,7 +8945,8 @@ public class Campaign implements ITechManager, IPlace {
     }
 
     /**
-     * Selects a starting planet for mercenary or pirate campaigns based on the player's {@link StartingLocationChoice}.
+     * Selects a starting planet for mercenary or pirate campaigns based on the player's
+     * {@link StartingLocationChoice}.
      *
      * <p>The mercenary faction (or, for pirates, the Tortuga Dominions, falling back to the configured default
      * faction if they are not active at the campaign's start date) is used both as the "mercenary capital" option and
@@ -9002,7 +9007,7 @@ public class Campaign implements ITechManager, IPlace {
             }
             default -> {
                 List<Faction> pool = buildStartingFactionPool(
-                    factions, choice.mode(), choice.includeDeepPeriphery());
+                      factions, choice.mode(), choice.includeDeepPeriphery());
                 Faction randomFaction = ObjectUtility.getRandomItem(pool);
                 return (randomFaction != null) ? randomFaction : fallbackFaction;
             }
