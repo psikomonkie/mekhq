@@ -36,6 +36,7 @@ import static mekhq.gui.campaignOptions.CampaignOptionsUtilities.getMetadata;
 import static mekhq.utilities.MHQInternationalization.getTextAt;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -125,30 +126,41 @@ class MHQDisplayPage extends MHQOptionsPage {
         CampaignOptionsFormPanel panel = new CampaignOptionsFormPanel("MHQDisplayGeneralContent", FORM_LABEL_WIDTH,
               FORM_CONTROL_WIDTH);
 
-        fieldDisplayDateFormat = new JTextField(model.displayDateFormat, 20);
+        fieldDisplayDateFormat = new JTextField(model.displayDateFormat, 14);
         fieldDisplayDateFormat.setName("txtlabelDisplayDateFormat");
         panel.addRow(new CampaignOptionsLabel(RESOURCE_BUNDLE, "labelDisplayDateFormat"),
               dateFormatControl(fieldDisplayDateFormat));
-        fieldLongDisplayDateFormat = new JTextField(model.longDisplayDateFormat, 20);
+        fieldLongDisplayDateFormat = new JTextField(model.longDisplayDateFormat, 14);
         fieldLongDisplayDateFormat.setName("txtlabelLongDisplayDateFormat");
         panel.addRow(new CampaignOptionsLabel(RESOURCE_BUNDLE, "labelLongDisplayDateFormat"),
               dateFormatControl(fieldLongDisplayDateFormat));
 
         JLabel guiScaleLabel = new JLabel(Messages.getString("CommonSettingsDialog.guiScale"));
-        guiScaleSlider = new JSlider(7, 24);
+        guiScaleSlider = new JSlider(7, 25);
         guiScaleSlider.setName("guiScale");
         guiScaleSlider.setMajorTickSpacing(3);
+        // Label every 30% stop, including the 250% maximum, so each tick is numbered.
         Hashtable<Integer, JComponent> labelTable = new Hashtable<>();
         labelTable.put(7, new JLabel("70%"));
         labelTable.put(10, new JLabel("100%"));
+        labelTable.put(13, new JLabel("130%"));
         labelTable.put(16, new JLabel("160%"));
+        labelTable.put(19, new JLabel("190%"));
         labelTable.put(22, new JLabel("220%"));
+        labelTable.put(25, new JLabel("250%"));
         guiScaleSlider.setLabelTable(labelTable);
         guiScaleSlider.setPaintTicks(true);
         guiScaleSlider.setPaintLabels(true);
         guiScaleSlider.setValue(model.guiScaleValue);
         guiScaleSlider.setToolTipText(Messages.getString("CommonSettingsDialog.guiScaleTT"));
-        panel.addRow(guiScaleLabel, guiScaleSlider);
+        // Give the slider a fixed, roomy width so its seven stop labels do not crowd together, and left-align it so it
+        // stays compact rather than stretching across the whole control column (which would force the section wide).
+        guiScaleSlider.setPreferredSize(new Dimension(UIUtil.scaleForGUI(320),
+              guiScaleSlider.getPreferredSize().height));
+        JPanel guiScaleControl = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        guiScaleControl.setOpaque(false);
+        guiScaleControl.add(guiScaleSlider);
+        panel.addRow(guiScaleLabel, guiScaleControl);
 
         chkHideUnitFluff = checkBox("optionHideUnitFluff", model.hideUnitFluff);
         chkHistoricalDailyLog = checkBox("optionHistoricalDailyLog", model.historicalDailyLog);

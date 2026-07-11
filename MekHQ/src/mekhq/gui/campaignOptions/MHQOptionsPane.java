@@ -37,6 +37,7 @@ import static mekhq.utilities.MHQInternationalization.getTextAt;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -64,6 +65,9 @@ import mekhq.gui.campaignOptions.components.CampaignOptionsPagePanel;
  */
 public class MHQOptionsPane extends JPanel {
     private static final int CONTENT_MARGIN = UIUtil.scaleForGUI(4);
+    // Unscaled initial dialog height, floored in getPreferredSize() and scaled at use. The base dialog still clamps
+    // the packed size to 80% of the screen, so this is an upper target rather than a hard height.
+    private static final int START_HEIGHT = 800;
 
     private final JFrame frame;
     private final MHQOptions options;
@@ -123,7 +127,8 @@ public class MHQOptionsPane extends JPanel {
         navigationPanel.setSearchIndexInitializer(this::ensureSearchIndexBuilt);
 
         // Match the Campaign Options pane: a small content margin (0 at the bottom, since the footer adds its own top
-        // padding) and no fixed preferred size, so the dialog packs to its content the same way Campaign Options does.
+        // padding). getPreferredSize() floors the width so the dialog opens at a Campaign-Options-comparable size
+        // rather than packing tightly around the narrower MekHQ pages.
         setBorder(BorderFactory.createEmptyBorder(CONTENT_MARGIN, CONTENT_MARGIN, 0, CONTENT_MARGIN));
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, navigationPanel, contentHost);
@@ -133,6 +138,22 @@ public class MHQOptionsPane extends JPanel {
         add(splitPane, BorderLayout.CENTER);
 
         navigationPanel.selectRoute(initialRoute);
+    }
+
+    /**
+     * Floors the pane's initial size so the dialog opens at a comfortable size rather than packing tightly around the
+     * simpler MekHQ pages (whose sections start collapsed). Width is floored to the navigation column plus the shared
+     * page-width cap (narrower pages centre within it, as in Campaign Options); height is floored to a fixed start
+     * height. The base dialog still clamps the result to 80% of the screen, the dialog stays freely resizable, and
+     * naturally larger content still wins via {@code Math.max}.
+     */
+    @Override
+    public Dimension getPreferredSize() {
+        Dimension preferred = super.getPreferredSize();
+        int floorWidth = UIUtil.scaleForGUI(CampaignOptionsNavigationPanel.NAVIGATION_WIDTH)
+              + CampaignOptionsUtilities.CAMPAIGN_OPTIONS_PANEL_WIDTH;
+        int floorHeight = UIUtil.scaleForGUI(START_HEIGHT);
+        return new Dimension(Math.max(preferred.width, floorWidth), Math.max(preferred.height, floorHeight));
     }
 
     private void selectRoute(CampaignOptionsRoute route) {
