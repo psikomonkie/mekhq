@@ -480,7 +480,7 @@ public class CampaignNewDayManager {
 
         processAllArrivals();
 
-        campaign.getCampaignLocationManager().pruneEmptyLocations(campaign);
+        campaign.getCampaignLocationManager().pruneEmptyLocations();
 
         if (campaignOptions.isUseRandomDiseases() && campaignOptions.isUseAlternativeAdvancedMedical()) {
             PlanetarySystem currentSystem = updatedLocation.getCurrentSystem();
