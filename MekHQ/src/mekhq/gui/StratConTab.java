@@ -48,6 +48,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JViewport;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
@@ -144,6 +145,9 @@ public class StratConTab extends CampaignGuiTab {
         scrollPane.setBorder(RoundedLineBorder.createRoundedLineBorder());
         scrollPane.getHorizontalScrollBar().setUnitIncrement(StratConPanel.HEX_X_RADIUS);
         scrollPane.getVerticalScrollBar().setUnitIncrement(StratConPanel.HEX_Y_RADIUS);
+        // Repaint the whole map on scroll rather than blit-copying old pixels; the default BLIT mode tears when panning
+        // the large, scaled hex map.
+        scrollPane.getViewport().setScrollMode(JViewport.SIMPLE_SCROLL_MODE);
 
         this.add(scrollPane, BorderLayout.CENTER);
 
