@@ -641,6 +641,11 @@ public class Resupply {
      * @return {@code true} if the part is in the exclusion list, {@code false} otherwise.
      */
     private boolean checkExclusionList(Part part) {
+        // AmmoBin extends EquipmentPart but doesn't accept MiscType flags
+        if (part instanceof AmmoBin) {
+            return false;
+        }
+
         if (part instanceof EquipmentPart equipmentPart) {
             return equipmentPart.getType().hasFlag(F_SPONSON_TURRET);
         }
