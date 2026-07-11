@@ -436,8 +436,9 @@ public class CampaignLocationManager {
     }
 
     /**
-     * Removes any {@link AbstractLocation} entries that have no personnel, parts, or units at any depth in their
-     * subtree, excluding the campaign's own current location.
+     * Removes any tracked top-level {@link AbstractLocation} that is no longer {@link ILocation#isInUse() in use} —
+     * one with no {@link Campaign}, {@link mekhq.campaign.base.AbstractBase}, person, unit, or part anywhere in its
+     * subtree. The main force's current location is retained automatically because the campaign node sits below it.
      *
      * <p>This handles two leak paths: {@link CurrentLocation} travel nodes whose passengers all
      * died or were removed before arriving, and {@link FixedLocation}/{@link AcademyCampusLocation} pairs that were
@@ -445,15 +446,9 @@ public class CampaignLocationManager {
      *
      * <p>Call this once per day after all personnel processing has completed.</p>
      */
-    public void pruneEmptyLocations(Campaign campaign) {
-        AbstractLocation mainLocation = campaign.getCurrentLocation();
+    public void pruneEmptyLocations() {
         locations.removeIf(location -> {
-            if (location == mainLocation) {
-                return false;
-            }
-            if (!location.fetchPersonnelAtLocation().isEmpty()
-                      || !location.fetchPartsAtLocation().isEmpty()
-                      || !location.fetchUnitsAtLocation().isEmpty()) {
+            if (location.isInUse()) {
                 return false;
             }
             if (location instanceof AbstractMobileLocation) {
