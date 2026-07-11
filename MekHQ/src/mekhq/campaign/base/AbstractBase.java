@@ -102,6 +102,12 @@ public abstract class AbstractBase implements IPlace {
         return locationNode;
     }
 
+    /** A base is always in use, so any location node with a base below it must never be pruned. */
+    @Override
+    public boolean isInUse() {
+        return true;
+    }
+
     /** Returns the {@link Personnel} node that holds persons who have arrived at this base. */
     public Personnel getBasePersonnel() {
         return basePersonnel;
