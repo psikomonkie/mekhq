@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2017-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -150,6 +150,14 @@ public class TaskTableMouseAdapter extends JPopupMenuAdapter {
 
                 reportAndTriggerEvent(p);
             }
+        } else if (command.equalsIgnoreCase("CANCEL")) {
+            for (IPartWork work : parts) {
+                // Cancel the assignment without refunding the minutes already spent.
+                work.cancelAssignment(false);
+                if (work instanceof Part part) {
+                    MekHQ.triggerEvent(new PartChangedEvent(part));
+                }
+            }
         }
     }
 
@@ -257,6 +265,13 @@ public class TaskTableMouseAdapter extends JPopupMenuAdapter {
             menuItem.setEnabled(!isBeingWorked);
             popup.add(menuItem);
         }
+
+        // Cancel task (unassign tech; spent minutes are not refunded)
+        menuItem = new JMenuItem(getTextAt(RESOURCE_BUNDLE, "TaskTableMouseAdapter.CANCEL"));
+        menuItem.setActionCommand("CANCEL");
+        menuItem.addActionListener(this);
+        menuItem.setEnabled(isBeingWorked);
+        popup.add(menuItem);
 
         if (gui.getCampaign().isGM()) {
             popup.addSeparator();
