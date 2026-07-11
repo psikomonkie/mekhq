@@ -151,7 +151,7 @@ public class MHQOptionsPane extends JPanel {
     public Dimension getPreferredSize() {
         Dimension preferred = super.getPreferredSize();
         int floorWidth = UIUtil.scaleForGUI(CampaignOptionsNavigationPanel.NAVIGATION_WIDTH)
-              + CampaignOptionsUtilities.CAMPAIGN_OPTIONS_PANEL_WIDTH;
+              + CampaignOptionsUtilities.campaignOptionsPanelWidth();
         int floorHeight = UIUtil.scaleForGUI(START_HEIGHT);
         return new Dimension(Math.max(preferred.width, floorWidth), Math.max(preferred.height, floorHeight));
     }

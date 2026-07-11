@@ -99,11 +99,12 @@ class MHQNewDayPage extends MHQOptionsPage {
         JComponent tasksContent = createNewDayTasksSection();
         JComponent trainingContent = createNewDayTrainingSection();
         JComponent formationContent = createNewDayFormationSection();
-        // Non-short-circuit | so tips are registered for every section body before the page is built.
-        boolean hasTooltips = registerDetailsTips(poolContent)
-              | registerDetailsTips(tasksContent)
-              | registerDetailsTips(trainingContent)
-              | registerDetailsTips(formationContent);
+        // Register each section body's tips before the page is built; |= always evaluates its right side, so no
+        // section's registration is skipped.
+        boolean hasTooltips = registerDetailsTips(poolContent);
+        hasTooltips |= registerDetailsTips(tasksContent);
+        hasTooltips |= registerDetailsTips(trainingContent);
+        hasTooltips |= registerDetailsTips(formationContent);
         Component page = pageBuilder("MHQNewDayPage", hasTooltips)
                      .section("lblMHQNewDayPoolSection.text", "lblMHQNewDayPoolSection.summary", poolContent)
                      .section("lblMHQNewDayTasksSection.text", "lblMHQNewDayTasksSection.summary", tasksContent)

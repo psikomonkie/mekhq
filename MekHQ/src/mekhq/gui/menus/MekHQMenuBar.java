@@ -244,9 +244,9 @@ public class MekHQMenuBar extends JMenuBar {
               Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | InputEvent.SHIFT_DOWN_MASK));
         menuFile.add(menuOptions);
 
-        JMenuItem miMHQOptions = createMenuItem("miMHQOptions.text", KeyEvent.VK_UNDEFINED,
+        JMenuItem miMHQOptions = createMenuItem("miMHQOptions.text", KeyEvent.VK_H,
               evt -> new MHQOptionsTreeDialog(getFrame()).setVisible(true));
-        miMHQOptions.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q,
+        miMHQOptions.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H,
               Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx() | InputEvent.SHIFT_DOWN_MASK));
         miMHQOptions.setToolTipText(getTextAt("miMHQOptions.toolTipText"));
         menuFile.add(miMHQOptions);

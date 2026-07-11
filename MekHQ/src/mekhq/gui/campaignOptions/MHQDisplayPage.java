@@ -53,6 +53,8 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import megamek.client.ui.Messages;
 import megamek.client.ui.buttons.ColourSelectorButton;
@@ -106,10 +108,11 @@ class MHQDisplayPage extends MHQOptionsPage {
         JComponent generalContent = createDisplayGeneralSection();
         JComponent interstellarContent = createDisplayInterstellarSection();
         JComponent personnelContent = createDisplayPersonnelSection();
-        // Non-short-circuit | so tips are registered for every section body before the page is built.
-        boolean hasTooltips = registerDetailsTips(generalContent)
-              | registerDetailsTips(interstellarContent)
-              | registerDetailsTips(personnelContent);
+        // Register each section body's tips before the page is built; |= always evaluates its right side, so no
+        // section's registration is skipped.
+        boolean hasTooltips = registerDetailsTips(generalContent);
+        hasTooltips |= registerDetailsTips(interstellarContent);
+        hasTooltips |= registerDetailsTips(personnelContent);
         Component page = pageBuilder("MHQDisplayPage", hasTooltips)
                      .section("lblMHQDisplayGeneralSection.text", "lblMHQDisplayGeneralSection.summary",
                            generalContent)
@@ -185,7 +188,24 @@ class MHQDisplayPage extends MHQOptionsPage {
               ? LocalDate.now().format(DateTimeFormatter.ofPattern(field.getText())
                     .withLocale(MekHQ.getMHQOptions().getDateLocale()))
               : getTextAt(RESOURCE_BUNDLE, "invalidDateFormat.error"));
-        field.addActionListener(evt -> updateExample.run());
+        // Refresh on every document edit (typing, paste, delete), not only on Enter, so the example and validation
+        // stay in step with the field instead of lagging behind until an ActionEvent fires.
+        field.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent event) {
+                updateExample.run();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent event) {
+                updateExample.run();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent event) {
+                updateExample.run();
+            }
+        });
         updateExample.run();
 
         JPanel control = new JPanel(new FlowLayout(FlowLayout.LEFT, UIUtil.scaleForGUI(6), 0));

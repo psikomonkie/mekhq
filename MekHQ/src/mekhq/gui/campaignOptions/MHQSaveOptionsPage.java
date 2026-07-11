@@ -77,8 +77,10 @@ class MHQSaveOptionsPage extends MHQOptionsPage {
     Component createPage() {
         JComponent autosaveContent = createAutosaveSection();
         JComponent campaignSaveContent = createCampaignSaveSection();
-        // Non-short-circuit | so tips are registered for both section bodies before the page is built.
-        boolean hasTooltips = registerDetailsTips(autosaveContent) | registerDetailsTips(campaignSaveContent);
+        // Register each section body's tips before the page is built; |= always evaluates its right side, so no
+        // section's registration is skipped.
+        boolean hasTooltips = registerDetailsTips(autosaveContent);
+        hasTooltips |= registerDetailsTips(campaignSaveContent);
         Component page = pageBuilder("MHQSaveOptionsPage", hasTooltips)
                      .section("lblMHQAutosaveSection.text", "lblMHQAutosaveSection.summary", autosaveContent)
                      .section("lblMHQCampaignSaveSection.text", "lblMHQCampaignSaveSection.summary",

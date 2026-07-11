@@ -62,8 +62,10 @@ class MHQRemindersPage extends MHQOptionsPage {
     Component createPage() {
         JComponent nagsContent = createRemindersNagsSection();
         JComponent confirmationsContent = createRemindersConfirmationsSection();
-        // Non-short-circuit | so tips are registered for both section bodies before the page is built.
-        boolean hasTooltips = registerDetailsTips(nagsContent) | registerDetailsTips(confirmationsContent);
+        // Register each section body's tips before the page is built; |= always evaluates its right side, so no
+        // section's registration is skipped.
+        boolean hasTooltips = registerDetailsTips(nagsContent);
+        hasTooltips |= registerDetailsTips(confirmationsContent);
         Component page = pageBuilder("MHQRemindersPage", hasTooltips)
                      .section("lblMHQNagSection.text", "lblMHQNagSection.summary", nagsContent)
                      .section("lblMHQConfirmationSection.text", "lblMHQConfirmationSection.summary",
