@@ -225,7 +225,7 @@ public class TaskTableMouseAdapter extends JPopupMenuAdapter {
      *
      * @return {@code true} if a "Strip Part" entry should be shown for this task
      */
-    private static boolean isStripCandidate(Part part) {
+    static boolean isStripCandidate(Part part) {
         Unit unit = part.getUnit();
         if ((unit == null) || unit.isSalvage() || (part instanceof MissingPart)) {
             return false;
@@ -244,7 +244,7 @@ public class TaskTableMouseAdapter extends JPopupMenuAdapter {
      *
      * @return the target roll for removing the part, or {@code null} if it cannot be computed
      */
-    private TargetRoll getStripTarget(Part part, Person tech) {
+    TargetRoll getStripTarget(Part part, Person tech) {
         Unit unit = part.getUnit();
         if ((unit == null) || (tech == null)) {
             return null;
@@ -275,7 +275,7 @@ public class TaskTableMouseAdapter extends JPopupMenuAdapter {
      *
      * @return the time (in minutes) left to remove the part
      */
-    private int getStripTime(Part part) {
+    int getStripTime(Part part) {
         Unit unit = part.getUnit();
         if (unit == null) {
             return 0;
@@ -301,7 +301,7 @@ public class TaskTableMouseAdapter extends JPopupMenuAdapter {
      * @param part     the part to strip
      * @param tech     the technician performing the removal
      */
-    private void stripPart(Campaign campaign, Part part, Person tech) {
+    void stripPart(Campaign campaign, Part part, Person tech) {
         Unit unit = part.getUnit();
         if (unit == null) {
             return;
