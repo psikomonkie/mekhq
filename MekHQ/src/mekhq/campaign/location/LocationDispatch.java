@@ -81,17 +81,20 @@ public final class LocationDispatch {
      * Removes a spent travel node from the campaign: detaches it from the location tree and de-registers it from the
      * campaign's location list.
      *
-     * <p>No-op when {@code travelNode} is {@code null} or still {@link ILocation#isInUse() in use} — i.e. it still has
-     * a {@link mekhq.campaign.Campaign}, {@link mekhq.campaign.base.AbstractBase}, person, unit, or part below it.
-     * This guards against removing a node that is not really a spent travel node, most notably the main force's own
-     * {@link mekhq.campaign.CurrentLocation} (which carries the whole campaign) when it is reached during education
-     * arrival.</p>
+     * <p>No-op when {@code travelNode} is {@code null}, still {@link ILocation#isInUse() in use} — i.e. it still has a
+     * {@link mekhq.campaign.Campaign}, {@link mekhq.campaign.base.AbstractBase}, person, unit, or part below it — or its
+     * subtree is still a queued {@link CampaignLocationManager#holdsPendingTravelDestination pending-travel
+     * destination}. This guards against removing a node that is not really a spent travel node, most notably the main
+     * force's own {@link mekhq.campaign.CurrentLocation} (which carries the whole campaign) when it is reached during
+     * education arrival.</p>
      *
      * @param travelNode      the node to remove, or {@code null}
      * @param locationManager the campaign's location registry; must not be {@code null}
      */
     public static void removeTravelNode(@Nullable AbstractMobileLocation travelNode, CampaignLocationManager locationManager) {
-        if (travelNode == null || travelNode.isInUse()) {
+        if (travelNode == null
+                  || travelNode.isInUse()
+                  || locationManager.holdsPendingTravelDestination(travelNode)) {
             return;
         }
         travelNode.setParent(null);

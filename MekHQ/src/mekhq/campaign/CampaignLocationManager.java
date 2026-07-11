@@ -444,11 +444,16 @@ public class CampaignLocationManager {
      * died or were removed before arriving, and {@link FixedLocation}/{@link AcademyCampusLocation} pairs that were
      * never cleaned up after the last student graduated.</p>
      *
+     * <p>A location whose subtree still holds a queued pending-travel destination is retained even when otherwise
+     * empty: dispatching that queued travel later would dereference the destination, so removing it here would leave
+     * {@link #dispatchPendingTravel} with a detached node.</p>
+     *
      * <p>Call this once per day after all personnel processing has completed.</p>
      */
     public void pruneEmptyLocations() {
+        Set<ILocation> pendingDestinations = collectPendingDestinations();
         locations.removeIf(location -> {
-            if (location.isInUse()) {
+            if (location.isInUse() || subtreeHoldsPendingDestination(location, pendingDestinations)) {
                 return false;
             }
             if (location instanceof AbstractMobileLocation) {
@@ -462,6 +467,45 @@ public class CampaignLocationManager {
             }
             return true;
         });
+    }
+
+    /**
+     * Returns {@code true} if {@code location} or any node in its subtree is queued as a pending-travel destination, so
+     * that a caller about to remove {@code location} from the tree can spare it — dispatching that queued travel later
+     * would otherwise dereference a detached destination.
+     */
+    public boolean holdsPendingTravelDestination(ILocation location) {
+        return subtreeHoldsPendingDestination(location, collectPendingDestinations());
+    }
+
+    /** Collects the destinations of all queued pending travel into an identity set. */
+    private Set<ILocation> collectPendingDestinations() {
+        Set<ILocation> destinations = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (TravelRoute route : pendingTravel.keySet()) {
+            if (route.destination() != null) {
+                destinations.add(route.destination());
+            }
+        }
+        return destinations;
+    }
+
+    /**
+     * Returns {@code true} if {@code location} or any node in its subtree is one of {@code pendingDestinations}. Used to
+     * spare an otherwise-empty node that queued travel is still bound for.
+     */
+    private static boolean subtreeHoldsPendingDestination(ILocation location, Set<ILocation> pendingDestinations) {
+        if (pendingDestinations.isEmpty()) {
+            return false;
+        }
+        if (pendingDestinations.contains(location)) {
+            return true;
+        }
+        for (ILocation child : location.getChildLocations()) {
+            if (subtreeHoldsPendingDestination(child, pendingDestinations)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
