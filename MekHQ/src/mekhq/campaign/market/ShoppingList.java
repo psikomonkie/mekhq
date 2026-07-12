@@ -47,6 +47,7 @@ import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.events.ProcurementEvent;
 import mekhq.campaign.finances.Money;
+import mekhq.campaign.force.PlayerForce;
 import mekhq.campaign.location.IPlace;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.parts.Refit;
@@ -182,7 +183,7 @@ public class ShoppingList {
     public void addShoppingItem(IAcquisitionWork newWork, int quantity, Campaign campaign, @Nullable IPlace place) {
         // The main force leaves orders unanchored (their part resolves to the campaign warehouse); a base anchors the
         // order at that base so it resolves to the base warehouse.
-        IPlace destination = (place instanceof Campaign) ? null : place;
+        IPlace destination = (place instanceof Campaign || place instanceof PlayerForce) ? null : place;
         if (destination != null) {
             newWork.setParent(destination);
         }

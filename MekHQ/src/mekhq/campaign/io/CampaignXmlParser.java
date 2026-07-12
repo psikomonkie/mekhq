@@ -100,6 +100,7 @@ import mekhq.campaign.enums.CampaignTransportType;
 import mekhq.campaign.finances.Finances;
 import mekhq.campaign.force.CombatTeam;
 import mekhq.campaign.force.Formation;
+import mekhq.campaign.force.PlayerForce;
 import mekhq.campaign.icons.UnitIcon;
 import mekhq.campaign.location.AcademyCampusLocation;
 import mekhq.campaign.location.ILocation;
@@ -1986,7 +1987,7 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
                 ILocation parentLocation = person.getParentLocation();
                 if (parentLocation != null
                           && !(parentLocation instanceof Personnel personnel
-                                && personnel.getParentLocation() instanceof Campaign)) {
+                                     && personnel.getParentLocation() instanceof PlayerForce)) {
                     LOGGER.debug("migrateLegacyEducationTravel: skipping {} — already reconnected (stage={})",
                           person.getFullTitle(), stage);
                     continue;

@@ -37,14 +37,12 @@ import static mekhq.campaign.market.contractMarket.ContractAutomation.performAut
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 import jakarta.annotation.Nonnull;
 import mekhq.MekHQ;
 import mekhq.campaign.events.LocationChangedEvent;
+import mekhq.campaign.force.PlayerForce;
 import mekhq.campaign.location.ILocation;
-import mekhq.campaign.location.IPlace;
 import mekhq.campaign.location.LocationDispatch;
 import mekhq.campaign.location.LocationNode;
 import mekhq.campaign.personnel.medical.advancedMedicalAlternate.Inoculations;
@@ -59,68 +57,26 @@ import mekhq.campaign.universe.PlanetarySystem;
  */
 public class ForceLocationManager {
 
-    /**
-     * Temporary {@link IPlace} facade exposing only the force-level operations {@link ForceLocationManager} needs
-     * from the {@link Campaign} that currently doubles as the player's main force.
-     *
-     * <p><strong>Remove this class once {@link Campaign} is properly split into a standalone {@code Force} class.
-     * </strong> Right now {@code Force} is just a thin wrapper around {@link Campaign}: it has no {@link LocationNode}
-     * of its own and simply borrows the wrapped campaign's node and resources. Because of that,
-     * {@code getCurrentLocation()}, {@code setParent(...)} and {@code getChildLocations()} are inherited from the
-     * {@link IPlace}/{@link ILocation} defaults operating on that shared node, and only the node and the owned
-     * resources are overridden here.</p>
-     *
-     * <p>Anything at the whole-campaign level (campaign options, the universe, the shared location collection) is
-     * intentionally <em>not</em> exposed here and is passed in as a {@link Campaign} argument instead. Keeping the
-     * surface this small documents exactly which operations belong to the force and keeps the eventual split
-     * mechanical.</p>
-     */
-    private static final class Force implements IPlace {
-        private final Campaign campaign;
-
-        Force(Campaign campaign) {
-            this.campaign = campaign;
-        }
-
-        @Override
-        public LocationNode getLocationNode() {
-            return campaign.getLocationNode();
-        }
-
-        @Override
-        @Nonnull
-        public Hangar getHangar() {
-            return campaign.getHangar();
-        }
-
-        @Override
-        @Nonnull
-        public Warehouse getWarehouse() {
-            return campaign.getWarehouse();
-        }
-
-        @Override
-        @Nonnull
-        public Personnel getPersonnel() {
-            return campaign.getMainForcePersonnel();
-        }
-
-        List<UUID> getAutomatedMothballUnits() {
-            return campaign.getAutomatedMothballUnits();
-        }
-    }
-
-    private final Force mainForce;
-    private final LocationNode locationNode;
+    private final Campaign campaign;
 
     public ForceLocationManager(Campaign campaign) {
-        this.mainForce = new Force(campaign);
-        this.locationNode = new LocationNode(campaign);
+        this.campaign = campaign;
+    }
+
+    /**
+     * The player's main force — the {@link PlayerForce} that owns the {@link LocationNode} this manager anchors to a
+     * location, along with the hangar, warehouse, and personnel that travel with it.
+     *
+     * <p>Resolved on demand rather than cached, because the manager is constructed as a {@link Campaign} field before
+     * the campaign builds its {@code PlayerForce}.</p>
+     */
+    private PlayerForce mainForce() {
+        return campaign.getPlayerForce();
     }
 
     @Nonnull
     public LocationNode getLocationNode() {
-        return locationNode;
+        return mainForce().getLocationNode();
     }
 
     /**
@@ -130,11 +86,11 @@ public class ForceLocationManager {
      * location is removed from the collection when it no longer has any children.</p>
      */
     public void setLocation(CampaignLocationManager locationManager, AbstractLocation location) {
-        AbstractLocation old = mainForce.getCurrentLocation();
+        AbstractLocation old = mainForce().getCurrentLocation();
         if (location != null && !locationManager.getLocations().contains(location)) {
             locationManager.addLocation(location);
         }
-        mainForce.setParent(location);
+        mainForce().setParent(location);
         if (old != null && old != location && old.getChildLocations().isEmpty()) {
             locationManager.removeLocation(old);
         }
@@ -146,7 +102,7 @@ public class ForceLocationManager {
      * landing their passengers into the campaign's main force resources.
      */
     public void processArrivals(Campaign campaign) {
-        for (ILocation child : new ArrayList<>(mainForce.getChildLocations())) {
+        for (ILocation child : new ArrayList<>(mainForce().getChildLocations())) {
             if (!(child instanceof AbstractMobileLocation travelLocation)) {
                 continue;
             }
@@ -154,9 +110,9 @@ public class ForceLocationManager {
                 continue;
             }
             LocationDispatch.landFromTravelNode(travelLocation,
-                  mainForce.getPersonnel(),
-                  mainForce.getHangar(),
-                  mainForce.getWarehouse(),
+                  mainForce().getPersonnel(),
+                  mainForce().getHangar(),
+                  mainForce().getWarehouse(),
                   campaign,
                   campaign.getCampaignLocationManager());
         }
@@ -179,9 +135,9 @@ public class ForceLocationManager {
      */
     public void moveToPlanetarySystem(Campaign campaign, PlanetarySystem planetarySystem) {
         setLocation(campaign.getCampaignLocationManager(), new CurrentLocation(planetarySystem, 0.0));
-        MekHQ.triggerEvent(new LocationChangedEvent(mainForce.getCurrentLocation(), false));
+        MekHQ.triggerEvent(new LocationChangedEvent(mainForce().getCurrentLocation(), false));
 
-        if (mainForce.getAutomatedMothballUnits().isEmpty()) {
+        if (campaign.getAutomatedMothballUnits().isEmpty()) {
             performAutomatedActivation(campaign);
         }
 
@@ -196,6 +152,7 @@ public class ForceLocationManager {
      * {@code <locationNodeChildren>} block for Campaign's direct children in the location tree.
      */
     public void writeToXML(PrintWriter pw, int indent) {
+        LocationNode locationNode = getLocationNode();
         AbstractLocation currentLocation = locationNode.getNearestAbstractLocation();
         if (currentLocation != null) {
             currentLocation.writeToXML(pw, indent);
