@@ -679,11 +679,11 @@ public abstract class AbstractForce {
     }
 
     /**
-     * Moves {@code formation} to sit directly under {@code superFormation} in the TO&E, detaching it from its current
+     * Moves {@code formation} to sit directly under {@code superFormation} in the TOE, detaching it from its current
      * parent and inheriting the target's scenario assignment. Formation-type standardization is then applied per the
      * moved formation's {@link FormationType} (parents may be standardized, children may inherit), and formation levels
-     * are repopulated across the TO&E. No-ops if {@code formation} is {@code null} or equals {@code superFormation}.
-     * The {@link Campaign} is supplied as a parameter for the scenario and TO&E updates this drives.
+     * are repopulated across the TOE. No-ops if {@code formation} is {@code null} or equals {@code superFormation}.
+     * The {@link Campaign} is supplied as a parameter for the scenario and TOE updates this drives.
      */
     public void moveFormation(Formation formation, Formation superFormation, Campaign campaign) {
         // Can't move a null formation under a subformation and can't move a formation under itself.
@@ -801,7 +801,7 @@ public abstract class AbstractForce {
     }
 
     /**
-     * Removes {@code formation} from the TO&E: unassigns its units (clearing their scenario if it was deployed),
+     * Removes {@code formation} from the TOE: unassigns its units (clearing their scenario if it was deployed),
      * removes it from any scenario it was deployed to and from its parent formation, and clears any StratCon track
      * assignments. The {@link Campaign} is supplied as a parameter for the scenario, contract, and combat-team updates
      * this drives.
@@ -1073,7 +1073,7 @@ public abstract class AbstractForce {
     }
 
     /**
-     * @return one entry per C3i network in the TO&E that has at least one free node; each entry is a
+     * @return one entry per C3i network in the TOE that has at least one free node; each entry is a
      *       {@code {networkId, freeNodeCount}} pair
      */
     public Vector<String[]> getAvailableC3iNetworks() {
@@ -1104,7 +1104,7 @@ public abstract class AbstractForce {
     }
 
     /**
-     * @return one entry per Naval C3 network in the TO&E that has at least one free node; each entry is a
+     * @return one entry per Naval C3 network in the TOE that has at least one free node; each entry is a
      *       {@code {networkId, freeNodeCount}} pair. Naval C3 mirrors C3i, so this parallels
      *       {@link #getAvailableC3iNetworks()}.
      */
@@ -1136,7 +1136,7 @@ public abstract class AbstractForce {
     }
 
     /**
-     * @return one entry per Nova CEWS network in the TO&E that has at least one free node; each entry is a
+     * @return one entry per Nova CEWS network in the TOE that has at least one free node; each entry is a
      *       {@code {networkId, freeNodeCount}} pair. Nova CEWS networks hold at most three units.
      */
     public Vector<String[]> getAvailableNovaCEWSNetworks() {
@@ -1168,7 +1168,7 @@ public abstract class AbstractForce {
     }
 
     /**
-     * @return the C3 masters in the TO&E that can accept a slave (have a free C3 node), excluding company-level masters
+     * @return the C3 masters in the TOE that can accept a slave (have a free C3 node), excluding company-level masters
      *       whose free-node count is unreliable; each entry is a {@code {c3UUID, freeNodeCount, shortName}} triple
      */
     public Vector<String[]> getAvailableC3MastersForSlaves() {
@@ -1206,7 +1206,7 @@ public abstract class AbstractForce {
     }
 
     /**
-     * @return the C3 masters in the TO&E that can accept another master (have a free C3-M node); each entry is a
+     * @return the C3 masters in the TOE that can accept another master (have a free C3-M node); each entry is a
      *       {@code {c3UUID, freeMasterNodeCount, shortName}} triple
      */
     public Vector<String[]> getAvailableC3MastersForMasters() {
