@@ -109,7 +109,7 @@ public class PartsInUseManager {
      * @param campaign the {@link Campaign} to manage parts for
      */
     public PartsInUseManager(Campaign campaign) {
-        this(campaign, campaign);
+        this(campaign, campaign.getPlayerForce().getForceDetachment());
     }
 
     /**
@@ -135,7 +135,7 @@ public class PartsInUseManager {
     /** The place a part is located at — its unit's location for installed parts, its warehouse for spares. */
     private IPlace placeOf(Part part) {
         IPlace partPlace = part.getPlace();
-        return (partPlace != null) ? partPlace : campaign;
+        return (partPlace != null) ? partPlace : campaign.getPlayerForce().getForceDetachment();
     }
 
     /**

@@ -74,6 +74,8 @@ import mekhq.campaign.Warehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.enums.DailyReportType;
 import mekhq.campaign.events.persons.PersonStatusChangedEvent;
+import mekhq.campaign.force.Detachment;
+import mekhq.campaign.force.PlayerForce;
 import mekhq.campaign.location.AcademyCampusLocation;
 import mekhq.campaign.personnel.education.Academy;
 import mekhq.campaign.personnel.education.EducationController;
@@ -1597,6 +1599,9 @@ public class PersonTest {
             @BeforeEach
             void setUp() {
                 campaign = mock(Campaign.class);
+                PlayerForce playerForce = mock(PlayerForce.class);
+                when(campaign.getPlayerForce()).thenReturn(playerForce);
+                when(playerForce.getForceDetachment()).thenReturn(mock(Detachment.class));
                 when(campaign.getCampaignLocationManager()).thenReturn(mock(CampaignLocationManager.class));
                 when(campaign.getLocalDate()).thenReturn(LocalDate.of(3025, 1, 1));
 
@@ -1678,6 +1683,9 @@ public class PersonTest {
             @BeforeEach
             void setUp() {
                 campaign = mock(Campaign.class);
+                PlayerForce playerForce = mock(PlayerForce.class);
+                when(campaign.getPlayerForce()).thenReturn(playerForce);
+                when(playerForce.getForceDetachment()).thenReturn(mock(Detachment.class));
                 when(campaign.getCampaignLocationManager()).thenReturn(mock(CampaignLocationManager.class));
                 when(campaign.getLocalDate()).thenReturn(LocalDate.of(3025, 1, 1));
 

@@ -46,12 +46,6 @@ import static mekhq.campaign.enums.DailyReportType.FINANCES;
 import static mekhq.campaign.enums.DailyReportType.GENERAL;
 import static mekhq.campaign.enums.DailyReportType.PERSONNEL;
 import static mekhq.campaign.enums.DailyReportType.TECHNICAL;
-import static mekhq.campaign.force.CombatTeam.recalculateCombatTeams;
-import static mekhq.campaign.force.Formation.FORMATION_NONE;
-import static mekhq.campaign.force.Formation.FORMATION_ORIGIN;
-import static mekhq.campaign.force.Formation.NO_ASSIGNED_SCENARIO;
-import static mekhq.campaign.force.FormationType.STANDARD;
-import static mekhq.campaign.parts.enums.PartQuality.QUALITY_A;
 import static mekhq.campaign.personnel.PersonnelOptions.ADMIN_INTERSTELLAR_NEGOTIATOR;
 import static mekhq.campaign.personnel.PersonnelOptions.ADMIN_LOGISTICIAN;
 import static mekhq.campaign.personnel.PersonnelOptions.EDGE_ADMIN_APPRAISAL_FAIL;
@@ -65,8 +59,6 @@ import static mekhq.campaign.personnel.skills.SkillType.S_TECH_MECHANIC;
 import static mekhq.campaign.personnel.skills.SkillType.getType;
 import static mekhq.campaign.personnel.turnoverAndRetention.RetirementDefectionTracker.Payout.isBreakingContract;
 import static mekhq.campaign.randomEvents.other.GrayMonday.isGrayMonday;
-import static mekhq.campaign.randomEvents.prisoners.PrisonerEventManager.DEFAULT_TEMPORARY_CAPACITY;
-import static mekhq.campaign.randomEvents.prisoners.PrisonerEventManager.MINIMUM_TEMPORARY_CAPACITY;
 import static mekhq.campaign.unit.Unit.TECH_WORK_DAY;
 import static mekhq.campaign.universe.Faction.MERCENARY_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.PIRATE_FACTION_CODE;
@@ -167,7 +159,6 @@ import mekhq.campaign.force.FormationType;
 import mekhq.campaign.force.PlayerForce;
 import mekhq.campaign.icons.StandardFormationIcon;
 import mekhq.campaign.location.ILocation;
-import mekhq.campaign.location.IPlace;
 import mekhq.campaign.location.LocationNode;
 import mekhq.campaign.location.LocationUtils;
 import mekhq.campaign.log.HistoricalLogEntry;
@@ -218,7 +209,6 @@ import mekhq.campaign.personnel.enums.PersonnelStatus;
 import mekhq.campaign.personnel.enums.SplittingSurnameStyle;
 import mekhq.campaign.personnel.generator.AbstractPersonnelGenerator;
 import mekhq.campaign.personnel.marriage.AbstractMarriage;
-import mekhq.campaign.personnel.medical.MASHCapacity;
 import mekhq.campaign.personnel.procreation.AbstractProcreation;
 import mekhq.campaign.personnel.ranks.AutoAssignRankForCompanyGenerator;
 import mekhq.campaign.personnel.ranks.RankSystem;
@@ -236,7 +226,6 @@ import mekhq.campaign.randomEvents.randomEventsSystem.RandomEventLibraries;
 import mekhq.campaign.storyArc.StoryArc;
 import mekhq.campaign.stratCon.StratConContractInitializer;
 import mekhq.campaign.stratCon.StratConRulesManager;
-import mekhq.campaign.stratCon.StratConTrackState;
 import mekhq.campaign.unit.CargoStatistics;
 import mekhq.campaign.unit.CrewType;
 import mekhq.campaign.unit.HangarStatistics;
@@ -273,7 +262,7 @@ import mekhq.utilities.ReportingUtilities;
  *
  * @author Taharqa
  */
-public class Campaign implements ITechManager, IPlace {
+public class Campaign implements ITechManager {
     private static final MMLogger LOGGER = MMLogger.create(Campaign.class);
 
     public static final String REPORT_LINEBREAK = "<br/><br/>";
@@ -296,18 +285,18 @@ public class Campaign implements ITechManager, IPlace {
     /** The player's active force: faction identity, finances, reputation, and the owned hangar/warehouse/personnel. */
     @Nonnull
     private final PlayerForce playerForce;
-    CampaignTransporterMap shipTransporters = new CampaignTransporterMap(this, CampaignTransportType.SHIP_TRANSPORT);
+    // TODO (campaign split): Quartermaster holds a Campaign back-reference. Remove that coupling so it can
+    //   move onto the force (AbstractForce/PlayerForce) alongside the other owned state.
+    private final Quartermaster quartermaster;
     CampaignTransporterMap tacticalTransporters = new CampaignTransporterMap(this,
           CampaignTransportType.TACTICAL_TRANSPORT);
     CampaignTransporterMap towTransporters = new CampaignTransporterMap(this, CampaignTransportType.TOW_TRANSPORT);
-    private final TreeMap<Integer, Formation> formationIds = new TreeMap<>();
     private final TreeMap<Integer, Mission> missions = new TreeMap<>();
     private final TreeMap<Integer, Scenario> scenarios = new TreeMap<>();
     private final Map<UUID, List<Kill>> kills = new HashMap<>();
 
     private transient final UnitNameTracker unitNameTracker = new UnitNameTracker();
 
-    private int lastFormationId;
     private int lastMissionId;
     private int lastScenarioId;
 
@@ -323,11 +312,6 @@ public class Campaign implements ITechManager, IPlace {
     private LocalDate campaignStartDate;
 
     private transient CampaignNewDayManager newDayManager = null;
-
-    // hierarchically structured Formation object to define TO&E
-    private Formation formations;
-    private Hashtable<Integer, CombatTeam> combatTeams; // AtB
-
 
     private final ArrayList<String> currentReport;
     private transient String currentReportHTML;
@@ -369,10 +353,6 @@ public class Campaign implements ITechManager, IPlace {
     private transient String aggregateReportHTML;
     private transient List<String> newAggregateReports;
 
-    private boolean fieldKitchenWithinCapacity;
-    private int mashTheatreCapacity;
-    private int repairBaysRented;
-
     private Person genericAcquisitionPerson;
 
     // this is updated and used per gaming session, it is enabled/disabled via the Campaign options we're re-using
@@ -387,8 +367,6 @@ public class Campaign implements ITechManager, IPlace {
     private Systems systemsInstance;
     private final Map<String, PlanetarySystem> planetarySystemOverrides = new LinkedHashMap<>();
     private final CampaignLocationManager locationManager = new CampaignLocationManager();
-    private boolean isAvoidingEmptySystems;
-    private boolean isOverridingCommandCircuitRequirements;
 
     private final News news;
 
@@ -411,17 +389,12 @@ public class Campaign implements ITechManager, IPlace {
     @Deprecated(since = "0.50.10", forRemoval = true)
     private IUnitRating unitRating; // deprecated
     private CampaignSummary campaignSummary;
-    private final Quartermaster quartermaster;
+    // TODO (campaign split): the transporter maps hold a Campaign back-reference. Remove that coupling so they
+    //   can move onto the force (AbstractForce/PlayerForce) alongside the other owned state.
+    CampaignTransporterMap shipTransporters = new CampaignTransporterMap(this, CampaignTransportType.SHIP_TRANSPORT);
     private StoryArc storyArc;
     private BehaviorSettings autoResolveBehaviorSettings;
-    private List<UUID> automatedMothballUnits;
-    private int temporaryPrisonerCapacity;
     private boolean processProcurement;
-
-    // options relating to parts in use and restock
-    private boolean ignoreMothballed;
-    private boolean topUpWeekly;
-    private PartQuality ignoreSparesUnderQuality;
 
     // Libraries
     // We deliberately don't write this data to the save file as we want it rebuilt
@@ -536,9 +509,9 @@ public class Campaign implements ITechManager, IPlace {
         playerForce.setName(name);
 
         setLocation(startLocation);
-        this.setParent(startLocation);
-        formations = formation;
-        formationIds.put(0, formations);
+        playerForce.getForceDetachment().setParent(startLocation);
+        playerForce.setFormations(formation);
+        playerForce.getFormationIds().put(0, formation);
         randomEventLibraries = randomEvents;
         factionStandingUltimatumsLibrary = ultimatums;
         getHumanResources().setRetirementDefectionTracker(retDefTracker);
@@ -564,24 +537,16 @@ public class Campaign implements ITechManager, IPlace {
 
         // Starting config / default values
         campaignStartDate = null;
-        isAvoidingEmptySystems = true;
-        isOverridingCommandCircuitRequirements = false;
         overtime = false;
         gmMode = false;
-        combatTeams = new Hashtable<>();
         customs = new ArrayList<>();
         turnoverRetirementInformation = new ArrayList<>();
         atbConfig = null;
         hasActiveContract = false;
-        fieldKitchenWithinCapacity = false;
-        mashTheatreCapacity = 0;
-        repairBaysRented = 0;
-        automatedMothballUnits = new ArrayList<>();
-        temporaryPrisonerCapacity = DEFAULT_TEMPORARY_CAPACITY;
         processProcurement = true;
-        topUpWeekly = mekhqOptions.getNewDayAutoLogistics();
-        ignoreMothballed = true;
-        ignoreSparesUnderQuality = QUALITY_A;
+        // The force initializes the migrated settings/capacities to their static defaults; only the
+        // MHQ-options-derived one is asserted here where those options are available.
+        playerForce.setTopUpWeekly(mekhqOptions.getNewDayAutoLogistics());
 
         // Reports
         currentReport = new ArrayList<>();
@@ -794,32 +759,31 @@ public class Campaign implements ITechManager, IPlace {
         this.campaignStartDate = campaignStartDate;
     }
 
-    @Override
     public PlanetarySystem getCurrentSystem() {
         AbstractLocation location = getCurrentLocation();
         return location != null ? location.getCurrentSystem() : null;
     }
 
     public boolean isAvoidingEmptySystems() {
-        return isAvoidingEmptySystems;
+        return playerForce.isAvoidingEmptySystems();
     }
 
     public void setIsAvoidingEmptySystems(boolean isAvoidingEmptySystems) {
-        this.isAvoidingEmptySystems = isAvoidingEmptySystems;
+        playerForce.setIsAvoidingEmptySystems(isAvoidingEmptySystems);
     }
 
     public boolean isOverridingCommandCircuitRequirements() {
-        return isOverridingCommandCircuitRequirements;
+        return playerForce.isOverridingCommandCircuitRequirements();
     }
 
     public void setIsOverridingCommandCircuitRequirements(boolean isOverridingCommandCircuitRequirements) {
-        this.isOverridingCommandCircuitRequirements = isOverridingCommandCircuitRequirements;
+        playerForce.setIsOverridingCommandCircuitRequirements(isOverridingCommandCircuitRequirements);
     }
 
     public boolean isUseCommandCircuitForContract(AbstractMissionTransition abstractMission) {
         if (abstractMission instanceof AtBContract atBContract) {
             return FactionStandingUtilities.isUseCommandCircuit(
-                  isOverridingCommandCircuitRequirements, gmMode,
+                  isOverridingCommandCircuitRequirements(), gmMode,
                   campaignOptions.isUseFactionStandingCommandCircuitSafe(),
                   getFactionStandings(), List.of(atBContract));
         } else {
@@ -848,20 +812,20 @@ public class Campaign implements ITechManager, IPlace {
         return playerForce.getFunds();
     }
 
-    public void setFormations(Formation f) {
-        formations = f;
+    public Formation getFormations() {
+        return playerForce.getFormations();
     }
 
-    public Formation getFormations() {
-        return formations;
+    public void setFormations(Formation f) {
+        playerForce.setFormations(f);
     }
 
     public List<Formation> getAllFormations() {
-        return new ArrayList<>(formationIds.values());
+        return playerForce.getAllFormations();
     }
 
     public TreeMap<Integer, Formation> getFormationIds() {
-        return formationIds;
+        return playerForce.getFormationIds();
     }
 
     /**
@@ -879,7 +843,7 @@ public class Campaign implements ITechManager, IPlace {
      * @since 0.50.05
      */
     public List<UUID> getAllUnitsInTheTOE(boolean standardFormationsOnly) {
-        return formations.getAllUnits(standardFormationsOnly);
+        return playerForce.getAllUnitsInTheTOE(standardFormationsOnly);
     }
 
     /**
@@ -888,7 +852,7 @@ public class Campaign implements ITechManager, IPlace {
      * @param combatTeam the {@link CombatTeam} to be added to the {@link Hashtable}
      */
     public void addCombatTeam(CombatTeam combatTeam) {
-        combatTeams.put(combatTeam.getFormationId(), combatTeam);
+        playerForce.addCombatTeam(combatTeam);
     }
 
     /**
@@ -898,7 +862,7 @@ public class Campaign implements ITechManager, IPlace {
      * @param formationId the key of the {@link CombatTeam} to be removed from the {@link Hashtable}
      */
     public void removeCombatTeam(final int formationId) {
-        this.combatTeams.remove(formationId);
+        playerForce.removeCombatTeam(formationId);
     }
 
     /**
@@ -909,34 +873,7 @@ public class Campaign implements ITechManager, IPlace {
      * @return the sanitized {@link Hashtable} of {@link CombatTeam} objects stored in the current campaign.
      */
     public Hashtable<Integer, CombatTeam> getCombatTeamsAsMap() {
-        // Here we sanitize the list, ensuring ineligible formations have been removed
-        // before
-        // returning the hashtable. In theory, this shouldn't be necessary, however,
-        // having this
-        // sanitizing step should remove the need for isEligible() checks whenever we
-        // fetch the
-        // hashtable.
-        for (Formation formation : getAllFormations()) {
-            int formationId = formation.getId();
-            if (combatTeams.containsKey(formationId)) {
-                CombatTeam combatTeam = combatTeams.get(formationId);
-
-                if (combatTeam.isEligible(this)) {
-                    continue;
-                }
-            } else {
-                CombatTeam combatTeam = new CombatTeam(formationId, this);
-
-                if (combatTeam.isEligible(this)) {
-                    combatTeams.put(formationId, combatTeam);
-                    continue;
-                }
-            }
-
-            combatTeams.remove(formationId);
-        }
-
-        return combatTeams;
+        return playerForce.getCombatTeamsAsMap(this);
     }
 
     /**
@@ -947,14 +884,7 @@ public class Campaign implements ITechManager, IPlace {
      * @return an {@link ArrayList} of all the {@link CombatTeam} objects in the {@code combatTeams} {@link Hashtable}
      */
     public ArrayList<CombatTeam> getCombatTeamsAsList() {
-        // This call allows us to utilize the self-sanitizing feature of getCombatTeamsTable(), without needing to
-        // directly include the code here, too.
-        combatTeams = getCombatTeamsAsMap();
-
-        return combatTeams.values()
-                     .stream()
-                     .filter(l -> formationIds.containsKey(l.getFormationId()))
-                     .collect(Collectors.toCollection(ArrayList::new));
+        return playerForce.getCombatTeamsAsList(this);
     }
 
     public void setShoppingList(ShoppingList sl) {
@@ -1265,50 +1195,11 @@ public class Campaign implements ITechManager, IPlace {
      * @param superFormation - the superformation to add the new formation to
      */
     public void addFormation(Formation formation, Formation superFormation) {
-        int id = lastFormationId + 1;
-        formation.setId(id);
-        superFormation.addSubFormation(formation, true);
-        formation.setScenarioId(superFormation.getScenarioId(), this);
-        formationIds.put(id, formation);
-        lastFormationId = id;
-
-        formation.updateCommander(this);
-
-        if (campaignOptions.isUseStratCon()) {
-            recalculateCombatTeams(this);
-        }
+        playerForce.addFormation(formation, superFormation, this);
     }
 
     public void moveFormation(Formation formation, Formation superFormation) {
-        // Can't move a null formation under a subformation and can't move a formation under itself.
-        if (formation == null || formation.equals(superFormation)) {
-            return;
-        }
-        Formation parentFormation = formation.getParentFormation();
-
-        if (null != parentFormation) {
-            parentFormation.removeSubFormation(formation.getId());
-        }
-
-        superFormation.addSubFormation(formation, true);
-        formation.setScenarioId(superFormation.getScenarioId(), this);
-
-        FormationType formationType = formation.getFormationType();
-
-        if (formationType.shouldStandardizeParents()) {
-            for (Formation individualParentFormation : formation.getAllParents()) {
-                individualParentFormation.setFormationType(STANDARD, false);
-            }
-        }
-
-        if (formationType.shouldChildrenInherit()) {
-            for (Formation childFormation : formation.getAllSubFormations()) {
-                childFormation.setFormationType(formationType, false);
-            }
-        }
-
-        // repopulate formation levels across the TO&E
-        Formation.populateFormationLevelsFromOrigin(this);
+        playerForce.moveFormation(formation, superFormation, this);
     }
 
     /**
@@ -1317,8 +1208,7 @@ public class Campaign implements ITechManager, IPlace {
      * @param formation Formation to add
      */
     public void importFormation(Formation formation) {
-        lastFormationId = max(lastFormationId, formation.getId());
-        formationIds.put(formation.getId(), formation);
+        playerForce.importFormation(formation);
     }
 
     /**
@@ -1332,7 +1222,7 @@ public class Campaign implements ITechManager, IPlace {
     }
 
     public void addUnitToFormation(final @Nullable Unit unit, final Formation formation) {
-        addUnitToFormation(unit, formation.getId());
+        playerForce.addUnitToFormation(unit, formation, this);
     }
 
     /**
@@ -1342,72 +1232,7 @@ public class Campaign implements ITechManager, IPlace {
      * @param id   Formation ID to add unit to
      */
     public void addUnitToFormation(@Nullable Unit unit, int id) {
-        if (unit == null) {
-            return;
-        }
-
-        if (id == FORMATION_NONE) {
-            Formation currentFormation = getFormation(unit.getFormationId());
-            unit.setFormationId(FORMATION_NONE);
-            unit.setScenarioId(NO_ASSIGNED_SCENARIO);
-            MekHQ.triggerEvent(new OrganizationChangedEvent(this, currentFormation, unit));
-            return;
-        }
-
-        Formation formation = formationIds.get(id);
-        Formation prevFormation = formationIds.get(unit.getFormationId());
-        boolean useTransfers = false;
-        boolean transferLog = !getCampaignOptions().isUseTransfers();
-
-        if (null != prevFormation) {
-            if (null != prevFormation.getTechID()) {
-                unit.removeTech();
-            }
-            // We log removal if we don't use transfers or if it can't be assigned to a new
-            // formation
-            prevFormation.removeUnit(this, unit.getId(), transferLog || (formation == null));
-            useTransfers = !transferLog;
-            MekHQ.triggerEvent(new OrganizationChangedEvent(this, prevFormation, unit));
-        }
-
-        if (null != formation) {
-            unit.setFormationId(id);
-            unit.setScenarioId(formation.getScenarioId());
-            if (null != formation.getTechID()) {
-                Person formationTech = getPerson(formation.getTechID());
-                if (formationTech.canTech(unit.getEntity())) {
-                    if (null != unit.getTech()) {
-                        unit.removeTech();
-                    }
-
-                    unit.setTech(formationTech);
-                } else {
-                    String cantTech = formationTech.getFullName() +
-                                            " cannot maintain " +
-                                            unit.getName() +
-                                            '\n' +
-                                            "You will need to assign a tech manually.";
-                    JOptionPane.showMessageDialog(null, cantTech, "Warning", JOptionPane.WARNING_MESSAGE);
-                }
-            }
-            formation.addUnit(this, unit.getId(), useTransfers, prevFormation);
-            MekHQ.triggerEvent(new OrganizationChangedEvent(this, formation, unit));
-        }
-
-        if (campaignOptions.isUseStratCon()) {
-            recalculateCombatTeams(this);
-        }
-    }
-
-    /**
-     * Adds formation and all its sub-formations to the Combat Teams table
-     */
-    private void addAllCombatTeams(Formation formation) {
-        recalculateCombatTeams(this);
-
-        for (Formation subFormation : formation.getSubFormations()) {
-            addAllCombatTeams(subFormation);
-        }
+        playerForce.addUnitToFormation(unit, id, this);
     }
 
     // region Missions/Contracts
@@ -1708,7 +1533,7 @@ public class Campaign implements ITechManager, IPlace {
     }
 
     public void setLocation(AbstractLocation location) {
-        getForceLocationManager().setLocation(getCampaignLocationManager(), location);
+        getDetachmentLocationManager().setLocation(getCampaignLocationManager(), location);
     }
 
     @Nonnull
@@ -1717,8 +1542,8 @@ public class Campaign implements ITechManager, IPlace {
     }
 
     @Nonnull
-    public ForceLocationManager getForceLocationManager() {
-        return getPlayerForce().getForceLocationManager();
+    public DetachmentLocationManager getDetachmentLocationManager() {
+        return getPlayerForce().getDetachmentLocationManager();
     }
 
     /**
@@ -1735,24 +1560,35 @@ public class Campaign implements ITechManager, IPlace {
     }
 
     public void moveToPlanetarySystem(PlanetarySystem planetarySystem) {
-        getForceLocationManager().moveToPlanetarySystem(this, planetarySystem);
+        getDetachmentLocationManager().moveToPlanetarySystem(this, planetarySystem);
     }
 
-    @Override
     @Nonnull
     public LocationNode getLocationNode() {
-        return getForceLocationManager().getLocationNode();
+        return getDetachmentLocationManager().getLocationNode();
     }
 
-    @Override
-    public void onArrival(Campaign campaign, boolean isSilentProcessing) {
-        // The main force is the IPlace that arrives; this is a pass-through to it.
-        playerForce.onArrival(campaign, isSilentProcessing);
-    }
-
-    @Override
     public void processArrivals(Campaign campaign) {
-        getForceLocationManager().processArrivals(campaign);
+        getDetachmentLocationManager().processArrivals(campaign);
+    }
+
+    // The campaign is no longer an ILocation/IPlace itself; the main force (PlayerForce) is the location node.
+    // These convenience accessors delegate to it so callers can still ask the campaign about its position.
+
+    public @Nullable AbstractLocation getCurrentLocation() {
+        return playerForce.getForceDetachment().getCurrentLocation();
+    }
+
+    public boolean isOnPlanet() {
+        return playerForce.getForceDetachment().isOnPlanet();
+    }
+
+    public @Nullable Planet getPlanet() {
+        return playerForce.getForceDetachment().getPlanet();
+    }
+
+    public Set<ILocation> getChildLocations() {
+        return playerForce.getForceDetachment().getChildLocations();
     }
 
     public boolean isOnContractAndPlanetside() {
@@ -2190,46 +2026,42 @@ public class Campaign implements ITechManager, IPlace {
     }
 
     public boolean getFieldKitchenWithinCapacity() {
-        return fieldKitchenWithinCapacity;
+        return playerForce.getFieldKitchenWithinCapacity();
     }
 
     public void setFieldKitchenWithinCapacity(boolean fieldKitchenWithinCapacity) {
-        this.fieldKitchenWithinCapacity = fieldKitchenWithinCapacity;
+        playerForce.setFieldKitchenWithinCapacity(fieldKitchenWithinCapacity);
     }
 
     public boolean getMashTheatresWithinCapacity() {
-        return !isOnContractAndPlanetside() || calculateMASHTheaterCapacity() >= getPatientsAssignedToDoctors().size();
+        return playerForce.getMashTheatresWithinCapacity(this);
     }
 
     public int calculateMASHTheaterCapacity() {
-        List<Unit> unitsInTOE = getFormation(FORMATION_ORIGIN).getAllUnitsAsUnits(getHangar(), false);
-        int baseCapacity = MASHCapacity.checkMASHCapacity(unitsInTOE, campaignOptions.getMASHTheatreCapacity());
-        int rentedCapacity = FacilityRentals.getCapacityIncreaseFromRentals(getActiveContracts(),
-              ContractRentalType.HOSPITAL_BEDS);
-        return baseCapacity + rentedCapacity;
+        return playerForce.calculateMASHTheaterCapacity(this);
     }
 
     @Deprecated(since = "0.51.0", forRemoval = true)
     public int getCachedMashTheaterCapacity() {
-        return mashTheatreCapacity;
+        return playerForce.getCachedMashTheaterCapacity();
     }
 
     public void setMashTheatreCapacity(int mashTheatreCapacity) {
-        this.mashTheatreCapacity = mashTheatreCapacity;
+        playerForce.setMashTheatreCapacity(mashTheatreCapacity);
     }
 
     @Deprecated(since = "0.51.0", forRemoval = true)
     public int getRepairBaysRented() {
-        return repairBaysRented;
+        return playerForce.getRepairBaysRented();
     }
 
     public void setRepairBaysRented(int repairBaysRented) {
-        this.repairBaysRented = repairBaysRented;
+        playerForce.setRepairBaysRented(repairBaysRented);
     }
 
     @Deprecated(since = "0.51.0", forRemoval = true)
     public void changeRepairBaysRented(int delta) {
-        repairBaysRented = max(0, repairBaysRented + delta);
+        playerForce.changeRepairBaysRented(delta);
     }
     // endregion Person Creation
 
@@ -2425,7 +2257,6 @@ public class Campaign implements ITechManager, IPlace {
         return getHumanResources().getPerson(id);
     }
 
-    @Override
     public Personnel getPersonnel() {
         return playerForce.getPersonnel();
     }
@@ -2707,7 +2538,7 @@ public class Campaign implements ITechManager, IPlace {
 
     @Nullable
     public Formation getFormation(int id) {
-        return formationIds.get(id);
+        return playerForce.getFormation(id);
     }
 
     public List<String> getCurrentReport() {
@@ -4287,7 +4118,7 @@ public class Campaign implements ITechManager, IPlace {
         int role = -max(1, contract.getRequiredCombatElements() / 2);
 
         final CombatRole requiredLanceRole = contract.getContractType().getRequiredCombatRole();
-        for (CombatTeam combatTeam : combatTeams.values()) {
+        for (CombatTeam combatTeam : playerForce.getCombatTeamsMap().values()) {
             CombatRole combatRole = combatTeam.getRole();
 
             if (!combatRole.isReserve() && !combatRole.isAuxiliary()) {
@@ -4564,7 +4395,7 @@ public class Campaign implements ITechManager, IPlace {
         }
 
         // remove from automatic mothballing
-        automatedMothballUnits.remove(unit.getId());
+        getAutomatedMothballUnits().remove(unit.getId());
 
         // finally, remove the unit
         getHangar().removeUnit(unit.getId());
@@ -4639,104 +4470,19 @@ public class Campaign implements ITechManager, IPlace {
     }
 
     public void removeFormation(Formation formation) {
-        int fid = formation.getId();
-        formationIds.remove(fid);
-        // clear formationIds of all personnel with this formation
-        for (UUID uid : formation.getUnits()) {
-            Unit u = getHangar().getUnit(uid);
-            if (null == u) {
-                continue;
-            }
-            if (u.getFormationId() == fid) {
-                u.setFormationId(FORMATION_NONE);
-                if (formation.isDeployed()) {
-                    u.setScenarioId(NO_ASSIGNED_SCENARIO);
-                }
-            }
-        }
-
-        // also remove this formation's id from any scenarios
-        if (formation.isDeployed()) {
-            Scenario s = getScenario(formation.getScenarioId());
-            s.removeFormation(fid);
-        }
-
-        if (null != formation.getParentFormation()) {
-            formation.getParentFormation().removeSubFormation(fid);
-        }
-
-        // clear out StratCon formation assignments
-        for (AtBContract contract : getActiveAtBContracts()) {
-            if (contract.getStratConCampaignState() != null) {
-                for (StratConTrackState track : contract.getStratConCampaignState().getTracks()) {
-                    track.unassignFormation(fid);
-                }
-            }
-        }
-
-        if (campaignOptions.isUseStratCon()) {
-            recalculateCombatTeams(this);
-        }
+        playerForce.removeFormation(formation, this);
     }
 
     public void removeUnitFromFormation(Unit u) {
-        Formation formation = getFormation(u.getFormationId());
-        if (null != formation) {
-            formation.removeUnit(this, u.getId(), true);
-            u.setFormationId(FORMATION_NONE);
-            u.setScenarioId(NO_ASSIGNED_SCENARIO);
-            if (u.getEntity().hasNavalC3() && u.getEntity().calculateFreeC3Nodes() < 5) {
-                Vector<Unit> removedUnits = new Vector<>();
-                removedUnits.add(u);
-                removeUnitsFromNetwork(removedUnits);
-                u.getEntity().setC3MasterIsUUIDAsString(null);
-                u.getEntity().setC3Master(null, true);
-                refreshNetworks();
-            } else if (u.getEntity().hasC3i() && u.getEntity().calculateFreeC3Nodes() < 5) {
-                Vector<Unit> removedUnits = new Vector<>();
-                removedUnits.add(u);
-                removeUnitsFromNetwork(removedUnits);
-                u.getEntity().setC3MasterIsUUIDAsString(null);
-                u.getEntity().setC3Master(null, true);
-                refreshNetworks();
-            } else if (u.getEntity().hasNovaCEWS() && u.getEntity().calculateFreeC3Nodes() < 2) {
-                // Nova CEWS max is 3 nodes, so < 2 free means unit is networked
-                Vector<Unit> removedUnits = new Vector<>();
-                removedUnits.add(u);
-                removeUnitsFromNetwork(removedUnits);
-                u.getEntity().setC3MasterIsUUIDAsString(null);
-                u.getEntity().setC3Master(null, true);
-                refreshNetworks();
-            }
-            if (u.getEntity().hasC3M()) {
-                removeUnitsFromC3Master(u);
-                u.getEntity().setC3MasterIsUUIDAsString(null);
-                u.getEntity().setC3Master(null, true);
-            }
-
-            if (campaignOptions.isUseStratCon() && formation.getUnits().isEmpty()) {
-                combatTeams.remove(formation.getId());
-            }
-        }
+        playerForce.removeUnitFromFormation(u, this);
     }
 
     public @Nullable Formation getFormationFor(final @Nullable Unit unit) {
-        return (unit == null) ? null : getFormation(unit.getFormationId());
+        return playerForce.getFormationFor(unit);
     }
 
     public @Nullable Formation getFormationFor(final Person person) {
-        final Unit unit = person.getUnit();
-        if (unit != null) {
-            return getFormationFor(unit);
-        } else if (person.isTech()) {
-            return formationIds.values()
-                         .stream()
-                         .filter(formation -> person.getId().equals(formation.getTechID()))
-                         .findFirst()
-                         .orElse(null);
-        }
-
-        return null;
+        return playerForce.getFormationFor(person);
     }
 
     public void restore() {
@@ -4824,7 +4570,7 @@ public class Campaign implements ITechManager, IPlace {
         }
 
         // clean up non-existent unit references in formation unit lists
-        for (Formation formation : formationIds.values()) {
+        for (Formation formation : getFormationIds().values()) {
             List<UUID> orphanFormationUnitIDs = new ArrayList<>();
 
             for (UUID unitID : formation.getUnits()) {
@@ -5348,7 +5094,7 @@ public class Campaign implements ITechManager, IPlace {
      *       no units are configured.
      */
     public List<UUID> getAutomatedMothballUnits() {
-        return automatedMothballUnits;
+        return playerForce.getAutomatedMothballUnits();
     }
 
     /**
@@ -5361,15 +5107,15 @@ public class Campaign implements ITechManager, IPlace {
      * @param automatedMothballUnits A {@link List} of {@link UUID} objects to configure for automated mothballing.
      */
     public void setAutomatedMothballUnits(List<UUID> automatedMothballUnits) {
-        this.automatedMothballUnits = automatedMothballUnits;
+        playerForce.setAutomatedMothballUnits(automatedMothballUnits);
     }
 
     public int getTemporaryPrisonerCapacity() {
-        return temporaryPrisonerCapacity;
+        return playerForce.getTemporaryPrisonerCapacity();
     }
 
     public void setTemporaryPrisonerCapacity(int temporaryPrisonerCapacity) {
-        this.temporaryPrisonerCapacity = max(MINIMUM_TEMPORARY_CAPACITY, temporaryPrisonerCapacity);
+        playerForce.setTemporaryPrisonerCapacity(temporaryPrisonerCapacity);
     }
 
     /**
@@ -5382,8 +5128,7 @@ public class Campaign implements ITechManager, IPlace {
      *              capacity, while a negative value decreases it.
      */
     public void changeTemporaryPrisonerCapacity(int delta) {
-        int newCapacity = temporaryPrisonerCapacity + delta;
-        temporaryPrisonerCapacity = max(MINIMUM_TEMPORARY_CAPACITY, newCapacity);
+        playerForce.changeTemporaryPrisonerCapacity(delta);
     }
 
     public RandomEventLibraries getRandomEventLibraries() {
@@ -5449,13 +5194,13 @@ public class Campaign implements ITechManager, IPlace {
         MHQXMLUtility.writeSimpleXMLTag(writer, indent, "overtime", overtime);
         MHQXMLUtility.writeSimpleXMLTag(writer, indent, "gmMode", gmMode);
 
-        MHQXMLUtility.writeSimpleXMLTag(writer, indent, "fieldKitchenWithinCapacity", fieldKitchenWithinCapacity);
-        MHQXMLUtility.writeSimpleXMLTag(writer, indent, "mashTheatreCapacity", mashTheatreCapacity);
-        MHQXMLUtility.writeSimpleXMLTag(writer, indent, "repairBaysRented", repairBaysRented);
+        MHQXMLUtility.writeSimpleXMLTag(writer, indent, "fieldKitchenWithinCapacity", getFieldKitchenWithinCapacity());
+        MHQXMLUtility.writeSimpleXMLTag(writer, indent, "mashTheatreCapacity", getCachedMashTheaterCapacity());
+        MHQXMLUtility.writeSimpleXMLTag(writer, indent, "repairBaysRented", getRepairBaysRented());
         getCamouflage().writeToXML(writer, indent);
         MHQXMLUtility.writeSimpleXMLTag(writer, indent, "colour", getColour().name());
         getUnitIcon().writeToXML(writer, indent);
-        MHQXMLUtility.writeSimpleXMLTag(writer, indent, "lastFormationId", lastFormationId);
+        MHQXMLUtility.writeSimpleXMLTag(writer, indent, "lastFormationId", playerForce.getLastFormationId());
         MHQXMLUtility.writeSimpleXMLTag(writer, indent, "lastMissionId", lastMissionId);
         MHQXMLUtility.writeSimpleXMLTag(writer, indent, "lastScenarioId", lastScenarioId);
         MHQXMLUtility.writeSimpleXMLTag(writer, indent, "initiativeBonus", getInitiativeBonus());
@@ -5575,16 +5320,16 @@ public class Campaign implements ITechManager, IPlace {
         // the formations structure is hierarchical, but that should be handled
         // internally from with writeToXML function for Formation
         MHQXMLUtility.writeSimpleXMLOpenTag(writer, indent++, "formations");
-        formations.writeToXML(writer, indent);
+        getFormations().writeToXML(writer, indent);
         MHQXMLUtility.writeSimpleXMLCloseTag(writer, --indent, "formations");
         getFinances().writeToXML(writer, indent);
-        getForceLocationManager().writeToXML(writer, indent);
+        getDetachmentLocationManager().writeToXML(writer, indent);
         locationManager.writeToXML(this, writer, indent);
-        MHQXMLUtility.writeSimpleXMLTag(writer, indent, "isAvoidingEmptySystems", isAvoidingEmptySystems);
+        MHQXMLUtility.writeSimpleXMLTag(writer, indent, "isAvoidingEmptySystems", isAvoidingEmptySystems());
         MHQXMLUtility.writeSimpleXMLTag(writer,
               indent,
               "isOverridingCommandCircuitRequirements",
-              isOverridingCommandCircuitRequirements);
+              isOverridingCommandCircuitRequirements());
         getShoppingList().writeToXML(writer, indent);
         MHQXMLUtility.writeSimpleXMLOpenTag(writer, indent++, "kills");
         for (List<Kill> kills : kills.values()) {
@@ -5636,10 +5381,10 @@ public class Campaign implements ITechManager, IPlace {
             // CAW: implicit DEPENDS-ON to the <missions> node, do not move this above it
             contractMarket.writeToXML(this, writer, indent);
 
-            if (!combatTeams.isEmpty()) {
+            if (!playerForce.getCombatTeamsMap().isEmpty()) {
                 MHQXMLUtility.writeSimpleXMLOpenTag(writer, indent++, "combatTeams");
-                for (CombatTeam combatTeam : combatTeams.values()) {
-                    if (formationIds.containsKey(combatTeam.getFormationId())) {
+                for (CombatTeam combatTeam : playerForce.getCombatTeamsMap().values()) {
+                    if (getFormationIds().containsKey(combatTeam.getFormationId())) {
                         combatTeam.writeToXML(writer, indent);
                     }
                 }
@@ -5652,11 +5397,11 @@ public class Campaign implements ITechManager, IPlace {
         }
 
         MHQXMLUtility.writeSimpleXMLOpenTag(writer, indent++, "automatedMothballUnits");
-        for (UUID unitId : automatedMothballUnits) {
+        for (UUID unitId : getAutomatedMothballUnits()) {
             MHQXMLUtility.writeSimpleXMLTag(writer, indent, "mothballedUnit", unitId);
         }
         MHQXMLUtility.writeSimpleXMLCloseTag(writer, --indent, "automatedMothballUnits");
-        MHQXMLUtility.writeSimpleXMLTag(writer, indent, "temporaryPrisonerCapacity", temporaryPrisonerCapacity);
+        MHQXMLUtility.writeSimpleXMLTag(writer, indent, "temporaryPrisonerCapacity", getTemporaryPrisonerCapacity());
         MHQXMLUtility.writeSimpleXMLTag(writer, indent, "processProcurement", processProcurement);
 
         MHQXMLUtility.writeSimpleXMLOpenTag(writer, ++indent, "partsInUse");
@@ -5933,7 +5678,7 @@ public class Campaign implements ITechManager, IPlace {
 
         // Shortcuts to ensure we're not processing a lot of data when we're unable to reach the target system
         if (!skipEmptySystemCheck
-                  && isAvoidingEmptySystems
+                  && isAvoidingEmptySystems()
                   && end.getPopulation(currentDay) == 0) {
             new ImmersiveDialogSimple(this, getSeniorAdminPerson(AdministratorSpecialization.TRANSPORT), null,
                   String.format(resources.getString("unableToEnterSystem.abandoned.ic"), getCommanderAddress()),
@@ -5993,7 +5738,7 @@ public class Campaign implements ITechManager, IPlace {
             PlanetarySystem currentSystem = systemsInstance.getSystemById(current);
 
             boolean isUseCommandCircuits =
-                  FactionStandingUtilities.isUseCommandCircuit(isOverridingCommandCircuitRequirements, gmMode,
+                  FactionStandingUtilities.isUseCommandCircuit(isOverridingCommandCircuitRequirements(), gmMode,
                         campaignOptions.isUseFactionStandingCommandCircuitSafe(),
                         getFactionStandings(), getFutureAtBContracts());
 
@@ -6007,7 +5752,7 @@ public class Campaign implements ITechManager, IPlace {
 
                 // Skip systems without population if avoiding empty systems
                 if (!skipEmptySystemCheck
-                          && isAvoidingEmptySystems
+                          && isAvoidingEmptySystems()
                           && neighborSystem.getPopulation(currentDay) == 0) {
                     return;
                 }
@@ -7592,331 +7337,43 @@ public class Campaign implements ITechManager, IPlace {
     }
 
     public void refreshNetworks() {
-        for (Unit unit : getUnits()) {
-            // we are going to rebuild the c3, nc3 and c3i networks based on
-            // the c3UUIDs
-            // TODO: can we do this more efficiently?
-            // this code is cribbed from megamek.server#receiveEntityAdd
-            Entity entity = unit.getEntity();
-            if (null != entity && (entity.hasC3() || entity.hasC3i() || entity.hasNavalC3())) {
-                boolean C3iSet = false;
-                boolean NC3Set = false;
-
-                for (Entity e : game.getEntitiesVector()) {
-                    // C3 Checks
-                    if (entity.hasC3()) {
-                        if ((entity.getC3MasterIsUUIDAsString() != null) &&
-                                  entity.getC3MasterIsUUIDAsString().equals(e.getC3UUIDAsString())) {
-                            entity.setC3Master(e, false);
-                            break;
-                        }
-                    }
-                    // Naval C3 checks
-                    if (entity.hasNavalC3() && !NC3Set) {
-                        entity.setC3NetIdSelf();
-                        int pos = 0;
-                        // Well, they're the same value of 6...
-                        while (pos < Entity.MAX_C3i_NODES) {
-                            // We've found a network, join it.
-                            if ((entity.getNC3NextUUIDAsString(pos) != null) &&
-                                      (e.getC3UUIDAsString() != null) &&
-                                      entity.getNC3NextUUIDAsString(pos).equals(e.getC3UUIDAsString())) {
-                                entity.setC3NetId(e);
-                                NC3Set = true;
-                                break;
-                            }
-
-                            pos++;
-                        }
-                    }
-                    // C3i Checks
-                    if (entity.hasC3i() && !C3iSet) {
-                        entity.setC3NetIdSelf();
-                        int pos = 0;
-                        while (pos < Entity.MAX_C3i_NODES) {
-                            // We've found a network, join it.
-                            if ((entity.getC3iNextUUIDAsString(pos) != null) &&
-                                      (e.getC3UUIDAsString() != null) &&
-                                      entity.getC3iNextUUIDAsString(pos).equals(e.getC3UUIDAsString())) {
-                                entity.setC3NetId(e);
-                                C3iSet = true;
-                                break;
-                            }
-
-                            pos++;
-                        }
-                    }
-                }
-            }
-        }
+        playerForce.refreshNetworks(game);
     }
 
     public void disbandNetworkOf(Unit u) {
-        // collect all the other units on this network to rebuild the uuids
-        Vector<Unit> networkedUnits = new Vector<>();
-        for (Unit unit : getUnits()) {
-            if (null != unit.getEntity().getC3NetId() &&
-                      unit.getEntity().getC3NetId().equals(u.getEntity().getC3NetId())) {
-                networkedUnits.add(unit);
-            }
-        }
-        for (int pos = 0; pos < Entity.MAX_C3i_NODES; pos++) {
-            for (Unit nUnit : networkedUnits) {
-                if (nUnit.getEntity().hasNavalC3()) {
-                    nUnit.getEntity().setNC3NextUUIDAsString(pos, null);
-                } else {
-                    nUnit.getEntity().setC3iNextUUIDAsString(pos, null);
-                }
-            }
-        }
-        refreshNetworks();
-        MekHQ.triggerEvent(new NetworkChangedEvent(networkedUnits));
+        playerForce.disbandNetworkOf(u, game);
     }
 
     public void removeUnitsFromNetwork(Vector<Unit> removedUnits) {
-        // collect all the other units on this network to rebuild the uuids
-        Vector<String> uuids = new Vector<>();
-        Vector<Unit> networkedUnits = new Vector<>();
-        String network = removedUnits.getFirst().getEntity().getC3NetId();
-        for (Unit unit : getUnits()) {
-            if (removedUnits.contains(unit)) {
-                continue;
-            }
-            if (null != unit.getEntity().getC3NetId() && unit.getEntity().getC3NetId().equals(network)) {
-                networkedUnits.add(unit);
-                uuids.add(unit.getEntity().getC3UUIDAsString());
-            }
-        }
-        for (int pos = 0; pos < Entity.MAX_C3i_NODES; pos++) {
-            for (Unit u : removedUnits) {
-                if (u.getEntity().hasNavalC3()) {
-                    u.getEntity().setNC3NextUUIDAsString(pos, null);
-                } else {
-                    u.getEntity().setC3iNextUUIDAsString(pos, null);
-                }
-            }
-            for (Unit nUnit : networkedUnits) {
-                if (pos < uuids.size()) {
-                    if (nUnit.getEntity().hasNavalC3()) {
-                        nUnit.getEntity().setNC3NextUUIDAsString(pos, uuids.get(pos));
-                    } else {
-                        nUnit.getEntity().setC3iNextUUIDAsString(pos, uuids.get(pos));
-                    }
-                } else {
-                    if (nUnit.getEntity().hasNavalC3()) {
-                        nUnit.getEntity().setNC3NextUUIDAsString(pos, null);
-                    } else {
-                        nUnit.getEntity().setC3iNextUUIDAsString(pos, null);
-                    }
-                }
-            }
-        }
-        refreshNetworks();
+        playerForce.removeUnitsFromNetwork(removedUnits, game);
     }
 
     public void addUnitsToNetwork(Vector<Unit> addedUnits, String networkID) {
-        // collect all the other units on this network to rebuild the uuids
-        Vector<String> uuids = new Vector<>();
-        Vector<Unit> networkedUnits = new Vector<>();
-        for (Unit u : addedUnits) {
-            uuids.add(u.getEntity().getC3UUIDAsString());
-            networkedUnits.add(u);
-        }
-        for (Unit unit : getUnits()) {
-            if (addedUnits.contains(unit)) {
-                continue;
-            }
-            if (null != unit.getEntity().getC3NetId() && unit.getEntity().getC3NetId().equals(networkID)) {
-                networkedUnits.add(unit);
-                uuids.add(unit.getEntity().getC3UUIDAsString());
-            }
-        }
-        for (int pos = 0; pos < Entity.MAX_C3i_NODES; pos++) {
-            for (Unit nUnit : networkedUnits) {
-                if (pos < uuids.size()) {
-                    if (nUnit.getEntity().hasNavalC3()) {
-                        nUnit.getEntity().setNC3NextUUIDAsString(pos, uuids.get(pos));
-                    } else {
-                        nUnit.getEntity().setC3iNextUUIDAsString(pos, uuids.get(pos));
-                    }
-                } else {
-                    if (nUnit.getEntity().hasNavalC3()) {
-                        nUnit.getEntity().setNC3NextUUIDAsString(pos, null);
-                    } else {
-                        nUnit.getEntity().setC3iNextUUIDAsString(pos, null);
-                    }
-                }
-            }
-        }
-        refreshNetworks();
-        MekHQ.triggerEvent(new NetworkChangedEvent(addedUnits));
+        playerForce.addUnitsToNetwork(addedUnits, networkID, game);
     }
 
     public Vector<String[]> getAvailableC3iNetworks() {
-        Vector<String[]> networks = new Vector<>();
-        Vector<String> networkNames = new Vector<>();
-
-        for (Unit u : getUnits()) {
-
-            if (u.getFormationId() < 0) {
-                // only units currently in the TO&E
-                continue;
-            }
-            Entity en = u.getEntity();
-            if (null == en) {
-                continue;
-            }
-            if (en.hasC3i() && en.calculateFreeC3Nodes() <= 5 && en.calculateFreeC3Nodes() > 0) {
-                String[] network = new String[2];
-                network[0] = en.getC3NetId();
-                network[1] = "" + en.calculateFreeC3Nodes();
-                if (!networkNames.contains(network[0])) {
-                    networks.add(network);
-                    networkNames.add(network[0]);
-                }
-            }
-        }
-        return networks;
+        return playerForce.getAvailableC3iNetworks();
     }
 
-    /**
-     * @return returns a Vector of the unique name Strings of all Naval C3 networks that have at least 1 free node
-     *       Adapted from getAvailableC3iNetworks() as the two technologies have very similar workings
-     */
     public Vector<String[]> getAvailableNC3Networks() {
-        Vector<String[]> networks = new Vector<>();
-        Vector<String> networkNames = new Vector<>();
-
-        for (Unit u : getUnits()) {
-
-            if (u.getFormationId() < 0) {
-                // only units currently in the TO&E
-                continue;
-            }
-            Entity en = u.getEntity();
-            if (null == en) {
-                continue;
-            }
-            if (en.hasNavalC3() && en.calculateFreeC3Nodes() <= 5 && en.calculateFreeC3Nodes() > 0) {
-                String[] network = new String[2];
-                network[0] = en.getC3NetId();
-                network[1] = "" + en.calculateFreeC3Nodes();
-                if (!networkNames.contains(network[0])) {
-                    networks.add(network);
-                    networkNames.add(network[0]);
-                }
-            }
-        }
-        return networks;
+        return playerForce.getAvailableNC3Networks();
     }
 
-    /**
-     * @return returns a Vector of the unique name Strings of all Nova CEWS networks that have at least 1 free node Nova
-     *       CEWS networks support a maximum of 3 units
-     */
     public Vector<String[]> getAvailableNovaCEWSNetworks() {
-        Vector<String[]> networks = new Vector<>();
-        Vector<String> networkNames = new Vector<>();
-
-        for (Unit u : getUnits()) {
-
-            if (u.getFormationId() < 0) {
-                // only units currently in the TO&E
-                continue;
-            }
-            Entity en = u.getEntity();
-            if (null == en) {
-                continue;
-            }
-            // Nova CEWS max is 3 nodes, so unnetworked unit has 2 free nodes
-            if (en.hasNovaCEWS() && en.calculateFreeC3Nodes() <= 2 && en.calculateFreeC3Nodes() > 0) {
-                String[] network = new String[2];
-                network[0] = en.getC3NetId();
-                network[1] = "" + en.calculateFreeC3Nodes();
-                if (!networkNames.contains(network[0])) {
-                    networks.add(network);
-                    networkNames.add(network[0]);
-                }
-            }
-        }
-        return networks;
+        return playerForce.getAvailableNovaCEWSNetworks();
     }
 
     public Vector<String[]> getAvailableC3MastersForSlaves() {
-        Vector<String[]> networks = new Vector<>();
-        Vector<String> networkNames = new Vector<>();
-
-        for (Unit u : getUnits()) {
-
-            if (u.getFormationId() < 0) {
-                // only units currently in the TO&E
-                continue;
-            }
-            Entity en = u.getEntity();
-            if (null == en) {
-                continue;
-            }
-            // count of free c3 nodes for single company-level masters
-            // will not be right so skip
-            if (en.hasC3M() && !en.hasC3MM() && en.C3MasterIs(en)) {
-                continue;
-            }
-            if (en.calculateFreeC3Nodes() > 0) {
-                String[] network = new String[3];
-                network[0] = en.getC3UUIDAsString();
-                network[1] = "" + en.calculateFreeC3Nodes();
-                network[2] = en.getShortName();
-                if (!networkNames.contains(network[0])) {
-                    networks.add(network);
-                    networkNames.add(network[0]);
-                }
-            }
-        }
-
-        return networks;
+        return playerForce.getAvailableC3MastersForSlaves();
     }
 
     public Vector<String[]> getAvailableC3MastersForMasters() {
-        Vector<String[]> networks = new Vector<>();
-        Vector<String> networkNames = new Vector<>();
-
-        for (Unit u : getUnits()) {
-
-            if (u.getFormationId() < 0) {
-                // only units currently in the TO&E
-                continue;
-            }
-            Entity en = u.getEntity();
-            if (null == en) {
-                continue;
-            }
-            if (en.calculateFreeC3MNodes() > 0) {
-                String[] network = new String[3];
-                network[0] = en.getC3UUIDAsString();
-                network[1] = "" + en.calculateFreeC3MNodes();
-                network[2] = en.getShortName();
-                if (!networkNames.contains(network[0])) {
-                    networks.add(network);
-                    networkNames.add(network[0]);
-                }
-            }
-        }
-
-        return networks;
+        return playerForce.getAvailableC3MastersForMasters();
     }
 
     public void removeUnitsFromC3Master(Unit master) {
-        List<Unit> removed = new ArrayList<>();
-        for (Unit unit : getUnits()) {
-            if (null != unit.getEntity().getC3MasterIsUUIDAsString() &&
-                      unit.getEntity().getC3MasterIsUUIDAsString().equals(master.getEntity().getC3UUIDAsString())) {
-                unit.getEntity().setC3MasterIsUUIDAsString(null);
-                unit.getEntity().setC3Master(null, true);
-                removed.add(unit);
-            }
-        }
-        refreshNetworks();
-        MekHQ.triggerEvent(new NetworkChangedEvent(removed));
+        playerForce.removeUnitsFromC3Master(master, game);
     }
 
     /**
@@ -8137,9 +7594,8 @@ public class Campaign implements ITechManager, IPlace {
      *
      * @see PartInventory
      */
-    @Override
     public PartInventory getPartInventory(Part part) {
-        PartInventory inventory = IPlace.super.getPartInventory(part);
+        PartInventory inventory = playerForce.getPartInventory(part);
 
         int nOrdered = 0;
         IAcquisitionWork onOrder = getShoppingList().getShoppingItem(part);
@@ -8392,7 +7848,7 @@ public class Campaign implements ITechManager, IPlace {
                 }
             }
 
-            addAllCombatTeams(this.formations);
+            playerForce.addAllCombatTeams(getFormations(), this);
 
             // Determine whether there is an active contract
             setHasActiveContract();
@@ -8653,7 +8109,6 @@ public class Campaign implements ITechManager, IPlace {
         this.processProcurement = processProcurement;
     }
 
-    @Override
     public RequestedStockLevels getRequestedStockLevels() {
         return playerForce.getRequestedStockLevels();
     }
@@ -8670,33 +8125,33 @@ public class Campaign implements ITechManager, IPlace {
     }
 
     public boolean getIgnoreMothballed() {
-        return ignoreMothballed;
+        return playerForce.getIgnoreMothballed();
     }
 
     public void setIgnoreMothballed(boolean ignoreMothballed) {
-        this.ignoreMothballed = ignoreMothballed;
+        playerForce.setIgnoreMothballed(ignoreMothballed);
     }
 
     public boolean getTopUpWeekly() {
-        return topUpWeekly;
+        return playerForce.getTopUpWeekly();
     }
 
     public void setTopUpWeekly(boolean topUpWeekly) {
-        this.topUpWeekly = topUpWeekly;
+        playerForce.setTopUpWeekly(topUpWeekly);
     }
 
     public PartQuality getIgnoreSparesUnderQuality() {
-        return ignoreSparesUnderQuality;
+        return playerForce.getIgnoreSparesUnderQuality();
     }
 
     public void setIgnoreSparesUnderQuality(PartQuality ignoreSparesUnderQuality) {
-        this.ignoreSparesUnderQuality = ignoreSparesUnderQuality;
+        playerForce.setIgnoreSparesUnderQuality(ignoreSparesUnderQuality);
     }
 
     public void writePartInUseToXML(final PrintWriter pw, int indent) {
-        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "ignoreMothBalled", ignoreMothballed);
-        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "topUpWeekly", topUpWeekly);
-        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "ignoreSparesUnderQuality", ignoreSparesUnderQuality.name());
+        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "ignoreMothBalled", getIgnoreMothballed());
+        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "topUpWeekly", getTopUpWeekly());
+        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "ignoreSparesUnderQuality", getIgnoreSparesUnderQuality().name());
         getRequestedStockLevels().writeToXML(pw, indent);
     }
 

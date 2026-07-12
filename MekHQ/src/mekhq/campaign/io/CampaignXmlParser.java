@@ -2078,8 +2078,8 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
                 travelLocation.setParent(campusLocation);
             } else if (stage == EducationStage.JOURNEY_FROM_CAMPUS) {
                 LOGGER.info("migrateLegacyEducationTravel: no campus found for {} (JOURNEY_FROM_CAMPUS)"
-                      + " — parenting travel node under Campaign root", person.getFullTitle());
-                travelLocation.setParent(campaign);
+                                  + " — parenting travel node under the main force", person.getFullTitle());
+                travelLocation.setParent(campaign.getPlayerForce().getForceDetachment());
             }
             person.setParent(travelLocation);
             campaign.getCampaignLocationManager().addLocation(travelLocation);

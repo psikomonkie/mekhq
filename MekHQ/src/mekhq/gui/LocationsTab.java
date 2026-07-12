@@ -439,7 +439,7 @@ public class LocationsTab extends CampaignGuiTab {
 
         void refresh(Campaign campaign) {
             List<IPlace> places = new ArrayList<>();
-            places.add(campaign);
+            places.add(campaign.getPlayerForce().getForceDetachment());
             places.addAll(campaign.getCampaignLocationManager().getPlayerBases());
             model.setData(places, campaign);
         }

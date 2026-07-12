@@ -32,32 +32,29 @@
  */
 package mekhq.campaign.force;
 
-import megamek.common.annotations.Nullable;
-import mekhq.campaign.Campaign;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import mekhq.campaign.camOpsReputation.ReputationController;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.finances.Finances;
-import mekhq.campaign.location.ILocation;
 import mekhq.campaign.personnel.ranks.RankSystem;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.factionStanding.FactionStandings;
-import org.w3c.dom.Node;
 
 /**
- * The human player's active force: the single {@link AbstractForce} a {@link Campaign} is played through.
+ * The human player's active force: the single {@link AbstractForce} a {@link mekhq.campaign.Campaign} is played
+ * through.
  *
- * <p>It is the {@link mekhq.campaign.location.IPlace} node representing the main force in the location tree (its
- * {@link mekhq.campaign.location.LocationNode}, owned by {@link AbstractForce}, is what
- * {@link mekhq.campaign.ForceLocationManager} anchors to a location) and the referable node that survives an XML
- * save/load round-trip. Like every force, it holds no reference back to the campaign.</p>
- *
- * <p>For now a {@link Campaign} owns exactly one {@code PlayerForce}; multiple forces per campaign is a later
- * refactor.</p>
+ * <p>For now a player force owns exactly one {@link Detachment} — hence it implements
+ * {@link SingleDetachmentForce}, which supplies the located-resource passthroughs (hangar, warehouse, personnel, …).
+ * Multiple detachments per force is a later refactor, at which point a multi-detachment variant will simply not
+ * implement {@code SingleDetachmentForce} and the compiler will flag every single-detachment assumption.</p>
  */
-public class PlayerForce extends AbstractForce {
+public class PlayerForce extends AbstractForce implements SingleDetachmentForce {
 
-    /** Discriminator identifying the player's main force as a serialized {@link ILocation} reference. */
-    public static final String LOCATION_REFERENCE_TYPE = "playerForce";
+    private final Detachment forceDetachment = new Detachment();
 
     /**
      * @param faction              the force's starting faction
@@ -76,15 +73,12 @@ public class PlayerForce extends AbstractForce {
     }
 
     @Override
-    public String locationReferenceType() {
-        return LOCATION_REFERENCE_TYPE;
+    public Detachment getForceDetachment() {
+        return forceDetachment;
     }
 
-    /**
-     * Resolves a serialized reference to the player force back to the live instance. Because a campaign has a single
-     * player force, the reference carries no identity beyond its discriminator.
-     */
-    public static @Nullable ILocation resolveReference(Campaign campaign, Node node) {
-        return campaign.getPlayerForce();
+    @Override
+    public Collection<Detachment> getDetachments() {
+        return new ArrayList<>(List.of(forceDetachment));
     }
 }
