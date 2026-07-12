@@ -387,7 +387,6 @@ public class Campaign implements ITechManager, IPlace {
     private Systems systemsInstance;
     private final Map<String, PlanetarySystem> planetarySystemOverrides = new LinkedHashMap<>();
     private final CampaignLocationManager locationManager = new CampaignLocationManager();
-    private final ForceLocationManager forceLocationManager = new ForceLocationManager(getPlayerForce());
     private boolean isAvoidingEmptySystems;
     private boolean isOverridingCommandCircuitRequirements;
 
@@ -5579,7 +5578,7 @@ public class Campaign implements ITechManager, IPlace {
         formations.writeToXML(writer, indent);
         MHQXMLUtility.writeSimpleXMLCloseTag(writer, --indent, "formations");
         getFinances().writeToXML(writer, indent);
-        forceLocationManager.writeToXML(writer, indent);
+        getForceLocationManager().writeToXML(writer, indent);
         locationManager.writeToXML(this, writer, indent);
         MHQXMLUtility.writeSimpleXMLTag(writer, indent, "isAvoidingEmptySystems", isAvoidingEmptySystems);
         MHQXMLUtility.writeSimpleXMLTag(writer,
