@@ -45,6 +45,7 @@ import megamek.common.icons.Camouflage;
 import mekhq.campaign.AbstractLocation;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.CampaignNewDayManager;
+import mekhq.campaign.ForceLocationManager;
 import mekhq.campaign.Hangar;
 import mekhq.campaign.HumanResources;
 import mekhq.campaign.Personnel;
@@ -91,6 +92,8 @@ public abstract class AbstractForce implements IPlace {
     private HumanResources humanResources = new HumanResources();
     private final RequestedStockLevels requestedStockLevels = new RequestedStockLevels();
     private ShoppingList shoppingList = new ShoppingList();
+
+    private final ForceLocationManager forceLocationManager = new ForceLocationManager(this);
 
     private final ForceOptions forceOptions;
 
@@ -175,6 +178,11 @@ public abstract class AbstractForce implements IPlace {
 
     public ShoppingList getShoppingList() {
         return shoppingList;
+    }
+
+    @Nonnull
+    public ForceLocationManager getForceLocationManager() {
+        return forceLocationManager;
     }
 
 

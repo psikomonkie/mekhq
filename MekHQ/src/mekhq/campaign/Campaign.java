@@ -387,7 +387,7 @@ public class Campaign implements ITechManager, IPlace {
     private Systems systemsInstance;
     private final Map<String, PlanetarySystem> planetarySystemOverrides = new LinkedHashMap<>();
     private final CampaignLocationManager locationManager = new CampaignLocationManager();
-    private final ForceLocationManager forceLocationManager = new ForceLocationManager(this);
+    private final ForceLocationManager forceLocationManager = new ForceLocationManager(getPlayerForce());
     private boolean isAvoidingEmptySystems;
     private boolean isOverridingCommandCircuitRequirements;
 
@@ -1719,7 +1719,7 @@ public class Campaign implements ITechManager, IPlace {
 
     @Nonnull
     public ForceLocationManager getForceLocationManager() {
-        return forceLocationManager;
+        return getPlayerForce().getForceLocationManager();
     }
 
     /**

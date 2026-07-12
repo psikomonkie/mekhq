@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import jakarta.annotation.Nonnull;
 import mekhq.MekHQ;
 import mekhq.campaign.events.LocationChangedEvent;
+import mekhq.campaign.force.AbstractForce;
 import mekhq.campaign.force.PlayerForce;
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.location.LocationDispatch;
@@ -57,10 +58,10 @@ import mekhq.campaign.universe.PlanetarySystem;
  */
 public class ForceLocationManager {
 
-    private final Campaign campaign;
+    private final AbstractForce force;
 
-    public ForceLocationManager(Campaign campaign) {
-        this.campaign = campaign;
+    public ForceLocationManager(AbstractForce force) {
+        this.force = force;
     }
 
     /**
@@ -71,7 +72,7 @@ public class ForceLocationManager {
      * the campaign builds its {@code PlayerForce}.</p>
      */
     private PlayerForce mainForce() {
-        return campaign.getPlayerForce();
+        return force;
     }
 
     @Nonnull
