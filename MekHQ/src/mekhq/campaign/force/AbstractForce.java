@@ -678,6 +678,13 @@ public abstract class AbstractForce {
         }
     }
 
+    /**
+     * Moves {@code formation} to sit directly under {@code superFormation} in the TO&E, detaching it from its current
+     * parent and inheriting the target's scenario assignment. Formation-type standardization is then applied per the
+     * moved formation's {@link FormationType} (parents may be standardized, children may inherit), and formation levels
+     * are repopulated across the TO&E. No-ops if {@code formation} is {@code null} or equals {@code superFormation}.
+     * The {@link Campaign} is supplied as a parameter for the scenario and TO&E updates this drives.
+     */
     public void moveFormation(Formation formation, Formation superFormation, Campaign campaign) {
         // Can't move a null formation under a subformation and can't move a formation under itself.
         if (formation == null || formation.equals(superFormation)) {
@@ -793,6 +800,12 @@ public abstract class AbstractForce {
         }
     }
 
+    /**
+     * Removes {@code formation} from the TO&E: unassigns its units (clearing their scenario if it was deployed),
+     * removes it from any scenario it was deployed to and from its parent formation, and clears any StratCon track
+     * assignments. The {@link Campaign} is supplied as a parameter for the scenario, contract, and combat-team updates
+     * this drives.
+     */
     public void removeFormation(Formation formation, Campaign campaign) {
         int fid = formation.getId();
         formationIds.remove(fid);
@@ -834,6 +847,12 @@ public abstract class AbstractForce {
         }
     }
 
+    /**
+     * Removes {@code u} from its current formation, clearing its formation and scenario assignments and detaching it
+     * from any C3 networks. When StratCon is enabled and this empties the formation, the formation is dropped from the
+     * combat-teams table. The {@link Campaign} is supplied as a parameter for the game and combat-team updates this
+     * drives.
+     */
     public void removeUnitFromFormation(Unit u, Campaign campaign) {
         Formation formation = getFormation(u.getFormationId());
         if (null != formation) {
@@ -848,10 +867,20 @@ public abstract class AbstractForce {
         }
     }
 
+    /**
+     * @return the {@link Formation} {@code unit} is currently assigned to, or {@code null} if {@code unit} is
+     *       {@code null} or unassigned
+     */
     public @Nullable Formation getFormationFor(final @Nullable Unit unit) {
         return (unit == null) ? null : getFormation(unit.getFormationId());
     }
 
+    /**
+     * Resolves the {@link Formation} a person belongs to: the formation of their assigned unit if they crew one,
+     * otherwise — for techs — the formation they are the assigned tech of.
+     *
+     * @return the person's formation, or {@code null} if none applies
+     */
     public @Nullable Formation getFormationFor(final Person person) {
         final Unit unit = person.getUnit();
         if (unit != null) {
@@ -929,6 +958,10 @@ public abstract class AbstractForce {
         }
     }
 
+    /**
+     * Disbands the entire C3i/Naval C3 network that {@code u} belongs to, clearing the stored next-node UUIDs of every
+     * unit on that network and refreshing networks against the supplied {@link Game}.
+     */
     public void disbandNetworkOf(Unit u, Game game) {
         // collect all the other units on this network to rebuild the uuids
         Vector<Unit> networkedUnits = new Vector<>();
@@ -951,6 +984,11 @@ public abstract class AbstractForce {
         MekHQ.triggerEvent(new NetworkChangedEvent(networkedUnits));
     }
 
+    /**
+     * Removes {@code removedUnits} from their shared C3i/Naval C3 network and rebuilds the remaining members' node
+     * UUIDs so the network stays contiguous, refreshing networks against the supplied {@link Game}. All removed units
+     * are assumed to share the first unit's network id.
+     */
     public void removeUnitsFromNetwork(Vector<Unit> removedUnits, Game game) {
         // collect all the other units on this network to rebuild the uuids
         Vector<String> uuids = new Vector<>();
@@ -992,6 +1030,10 @@ public abstract class AbstractForce {
         refreshNetworks(game);
     }
 
+    /**
+     * Adds {@code addedUnits} to the C3i/Naval C3 network identified by {@code networkID}, rebuilding every member's
+     * node UUIDs, and refreshes networks against the supplied {@link Game}.
+     */
     public void addUnitsToNetwork(Vector<Unit> addedUnits, String networkID, Game game) {
         // collect all the other units on this network to rebuild the uuids
         Vector<String> uuids = new Vector<>();
@@ -1030,6 +1072,10 @@ public abstract class AbstractForce {
         MekHQ.triggerEvent(new NetworkChangedEvent(addedUnits));
     }
 
+    /**
+     * @return one entry per C3i network in the TO&E that has at least one free node; each entry is a
+     *       {@code {networkId, freeNodeCount}} pair
+     */
     public Vector<String[]> getAvailableC3iNetworks() {
         Vector<String[]> networks = new Vector<>();
         Vector<String> networkNames = new Vector<>();
@@ -1058,8 +1104,9 @@ public abstract class AbstractForce {
     }
 
     /**
-     * @return returns a Vector of the unique name Strings of all Naval C3 networks that have at least 1 free node
-     *       Adapted from getAvailableC3iNetworks() as the two technologies have very similar workings
+     * @return one entry per Naval C3 network in the TO&E that has at least one free node; each entry is a
+     *       {@code {networkId, freeNodeCount}} pair. Naval C3 mirrors C3i, so this parallels
+     *       {@link #getAvailableC3iNetworks()}.
      */
     public Vector<String[]> getAvailableNC3Networks() {
         Vector<String[]> networks = new Vector<>();
@@ -1089,8 +1136,8 @@ public abstract class AbstractForce {
     }
 
     /**
-     * @return returns a Vector of the unique name Strings of all Nova CEWS networks that have at least 1 free node Nova
-     *       CEWS networks support a maximum of 3 units
+     * @return one entry per Nova CEWS network in the TO&E that has at least one free node; each entry is a
+     *       {@code {networkId, freeNodeCount}} pair. Nova CEWS networks hold at most three units.
      */
     public Vector<String[]> getAvailableNovaCEWSNetworks() {
         Vector<String[]> networks = new Vector<>();
@@ -1120,6 +1167,10 @@ public abstract class AbstractForce {
         return networks;
     }
 
+    /**
+     * @return the C3 masters in the TO&E that can accept a slave (have a free C3 node), excluding company-level masters
+     *       whose free-node count is unreliable; each entry is a {@code {c3UUID, freeNodeCount, shortName}} triple
+     */
     public Vector<String[]> getAvailableC3MastersForSlaves() {
         Vector<String[]> networks = new Vector<>();
         Vector<String> networkNames = new Vector<>();
@@ -1154,6 +1205,10 @@ public abstract class AbstractForce {
         return networks;
     }
 
+    /**
+     * @return the C3 masters in the TO&E that can accept another master (have a free C3-M node); each entry is a
+     *       {@code {c3UUID, freeMasterNodeCount, shortName}} triple
+     */
     public Vector<String[]> getAvailableC3MastersForMasters() {
         Vector<String[]> networks = new Vector<>();
         Vector<String> networkNames = new Vector<>();
@@ -1183,6 +1238,10 @@ public abstract class AbstractForce {
         return networks;
     }
 
+    /**
+     * Detaches every unit slaved to {@code master} from it, clearing their C3 master reference and refreshing networks
+     * against the supplied {@link Game}.
+     */
     public void removeUnitsFromC3Master(Unit master, Game game) {
         List<Unit> removed = new ArrayList<>();
         for (Unit unit : allUnits()) {

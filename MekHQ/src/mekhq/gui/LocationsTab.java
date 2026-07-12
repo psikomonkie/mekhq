@@ -55,7 +55,7 @@ import mekhq.campaign.Campaign;
 import mekhq.campaign.base.AbstractBase;
 import mekhq.campaign.base.PlayerBase;
 import mekhq.campaign.events.LocationEvent;
-import mekhq.campaign.force.PlayerForce;
+import mekhq.campaign.force.Detachment;
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.location.IPlace;
 import mekhq.campaign.parts.Part;
@@ -241,7 +241,7 @@ public class LocationsTab extends CampaignGuiTab {
         }
 
         private static String resolveType(IPlace place) {
-            if (place instanceof PlayerForce) {
+            if (place instanceof Detachment) {
                 return getText("LocationPlacePanel.type.mainForce");
             }
             if (place instanceof AbstractBase base) {

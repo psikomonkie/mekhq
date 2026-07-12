@@ -47,7 +47,7 @@ import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.events.ProcurementEvent;
 import mekhq.campaign.finances.Money;
-import mekhq.campaign.force.PlayerForce;
+import mekhq.campaign.force.Detachment;
 import mekhq.campaign.location.IPlace;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.parts.Refit;
@@ -178,12 +178,12 @@ public class ShoppingList {
      * eventually delivered from it) resolves to that base's warehouse. Orders bound for different places are kept as
      * separate line items even when they are the same equipment.</p>
      *
-     * @param place the destination; {@code null} or the campaign itself means the main force
+     * @param place the destination; {@code null} or the main force's {@link Detachment} means the main force
      */
     public void addShoppingItem(IAcquisitionWork newWork, int quantity, Campaign campaign, @Nullable IPlace place) {
-        // The main force leaves orders unanchored (their part resolves to the campaign warehouse); a base anchors the
+        // The main force leaves orders unanchored (their part resolves to the main force warehouse); a base anchors the
         // order at that base so it resolves to the base warehouse.
-        IPlace destination = (place instanceof Campaign || place instanceof PlayerForce) ? null : place;
+        IPlace destination = (place instanceof Detachment) ? null : place;
         if (destination != null) {
             newWork.setParent(destination);
         }
