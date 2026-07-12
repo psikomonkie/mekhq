@@ -154,8 +154,8 @@ class CampaignOptionsNavigationPanel extends JPanel {
         JPanel searchRow = new JPanel(new BorderLayout(CONTROL_GAP, 0));
         searchRow.setName("campaignOptionsSearchRow");
         searchRow.add(filterField, BorderLayout.CENTER);
-        // Only offer tree expand/collapse when pages nest under categories; a fully flat tree (every route top-level,
-        // as in the MekHQ Options pane) has nothing to expand or collapse.
+        // Only offer tree expand/collapse when pages nest under categories; a fully flat tree (every route top-level)
+        // has nothing to expand or collapse.
         if (routes.stream().anyMatch(route -> !route.isTopLevelRoute())) {
             searchRow.add(createTreeControls(), BorderLayout.EAST);
         }
