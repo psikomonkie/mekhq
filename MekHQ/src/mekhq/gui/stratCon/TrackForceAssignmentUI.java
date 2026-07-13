@@ -51,6 +51,7 @@ import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
 import mekhq.campaign.digitalGM.stratCon.StratConCoords;
+import mekhq.campaign.digitalGM.stratCon.StratConGMs;
 import mekhq.campaign.digitalGM.stratCon.StratConRulesManager;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.mission.ScenarioForceTemplate;
@@ -167,14 +168,14 @@ public class TrackForceAssignmentUI extends JDialog implements ActionListener {
 
             for (Formation formation : availableForceList.getSelectedValuesList()) {
                 if (assignToScenario) {
-                    StratConRulesManager.assignForceToScenario(ownerPanel.getSelectedCoords(),
+                    StratConGMs.forceDeployment(campaign).assignForceToScenario(ownerPanel.getSelectedCoords(),
                           formation.getId(),
                           campaign,
                           currentCampaignState.getContract(),
                           ownerPanel.getCurrentTrack(),
                           false);
                 } else {
-                    StratConRulesManager.deployForceToCoords(ownerPanel.getSelectedCoords(),
+                    StratConGMs.forceDeployment(campaign).deployForceToCoords(ownerPanel.getSelectedCoords(),
                           formation.getId(),
                           campaign,
                           currentCampaignState.getContract(),

@@ -32,25 +32,72 @@
  */
 package mekhq.campaign.digitalGM.strategy;
 
+import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.stratCon.StratConCoords;
+import mekhq.campaign.digitalGM.stratCon.StratConScenario;
+import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
+import mekhq.campaign.mission.AtBContract;
+
 /**
  * Strategy for placing player forces into scenarios &mdash; direct deployment to coordinates, assignment to a scenario,
- * and committing primary forces. This is the seam that Mapless play diverges on most: it bypasses the map/coordinate
- * model entirely.
+ * and committing primary forces. This is the seam that a mapless GM diverges on most, since it bypasses the
+ * map/coordinate model.
  *
- * <p><b>Extension shell.</b> This interface is intentionally empty for now. It marks force deployment as a distinct
- * capability of the digital GM, but the relevant logic still lives as static methods on
- * {@link mekhq.campaign.digitalGM.stratCon.StratConRulesManager StratConRulesManager} (for example
- * {@code deployForceToCoords}, {@code assignForceToScenario}, {@code processForceDeployment} and
- * {@code commitPrimaryForces}). Those signatures should be lifted here &mdash; and an accessor added to
- * {@link mekhq.campaign.digitalGM.AbstractDigitalGM AbstractDigitalGM} &mdash; when this capability is extracted.</p>
+ * <p>The method signatures mirror the corresponding static entry points on
+ * {@link mekhq.campaign.digitalGM.stratCon.StratConRulesManager StratConRulesManager}; the default StratCon
+ * implementation delegates to them, so the rules themselves are unchanged. The accessor lives on
+ * {@link mekhq.campaign.digitalGM.stratCon.AbstractStratConGM AbstractStratConGM}.</p>
  *
  * @author Illiani
  * @since 0.50.10
  */
 public interface ForceDeploymentStrategy {
-    // TODO Extraction target. Lift the force-placement entry points from StratConRulesManager into this strategy:
-    //   - deployForceToCoords(...)
-    //   - assignForceToScenario(...)
-    //   - processForceDeployment(...)
-    //   - commitPrimaryForces(...)
+
+    /**
+     * Deploys a force to a set of coordinates, potentially revealing terrain and spawning a scenario.
+     *
+     * @param coords   the coordinates to deploy to
+     * @param forceID  the force being deployed
+     * @param campaign the active campaign
+     * @param contract the contract owning the track
+     * @param track    the track being deployed on
+     * @param sticky   {@code true} if the deployment should persist rather than being cleared each cycle
+     */
+    void deployForceToCoords(StratConCoords coords, int forceID, Campaign campaign, AtBContract contract,
+          StratConTrackState track, boolean sticky);
+
+    /**
+     * Assigns a force to the scenario located at the given coordinates.
+     *
+     * @param coords   the coordinates of the scenario
+     * @param forceID  the force being assigned
+     * @param campaign the active campaign
+     * @param contract the contract owning the track
+     * @param track    the track containing the scenario
+     * @param sticky   {@code true} if the assignment should persist rather than being cleared each cycle
+     */
+    void assignForceToScenario(StratConCoords coords, int forceID, Campaign campaign, AtBContract contract,
+          StratConTrackState track, boolean sticky);
+
+    /**
+     * Processes the mechanical consequences of deploying a force to a set of coordinates (scouting neighbours, clearing
+     * prior placements, and so on).
+     *
+     * @param coords   the coordinates deployed to
+     * @param forceID  the deployed force
+     * @param campaign the active campaign
+     * @param track    the track being deployed on
+     * @param sticky   {@code true} if the deployment should persist rather than being cleared each cycle
+     */
+    void processForceDeployment(StratConCoords coords, int forceID, Campaign campaign, StratConTrackState track,
+          boolean sticky);
+
+    /**
+     * Commits the primary forces to a scenario, adding it to the track and finalising its deployment dates.
+     *
+     * @param campaign   the active campaign
+     * @param scenario   the scenario receiving the committed forces
+     * @param trackState the track the scenario belongs to
+     */
+    void commitPrimaryForces(Campaign campaign, StratConScenario scenario, StratConTrackState trackState);
 }

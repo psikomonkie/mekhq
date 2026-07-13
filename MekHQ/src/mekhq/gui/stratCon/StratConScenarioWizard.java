@@ -75,6 +75,7 @@ import mekhq.campaign.Campaign;
 import mekhq.campaign.Campaign.AdministratorSpecialization;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
+import mekhq.campaign.digitalGM.stratCon.StratConGMs;
 import mekhq.campaign.digitalGM.stratCon.StratConRulesManager;
 import mekhq.campaign.digitalGM.stratCon.StratConScenario;
 import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
@@ -1012,7 +1013,7 @@ public class StratConScenarioWizard extends JDialog {
 
         // every force that's been deployed to this scenario gets assigned to the track
         for (int forceID : currentScenario.getAssignedForces()) {
-            StratConRulesManager.processForceDeployment(currentScenario.getCoords(),
+            StratConGMs.forceDeployment(campaign).processForceDeployment(currentScenario.getCoords(),
                   forceID,
                   campaign,
                   currentTrackState,

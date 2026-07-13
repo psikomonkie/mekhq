@@ -61,21 +61,24 @@ public abstract class AbstractDigitalGM implements DigitalGM {
     /**
      * {@inheritDoc}
      *
-     * <p>Registers this GM on the MekHQ event bus so {@link #onNewDay(NewDayEvent)} begins firing.</p>
+     * <p>Registers this GM on the MekHQ event bus so {@link #onNewDay(NewDayEvent)} begins firing, and adds it to the
+     * {@link DigitalGMRegistry} so non-GM code can look it up for a campaign.</p>
      */
     @Override
     public void startup() {
         MekHQ.registerHandler(this);
+        DigitalGMRegistry.register(this);
     }
 
     /**
      * {@inheritDoc}
      *
-     * <p>Removes this GM from the MekHQ event bus.</p>
+     * <p>Removes this GM from the MekHQ event bus and the {@link DigitalGMRegistry}.</p>
      */
     @Override
     public void shutdown() {
         MekHQ.unregisterHandler(this);
+        DigitalGMRegistry.unregister(this);
     }
 
     /**

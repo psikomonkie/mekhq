@@ -33,11 +33,12 @@
 package mekhq.campaign.digitalGM.stratCon;
 
 import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
+import mekhq.campaign.mission.AtBContract;
+import mekhq.campaign.mission.AtBScenario;
 
 /**
- * Default (map-based) StratCon implementation of {@link FacilityStrategy}. Delegates to the existing facility logic on
- * {@link StratConRulesManager}, so behaviour is unchanged from the legacy engine's {@code processFacilityEffects}
- * call.
+ * Default (map-based) StratCon implementation of {@link FacilityStrategy}. Every method delegates to the existing
+ * facility logic on {@link StratConRulesManager}, so behaviour is unchanged from the legacy engine.
  *
  * @author Illiani
  * @since 0.50.10
@@ -48,5 +49,16 @@ public class StratConFacilityStrategy implements FacilityStrategy {
     public void applyPeriodicEffects(StratConTrackState track, StratConCampaignState campaignState,
           boolean isStartOfMonth) {
         StratConRulesManager.processFacilityEffects(track, campaignState, isStartOfMonth);
+    }
+
+    @Override
+    public void updateFacilityForScenario(AtBScenario scenario, AtBContract contract, boolean destroy,
+          boolean capture) {
+        StratConRulesManager.updateFacilityForScenario(scenario, contract, destroy, capture);
+    }
+
+    @Override
+    public void switchFacilityOwner(StratConFacility facility) {
+        StratConRulesManager.switchFacilityOwner(facility);
     }
 }

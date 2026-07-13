@@ -39,6 +39,8 @@ import java.util.List;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.digitalGM.AbstractDigitalGM;
 import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
+import mekhq.campaign.digitalGM.strategy.ForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.ReinforcementStrategy;
 import mekhq.campaign.digitalGM.strategy.ScenarioGenerationStrategy;
 import mekhq.campaign.digitalGM.strategy.ScenarioLifecycleStrategy;
 import mekhq.campaign.events.NewDayEvent;
@@ -71,6 +73,8 @@ public abstract class AbstractStratConGM extends AbstractDigitalGM {
     private final ScenarioGenerationStrategy scenarioGeneration = new StratConScenarioGenerationStrategy();
     private final ScenarioLifecycleStrategy scenarioLifecycle = new StratConScenarioLifecycleStrategy();
     private final FacilityStrategy facility = new StratConFacilityStrategy();
+    private final ForceDeploymentStrategy forceDeployment = new StratConForceDeploymentStrategy();
+    private final ReinforcementStrategy reinforcement = new StratConReinforcementStrategy();
 
     /**
      * @return the strategy that decides when and how scenarios are generated for this GM
@@ -92,6 +96,20 @@ public abstract class AbstractStratConGM extends AbstractDigitalGM {
      */
     protected FacilityStrategy facility() {
         return facility;
+    }
+
+    /**
+     * @return the strategy governing how player forces are deployed to and committed to scenarios
+     */
+    protected ForceDeploymentStrategy forceDeployment() {
+        return forceDeployment;
+    }
+
+    /**
+     * @return the strategy governing reinforcement eligibility, target numbers and deployment
+     */
+    protected ReinforcementStrategy reinforcement() {
+        return reinforcement;
     }
 
     /**

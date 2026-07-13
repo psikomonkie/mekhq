@@ -33,13 +33,20 @@
 package mekhq.campaign.digitalGM.strategy;
 
 import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
+import mekhq.campaign.digitalGM.stratCon.StratConFacility;
 import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
+import mekhq.campaign.mission.AtBContract;
+import mekhq.campaign.mission.AtBScenario;
 
 /**
- * Strategy for map facilities &mdash; the periodic effects a facility applies during the daily lifecycle. This is the
- * seam Mapless (and, by extension, Singles) play skips entirely, since those play types have no facility map: the
- * legacy engine gated the call behind {@code if (!isUseStratConMapless)}, which is now expressed as a no-op
- * implementation of this strategy.
+ * Strategy for map facilities &mdash; applying their periodic effects, updating them when a scenario resolves, and
+ * transferring ownership. Mapless (and, by extension, Singles) play has no facility map at all, so its implementation
+ * is a no-op; the legacy engine gated the periodic call behind {@code if (!isUseStratConMapless)} and skipped facility
+ * placement entirely, so the remaining operations are already inert there.
+ *
+ * <p>The method signatures mirror the corresponding static entry points on
+ * {@link mekhq.campaign.digitalGM.stratCon.StratConRulesManager StratConRulesManager}; the default StratCon
+ * implementation delegates to them, so the rules themselves are unchanged.</p>
  *
  * @author Illiani
  * @since 0.50.10
@@ -55,6 +62,20 @@ public interface FacilityStrategy {
      */
     void applyPeriodicEffects(StratConTrackState track, StratConCampaignState campaignState, boolean isStartOfMonth);
 
-    // TODO Further facility entry points on StratConRulesManager remain candidates for this strategy as the
-    //      abstraction grows: updateFacilityForScenario(...) and switchFacilityOwner(...).
+    /**
+     * Updates the facility associated with a resolved scenario, destroying or capturing it as required.
+     *
+     * @param scenario the resolved scenario
+     * @param contract the contract owning the facility
+     * @param destroy  {@code true} if the facility should be destroyed
+     * @param capture  {@code true} if the facility should change hands
+     */
+    void updateFacilityForScenario(AtBScenario scenario, AtBContract contract, boolean destroy, boolean capture);
+
+    /**
+     * Transfers ownership of a facility to the opposing side (or its captured definition).
+     *
+     * @param facility the facility whose owner changes
+     */
+    void switchFacilityOwner(StratConFacility facility);
 }
