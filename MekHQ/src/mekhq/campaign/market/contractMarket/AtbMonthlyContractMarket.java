@@ -61,6 +61,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import megamek.common.annotations.Nullable;
 import megamek.common.compute.Compute;
 import megamek.common.enums.SkillLevel;
@@ -595,7 +596,7 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
         return contract;
     }
 
-    static @org.jspecify.annotations.NonNull String generateDefaultName(String employer, AtBContract contract,
+    static @Nonnull String generateDefaultName(String employer, AtBContract contract,
           Campaign campaign) {
         return String.format("%s - %s - %s %s",
               contract.getStartDate()

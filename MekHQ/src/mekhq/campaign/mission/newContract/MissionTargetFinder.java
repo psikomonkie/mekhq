@@ -167,18 +167,11 @@ public class MissionTargetFinder {
         if (!profileTargets.isEmpty()) {
             return profileTargets;
         }
-
-        // INVASION found no shared border above, and it is the one profile that is a hard restriction rather than a
-        // preference: an invader can only supply and hold a conquest adjacent to its own territory, so there is no
-        // deep-placement fallback for it - no shared border means no viable invasion target at all.
-        if (profile == MissionLocationProfile.INVASION) {
-            return Collections.emptyList();
-        } else {
-            List<PlanetarySystem> borderTargets = findSharedBorderTargets(attacker, defender, location, radius,
-                  currentDate);
-            if (!borderTargets.isEmpty()) {
-                return borderTargets;
-            }
+        
+        List<PlanetarySystem> borderTargets = findSharedBorderTargets(attacker, defender, location, radius,
+              currentDate);
+        if (!borderTargets.isEmpty()) {
+            return borderTargets;
         }
 
         // Last resort: neither a direct border nor a contained-faction proxy border exists. Target whichever of
