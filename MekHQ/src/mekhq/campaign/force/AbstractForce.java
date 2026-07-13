@@ -52,7 +52,6 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.Vector;
-import java.util.stream.Collectors;
 import javax.swing.JOptionPane;
 
 import megamek.client.ui.util.PlayerColour;
@@ -167,16 +166,20 @@ public abstract class AbstractForce {
 
     /** All units across every {@link Detachment} of this force. Multi-detachment-safe. */
     public Collection<Unit> allUnits() {
-        return getDetachments().stream()
-                     .flatMap(detachment -> detachment.getHangar().getUnits().stream())
-                     .collect(Collectors.toList());
+        List<Unit> units = new ArrayList<>();
+        for (Detachment detachment : getDetachments()) {
+            units.addAll(detachment.getHangar().getUnits());
+        }
+        return units;
     }
 
     /** All personnel across every {@link Detachment} of this force. Multi-detachment-safe. */
     public Collection<Person> allPersonnel() {
-        return getDetachments().stream()
-                     .flatMap(detachment -> detachment.getPersonnel().values().stream())
-                     .collect(Collectors.toList());
+        List<Person> personnel = new ArrayList<>();
+        for (Detachment detachment : getDetachments()) {
+            personnel.addAll(detachment.getPersonnel().values());
+        }
+        return personnel;
     }
 
     /**
@@ -653,10 +656,13 @@ public abstract class AbstractForce {
     }
 
     public ArrayList<CombatTeam> getCombatTeamsAsList(Campaign campaign) {
-        return getCombatTeamsAsMap(campaign).values()
-                     .stream()
-                     .filter(l -> formationIds.containsKey(l.getFormationId()))
-                     .collect(Collectors.toCollection(ArrayList::new));
+        ArrayList<CombatTeam> combatTeamsList = new ArrayList<>();
+        for (CombatTeam combatTeam : getCombatTeamsAsMap(campaign).values()) {
+            if (formationIds.containsKey(combatTeam.getFormationId())) {
+                combatTeamsList.add(combatTeam);
+            }
+        }
+        return combatTeamsList;
     }
 
     /**
@@ -807,37 +813,37 @@ public abstract class AbstractForce {
      * this drives.
      */
     public void removeFormation(Formation formation, Campaign campaign) {
-        int fid = formation.getId();
-        formationIds.remove(fid);
+        int formationId = formation.getId();
+        formationIds.remove(formationId);
         // clear formationIds of all personnel with this formation
-        for (UUID uid : formation.getUnits()) {
-            Unit u = requireSingleDetachment().getHangar().getUnit(uid);
-            if (null == u) {
+        for (UUID unitId : formation.getUnits()) {
+            Unit unit = requireSingleDetachment().getHangar().getUnit(unitId);
+            if (null == unit) {
                 continue;
             }
-            if (u.getFormationId() == fid) {
-                u.setFormationId(FORMATION_NONE);
+            if (unit.getFormationId() == formationId) {
+                unit.setFormationId(FORMATION_NONE);
                 if (formation.isDeployed()) {
-                    u.setScenarioId(NO_ASSIGNED_SCENARIO);
+                    unit.setScenarioId(NO_ASSIGNED_SCENARIO);
                 }
             }
         }
 
         // also remove this formation's id from any scenarios
         if (formation.isDeployed()) {
-            Scenario s = campaign.getScenario(formation.getScenarioId());
-            s.removeFormation(fid);
+            Scenario scenario = campaign.getScenario(formation.getScenarioId());
+            scenario.removeFormation(formationId);
         }
 
         if (null != formation.getParentFormation()) {
-            formation.getParentFormation().removeSubFormation(fid);
+            formation.getParentFormation().removeSubFormation(formationId);
         }
 
         // clear out StratCon formation assignments
         for (AtBContract contract : campaign.getActiveAtBContracts()) {
             if (contract.getStratConCampaignState() != null) {
                 for (StratConTrackState track : contract.getStratConCampaignState().getTracks()) {
-                    track.unassignFormation(fid);
+                    track.unassignFormation(formationId);
                 }
             }
         }
@@ -853,13 +859,13 @@ public abstract class AbstractForce {
      * combat-teams table. The {@link Campaign} is supplied as a parameter for the game and combat-team updates this
      * drives.
      */
-    public void removeUnitFromFormation(Unit u, Campaign campaign) {
-        Formation formation = getFormation(u.getFormationId());
+    public void removeUnitFromFormation(Unit unit, Campaign campaign) {
+        Formation formation = getFormation(unit.getFormationId());
         if (null != formation) {
-            formation.removeUnit(campaign, u.getId(), true);
-            u.setFormationId(FORMATION_NONE);
-            u.setScenarioId(NO_ASSIGNED_SCENARIO);
-            detachUnitFromC3Networks(u, campaign.getGame());
+            formation.removeUnit(campaign, unit.getId(), true);
+            unit.setFormationId(FORMATION_NONE);
+            unit.setScenarioId(NO_ASSIGNED_SCENARIO);
+            detachUnitFromC3Networks(unit, campaign.getGame());
 
             if (campaign.getCampaignOptions().isUseStratCon() && formation.getUnits().isEmpty()) {
                 combatTeams.remove(formation.getId());
@@ -886,11 +892,11 @@ public abstract class AbstractForce {
         if (unit != null) {
             return getFormationFor(unit);
         } else if (person.isTech()) {
-            return formationIds.values()
-                         .stream()
-                         .filter(formation -> person.getId().equals(formation.getTechID()))
-                         .findFirst()
-                         .orElse(null);
+            for (Formation formation : formationIds.values()) {
+                if (person.getId().equals(formation.getTechID())) {
+                    return formation;
+                }
+            }
         }
 
         return null;
