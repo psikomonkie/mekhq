@@ -81,13 +81,13 @@ public class RandomEventDialog {
     private final static String MESSAGE_SUFFIX = ".message";
 
     private final Campaign campaign;
-    private final Person eventParticipant;
+    private final Person activeEventParticipant;
     private final boolean isUseAgingEffects;
     private final boolean isUseRandomPersonalities;
     private final boolean isClanCampaign;
     private final LocalDate today;
-    private final boolean useEdge;
-    private final int personalityModifier;
+    private boolean useEdge = false;
+    private int personalityModifier = 0;
 
     private final Map<Integer, String> followOnEventMap = new HashMap<>();
     private final Map<Integer, SkillCheck> skillCheckMap = new HashMap<>();
@@ -111,10 +111,10 @@ public class RandomEventDialog {
         return followOnEventMap.get(responseIndex);
     }
 
-    public RandomEventDialog(Campaign campaign, Person eventParticipant, @Nullable Person otherEventParticipant,
+    public RandomEventDialog(Campaign campaign, Person activeEventParticipant, @Nullable Person passiveEventParticipant,
           RandomEventData eventData) {
         this.campaign = campaign;
-        this.eventParticipant = eventParticipant;
+        this.activeEventParticipant = activeEventParticipant;
 
         CampaignOptions campaignOptions = campaign.getCampaignOptions();
         isUseAgingEffects = campaignOptions.isUseAgeEffects();
@@ -123,26 +123,39 @@ public class RandomEventDialog {
         isClanCampaign = campaign.isClanCampaign();
         today = campaign.getLocalDate();
 
-        useEdge = campaignOptions.isUseEdge() && eventParticipant.getOptions().booleanOption(EDGE_RANDOM_EVENTS);
-        personalityModifier = getPersonalityModifier(eventParticipant);
+        populateActiveParticipantSpecialValues(activeEventParticipant, campaignOptions);
+
         populateHashMaps(eventData);
 
         resolveDialog(campaign,
-              eventParticipant,
-              otherEventParticipant,
+              activeEventParticipant,
+              passiveEventParticipant,
               eventData);
     }
 
-    private void resolveDialog(Campaign campaign, Person eventParticipant, @Nullable Person otherEventParticipant,
+    private void populateActiveParticipantSpecialValues(Person activeEventParticipant,
+          CampaignOptions campaignOptions) {
+        boolean edgeEnabled = campaignOptions.isUseEdge();
+        boolean speakerIsReal = activeEventParticipant != null;
+
+        if (speakerIsReal) {
+            useEdge = edgeEnabled && activeEventParticipant.getOptions().booleanOption(EDGE_RANDOM_EVENTS);
+            personalityModifier = getPersonalityModifier(activeEventParticipant);
+        }
+    }
+
+    private void resolveDialog(Campaign campaign, Person activeEventParticipant,
+          @Nullable Person passiveEventParticipant,
           RandomEventData eventData) {
-        triggerDialog(campaign, eventParticipant, otherEventParticipant, eventData);
+        triggerDialog(campaign, activeEventParticipant, passiveEventParticipant, eventData);
 
         resolveEvent(useEdge);
         reportSkillCheckResults();
         reportAttributeCheckResults();
     }
 
-    private void triggerDialog(Campaign campaign, Person eventParticipant, @Nullable Person otherEventParticipant,
+    private void triggerDialog(Campaign campaign, Person activeEventParticipant,
+          @Nullable Person passiveEventParticipant,
           RandomEventData eventData) {
         String eventName = eventData.randomEventType();
         String commanderAddress = getCommanderAddress();
@@ -152,8 +165,8 @@ public class RandomEventDialog {
         List<String> options = getOptions(eventData, eventName);
 
         ImmersiveDialogSimple eventDialog = new ImmersiveDialogSimple(campaign,
-              eventParticipant,
-              otherEventParticipant,
+              activeEventParticipant,
+              passiveEventParticipant,
               inCharacterMessage,
               options,
               outOfCharacterMessage,
@@ -163,13 +176,13 @@ public class RandomEventDialog {
         choiceIndex = eventDialog.getDialogChoice();
     }
 
-    private int getPersonalityModifier(Person eventParticipant) {
+    private int getPersonalityModifier(Person activeEventParticipant) {
         // This polarity inversion is intentional. Positive is a penalty, negative is a bonus
         return -getPersonalityValue(isUseRandomPersonalities,
-              eventParticipant.getAggression(),
-              eventParticipant.getAmbition(),
-              eventParticipant.getGreed(),
-              eventParticipant.getSocial());
+              activeEventParticipant.getAggression(),
+              activeEventParticipant.getAmbition(),
+              activeEventParticipant.getGreed(),
+              activeEventParticipant.getSocial());
     }
 
     private void populateHashMaps(RandomEventData event) {
@@ -204,7 +217,7 @@ public class RandomEventDialog {
     private void addAttributeCheck(SkillAttribute attribute, List<TargetRollModifier> externalModifiers,
           int responseIndex) {
         if (attribute != SkillAttribute.NO_ATTRIBUTE) {
-            AttributeCheck attributeCheck = eventParticipant.checkAttribute(attribute)
+            AttributeCheck attributeCheck = activeEventParticipant.checkAttribute(attribute)
                                                   .withExternalModifiers(externalModifiers);
 
             attributeCheckMap.put(responseIndex, attributeCheck);
@@ -214,7 +227,10 @@ public class RandomEventDialog {
     private void addSkillCheck(String skillName, List<TargetRollModifier> externalModifiers,
           int responseIndex) {
         if (!StringUtility.isNullOrBlank(skillName)) {
-            SkillCheck skillCheck = eventParticipant.checkSkill(skillName, isUseAgingEffects, isClanCampaign, today)
+            SkillCheck skillCheck = activeEventParticipant.checkSkill(skillName,
+                        isUseAgingEffects,
+                        isClanCampaign,
+                        today)
                                           .withExternalModifiers(externalModifiers);
 
             skillCheckMap.put(responseIndex, skillCheck);
@@ -275,7 +291,7 @@ public class RandomEventDialog {
     private @NonNull String getAttributeAddendum(AttributeCheck attributeCheck, String optionText) {
         SkillAttribute attribute = attributeCheck.getFirstAttribute();
         String attributeName = attribute.getLabel();
-        String attributeLevel = Attributes.getAttributeLevel(eventParticipant, attribute);
+        String attributeLevel = Attributes.getAttributeLevel(activeEventParticipant, attribute);
 
         optionText = attributeName + " (" + attributeLevel + ")<br>" + optionText;
 
@@ -286,10 +302,10 @@ public class RandomEventDialog {
         SkillType skillType = skillCheck.getSkillType();
         String skillName = skillType.getName();
 
-        Skill skill = eventParticipant.getSkill(skillName);
+        Skill skill = activeEventParticipant.getSkill(skillName);
         String skillLevelLabel = getTextAt(RESOURCES_RANDOM_EVENT_DIALOG, "RandomEventDialog.skill.unskilled");
         if (skill != null) {
-            SkillModifierData skillModifierData = eventParticipant.getSkillModifierData(isUseAgingEffects,
+            SkillModifierData skillModifierData = activeEventParticipant.getSkillModifierData(isUseAgingEffects,
                   isClanCampaign,
                   today);
             SkillLevel skillLevel = skill.getSkillLevel(skillModifierData);
@@ -382,6 +398,13 @@ public class RandomEventDialog {
         String resourceKey = RESPONSE_PREFIX + '.' + choiceIndex + '.' + event.randomEventType() + suffix;
         String inCharacterMessage = getFormattedTextAt(RESOURCES_RANDOM_EVENT_EFFECTS, resourceKey, commanderAddress);
 
-        new ImmersiveDialogSimple(campaign, eventParticipant, null, inCharacterMessage, null, eventReport, null, false);
+        new ImmersiveDialogSimple(campaign,
+              activeEventParticipant,
+              null,
+              inCharacterMessage,
+              null,
+              eventReport,
+              null,
+              false);
     }
 }

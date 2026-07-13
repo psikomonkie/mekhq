@@ -62,8 +62,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalHangar;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.personnel.Person;
@@ -144,8 +144,8 @@ class RandomEventEffectsManagerTest {
     private void enableFatigue() {
         when(mockCampaignOptions.isUseFatigue()).thenReturn(true);
         when(mockCampaignOptions.getFatigueRate()).thenReturn(1);
-        when(mockCampaign.getHangar()).thenReturn(mock(Hangar.class));
-        when(mockCampaign.getWarehouse()).thenReturn(mock(Warehouse.class));
+        when(mockCampaign.getHangar()).thenReturn(mock(LocalHangar.class));
+        when(mockCampaign.getWarehouse()).thenReturn(mock(LocalWarehouse.class));
     }
 
     // -----------------------------------------------------------------------
