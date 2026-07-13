@@ -54,6 +54,8 @@ import mekhq.campaign.Hangar;
 import mekhq.campaign.JumpPath;
 import mekhq.campaign.Warehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
+import mekhq.campaign.force.Detachment;
+import mekhq.campaign.force.PlayerForce;
 import mekhq.campaign.location.AcademyCampusLocation;
 import mekhq.campaign.location.LocationUtils;
 import mekhq.campaign.personnel.Person;
@@ -115,6 +117,10 @@ class EducationControllerTest {
 
         when(campaign.getCampaignLocationManager()).thenReturn(mock(CampaignLocationManager.class));
 
+        PlayerForce playerForce = mock(PlayerForce.class);
+        when(campaign.getPlayerForce()).thenReturn(playerForce);
+        when(playerForce.getForceDetachment()).thenReturn(mock(Detachment.class));
+
         return campaign;
     }
 
@@ -139,6 +145,9 @@ class EducationControllerTest {
             person.setEduAcademySystem("TestSystem");
             person.setEduEducationStage(EducationStage.JOURNEY_TO_CAMPUS);
             campaign = mock(Campaign.class);
+            PlayerForce playerForce = mock(PlayerForce.class);
+            when(campaign.getPlayerForce()).thenReturn(playerForce);
+            when(playerForce.getForceDetachment()).thenReturn(mock(Detachment.class));
             when(campaign.getCampaignLocationManager()).thenReturn(mock(CampaignLocationManager.class));
             PlanetarySystem destSystem = mock(PlanetarySystem.class);
             when(campaign.getSystemById("TestSystem")).thenReturn(destSystem);
@@ -235,6 +244,9 @@ class EducationControllerTest {
 
             destSystem = mock(PlanetarySystem.class);
             campaign = mock(Campaign.class);
+            PlayerForce playerForce = mock(PlayerForce.class);
+            when(campaign.getPlayerForce()).thenReturn(playerForce);
+            when(playerForce.getForceDetachment()).thenReturn(mock(Detachment.class));
             when(campaign.getCampaignLocationManager()).thenReturn(mock(CampaignLocationManager.class));
             when(campaign.getSystemById("TestSystem")).thenReturn(destSystem);
             when(campaign.getSimplifiedTravelTime(destSystem)).thenReturn(5);

@@ -49,6 +49,7 @@ import mekhq.campaign.JumpPath;
 import mekhq.campaign.Personnel;
 import mekhq.campaign.Warehouse;
 import mekhq.campaign.base.PlayerBase;
+import mekhq.campaign.force.Detachment;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.personnel.Person;
 import mekhq.campaign.unit.Unit;
@@ -540,7 +541,11 @@ public interface ILocation {
      * constant.
      */
     Map<String, ReferenceResolver> REFERENCE_RESOLVERS = Map.of(
-          Campaign.LOCATION_REFERENCE_TYPE, (campaign, node) -> campaign,
+          Detachment.LOCATION_REFERENCE_TYPE, Detachment::resolveReference,
+          // Legacy aliases: pre-detachment saves referenced the main force as "playerForce", and pre-force saves
+          // referenced it as "campaign". Both now resolve to the player force's detachment.
+          "playerForce", Detachment::resolveReference,
+          Campaign.LOCATION_REFERENCE_TYPE, Detachment::resolveReference,
           PlayerBase.LOCATION_REFERENCE_TYPE, PlayerBase::resolveReference,
           FixedLocation.LOCATION_REFERENCE_TYPE, FixedLocation::resolveReference,
           AcademyCampusLocation.CAMPUS_REFERENCE_TYPE, AcademyCampusLocation::resolveCampusReference,

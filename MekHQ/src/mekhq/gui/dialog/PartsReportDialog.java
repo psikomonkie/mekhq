@@ -130,8 +130,8 @@ public class PartsReportDialog extends JDialog {
         super(gui.getFrame(), modal);
         this.gui = gui;
         this.campaign = gui.getCampaign();
-        this.activePlace = campaign;
-        this.partsInUseManager = new PartsInUseManager(campaign, campaign);
+        this.activePlace = campaign.getPlayerForce().getForceDetachment();
+        this.partsInUseManager = new PartsInUseManager(campaign, campaign.getPlayerForce().getForceDetachment());
         initComponents();
         // initComponents() selects the dropdown to match the main GUI's active location; sync the scoped manager to it.
         activePlace = getSelectedPlace();
@@ -655,7 +655,7 @@ public class PartsReportDialog extends JDialog {
     private IPlace getSelectedPlace() {
         LocationFilterItem item = (LocationFilterItem) choiceLocation.getSelectedItem();
         if (item == null || item.isMainForce()) {
-            return campaign;
+            return campaign.getPlayerForce().getForceDetachment();
         }
         return item.getBase();
     }

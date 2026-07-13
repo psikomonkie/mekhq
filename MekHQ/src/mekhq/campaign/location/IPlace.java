@@ -105,9 +105,9 @@ public interface IPlace extends ILocation {
     /**
      * Returns the per-part "requested stock percent" targets this place maintains for its warehouse.
      *
-     * <p>Only {@link mekhq.campaign.Campaign} (main force) and {@link mekhq.campaign.base.AbstractBase} own real stock
-     * levels; every other place inherits the empty {@link RequestedStockLevels#NO_RESTOCK}, so its parts fall through to
-     * default stock percentages.</p>
+     * <p>Only the main force's {@link mekhq.campaign.force.Detachment} and {@link mekhq.campaign.base.AbstractBase} own
+     * real stock levels; every other place inherits the empty {@link RequestedStockLevels#NO_RESTOCK}, so its parts fall
+     * through to default stock percentages.</p>
      */
     default RequestedStockLevels getRequestedStockLevels() {
         return RequestedStockLevels.NO_RESTOCK;
@@ -116,8 +116,9 @@ public interface IPlace extends ILocation {
     /**
      * Returns a {@link PartInventory} counting spare parts that match {@code part} in this place's warehouse.
      *
-     * <p>Supply counts present spares; transit counts non-present spares. The ordered count is
-     * zero by default — {@link mekhq.campaign.Campaign} overrides this to add shopping-list orders.</p>
+     * <p>Supply counts present spares; transit counts non-present spares. The ordered count is zero here;
+     * {@link mekhq.campaign.Campaign#getPartInventory} wraps this result to add the main force's shopping-list
+     * orders.</p>
      */
     default PartInventory getPartInventory(Part part) {
         PartInventory inventory = new PartInventory();
@@ -200,8 +201,8 @@ public interface IPlace extends ILocation {
             if (!travelNode.hasArrived()) {
                 continue;
             }
-            LocationDispatch.landFromTravelNode(travelNode, personnel, hangar, warehouse, campaign,
-                  campaign.getCampaignLocationManager());
+            LocationDispatch.landFromTravelNode(travelNode, personnel, hangar, warehouse,
+                  campaign.getPlayerForce().getForceDetachment(), campaign.getCampaignLocationManager());
         }
     }
 }

@@ -99,6 +99,7 @@ import mekhq.campaign.campaignOptions.CampaignOptionsUnmarshaller;
 import mekhq.campaign.enums.CampaignTransportType;
 import mekhq.campaign.finances.Finances;
 import mekhq.campaign.force.CombatTeam;
+import mekhq.campaign.force.Detachment;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.icons.UnitIcon;
 import mekhq.campaign.location.AcademyCampusLocation;
@@ -1986,7 +1987,7 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
                 ILocation parentLocation = person.getParentLocation();
                 if (parentLocation != null
                           && !(parentLocation instanceof Personnel personnel
-                                && personnel.getParentLocation() instanceof Campaign)) {
+                                     && personnel.getParentLocation() instanceof Detachment)) {
                     LOGGER.debug("migrateLegacyEducationTravel: skipping {} — already reconnected (stage={})",
                           person.getFullTitle(), stage);
                     continue;
@@ -2077,8 +2078,8 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
                 travelLocation.setParent(campusLocation);
             } else if (stage == EducationStage.JOURNEY_FROM_CAMPUS) {
                 LOGGER.info("migrateLegacyEducationTravel: no campus found for {} (JOURNEY_FROM_CAMPUS)"
-                      + " — parenting travel node under Campaign root", person.getFullTitle());
-                travelLocation.setParent(campaign);
+                                  + " — parenting travel node under the main force", person.getFullTitle());
+                travelLocation.setParent(campaign.getPlayerForce().getForceDetachment());
             }
             person.setParent(travelLocation);
             campaign.getCampaignLocationManager().addLocation(travelLocation);

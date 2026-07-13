@@ -800,7 +800,8 @@ public class EducationController {
             // the travel-progress display; arrival is driven by the travel node.
             person.setEduJourneyTime(2);
             person.setEduDaysOfTravel(0);
-            campaign.getCampaignLocationManager().queueTravel(List.of(person), campaign);
+            campaign.getCampaignLocationManager()
+                  .queueTravel(List.of(person), campaign.getPlayerForce().getForceDetachment());
             campaign.addReport(PERSONNEL, String.format(resources.getString("returningFromSchool.text"),
                   person.getHyperlinkedFullTitle(), 2));
             person.setEduEducationStage(EducationStage.JOURNEY_FROM_CAMPUS);
@@ -829,7 +830,8 @@ public class EducationController {
             }
         }
 
-        campaign.getCampaignLocationManager().queueTravel(List.of(person), campaign);
+        campaign.getCampaignLocationManager()
+              .queueTravel(List.of(person), campaign.getPlayerForce().getForceDetachment());
 
         JumpPath returnPath = LocationUtils.planJumpPath(academySystem, campaign.getCurrentSystem(), campaign);
         int travelDays = returnPath != null
@@ -853,7 +855,7 @@ public class EducationController {
             }
             current = current.getParentLocation();
         }
-        return campaign;
+        return campaign.getPlayerForce().getForceDetachment();
     }
 
     /**

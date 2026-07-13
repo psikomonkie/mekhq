@@ -593,7 +593,7 @@ public class CampaignLocationManager {
             }
         }
         AcademyCampusLocation campus = new AcademyCampusLocation(academySet, academyName);
-        LocationNode.LocationManager.setLocation(campus, campaign);
+        LocationNode.LocationManager.setLocation(campus, campaign.getPlayerForce().getForceDetachment());
         return campus;
     }
 
@@ -627,7 +627,7 @@ public class CampaignLocationManager {
         MHQXMLUtility.writeSimpleXMLOpenTag(pw, indent++, "locations");
         for (AbstractLocation location : locations) {
             // Skip locations parented to another node — they are serialized inside their parent's XML.
-            // Skip the main force's current location — written separately by ForceLocationManager as <location>.
+            // Skip the main force's current location — written separately by DetachmentLocationManager as <location>.
             if (location.isParented() || location == mainForceLocation) {
                 continue;
             }
