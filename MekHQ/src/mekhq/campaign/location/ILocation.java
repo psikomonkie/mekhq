@@ -462,6 +462,23 @@ public interface ILocation {
     }
 
     /**
+     * Returns {@code true} if this node — or anything in the tree below it — is a real occupant that must not be
+     * pruned: a {@link Campaign}, {@link mekhq.campaign.base.AbstractBase}, {@link Person}, {@link Unit}, or
+     * {@link Part}. A top-level {@link AbstractLocation} for which this returns {@code false} is dead structure safe to
+     * remove from the tree.
+     *
+     * <p>The default recurses into child locations; occupant types override it to return {@code true} directly.</p>
+     */
+    default boolean isInUse() {
+        for (ILocation child : getChildLocations()) {
+            if (child.isInUse()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Processes arriving travel nodes parented to this location.
      *
      * <p>For each completed {@link mekhq.campaign.CurrentLocation} child (one whose jump path has

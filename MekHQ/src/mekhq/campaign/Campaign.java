@@ -1591,6 +1591,12 @@ public class Campaign implements ITechManager {
         return playerForce.getForceDetachment().getChildLocations();
     }
 
+    /** The campaign is always in use, so any location node with the campaign below it must never be pruned. */
+    @Override
+    public boolean isInUse() {
+        return true;
+    }
+
     public boolean isOnContractAndPlanetside() {
         boolean isOnContract = !getActiveMissions(false).isEmpty();
         boolean isPlanetside = isOnPlanet();
