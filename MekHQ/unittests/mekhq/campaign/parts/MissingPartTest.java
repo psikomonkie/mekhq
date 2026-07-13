@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2020-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -46,8 +46,7 @@ import java.util.UUID;
 import megamek.common.equipment.EquipmentType;
 import megamek.common.units.Mek;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Quartermaster;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.parts.meks.MekLocation;
 import mekhq.campaign.parts.missing.MissingMekLocation;
 import mekhq.campaign.parts.missing.MissingPart;
@@ -59,9 +58,9 @@ public class MissingPartTest {
     @Test
     public void reservePartDoesNothingWithoutTheRightPart() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getWarehouse()).thenReturn(warehouse);
-        Quartermaster quartermaster = new Quartermaster(mockCampaign);
+        mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
         // Add a not-suitable parts to the warehouse
@@ -89,9 +88,9 @@ public class MissingPartTest {
     @Test
     public void reservePartDoesNothingWithoutATech() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getWarehouse()).thenReturn(warehouse);
-        Quartermaster quartermaster = new Quartermaster(mockCampaign);
+        mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
         // Add a suitable parts to the warehouse
@@ -113,9 +112,9 @@ public class MissingPartTest {
     @Test
     public void reservePartFindsTheRightPart() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getWarehouse()).thenReturn(warehouse);
-        Quartermaster quartermaster = new Quartermaster(mockCampaign);
+        mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
         // Add a suitable parts to the warehouse
@@ -151,9 +150,9 @@ public class MissingPartTest {
     @Test
     public void reservePartTakesJustOne() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getWarehouse()).thenReturn(warehouse);
-        Quartermaster quartermaster = new Quartermaster(mockCampaign);
+        mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
         // Add a few suitable parts to the warehouse
@@ -198,9 +197,9 @@ public class MissingPartTest {
     @Test
     public void cancelReservationReturnsThePart() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getWarehouse()).thenReturn(warehouse);
-        Quartermaster quartermaster = new Quartermaster(mockCampaign);
+        mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
         // Add a suitable parts to the warehouse
@@ -240,9 +239,9 @@ public class MissingPartTest {
     @Test
     public void cancelReservationReturnsJustOnePart() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getWarehouse()).thenReturn(warehouse);
-        Quartermaster quartermaster = new Quartermaster(mockCampaign);
+        mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
         // Add a few suitable parts to the warehouse
@@ -292,9 +291,9 @@ public class MissingPartTest {
     @Test
     public void cancelReservationReturnsNothingIfReplacementUsed() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getWarehouse()).thenReturn(warehouse);
-        Quartermaster quartermaster = new Quartermaster(mockCampaign);
+        mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
         // Add a few suitable parts to the warehouse

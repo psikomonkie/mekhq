@@ -54,9 +54,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.JumpPath;
-import mekhq.campaign.camOpsReputation.ReputationController;
+import mekhq.campaign.LocalHangar;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.enums.DragoonRating;
 import mekhq.campaign.finances.Accountant;
@@ -148,7 +147,7 @@ class AtbMonthlyContractMarketTest {
             CampaignOptions campaignOptions = mock(CampaignOptions.class);
             when(campaignOptions.getContractMaxSalvagePercentage()).thenReturn(100);
 
-            ReputationController reputation = mock(ReputationController.class);
+            mekhq.campaign.camOpsReputation.ForceReputationController reputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
             when(reputation.getReputationFactor()).thenReturn(1.0);
             when(reputation.getAverageSkillLevel()).thenReturn(REGULAR);
 
@@ -157,7 +156,7 @@ class AtbMonthlyContractMarketTest {
             when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
             when(accountant.getPeacetimeCost()).thenReturn(Money.of(1));
 
-            Hangar hangar = mock(Hangar.class);
+            LocalHangar hangar = mock(LocalHangar.class);
             doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
 
             when(campaign.getFaction()).thenReturn(employerFaction);

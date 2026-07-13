@@ -54,9 +54,8 @@ import java.util.Vector;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.CurrentLocation;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.JumpPath;
-import mekhq.campaign.camOpsReputation.ReputationController;
+import mekhq.campaign.LocalHangar;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.enums.DragoonRating;
 import mekhq.campaign.finances.Accountant;
@@ -102,7 +101,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -121,7 +120,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -206,7 +205,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -225,7 +224,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -313,7 +312,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -332,7 +331,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -420,7 +419,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -439,7 +438,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -536,7 +535,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -555,7 +554,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -647,7 +646,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -684,7 +683,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -703,7 +702,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -791,7 +790,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -810,7 +809,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -890,7 +889,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -909,7 +908,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -997,7 +996,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -1016,7 +1015,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -1100,7 +1099,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -1119,7 +1118,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -1207,7 +1206,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -1226,7 +1225,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -1314,7 +1313,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -1333,7 +1332,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -1421,7 +1420,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -1440,7 +1439,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -1527,7 +1526,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -1547,7 +1546,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -1635,7 +1634,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -1655,7 +1654,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -1742,7 +1741,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -1762,7 +1761,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 
@@ -1850,7 +1849,7 @@ public class ContractMarketAtBGenerationTests {
         when(campaign.getLocalDate()).thenReturn(LocalDate.ofYearDay(gameYear, 1));
         when(campaign.getGameYear()).thenReturn(gameYear);
 
-        ReputationController camOpsReputation = mock(ReputationController.class);
+        mekhq.campaign.camOpsReputation.ForceReputationController camOpsReputation = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(camOpsReputation.getReputationFactor()).thenReturn(0.0);
         when(campaign.getReputation()).thenReturn(camOpsReputation);
 
@@ -1870,7 +1869,7 @@ public class ContractMarketAtBGenerationTests {
         when(accountant.getOverheadExpenses()).thenReturn(Money.of(1));
         when(campaign.getAccountant()).thenReturn(accountant);
 
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         doReturn(Money.of(1)).when(hangar).getUnitCosts(any(), any());
         when(campaign.getAllHangar()).thenReturn(hangar);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2020-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -59,8 +59,7 @@ import megamek.common.equipment.Mounted;
 import megamek.common.equipment.WeaponMounted;
 import megamek.common.units.Entity;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Quartermaster;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.parts.enums.PartRepairType;
 import mekhq.campaign.parts.meks.MekLocation;
@@ -211,9 +210,9 @@ public class MissingLargeCraftAmmoBinTest {
     @Test
     public void fixFindsAcceptableReplacementTest() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getWarehouse()).thenReturn(warehouse);
-        Quartermaster quartermaster = new Quartermaster(mockCampaign);
+        mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
         AmmoType ammoType = getAmmoType("ISSRM6 Ammo");
