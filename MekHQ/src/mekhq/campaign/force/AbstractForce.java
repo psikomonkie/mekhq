@@ -533,10 +533,11 @@ public abstract class AbstractForce {
      * there is no cap. Takes a {@link Campaign} for the contract/location context the force does not hold.
      */
     public boolean getMashTheatresWithinCapacity(Campaign campaign) {
-        return !campaign.isOnContractAndPlanetside()
-                     ||
-                     calculateMASHTheaterCapacity(campaign) >=
-                           getHumanResources().getPatientsAssignedToDoctors().size();
+        if (campaign.isOnContractAndPlanetside()) {
+            return true;
+        }
+
+        return calculateMASHTheaterCapacity(campaign) >= getHumanResources().getPatientsAssignedToDoctors().size();
     }
 
     public int calculateMASHTheaterCapacity(Campaign campaign) {
