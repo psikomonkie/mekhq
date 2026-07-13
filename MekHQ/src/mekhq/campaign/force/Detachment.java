@@ -165,4 +165,9 @@ public class Detachment implements IPlace {
     public String locationReferenceType() {
         return LOCATION_REFERENCE_TYPE;
     }
+
+    @Override
+    public boolean isInUse() {
+        return true;
+    }
 }
