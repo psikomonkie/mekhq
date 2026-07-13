@@ -44,6 +44,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileInputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -56,6 +57,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 import megamek.Version;
@@ -361,13 +363,33 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
                 campaign.getGameOptions().getOption(OptionsConstants.ALLOWED_YEAR).setValue(campaign.getGameYear());
 
                 CampaignOptionsDialogMode mode = isSelect ? STARTUP_ABRIDGED : STARTUP;
-                CampaignOptionsDialog optionsDialog = new CampaignOptionsDialog(getFrame(), campaign, preset, mode);
-                setVisible(false); // cede visibility to `optionsDialog`
-                optionsDialog.setVisible(true);
-                if (optionsDialog.wasCanceled()) {
+                // The Campaign Options dialog and its entire component tree must be built and shown on the EDT.
+                // doInBackground() runs on a SwingWorker worker thread, so constructing the dialog here touched Swing
+                // off the EDT and intermittently crashed (e.g. RankSystemsPane rebuilt its shared table columns on this
+                // worker thread while a deferred EDT task read them). invokeAndWait builds and shows the modal dialog on
+                // the EDT and blocks this worker thread until the user closes it, preserving the original sequencing.
+                final boolean[] optionsCanceled = { false };
+                try {
+                    SwingUtilities.invokeAndWait(() -> {
+                        CampaignOptionsDialog optionsDialog = new CampaignOptionsDialog(getFrame(), campaign, preset,
+                              mode);
+                        setVisible(false); // cede visibility to `optionsDialog`
+                        optionsDialog.setVisible(true);
+                        if (optionsDialog.wasCanceled()) {
+                            optionsCanceled[0] = true;
+                        } else {
+                            setVisible(true); // restore loader visibility
+                        }
+                    });
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
                     return null;
-                } else {
-                    setVisible(true); // restore loader visibility
+                } catch (InvocationTargetException exception) {
+                    LOGGER.error("Failed to display the Campaign Options dialog", exception);
+                    return null;
+                }
+                if (optionsCanceled[0]) {
+                    return null;
                 }
 
                 // Starting planet: the campaign options General page resolves and sets the starting system during
