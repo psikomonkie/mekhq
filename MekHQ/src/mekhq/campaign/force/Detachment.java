@@ -42,10 +42,10 @@ import mekhq.campaign.AbstractLocation;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.CampaignNewDayManager;
 import mekhq.campaign.DetachmentLocationManager;
-import mekhq.campaign.Hangar;
-import mekhq.campaign.HumanResources;
-import mekhq.campaign.Personnel;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.ForceHumanResources;
+import mekhq.campaign.LocalHangar;
+import mekhq.campaign.LocalPersonnel;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.location.IPlace;
@@ -74,10 +74,10 @@ public class Detachment implements IPlace {
     private final DetachmentLocationManager detachmentLocationManager;
 
     // Owned resources — this detachment is the IPlace that owns them.
-    private final Hangar units = new Hangar();
-    private final Personnel personnel = new Personnel();
+    private final LocalHangar units = new LocalHangar();
+    private final LocalPersonnel personnel = new LocalPersonnel();
     private final RequestedStockLevels requestedStockLevels = new RequestedStockLevels();
-    private Warehouse parts = new Warehouse();
+    private LocalWarehouse parts = new LocalWarehouse();
 
     public Detachment() {
         // The manager owns the LocationNode; build it first so parenting the resources can resolve this node.
@@ -105,21 +105,21 @@ public class Detachment implements IPlace {
     }
 
     @Override
-    public Hangar getHangar() {
+    public LocalHangar getHangar() {
         return units;
     }
 
     @Override
-    public Warehouse getWarehouse() {
+    public LocalWarehouse getWarehouse() {
         return parts;
     }
 
-    public void setWarehouse(Warehouse warehouse) {
+    public void setWarehouse(LocalWarehouse warehouse) {
         parts = Objects.requireNonNull(warehouse);
     }
 
     @Override
-    public Personnel getPersonnel() {
+    public LocalPersonnel getPersonnel() {
         return personnel;
     }
 
@@ -155,7 +155,7 @@ public class Detachment implements IPlace {
         }
 
         // We've just stopped traveling, so we should see if there are any local applicants.
-        if (!HumanResources.isUsingLegacyPersonnelMarket(campaign.getCampaignOptions())) {
+        if (!ForceHumanResources.isUsingLegacyPersonnelMarket(campaign.getCampaignOptions())) {
             campaign.refreshApplicants(true);
             CampaignNewDayManager.showRarePersonnelDialog(campaign, false);
         }

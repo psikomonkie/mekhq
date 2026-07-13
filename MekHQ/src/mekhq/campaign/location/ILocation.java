@@ -44,10 +44,10 @@ import megamek.common.annotations.Nullable;
 import mekhq.campaign.AbstractLocation;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.FixedLocation;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.JumpPath;
-import mekhq.campaign.Personnel;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalHangar;
+import mekhq.campaign.LocalPersonnel;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.base.PlayerBase;
 import mekhq.campaign.force.Detachment;
 import mekhq.campaign.parts.Part;
@@ -399,11 +399,11 @@ public interface ILocation {
     }
 
     /**
-     * Returns the {@link Hangar} owned by the nearest {@link mekhq.campaign.location.IPlace} ancestor of this location, or
+     * Returns the {@link LocalHangar} owned by the nearest {@link mekhq.campaign.location.IPlace} ancestor of this location, or
      * {@code null} if no such ancestor exists or it does not own a hangar.
      */
     @Nullable
-    default Hangar getHangar() {
+    default LocalHangar getHangar() {
         if (!hasLocationNode() || getLocationNode().getParent() == null) {
             return null;
         }
@@ -411,11 +411,11 @@ public interface ILocation {
     }
 
     /**
-     * Returns the {@link Warehouse} owned by the nearest {@link mekhq.campaign.location.IPlace} ancestor of this location,
+     * Returns the {@link LocalWarehouse} owned by the nearest {@link mekhq.campaign.location.IPlace} ancestor of this location,
      * or {@code null} if no such ancestor exists or it does not own a warehouse.
      */
     @Nullable
-    default Warehouse getWarehouse() {
+    default LocalWarehouse getWarehouse() {
         if (!hasLocationNode() || getLocationNode().getParent() == null) {
             return null;
         }
@@ -427,7 +427,7 @@ public interface ILocation {
      * or {@code null} if no such ancestor exists or it does not own a personnel roster.
      */
     @Nullable
-    default Personnel getPersonnel() {
+    default LocalPersonnel getPersonnel() {
         if (!hasLocationNode() || getLocationNode().getParent() == null) {
             return null;
         }

@@ -76,7 +76,7 @@ import mekhq.NullEntityException;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.Campaign.AdministratorSpecialization;
 import mekhq.campaign.CampaignFactory;
-import mekhq.campaign.camOpsReputation.ReputationController;
+import mekhq.campaign.camOpsReputation.ForceReputationController;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.events.OptionsChangedEvent;
 import mekhq.campaign.finances.CurrencyManager;
@@ -377,7 +377,7 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
                 }
 
                 // initialize reputation
-                ReputationController reputationController = new ReputationController();
+                ForceReputationController reputationController = new ForceReputationController();
                 reputationController.initializeReputation(campaign);
                 campaign.setReputation(reputationController);
 

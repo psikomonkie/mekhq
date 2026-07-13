@@ -44,7 +44,6 @@ import megamek.common.enums.TechRating;
 import megamek.common.equipment.EquipmentType;
 import megamek.common.units.Entity;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Warehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.parts.enums.PartQuality;
 import mekhq.campaign.parts.protomeks.ProtoMekArmor;
@@ -66,7 +65,7 @@ public class ArmorTest {
 
     static Campaign mockCampaign;
     static CampaignOptions mockCampaignOptions;
-    Warehouse warehouse;
+    mekhq.campaign.LocalWarehouse warehouse;
 
     @BeforeAll
     static void beforeAll() {
@@ -90,7 +89,7 @@ public class ArmorTest {
 
     @BeforeEach
     public void beforeEach() {
-        warehouse = new Warehouse();
+        warehouse = new mekhq.campaign.LocalWarehouse();
         when(mockCampaign.getWarehouse()).thenReturn(warehouse);
     }
 

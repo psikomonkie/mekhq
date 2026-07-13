@@ -39,9 +39,9 @@ import megamek.common.annotations.Nullable;
 import mekhq.campaign.AbstractLocation;
 import mekhq.campaign.AbstractMobileLocation;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
-import mekhq.campaign.Personnel;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalHangar;
+import mekhq.campaign.LocalPersonnel;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.market.RequestedStockLevels;
 import mekhq.campaign.parts.AmmoStorage;
@@ -52,7 +52,7 @@ import mekhq.campaign.personnel.medical.advancedMedicalAlternate.Inoculations;
 
 /**
  * A sub-interface of {@link ILocation} that marks a node in the {@link LocationNode} tree as a
- * "place" — an anchor that owns campaign resources such as a {@link Hangar}, {@link Warehouse},
+ * "place" — an anchor that owns campaign resources such as a {@link LocalHangar}, {@link LocalWarehouse},
  * and personnel roster.
  *
  * <p>
@@ -67,26 +67,26 @@ import mekhq.campaign.personnel.medical.advancedMedicalAlternate.Inoculations;
 public interface IPlace extends ILocation {
 
     /**
-     * Returns the {@link Hangar} owned by this place, or {@code null} if this place does not own
+     * Returns the {@link LocalHangar} owned by this place, or {@code null} if this place does not own
      * one.
      *
      * <p>Overrides {@link ILocation#getHangar()} to stop the upward tree traversal.</p>
      */
     @Override
     @Nullable
-    default Hangar getHangar() {
+    default LocalHangar getHangar() {
         return null;
     }
 
     /**
-     * Returns the {@link Warehouse} owned by this place, or {@code null} if this place does not
+     * Returns the {@link LocalWarehouse} owned by this place, or {@code null} if this place does not
      * own one.
      *
      * <p>Overrides {@link ILocation#getWarehouse()} to stop the upward tree traversal.</p>
      */
     @Override
     @Nullable
-    default Warehouse getWarehouse() {
+    default LocalWarehouse getWarehouse() {
         return null;
     }
 
@@ -98,7 +98,7 @@ public interface IPlace extends ILocation {
      */
     @Override
     @Nullable
-    default Personnel getPersonnel() {
+    default LocalPersonnel getPersonnel() {
         return null;
     }
 
@@ -122,7 +122,7 @@ public interface IPlace extends ILocation {
      */
     default PartInventory getPartInventory(Part part) {
         PartInventory inventory = new PartInventory();
-        Warehouse warehouse = getWarehouse();
+        LocalWarehouse warehouse = getWarehouse();
         if (warehouse == null) {
             return inventory;
         }
@@ -188,12 +188,12 @@ public interface IPlace extends ILocation {
      */
     @Override
     default void processArrivals(Campaign campaign) {
-        Personnel personnel = getPersonnel();
+        LocalPersonnel personnel = getPersonnel();
         if (personnel == null || !hasLocationNode()) {
             return;
         }
-        Hangar hangar = getHangar() != null ? getHangar() : campaign.getHangar();
-        Warehouse warehouse = getWarehouse() != null ? getWarehouse() : campaign.getWarehouse();
+        LocalHangar hangar = getHangar() != null ? getHangar() : campaign.getHangar();
+        LocalWarehouse warehouse = getWarehouse() != null ? getWarehouse() : campaign.getWarehouse();
         for (LocationNode child : new ArrayList<>(getLocationNode().getChildren())) {
             if (!(child.getLocatable() instanceof AbstractMobileLocation travelNode)) {
                 continue;

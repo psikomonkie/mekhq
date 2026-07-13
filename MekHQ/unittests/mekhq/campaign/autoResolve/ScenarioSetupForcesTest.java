@@ -51,16 +51,15 @@ import megamek.common.autoResolve.converter.FlattenForces;
 import megamek.common.board.Board;
 import megamek.common.enums.Gender;
 import megamek.common.enums.SkillLevel;
+import megamek.common.equipment.EquipmentType;
 import megamek.common.icons.Camouflage;
+import megamek.common.loaders.MapSettings;
 import megamek.common.planetaryConditions.PlanetaryConditions;
 import megamek.common.units.Crew;
 import megamek.common.units.CrewType;
 import megamek.common.units.Entity;
-import megamek.common.equipment.EquipmentType;
-import megamek.common.loaders.MapSettings;
 import megamek.common.util.BoardUtilities;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.camOpsReputation.ReputationController;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.AtBDynamicScenario;
@@ -169,7 +168,7 @@ class ScenarioSetupForcesTest {
     private Campaign createCampaign() {
         var campaign = MHQTestUtilities.getTestCampaign();
         campaign.setName("Test Player");
-        var reputationController = mock(ReputationController.class);
+        var reputationController = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(reputationController.getAverageSkillLevel()).thenReturn(SkillLevel.REGULAR);
         campaign.setReputation(reputationController);
         campaign.addFormation(new Formation("Heroes"), campaign.getFormation(0));

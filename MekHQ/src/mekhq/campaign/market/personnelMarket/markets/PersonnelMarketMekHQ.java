@@ -54,7 +54,6 @@ import megamek.common.compute.Compute;
 import megamek.common.enums.Gender;
 import mekhq.MekHQ;
 import mekhq.campaign.AbstractLocation;
-import mekhq.campaign.camOpsReputation.ReputationController;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.market.personnelMarket.records.PersonnelMarketEntry;
@@ -245,7 +244,7 @@ public class PersonnelMarketMekHQ extends NewPersonnelMarket {
      */
     @Override
     public void generateApplicants() {
-        ReputationController reputation = getCampaign().getReputation();
+        mekhq.campaign.camOpsReputation.ForceReputationController reputation = getCampaign().getReputation();
         int averageSkillLevel = reputation.getAverageSkillLevel().getExperienceLevel();
 
         calculateNumberOfRecruitmentRolls();
