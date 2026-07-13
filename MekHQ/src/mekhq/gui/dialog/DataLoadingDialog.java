@@ -44,6 +44,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileInputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -56,6 +57,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 import megamek.Version;
@@ -438,13 +440,31 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
                 campaign.getGameOptions().getOption(OptionsConstants.ALLOWED_YEAR).setValue(campaign.getGameYear());
 
                 CampaignOptionsDialogMode mode = isSelect ? STARTUP_ABRIDGED : STARTUP;
-                CampaignOptionsDialog optionsDialog = new CampaignOptionsDialog(getFrame(), campaign, preset, mode);
-                setVisible(false); // cede visibility to `optionsDialog`
-                optionsDialog.setVisible(true);
-                if (optionsDialog.wasCanceled()) {
+                // This method runs in a worker thread, but the construction of the UI for Campaign Options must run on
+                // the EDT, so dispatch it there using invokeAndWait.
+                final boolean[] optionsCanceled = { false };
+                try {
+                    SwingUtilities.invokeAndWait(
+                          () -> optionsCanceled[0] = showStartupCampaignOptionsDialog(campaign, preset, mode));
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
                     return null;
-                } else {
-                    setVisible(true); // restore loader visibility
+                } catch (InvocationTargetException exception) {
+                    // Let a genuine UI-construction failure propagate through the worker so done() reports it via its
+                    // ExecutionException handling, rather than returning null (which looks like a normal cancel and
+                    // silently hides the error). The Runnable can only fail with an unchecked throwable, so unwrap the
+                    // cause to keep done()'s per-type error dialogs working.
+                    LOGGER.error("Failed to display the Campaign Options dialog", exception);
+                    if (exception.getCause() instanceof RuntimeException runtimeException) {
+                        throw runtimeException;
+                    }
+                    if (exception.getCause() instanceof Error error) {
+                        throw error;
+                    }
+                    throw exception;
+                }
+                if (optionsCanceled[0]) {
+                    return null;
                 }
 
                 // Starting planet: the campaign options General page resolves and sets the starting system during
@@ -559,6 +579,98 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
             }
 
             return campaign;
+        }
+
+        /**
+         * Handles the upgrade process for a campaign in a thread-safe and blocking manner.
+         *
+         * <p>This method initiates the campaign upgrade dialog for the specified {@link Campaign}. While the upgrade
+         * is in progress, the method blocks further execution by using a {@link CountDownLatch}. This ensures that
+         * campaign loading or other interactions do not proceed while the campaign data may be in an inconsistent,
+         * mid-upgrade state, which can prevent a variety of random and challenging-to-debug errors.</p>
+         *
+         * <p>Once the upgrade dialog completes, the provided callback triggers an {@link OptionsChangedEvent}
+         * and signals the latch, allowing the method to return.</p>
+         *
+         * <p><b>Note:</b> This method should not be called from the Event Dispatch Thread (EDT), as it will block
+         * the thread until the upgrade is finished.</p>
+         *
+         * @param app      the application context
+         * @param campaign the {@link Campaign} instance to be upgraded
+         *
+         * @author Illiani
+         * @since 0.50.07
+         */
+        private static void handleCampaignUpgrading(MekHQ app, Campaign campaign) {
+            CampaignUpgradeDialog.campaignUpgradeDialog(app, campaign);
+        }
+
+        /**
+         * Builds and shows the modal Campaign Options dialog for a brand-new campaign, then reports whether the user
+         * canceled it.
+         *
+         * <p>Must run on the Event Dispatch Thread (it is invoked through {@link SwingUtilities#invokeAndWait} from the
+         * worker thread) because it constructs the dialog's entire Swing component tree.</p>
+         *
+         * @param campaign the new campaign being configured
+         * @param preset   the preset to seed the dialog with, or {@code null}
+         * @param mode     the dialog mode (abridged or full startup)
+         *
+         * @return {@code true} if the user canceled the dialog; {@code false} if the settings were applied
+         */
+        private boolean showStartupCampaignOptionsDialog(final Campaign campaign, final @Nullable CampaignPreset preset,
+              final CampaignOptionsDialogMode mode) {
+            final CampaignOptionsDialog optionsDialog = new CampaignOptionsDialog(getFrame(), campaign, preset, mode);
+            setVisible(false); // cede visibility to `optionsDialog`
+            optionsDialog.setVisible(true);
+            if (optionsDialog.wasCanceled()) {
+                return true;
+            }
+            setVisible(true); // restore loader visibility
+            return false;
+        }
+
+        /**
+         * Unassigns the crew from unsupported units in the given collection of units.
+         *
+         * <p>This method iterates through the provided {@link Collection} of {@link Unit} objects
+         * and checks if each unit's associated {@link Entity} is of an unsupported type.
+         *
+         * <p>If the entity is {@code null}, it is skipped. For unsupported unit types, the unit's
+         * crew is cleared using {@link Unit#clearCrew()}.</p>
+         *
+         * @param units The {@link Collection} of {@link Unit} instances to process. Must not be {@code null}.
+         */
+        private static void showRarePersonnelDialog(Campaign campaign, boolean isCampaignStart) {
+            if (!campaign.getNewPersonnelMarket().getHasRarePersonnel()) {
+                return;
+            }
+
+            StringBuilder oocReport = new StringBuilder(
+                  campaign.getResources().getString("personnelMarket.rareProfession.outOfCharacter"));
+            for (PersonnelRole profession : campaign.getNewPersonnelMarket().getRareProfessions()) {
+                oocReport.append("<p>- ").append(profession.getLabel(campaign.isClanCampaign())).append("</p>");
+            }
+
+            List<String> buttons = new ArrayList<>();
+            buttons.add(campaign.getResources().getString("personnelMarket.rareProfession.button.later"));
+            buttons.add(campaign.getResources().getString("personnelMarket.rareProfession.button.decline"));
+            if (!isCampaignStart) {
+                buttons.add(campaign.getResources().getString("personnelMarket.rareProfession.button.immediate"));
+            }
+
+            ImmersiveDialogSimple dialog = new ImmersiveDialogSimple(campaign,
+                  campaign.getSeniorAdminPerson(AdministratorSpecialization.HR),
+                  null,
+                  campaign.getResources().getString("personnelMarket.rareProfession.inCharacter"),
+                  buttons,
+                  oocReport.toString(),
+                  null,
+                  true);
+
+            if (dialog.getDialogChoice() == 2) {
+                campaign.getNewPersonnelMarket().showPersonnelMarketDialog();
+            }
         }
 
         private void unassignCrewFromUnsupportedUnits(Collection<Unit> units) {
