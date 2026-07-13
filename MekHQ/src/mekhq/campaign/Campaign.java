@@ -125,11 +125,11 @@ import mekhq.MHQConstants;
 import mekhq.MHQOptions;
 import mekhq.MekHQ;
 import mekhq.Utilities;
-import mekhq.campaign.Quartermaster.PartAcquisitionResult;
+import mekhq.campaign.ForceQuartermaster.PartAcquisitionResult;
 import mekhq.campaign.againstTheBot.AtBConfiguration;
 import mekhq.campaign.base.PlayerBase;
+import mekhq.campaign.camOpsReputation.ForceReputationController;
 import mekhq.campaign.camOpsReputation.IUnitRating;
-import mekhq.campaign.camOpsReputation.ReputationController;
 import mekhq.campaign.campaignOptions.AcquisitionsType;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.campaignOptions.CampaignOptionsMarshaller;
@@ -165,10 +165,10 @@ import mekhq.campaign.location.LocationUtils;
 import mekhq.campaign.log.HistoricalLogEntry;
 import mekhq.campaign.log.LogEntry;
 import mekhq.campaign.log.ServiceLogger;
+import mekhq.campaign.market.ForceShoppingList;
 import mekhq.campaign.market.PartsStore;
 import mekhq.campaign.market.PersonnelMarket;
 import mekhq.campaign.market.RequestedStockLevels;
-import mekhq.campaign.market.ShoppingList;
 import mekhq.campaign.market.contractMarket.AbstractContractMarket;
 import mekhq.campaign.market.personnelMarket.markets.NewPersonnelMarket;
 import mekhq.campaign.market.unitMarket.AbstractUnitMarket;
@@ -288,7 +288,7 @@ public class Campaign implements ITechManager {
     private final PlayerForce playerForce;
     // TODO (campaign split): Quartermaster holds a Campaign back-reference. Remove that coupling so it can
     //   move onto the force (AbstractForce/PlayerForce) alongside the other owned state.
-    private final Quartermaster quartermaster;
+    private final ForceQuartermaster quartermaster;
     CampaignTransporterMap tacticalTransporters = new CampaignTransporterMap(this,
           CampaignTransportType.TACTICAL_TRANSPORT);
     CampaignTransporterMap towTransporters = new CampaignTransporterMap(this, CampaignTransportType.TOW_TRANSPORT);
@@ -481,7 +481,7 @@ public class Campaign implements ITechManager {
           PartsStore partsStore, NewPersonnelMarket newPersonnelMarket,
           RandomDeath randomDeath, CampaignSummary campaignSummary,
           Faction faction, megamek.common.enums.Faction techFaction, CurrencyManager currencyManager,
-          Systems systemsInstance, AbstractLocation startLocation, ReputationController reputationController,
+          Systems systemsInstance, AbstractLocation startLocation, ForceReputationController reputationController,
           FactionStandings factionStandings, RankSystem rankSystem, Formation formation, Finances finances,
           RandomEventLibraries randomEvents, FactionStandingUltimatumsLibrary ultimatums,
           RetirementDefectionTracker retDefTracker, IAutosaveService autosave,
@@ -524,7 +524,7 @@ public class Campaign implements ITechManager {
         this.campaignSummary = campaignSummary;
 
         // Members that take `this` as an argument
-        this.quartermaster = new Quartermaster(this);
+        this.quartermaster = new ForceQuartermaster(this);
 
         // Primary init, sets state from passed values
         setFaction(faction);
@@ -607,7 +607,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * Returns the campaign's resource bundle (for use by extracted subsystems such as {@link HumanResources}).
+     * Returns the campaign's resource bundle (for use by extracted subsystems such as {@link ForceHumanResources}).
      *
      * @return the campaign {@link ResourceBundle}
      */
@@ -616,26 +616,26 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * Returns the {@link HumanResources} subsystem for this campaign.
+     * Returns the {@link ForceHumanResources} subsystem for this campaign.
      *
      * @return the human resources subsystem
      *
      * @deprecated Use {@link PlayerForce#getHumanResources()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public HumanResources getHumanResources() {
+    public ForceHumanResources getHumanResources() {
         return getPlayerForce().getHumanResources();
     }
 
     /**
-     * Replaces the {@link HumanResources} subsystem, used when loading from XML.
+     * Replaces the {@link ForceHumanResources} subsystem, used when loading from XML.
      *
      * @param humanResources the new human resources subsystem
      *
-     * @deprecated Use {@link PlayerForce#setHumanResources(HumanResources)} directly.
+     * @deprecated Use {@link PlayerForce#setHumanResources(ForceHumanResources)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public void setHumanResources(HumanResources humanResources) {
+    public void setHumanResources(ForceHumanResources humanResources) {
         getPlayerForce().setHumanResources(humanResources);
     }
 
@@ -956,22 +956,22 @@ public class Campaign implements ITechManager {
      * @deprecated Use {@link PlayerForce#getShoppingList()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public ShoppingList getShoppingList() {
+    public ForceShoppingList getShoppingList() {
         return getPlayerForce().getShoppingList();
     }
 
     /**
-     * @deprecated Use {@link PlayerForce#setShoppingList(ShoppingList)} directly.
+     * @deprecated Use {@link PlayerForce#setShoppingList(ForceShoppingList)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public void setShoppingList(ShoppingList sl) {
+    public void setShoppingList(ForceShoppingList sl) {
         getPlayerForce().setShoppingList(sl);
     }
 
     // region Markets
 
     /**
-     * @deprecated Use {@link HumanResources#getPersonnelMarket()} directly.
+     * @deprecated Use {@link ForceHumanResources#getPersonnelMarket()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public PersonnelMarket getPersonnelMarket() {
@@ -979,7 +979,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#setPersonnelMarket(PersonnelMarket)} directly.
+     * @deprecated Use {@link ForceHumanResources#setPersonnelMarket(PersonnelMarket)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPersonnelMarket(final PersonnelMarket personnelMarket) {
@@ -1003,7 +1003,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getNewPersonnelMarket()} directly.
+     * @deprecated Use {@link ForceHumanResources#getNewPersonnelMarket()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public NewPersonnelMarket getNewPersonnelMarket() {
@@ -1031,7 +1031,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getDivorce()} directly.
+     * @deprecated Use {@link ForceHumanResources#getDivorce()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public AbstractDivorce getDivorce() {
@@ -1039,7 +1039,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#setDivorce(AbstractDivorce)} directly.
+     * @deprecated Use {@link ForceHumanResources#setDivorce(AbstractDivorce)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDivorce(final AbstractDivorce divorce) {
@@ -1047,7 +1047,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getMarriage()} directly.
+     * @deprecated Use {@link ForceHumanResources#getMarriage()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public AbstractMarriage getMarriage() {
@@ -1055,7 +1055,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#setMarriage(AbstractMarriage)} directly.
+     * @deprecated Use {@link ForceHumanResources#setMarriage(AbstractMarriage)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMarriage(final AbstractMarriage marriage) {
@@ -1063,7 +1063,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getProcreation()} directly.
+     * @deprecated Use {@link ForceHumanResources#getProcreation()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public AbstractProcreation getProcreation() {
@@ -1071,7 +1071,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#setProcreation(AbstractProcreation)} directly.
+     * @deprecated Use {@link ForceHumanResources#setProcreation(AbstractProcreation)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setProcreation(final AbstractProcreation procreation) {
@@ -1080,7 +1080,7 @@ public class Campaign implements ITechManager {
     // endregion Personnel Modules
 
     /**
-     * @deprecated Use {@link HumanResources#getRetirementDefectionTracker()} directly.
+     * @deprecated Use {@link ForceHumanResources#getRetirementDefectionTracker()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public RetirementDefectionTracker getRetirementDefectionTracker() {
@@ -1088,7 +1088,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#setRetirementDefectionTracker(RetirementDefectionTracker)} directly.
+     * @deprecated Use {@link ForceHumanResources#setRetirementDefectionTracker(RetirementDefectionTracker)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRetirementDefectionTracker(RetirementDefectionTracker rdt) {
@@ -1100,7 +1100,7 @@ public class Campaign implements ITechManager {
      *
      * @return a {@link List} of {@link Person} objects representing personnel who have gained XP.
      *
-     * @deprecated Use {@link HumanResources#getPersonnelWhoAdvancedInXP()} directly.
+     * @deprecated Use {@link ForceHumanResources#getPersonnelWhoAdvancedInXP()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getPersonnelWhoAdvancedInXP() {
@@ -1113,7 +1113,7 @@ public class Campaign implements ITechManager {
      * @param personnelWhoAdvancedInXP a {@link List} of {@link Person} objects representing personnel who have gained
      *                                 XP.
      *
-     * @deprecated Use {@link HumanResources#setPersonnelWhoAdvancedInXP(List)} directly.
+     * @deprecated Use {@link ForceHumanResources#setPersonnelWhoAdvancedInXP(List)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPersonnelWhoAdvancedInXP(List<Person> personnelWhoAdvancedInXP) {
@@ -1704,7 +1704,7 @@ public class Campaign implements ITechManager {
      * @deprecated Use {@link PlayerForce#getPersonnel()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public Personnel getMainForcePersonnel() {
+    public LocalPersonnel getMainForcePersonnel() {
         return getPlayerForce().getPersonnel();
     }
 
@@ -1773,7 +1773,7 @@ public class Campaign implements ITechManager {
                                           .filter(unit -> !getCampaignLocationManager().isQueuedForTravel(unit))
                                           .toList();
         return new TransportCostCalculations(travelingUnits,
-              Warehouse.getSpareParts(getParts()),
+              LocalWarehouse.getSpareParts(getParts()),
               getPersonnelFilteringOutDepartedAndAbsent(),
               crewExperienceLevel);
     }
@@ -2013,7 +2013,7 @@ public class Campaign implements ITechManager {
      * @deprecated Use {@link PlayerForce#getHangar()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public Hangar getHangar() {
+    public LocalHangar getHangar() {
         return getPlayerForce().getHangar();
     }
 
@@ -2024,7 +2024,7 @@ public class Campaign implements ITechManager {
      * @deprecated Use {@link PlayerForce#getHangar()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public Hangar getAllHangar() {
+    public LocalHangar getAllHangar() {
         return getPlayerForce().getHangar();
     }
 
@@ -2095,7 +2095,7 @@ public class Campaign implements ITechManager {
      *
      * @return Return a {@link Person} object representing the new dependent.
      *
-     * @deprecated Use {@link HumanResources#newDependent(Campaign, Gender)} directly.
+     * @deprecated Use {@link ForceHumanResources#newDependent(Campaign, Gender)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person newDependent(Gender gender) {
@@ -2111,7 +2111,7 @@ public class Campaign implements ITechManager {
      *
      * @return Return a {@link Person} object representing the new dependent.
      *
-     * @deprecated Use {@link HumanResources#newDependent(Campaign, Gender, Faction, Planet)} directly.
+     * @deprecated Use {@link ForceHumanResources#newDependent(Campaign, Gender, Faction, Planet)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person newDependent(Gender gender, @Nullable Faction originFaction, @Nullable Planet originPlanet) {
@@ -2126,7 +2126,7 @@ public class Campaign implements ITechManager {
      *
      * @return A new {@link Person}.
      *
-     * @deprecated Use {@link HumanResources#newPerson(Campaign, PersonnelRole)} directly.
+     * @deprecated Use {@link ForceHumanResources#newPerson(Campaign, PersonnelRole)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person newPerson(final PersonnelRole role) {
@@ -2142,7 +2142,7 @@ public class Campaign implements ITechManager {
      *
      * @return A new {@link Person}.
      *
-     * @deprecated Use {@link HumanResources#newPerson(Campaign, PersonnelRole, PersonnelRole)} directly.
+     * @deprecated Use {@link ForceHumanResources#newPerson(Campaign, PersonnelRole, PersonnelRole)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person newPerson(final PersonnelRole primaryRole, final PersonnelRole secondaryRole) {
@@ -2159,7 +2159,7 @@ public class Campaign implements ITechManager {
      *
      * @return A new {@link Person}.
      *
-     * @deprecated Use {@link HumanResources#newPerson(Campaign, PersonnelRole, String, Gender)} directly.
+     * @deprecated Use {@link ForceHumanResources#newPerson(Campaign, PersonnelRole, String, Gender)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person newPerson(final PersonnelRole primaryRole, final String factionCode, final Gender gender) {
@@ -2178,7 +2178,7 @@ public class Campaign implements ITechManager {
      *
      * @return A new {@link Person}.
      *
-     * @deprecated Use {@link HumanResources#newPerson(Campaign, PersonnelRole, PersonnelRole, AbstractFactionSelector, AbstractPlanetSelector, Gender)} directly.
+     * @deprecated Use {@link ForceHumanResources#newPerson(Campaign, PersonnelRole, PersonnelRole, AbstractFactionSelector, AbstractPlanetSelector, Gender)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person newPerson(final PersonnelRole primaryRole, final PersonnelRole secondaryRole,
@@ -2196,7 +2196,7 @@ public class Campaign implements ITechManager {
      *
      * @return A new {@link Person} configured using {@code personnelGenerator}.
      *
-     * @deprecated Use {@link HumanResources#newPerson(Campaign, PersonnelRole, AbstractPersonnelGenerator)} directly.
+     * @deprecated Use {@link ForceHumanResources#newPerson(Campaign, PersonnelRole, AbstractPersonnelGenerator)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person newPerson(final PersonnelRole primaryRole, final AbstractPersonnelGenerator personnelGenerator) {
@@ -2213,7 +2213,7 @@ public class Campaign implements ITechManager {
      *
      * @return A new {@link Person} configured using {@code personnelGenerator}.
      *
-     * @deprecated Use {@link HumanResources#newPerson(Campaign, PersonnelRole, PersonnelRole, AbstractPersonnelGenerator, Gender)} directly.
+     * @deprecated Use {@link ForceHumanResources#newPerson(Campaign, PersonnelRole, PersonnelRole, AbstractPersonnelGenerator, Gender)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person newPerson(final PersonnelRole primaryRole, final PersonnelRole secondaryRole,
@@ -2311,7 +2311,7 @@ public class Campaign implements ITechManager {
      * @see #recruitPerson(Person, PrisonerStatus, boolean, boolean, boolean, boolean)
      * @see #importPerson(Person)
      *
-     * @deprecated Use {@link HumanResources#recruitPerson(Campaign, Person)} directly.
+     * @deprecated Use {@link ForceHumanResources#recruitPerson(Campaign, Person)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean recruitPerson(Person person) {
@@ -2346,7 +2346,7 @@ public class Campaign implements ITechManager {
      * @see #recruitPerson(Person, PrisonerStatus, boolean, boolean, boolean, boolean)
      * @see #importPerson(Person)
      *
-     * @deprecated Use {@link HumanResources#recruitPerson(Campaign, Person, boolean, boolean)} directly.
+     * @deprecated Use {@link ForceHumanResources#recruitPerson(Campaign, Person, boolean, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean recruitPerson(Person person, boolean gmAdd, boolean employ) {
@@ -2380,7 +2380,7 @@ public class Campaign implements ITechManager {
      * @see #recruitPerson(Person, PrisonerStatus, boolean, boolean, boolean, boolean)
      * @see #importPerson(Person)
      *
-     * @deprecated Use {@link HumanResources#recruitPerson(Campaign, Person, PrisonerStatus, boolean)} directly.
+     * @deprecated Use {@link ForceHumanResources#recruitPerson(Campaign, Person, PrisonerStatus, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean recruitPerson(Person person, PrisonerStatus prisonerStatus, boolean employ) {
@@ -2409,7 +2409,7 @@ public class Campaign implements ITechManager {
      * @see #importPerson(Person)
      * @since 0.50.07
      *
-     * @deprecated Use {@link HumanResources#recruitPerson(Campaign, Person, PrisonerStatus, boolean, boolean, boolean)} directly.
+     * @deprecated Use {@link ForceHumanResources#recruitPerson(Campaign, Person, PrisonerStatus, boolean, boolean, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean recruitPerson(Person person, PrisonerStatus prisonerStatus, boolean gmAdd, boolean log,
@@ -2445,7 +2445,7 @@ public class Campaign implements ITechManager {
      *
      * @see #importPerson(Person)
      *
-     * @deprecated Use {@link HumanResources#recruitPerson(Campaign, Person, PrisonerStatus, boolean, boolean, boolean, boolean)} directly.
+     * @deprecated Use {@link ForceHumanResources#recruitPerson(Campaign, Person, PrisonerStatus, boolean, boolean, boolean, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean recruitPerson(Person person, PrisonerStatus prisonerStatus, boolean gmAdd, boolean log,
@@ -2459,7 +2459,7 @@ public class Campaign implements ITechManager {
      *
      * @param person the {@code Person} being employed; may be {@code null}
      *
-     * @deprecated Use {@link HumanResources#employCampFollower(Campaign, Person)} directly.
+     * @deprecated Use {@link ForceHumanResources#employCampFollower(Campaign, Person)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void employCampFollower(Person person) {
@@ -2477,7 +2477,7 @@ public class Campaign implements ITechManager {
      * @param person     The Bloodname candidate
      * @param ignoreDice If true, skips the random roll and assigns a Bloodname automatically
      *
-     * @deprecated Use {@link HumanResources#checkBloodnameAdd(Campaign, Person, boolean)} directly.
+     * @deprecated Use {@link ForceHumanResources#checkBloodnameAdd(Campaign, Person, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void checkBloodnameAdd(Person person, boolean ignoreDice) {
@@ -2505,7 +2505,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getPerson(UUID)} directly.
+     * @deprecated Use {@link ForceHumanResources#getPerson(UUID)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public @Nullable Person getPerson(final UUID id) {
@@ -2516,14 +2516,14 @@ public class Campaign implements ITechManager {
      * @deprecated Use {@link PlayerForce#getPersonnel()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public Personnel getPersonnel() {
+    public LocalPersonnel getPersonnel() {
         return getPlayerForce().getPersonnel();
     }
 
     /**
      * @return all personnel across all locations associated with this campaign.
      *
-     * @deprecated Use {@link HumanResources#getPersonnel()} directly.
+     * @deprecated Use {@link ForceHumanResources#getPersonnel()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Collection<Person> getAllPersonnel() {
@@ -2535,7 +2535,7 @@ public class Campaign implements ITechManager {
      *
      * @return a {@code List} of {@link Person} objects who have not left the unit
      *
-     * @deprecated Use {@link HumanResources#getPersonnelFilteringOutDeparted()} directly.
+     * @deprecated Use {@link ForceHumanResources#getPersonnelFilteringOutDeparted()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getPersonnelFilteringOutDeparted() {
@@ -2548,7 +2548,7 @@ public class Campaign implements ITechManager {
      *
      * @return a {@code List} of {@link Person} objects who have not left the unit
      *
-     * @deprecated Use {@link HumanResources#getPersonnelFilteringOutDepartedAndAbsent()} directly.
+     * @deprecated Use {@link ForceHumanResources#getPersonnelFilteringOutDepartedAndAbsent()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getPersonnelFilteringOutDepartedAndAbsent() {
@@ -2571,7 +2571,7 @@ public class Campaign implements ITechManager {
      *
      * @return a {@link List} of {@link Person} objects matching the criteria
      *
-     * @deprecated Use {@link HumanResources#getActivePersonnel(boolean, boolean)} directly.
+     * @deprecated Use {@link ForceHumanResources#getActivePersonnel(boolean, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getActivePersonnel(boolean includePrisoners, boolean includeCampFollowers) {
@@ -2581,7 +2581,7 @@ public class Campaign implements ITechManager {
     /**
      * Clears the {@code activePersonnelCache} so it's recalculated next time we getActivePersonnel
      *
-     * @deprecated Use {@link HumanResources#invalidateActivePersonnelCache()} directly.
+     * @deprecated Use {@link ForceHumanResources#invalidateActivePersonnelCache()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void invalidateActivePersonnelCache() {
@@ -2594,7 +2594,7 @@ public class Campaign implements ITechManager {
      * @author Illiani
      * @since 0.50.06
      *
-     * @deprecated Use {@link HumanResources#getSalaryEligiblePersonnel()} directly.
+     * @deprecated Use {@link ForceHumanResources#getSalaryEligiblePersonnel()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getSalaryEligiblePersonnel() {
@@ -2608,7 +2608,7 @@ public class Campaign implements ITechManager {
      */
     @Deprecated(since = "0.51.0", forRemoval = true)
     public List<Person> getActiveCombatPersonnel() {
-        return HumanResources.getActiveCombatPersonnel(getHumanResources().getActivePersonnel(false, false));
+        return ForceHumanResources.getActiveCombatPersonnel(getHumanResources().getActivePersonnel(false, false));
     }
 
     /**
@@ -2616,7 +2616,7 @@ public class Campaign implements ITechManager {
      *
      * @return a {@link Person} <code>List</code> containing all active personnel
      *
-     * @deprecated Use {@link HumanResources#getActiveDependents()} directly.
+     * @deprecated Use {@link ForceHumanResources#getActiveDependents()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getActiveDependents() {
@@ -2628,7 +2628,7 @@ public class Campaign implements ITechManager {
      *
      * @return a {@link Person} <code>List</code> containing all active personnel
      *
-     * @deprecated Use {@link HumanResources#getCurrentPrisoners()} directly.
+     * @deprecated Use {@link ForceHumanResources#getCurrentPrisoners()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getCurrentPrisoners() {
@@ -2640,7 +2640,7 @@ public class Campaign implements ITechManager {
      *
      * @return a {@link Person} <code>List</code> containing all active personnel
      *
-     * @deprecated Use {@link HumanResources#getPrisonerDefectors()} directly.
+     * @deprecated Use {@link ForceHumanResources#getPrisonerDefectors()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getPrisonerDefectors() {
@@ -2652,7 +2652,7 @@ public class Campaign implements ITechManager {
      *
      * @return a {@link Person} <code>List</code> containing all active personnel
      *
-     * @deprecated Use {@link HumanResources#getFriendlyPrisoners()} directly.
+     * @deprecated Use {@link ForceHumanResources#getFriendlyPrisoners()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getFriendlyPrisoners() {
@@ -2664,7 +2664,7 @@ public class Campaign implements ITechManager {
      *
      * @return a {@link Person} <code>List</code> containing all active personnel
      *
-     * @deprecated Use {@link HumanResources#getStudents()} directly.
+     * @deprecated Use {@link ForceHumanResources#getStudents()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getStudents() {
@@ -2679,7 +2679,7 @@ public class Campaign implements ITechManager {
      *
      * @return An {@link AbstractFactionSelector} to use when selecting a {@link Faction}.
      *
-     * @deprecated Use {@link HumanResources#getFactionSelector(CampaignOptions)} directly.
+     * @deprecated Use {@link ForceHumanResources#getFactionSelector(CampaignOptions)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public AbstractFactionSelector getFactionSelector() {
@@ -2693,7 +2693,7 @@ public class Campaign implements ITechManager {
      *
      * @return An {@link AbstractFactionSelector} to use when selecting a {@link Faction}.
      *
-     * @deprecated Use {@link HumanResources#getFactionSelector(RandomOriginOptions)} directly.
+     * @deprecated Use {@link ForceHumanResources#getFactionSelector(RandomOriginOptions)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public AbstractFactionSelector getFactionSelector(final RandomOriginOptions options) {
@@ -2705,7 +2705,7 @@ public class Campaign implements ITechManager {
      *
      * @return An {@link AbstractPlanetSelector} to use when selecting a {@link Planet}.
      *
-     * @deprecated Use {@link HumanResources#getPlanetSelector(CampaignOptions)} directly.
+     * @deprecated Use {@link ForceHumanResources#getPlanetSelector(CampaignOptions)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public AbstractPlanetSelector getPlanetSelector() {
@@ -2719,7 +2719,7 @@ public class Campaign implements ITechManager {
      *
      * @return An {@link AbstractPlanetSelector} to use when selecting a {@link Planet}.
      *
-     * @deprecated Use {@link HumanResources#getPlanetSelector(RandomOriginOptions)} directly.
+     * @deprecated Use {@link ForceHumanResources#getPlanetSelector(RandomOriginOptions)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public AbstractPlanetSelector getPlanetSelector(final RandomOriginOptions options) {
@@ -2734,7 +2734,7 @@ public class Campaign implements ITechManager {
      *
      * @return An {@link AbstractPersonnelGenerator} to use when creating new personnel.
      *
-     * @deprecated Use {@link HumanResources#getPersonnelGenerator(CampaignOptions, AbstractFactionSelector, AbstractPlanetSelector)} directly.
+     * @deprecated Use {@link ForceHumanResources#getPersonnelGenerator(CampaignOptions, AbstractFactionSelector, AbstractPlanetSelector)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public AbstractPersonnelGenerator getPersonnelGenerator(final AbstractFactionSelector factionSelector,
@@ -2746,7 +2746,7 @@ public class Campaign implements ITechManager {
     // endregion Personnel
 
     /**
-     * @deprecated Use {@link HumanResources#getPatients()} directly.
+     * @deprecated Use {@link ForceHumanResources#getPatients()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getPatients() {
@@ -2754,7 +2754,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getPatientsAssignedToDoctors()} directly.
+     * @deprecated Use {@link ForceHumanResources#getPatientsAssignedToDoctors()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getPatientsAssignedToDoctors() {
@@ -2762,7 +2762,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getPatientsWithNonPermanentInjuries()} directly.
+     * @deprecated Use {@link ForceHumanResources#getPatientsWithNonPermanentInjuries()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getPatientsWithNonPermanentInjuries() {
@@ -2811,7 +2811,7 @@ public class Campaign implements ITechManager {
      * @deprecated Use {@link PlayerForce#getWarehouse()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public Warehouse getWarehouse() {
+    public LocalWarehouse getWarehouse() {
         return getPlayerForce().getWarehouse();
     }
 
@@ -2820,10 +2820,10 @@ public class Campaign implements ITechManager {
      *
      * @param warehouse The warehouse in which to store parts.
      *
-     * @deprecated Use {@link PlayerForce#setWarehouse(Warehouse)} directly.
+     * @deprecated Use {@link PlayerForce#setWarehouse(LocalWarehouse)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public void setWarehouse(Warehouse warehouse) {
+    public void setWarehouse(LocalWarehouse warehouse) {
         getPlayerForce().setWarehouse(warehouse);
     }
 
@@ -2833,12 +2833,12 @@ public class Campaign implements ITechManager {
      * @deprecated Use {@link PlayerForce#getWarehouse()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public Warehouse getAllWarehouse() {
+    public LocalWarehouse getAllWarehouse() {
         //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
         return getPlayerForce().getWarehouse();
     }
 
-    public Quartermaster getQuartermaster() {
+    public ForceQuartermaster getQuartermaster() {
         return quartermaster;
     }
 
@@ -3145,7 +3145,7 @@ public class Campaign implements ITechManager {
      *
      * @return The person in the designated role with the most experience.
      *
-     * @deprecated Use {@link HumanResources#findBestInRole(PersonnelRole, String, String, CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use {@link ForceHumanResources#findBestInRole(PersonnelRole, String, String, CampaignOptions, boolean, LocalDate)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person findBestInRole(PersonnelRole role, String primary, @Nullable String secondary) {
@@ -3158,7 +3158,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#findBestInRole(PersonnelRole, String, CampaignOptions, boolean, LocalDate)}
+     * @deprecated Use {@link ForceHumanResources#findBestInRole(PersonnelRole, String, CampaignOptions, boolean, LocalDate)}
      *       directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
@@ -3175,7 +3175,7 @@ public class Campaign implements ITechManager {
      * @return the {@link Person} with the highest calculated total skill level in the specified skill, or {@code null}
      *       if no qualifying person is found
      *
-     * @deprecated Use {@link HumanResources#findBestAtSkill(String, CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use {@link ForceHumanResources#findBestAtSkill(String, CampaignOptions, boolean, LocalDate)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public @Nullable Person findBestAtSkill(String skillName) {
@@ -3186,7 +3186,7 @@ public class Campaign implements ITechManager {
     /**
      * @return The list of all active {@link Person}s who qualify as technicians ({@link Person#isTech()});
      *
-     * @deprecated Use {@link HumanResources#getTechs(Collection, CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use {@link ForceHumanResources#getTechs(Collection, CampaignOptions, boolean, LocalDate)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getTechs() {
@@ -3197,7 +3197,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getTechs(Collection, CampaignOptions, boolean, LocalDate, boolean)}
+     * @deprecated Use {@link ForceHumanResources#getTechs(Collection, CampaignOptions, boolean, LocalDate, boolean)}
      *       directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
@@ -3210,7 +3210,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getTechsExpanded(Collection, CampaignOptions, boolean, LocalDate)}
+     * @deprecated Use {@link ForceHumanResources#getTechsExpanded(Collection, CampaignOptions, boolean, LocalDate)}
      *       directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
@@ -3223,7 +3223,7 @@ public class Campaign implements ITechManager {
 
     /**
      * @deprecated Use
-     *       {@link HumanResources#getTechs(Collection, CampaignOptions, boolean, LocalDate, boolean, boolean)}
+     *       {@link ForceHumanResources#getTechs(Collection, CampaignOptions, boolean, LocalDate, boolean, boolean)}
      *       directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
@@ -3245,7 +3245,7 @@ public class Campaign implements ITechManager {
      *
      * @return A list of active technicians sorted appropriately.
      *
-     * @deprecated Use {@link HumanResources#getTechsExpanded(Collection, CampaignOptions, boolean, LocalDate, boolean, boolean, boolean)} directly.
+     * @deprecated Use {@link ForceHumanResources#getTechsExpanded(Collection, CampaignOptions, boolean, LocalDate, boolean, boolean, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getTechsExpanded(final boolean noZeroMinute, final boolean eliteFirst, final boolean expanded) {
@@ -3259,7 +3259,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getAdmins()} directly.
+     * @deprecated Use {@link ForceHumanResources#getAdmins()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getAdmins() {
@@ -3267,7 +3267,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#isWorkingOnRefit(Hangar, Person)} directly.
+     * @deprecated Use {@link ForceHumanResources#isWorkingOnRefit(LocalHangar, Person)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isWorkingOnRefit(Person person) {
@@ -3275,7 +3275,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getDoctors()} directly.
+     * @deprecated Use {@link ForceHumanResources#getDoctors()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getDoctors() {
@@ -3283,7 +3283,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getPatientsFor(Person)} directly.
+     * @deprecated Use {@link ForceHumanResources#getPatientsFor(Person)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getPatientsFor(Person doctor) {
@@ -3313,7 +3313,7 @@ public class Campaign implements ITechManager {
      * @return The {@link Person} representing the best logistics character, or {@code null} if no suitable person is
      *       found.
      *
-     * @deprecated Use {@link HumanResources#getLogisticsPerson(CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use {@link ForceHumanResources#getLogisticsPerson(CampaignOptions, boolean, LocalDate)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public @Nullable Person getLogisticsPerson() {
@@ -3370,7 +3370,7 @@ public class Campaign implements ITechManager {
      *
      * @throws IllegalStateException if {@code type} is null or an unsupported value.
      *
-     * @deprecated Use {@link HumanResources#getSeniorAdminPerson(AdministratorSpecialization, CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use {@link ForceHumanResources#getSeniorAdminPerson(AdministratorSpecialization, CampaignOptions, boolean, LocalDate)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public @Nullable Person getSeniorAdminPerson(AdministratorSpecialization type) {
@@ -3379,7 +3379,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getSeniorMedicalPerson(CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use {@link ForceHumanResources#getSeniorMedicalPerson(CampaignOptions, boolean, LocalDate)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public @Nullable Person getSeniorMedicalPerson() {
@@ -3388,7 +3388,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getSeniorTechPerson(CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use {@link ForceHumanResources#getSeniorTechPerson(CampaignOptions, boolean, LocalDate)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public @Nullable Person getSeniorTechPerson() {
@@ -3401,7 +3401,7 @@ public class Campaign implements ITechManager {
      *
      * @return the {@link Person} who is the commander, or {@code null} if there are no suitable candidates.
      *
-     * @deprecated Use {@link HumanResources#getCommander(CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use {@link ForceHumanResources#getCommander(CampaignOptions, boolean, LocalDate)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public @Nullable Person getCommander() {
@@ -3415,7 +3415,7 @@ public class Campaign implements ITechManager {
      * @return the {@link Person} who is considered the second-in-command, or {@code null} if there are no suitable
      *       candidates.
      *
-     * @deprecated Use {@link HumanResources#getSecondInCommand(CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use {@link ForceHumanResources#getSecondInCommand(CampaignOptions, boolean, LocalDate)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public @Nullable Person getSecondInCommand() {
@@ -3452,7 +3452,7 @@ public class Campaign implements ITechManager {
      * @return A {@link List} of {@link Person} objects who are eligible and sorted to perform logistical actions, or an
      *       empty list if acquisitions automatically succeed.
      *
-     * @deprecated Use {@link HumanResources#getLogisticsPersonnel(CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use {@link ForceHumanResources#getLogisticsPersonnel(CampaignOptions, boolean, LocalDate)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getLogisticsPersonnel() {
@@ -3470,7 +3470,7 @@ public class Campaign implements ITechManager {
      * @return A <code>ShoppingList</code> object that includes all items that were
      *         not successfully acquired
      */
-    public ShoppingList goShopping(ShoppingList sList) {
+    public ForceShoppingList goShopping(ForceShoppingList sList) {
         // loop through shopping items and decrement days to wait
         for (IAcquisitionWork shoppingItem : sList.getShoppingList()) {
             shoppingItem.decrementDaysToWait();
@@ -3486,13 +3486,13 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * Shops for items on the {@link ShoppingList}, where each acquisition automatically succeeds.
+     * Shops for items on the {@link ForceShoppingList}, where each acquisition automatically succeeds.
      *
      * @param sList The shopping list to use when shopping.
      *
      * @return The new shopping list containing the items that were not acquired.
      */
-    private ShoppingList goShoppingAutomatically(ShoppingList sList) {
+    private ForceShoppingList goShoppingAutomatically(ForceShoppingList sList) {
         List<IAcquisitionWork> currentList = new ArrayList<>(sList.getShoppingList());
 
         List<IAcquisitionWork> remainingItems = new ArrayList<>(currentList.size());
@@ -3510,18 +3510,18 @@ public class Campaign implements ITechManager {
             }
         }
 
-        return new ShoppingList(remainingItems);
+        return new ForceShoppingList(remainingItems);
     }
 
     /**
-     * Shops for items on the {@link ShoppingList}, where each acquisition is performed by available logistics
+     * Shops for items on the {@link ForceShoppingList}, where each acquisition is performed by available logistics
      * personnel.
      *
      * @param sList The shopping list to use when shopping.
      *
      * @return The new shopping list containing the items that were not acquired.
      */
-    private ShoppingList goShoppingStandard(ShoppingList sList) {
+    private ForceShoppingList goShoppingStandard(ForceShoppingList sList) {
         List<Person> logisticsPersonnel = getLogisticsPersonnel();
         if (logisticsPersonnel.isEmpty()) {
             addReport(ACQUISITIONS, "Your force has no one capable of acquiring equipment.");
@@ -3553,18 +3553,18 @@ public class Campaign implements ITechManager {
             currentList = remainingItems;
         }
 
-        return new ShoppingList(currentList);
+        return new ForceShoppingList(currentList);
     }
 
     /**
-     * Shops for items on the {@link ShoppingList}, where each acquisition is attempted on nearby planets by available
+     * Shops for items on the {@link ForceShoppingList}, where each acquisition is attempted on nearby planets by available
      * logistics personnel.
      *
      * @param sList The shopping list to use when shopping.
      *
      * @return The new shopping list containing the items that were not acquired.
      */
-    private ShoppingList goShoppingByPlanet(ShoppingList sList) {
+    private ForceShoppingList goShoppingByPlanet(ForceShoppingList sList) {
         List<Person> logisticsPersonnel = getLogisticsPersonnel();
         if (logisticsPersonnel.isEmpty()) {
             addReport(ACQUISITIONS, "Your force has no one capable of acquiring equipment.");
@@ -3690,7 +3690,7 @@ public class Campaign implements ITechManager {
             }
         }
 
-        return new ShoppingList(currentList);
+        return new ForceShoppingList(currentList);
     }
 
     /**
@@ -4221,7 +4221,7 @@ public class Campaign implements ITechManager {
         Part repairable = part.clone();
         // Capture the original's effective warehouse before decrementing, since
         // decrementing to zero would remove the original and clear its locationNode.
-        Warehouse targetWarehouse = part.getWarehouse();
+        LocalWarehouse targetWarehouse = part.getWarehouse();
         part.changeQuantity(-1);
 
         fixPart(repairable, tech);
@@ -4691,7 +4691,7 @@ public class Campaign implements ITechManager {
      * @author Illiani
      * @since 0.50.06
      *
-     * @deprecated Use {@link HumanResources#refreshApplicants(Campaign, boolean)} directly.
+     * @deprecated Use {@link ForceHumanResources#refreshApplicants(Campaign, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void refreshApplicants(boolean bypassDateRestrictions) {
@@ -4847,7 +4847,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#removePerson(Campaign, Person)} directly.
+     * @deprecated Use {@link ForceHumanResources#removePerson(Campaign, Person)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void removePerson(final @Nullable Person person) {
@@ -4855,7 +4855,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#removePerson(Campaign, Person, boolean)} directly.
+     * @deprecated Use {@link ForceHumanResources#removePerson(Campaign, Person, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void removePerson(final @Nullable Person person, final boolean log) {
@@ -4863,7 +4863,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#removeAllPatientsFor(Person, CampaignOptions)} directly.
+     * @deprecated Use {@link ForceHumanResources#removeAllPatientsFor(Person, CampaignOptions)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void removeAllPatientsFor(Person doctor) {
@@ -5278,15 +5278,15 @@ public class Campaign implements ITechManager {
      * @deprecated Use {@link PlayerForce#getReputation()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public ReputationController getReputation() {
+    public ForceReputationController getReputation() {
         return getPlayerForce().getReputation();
     }
 
     /**
-     * @deprecated Use {@link PlayerForce#setReputation(ReputationController)} directly.
+     * @deprecated Use {@link PlayerForce#setReputation(ForceReputationController)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public void setReputation(ReputationController reputation) {
+    public void setReputation(ForceReputationController reputation) {
         getPlayerForce().setReputation(reputation);
     }
 
@@ -6806,7 +6806,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#personUpdated(Campaign, Person)} directly.
+     * @deprecated Use {@link ForceHumanResources#personUpdated(Campaign, Person)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void personUpdated(Person person) {
@@ -7147,7 +7147,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#resetAsTechMinutes(CampaignOptions)} directly.
+     * @deprecated Use {@link ForceHumanResources#resetAsTechMinutes(CampaignOptions)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void resetAsTechMinutes() {
@@ -7155,7 +7155,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getAsTechPoolMinutes()} directly.
+     * @deprecated Use {@link ForceHumanResources#getAsTechPoolMinutes()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAsTechPoolMinutes() {
@@ -7163,7 +7163,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#setAsTechPoolMinutes(int)} directly.
+     * @deprecated Use {@link ForceHumanResources#setAsTechPoolMinutes(int)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAsTechPoolMinutes(int minutes) {
@@ -7171,7 +7171,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getAsTechPoolOvertime()} directly.
+     * @deprecated Use {@link ForceHumanResources#getAsTechPoolOvertime()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAsTechPoolOvertime() {
@@ -7179,7 +7179,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#setAsTechPoolOvertime(int)} directly.
+     * @deprecated Use {@link ForceHumanResources#setAsTechPoolOvertime(int)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAsTechPoolOvertime(int overtime) {
@@ -7187,7 +7187,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getPossibleAsTechPoolMinutes(CampaignOptions)} directly.
+     * @deprecated Use {@link ForceHumanResources#getPossibleAsTechPoolMinutes(CampaignOptions)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getPossibleAsTechPoolMinutes() {
@@ -7195,7 +7195,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getPossibleAsTechPoolOvertime(CampaignOptions)} directly.
+     * @deprecated Use {@link ForceHumanResources#getPossibleAsTechPoolOvertime(CampaignOptions)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getPossibleAsTechPoolOvertime() {
@@ -7203,7 +7203,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#setAsTechPool(int)} directly.
+     * @deprecated Use {@link ForceHumanResources#setAsTechPool(int)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAsTechPool(int size) {
@@ -7217,7 +7217,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getTemporaryAsTechPool()} directly.
+     * @deprecated Use {@link ForceHumanResources#getTemporaryAsTechPool()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getTemporaryAsTechPool() {
@@ -7225,7 +7225,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#setMedicPool(int)} directly.
+     * @deprecated Use {@link ForceHumanResources#setMedicPool(int)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMedicPool(int size) {
@@ -7239,7 +7239,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getTemporaryMedicPool()} directly.
+     * @deprecated Use {@link ForceHumanResources#getTemporaryMedicPool()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getTemporaryMedicPool() {
@@ -7253,7 +7253,7 @@ public class Campaign implements ITechManager {
      *
      * @return the total number of temp crew in the pool for this role
      *
-     * @deprecated Use {@link HumanResources#getTempCrewPool(PersonnelRole)} directly.
+     * @deprecated Use {@link ForceHumanResources#getTempCrewPool(PersonnelRole)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getTempCrewPool(PersonnelRole role) {
@@ -7261,7 +7261,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getTempCrewRoleKeys()} directly.
+     * @deprecated Use {@link ForceHumanResources#getTempCrewRoleKeys()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Set<PersonnelRole> getTempCrewRoleKeys() {
@@ -7274,7 +7274,7 @@ public class Campaign implements ITechManager {
      * @param role the personnel role
      * @param size the total number of temp crew in the pool
      *
-     * @deprecated Use {@link HumanResources#setTempCrewPool(Campaign, PersonnelRole, int)} directly.
+     * @deprecated Use {@link ForceHumanResources#setTempCrewPool(Campaign, PersonnelRole, int)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTempCrewPool(PersonnelRole role, int size) {
@@ -7288,7 +7288,7 @@ public class Campaign implements ITechManager {
      *
      * @return true if this blob crew type is enabled
      *
-     * @deprecated Use {@link HumanResources#isBlobCrewEnabled(PersonnelRole, CampaignOptions)} directly.
+     * @deprecated Use {@link ForceHumanResources#isBlobCrewEnabled(PersonnelRole, CampaignOptions)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isBlobCrewEnabled(PersonnelRole role) {
@@ -7302,7 +7302,7 @@ public class Campaign implements ITechManager {
      *
      * @return the number of temp crew in use
      *
-     * @deprecated Use {@link HumanResources#getTempCrewInUse(Campaign, PersonnelRole)} directly.
+     * @deprecated Use {@link ForceHumanResources#getTempCrewInUse(Campaign, PersonnelRole)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getTempCrewInUse(PersonnelRole role) {
@@ -7316,7 +7316,7 @@ public class Campaign implements ITechManager {
      *
      * @return total pool minus crew currently in use
      *
-     * @deprecated Use {@link HumanResources#getAvailableTempCrewPool(Campaign, PersonnelRole)} directly.
+     * @deprecated Use {@link ForceHumanResources#getAvailableTempCrewPool(Campaign, PersonnelRole)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAvailableTempCrewPool(PersonnelRole role) {
@@ -7324,7 +7324,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#requiresAdditionalAsTechs(CampaignOptions)} directly.
+     * @deprecated Use {@link ForceHumanResources#requiresAdditionalAsTechs(CampaignOptions)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean requiresAdditionalAsTechs() {
@@ -7332,7 +7332,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getAsTechNeed(CampaignOptions)} directly.
+     * @deprecated Use {@link ForceHumanResources#getAsTechNeed(CampaignOptions)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAsTechNeed() {
@@ -7340,7 +7340,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#increaseAsTechPool(Campaign, int)} directly.
+     * @deprecated Use {@link ForceHumanResources#increaseAsTechPool(Campaign, int)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void increaseAsTechPool(int i) {
@@ -7365,7 +7365,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#decreaseAsTechPool(Campaign, int)} directly.
+     * @deprecated Use {@link ForceHumanResources#decreaseAsTechPool(Campaign, int)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void decreaseAsTechPool(int i) {
@@ -7449,7 +7449,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getAvailableAsTechs(int, boolean, boolean, CampaignOptions)} directly.
+     * @deprecated Use {@link ForceHumanResources#getAvailableAsTechs(int, boolean, boolean, CampaignOptions)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAvailableAsTechs(final int minutes, final boolean alreadyOvertime) {
@@ -7564,7 +7564,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#requiresAdditionalMedics()} directly.
+     * @deprecated Use {@link ForceHumanResources#requiresAdditionalMedics()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean requiresAdditionalMedics() {
@@ -7572,7 +7572,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#getMedicsNeed()} directly.
+     * @deprecated Use {@link ForceHumanResources#getMedicsNeed()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMedicsNeed() {
@@ -7580,7 +7580,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#increaseMedicPool(Campaign, int)} directly.
+     * @deprecated Use {@link ForceHumanResources#increaseMedicPool(Campaign, int)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void increaseMedicPool(int i) {
@@ -7605,7 +7605,7 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link HumanResources#decreaseMedicPool(Campaign, int)} directly.
+     * @deprecated Use {@link ForceHumanResources#decreaseMedicPool(Campaign, int)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void decreaseMedicPool(int i) {
@@ -7669,7 +7669,7 @@ public class Campaign implements ITechManager {
      *
      * @param role the personnel role to fill
      *
-     * @deprecated Use {@link HumanResources#fillTempCrewPoolForRole(Campaign, CampaignOptions, PersonnelRole)} directly.
+     * @deprecated Use {@link ForceHumanResources#fillTempCrewPoolForRole(Campaign, CampaignOptions, PersonnelRole)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void fillTempCrewPoolForRole(PersonnelRole role) {
@@ -7691,7 +7691,7 @@ public class Campaign implements ITechManager {
      * Releases surplus AsTechs from the pool, keeping only what is currently needed. If the pool already has fewer than
      * needed, no change is made.
      *
-     * @deprecated Use {@link HumanResources#releaseSurplusAsTechPool(Campaign)} directly.
+     * @deprecated Use {@link ForceHumanResources#releaseSurplusAsTechPool(Campaign)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void releaseSurplusAsTechPool() {
@@ -7702,7 +7702,7 @@ public class Campaign implements ITechManager {
      * Releases surplus Medics from the pool, keeping only what is currently needed. If the pool already has fewer than
      * needed, no change is made.
      *
-     * @deprecated Use {@link HumanResources#releaseSurplusMedicPool(Campaign)} directly.
+     * @deprecated Use {@link ForceHumanResources#releaseSurplusMedicPool(Campaign)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void releaseSurplusMedicPool() {
@@ -7717,7 +7717,7 @@ public class Campaign implements ITechManager {
      *
      * @param role the personnel role to trim
      *
-     * @deprecated Use {@link HumanResources#releaseSurplusBlobCrewForRole(Campaign, PersonnelRole)} directly.
+     * @deprecated Use {@link ForceHumanResources#releaseSurplusBlobCrewForRole(Campaign, PersonnelRole)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void releaseSurplusBlobCrewForRole(PersonnelRole role) {
@@ -7730,7 +7730,7 @@ public class Campaign implements ITechManager {
      *
      * @param role the personnel role to clear
      *
-     * @deprecated Use {@link HumanResources#clearBlobCrewForRole(Campaign, PersonnelRole)} directly.
+     * @deprecated Use {@link ForceHumanResources#clearBlobCrewForRole(Campaign, PersonnelRole)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void clearBlobCrewForRole(PersonnelRole role) {
@@ -7755,7 +7755,7 @@ public class Campaign implements ITechManager {
      *
      * @param role the personnel role to distribute
      *
-     * @deprecated Use {@link HumanResources#distributeTempCrewPoolToUnits(Campaign, CampaignOptions, PersonnelRole)} directly.
+     * @deprecated Use {@link ForceHumanResources#distributeTempCrewPoolToUnits(Campaign, CampaignOptions, PersonnelRole)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void distributeTempCrewPoolToUnits(PersonnelRole role) {
@@ -7950,7 +7950,7 @@ public class Campaign implements ITechManager {
      *
      * @param person The {@link Person} who should receive a randomized portrait.
      *
-     * @deprecated Use {@link HumanResources#assignRandomPortraitFor(CampaignOptions, Person)} directly.
+     * @deprecated Use {@link ForceHumanResources#assignRandomPortraitFor(CampaignOptions, Person)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void assignRandomPortraitFor(final Person person) {
@@ -7962,7 +7962,7 @@ public class Campaign implements ITechManager {
      *
      * @param person The {@link Person} who should receive a randomized origin.
      *
-     * @deprecated Use {@link HumanResources#assignRandomOriginFor(Campaign, CampaignOptions, Person)} directly.
+     * @deprecated Use {@link ForceHumanResources#assignRandomOriginFor(Campaign, CampaignOptions, Person)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void assignRandomOriginFor(final Person person) {

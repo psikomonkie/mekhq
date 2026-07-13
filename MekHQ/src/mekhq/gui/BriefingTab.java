@@ -33,7 +33,7 @@
 package mekhq.gui;
 
 import static megamek.client.ratgenerator.ForceDescriptor.RATING_5;
-import static mekhq.campaign.HumanResources.isUsingLegacyPersonnelMarket;
+import static mekhq.campaign.ForceHumanResources.isUsingLegacyPersonnelMarket;
 import static mekhq.campaign.enums.DailyReportType.PERSONNEL;
 import static mekhq.campaign.enums.DailyReportType.POLITICS;
 import static mekhq.campaign.force.Formation.NO_ASSIGNED_SCENARIO;
@@ -87,7 +87,7 @@ import megameklab.util.UnitPrintManager;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.CampaignNewDayManager;
-import mekhq.campaign.Hangar;
+import mekhq.campaign.LocalHangar;
 import mekhq.campaign.autoResolve.AutoResolveMethod;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.events.DeploymentChangedEvent;
@@ -1388,7 +1388,7 @@ public final class BriefingTab extends CampaignGuiTab {
         boolean wasConfirmed = forcePicker.wasConfirmed();
         if (wasConfirmed) {
             scenario.clearSalvageFormations();
-            Hangar hangar = getCampaign().getHangar();
+            LocalHangar hangar = getCampaign().getHangar();
             List<Formation> selectedFormations = forcePicker.getSelectedFormations();
             for (Formation formation : selectedFormations) {
                 scenario.addSalvageFormation(formation.getId());
@@ -1578,7 +1578,7 @@ public final class BriefingTab extends CampaignGuiTab {
 
         // Collect eligible salvage forces (We want salvage forces first)
         List<AtBContract> activeContracts = getCampaign().getActiveAtBContracts();
-        Hangar hangar = campaign.getHangar();
+        LocalHangar hangar = campaign.getHangar();
         List<Formation> eligibleSalvageFormations = new ArrayList<>();
         for (Formation formation : getCampaign().getAllFormations()) {
             Formation parentFormation = formation.getParentFormation();

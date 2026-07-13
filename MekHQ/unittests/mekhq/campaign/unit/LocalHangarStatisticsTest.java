@@ -39,11 +39,11 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 
 import megamek.common.units.Entity;
-import mekhq.campaign.Hangar;
+import mekhq.campaign.LocalHangar;
 import org.junit.jupiter.api.Test;
 
-class HangarStatisticsTest {
-    private final Hangar hangar = mock(Hangar.class);
+class LocalHangarStatisticsTest {
+    private final LocalHangar hangar = mock(LocalHangar.class);
     private final HangarStatistics hangarStatistics = new HangarStatistics(hangar);
 
     @Test

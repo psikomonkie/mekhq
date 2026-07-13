@@ -61,8 +61,8 @@ import megamek.common.icons.Camouflage;
 import megamek.common.units.Entity;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.HumanResources;
-import mekhq.campaign.camOpsReputation.ReputationController;
+import mekhq.campaign.ForceHumanResources;
+import mekhq.campaign.camOpsReputation.ForceReputationController;
 import mekhq.campaign.events.NetworkChangedEvent;
 import mekhq.campaign.events.OrganizationChangedEvent;
 import mekhq.campaign.finances.Finances;
@@ -70,7 +70,7 @@ import mekhq.campaign.finances.Money;
 import mekhq.campaign.finances.enums.TransactionType;
 import mekhq.campaign.icons.StandardFormationIcon;
 import mekhq.campaign.icons.UnitIcon;
-import mekhq.campaign.market.ShoppingList;
+import mekhq.campaign.market.ForceShoppingList;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.Scenario;
 import mekhq.campaign.mission.rentals.ContractRentalType;
@@ -103,8 +103,8 @@ import mekhq.campaign.universe.factionStanding.FactionStandings;
  */
 public abstract class AbstractForce {
 
-    private HumanResources humanResources = new HumanResources();
-    private ShoppingList shoppingList = new ShoppingList();
+    private ForceHumanResources humanResources = new ForceHumanResources();
+    private ForceShoppingList shoppingList = new ForceShoppingList();
 
     private final ForceOptions forceOptions;
 
@@ -121,7 +121,7 @@ public abstract class AbstractForce {
     private Finances finances;
 
     // Reputation / standing / crime / initiative
-    private ReputationController reputation;
+    private ForceReputationController reputation;
     private FactionStandings factionStandings;
     private int crimeRating = 0;
     private int crimePirateModifier = 0;
@@ -149,7 +149,7 @@ public abstract class AbstractForce {
     private Hashtable<Integer, CombatTeam> combatTeams = new Hashtable<>();
 
     protected AbstractForce(ForceOptions forceOptions, megamek.common.enums.Faction techFaction, RankSystem rankSystem,
-          Finances finances, ReputationController reputation, FactionStandings factionStandings) {
+          Finances finances, ForceReputationController reputation, FactionStandings factionStandings) {
         this.forceOptions = forceOptions;
         this.techFaction = techFaction;
         this.rankSystem = rankSystem;
@@ -199,20 +199,20 @@ public abstract class AbstractForce {
         return detachments.iterator().next();
     }
 
-    public HumanResources getHumanResources() {
+    public ForceHumanResources getHumanResources() {
         return humanResources;
     }
 
-    public void setHumanResources(HumanResources humanResources) {
+    public void setHumanResources(ForceHumanResources humanResources) {
         this.humanResources = humanResources;
     }
 
-    public void setShoppingList(ShoppingList shoppingList) {
-        this.shoppingList = shoppingList;
+    public ForceShoppingList getShoppingList() {
+        return shoppingList;
     }
 
-    public ShoppingList getShoppingList() {
-        return shoppingList;
+    public void setShoppingList(ForceShoppingList shoppingList) {
+        this.shoppingList = shoppingList;
     }
 
     public ForceOptions getForceOptions() {
@@ -374,11 +374,11 @@ public abstract class AbstractForce {
         finances.debit(type, date, quantity, description);
     }
 
-    public ReputationController getReputation() {
+    public ForceReputationController getReputation() {
         return reputation;
     }
 
-    public void setReputation(ReputationController reputation) {
+    public void setReputation(ForceReputationController reputation) {
         this.reputation = reputation;
     }
 

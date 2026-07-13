@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import mekhq.campaign.camOpsReputation.ReputationController;
+import mekhq.campaign.camOpsReputation.ForceReputationController;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.finances.Finances;
 import mekhq.campaign.personnel.ranks.RankSystem;
@@ -66,7 +66,7 @@ public class PlayerForce extends AbstractForce implements SingleDetachmentForce 
      * @param campaignOptions      the campaign options the force's {@link ForceOptions} passes through to
      */
     public PlayerForce(Faction faction, megamek.common.enums.Faction techFaction, RankSystem rankSystem,
-          Finances finances, ReputationController reputationController, FactionStandings factionStandings,
+          Finances finances, ForceReputationController reputationController, FactionStandings factionStandings,
           CampaignOptions campaignOptions) {
         super(new ForceOptions(campaignOptions, faction), techFaction, rankSystem, finances, reputationController,
               factionStandings);

@@ -44,8 +44,8 @@ import java.util.UUID;
 
 import megamek.common.equipment.EquipmentType;
 import mekhq.campaign.personnel.Person;
-import mekhq.campaign.personnel.skills.SkillType;
 import mekhq.campaign.personnel.enums.PersonnelRole;
+import mekhq.campaign.personnel.skills.SkillType;
 import mekhq.utilities.MHQXMLUtility;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,8 +69,8 @@ public class PersonnelTest {
     }
 
     /**
-     * Tests for {@link Personnel#writeToXML(PrintWriter, int, Campaign)} and
-     * {@link Personnel#loadFromXML(org.w3c.dom.Node, Campaign, megamek.common.Version)}
+     * Tests for {@link LocalPersonnel#writeToXML(PrintWriter, int, Campaign)} and
+     * {@link LocalPersonnel#loadFromXML(org.w3c.dom.Node, Campaign, megamek.common.Version)}
      */
     @Nested
     class WriteAndLoadFromXML {
@@ -78,7 +78,7 @@ public class PersonnelTest {
         @Test
         void emptyRosterWritesValidXmlWithNoPersonChildren() {
             // Arrange
-            Personnel personnel = new Personnel();
+            LocalPersonnel personnel = new LocalPersonnel();
             StringWriter stringWriter = new StringWriter();
             PrintWriter writer = new PrintWriter(stringWriter);
 
@@ -96,7 +96,7 @@ public class PersonnelTest {
         @Test
         void rosterWithPersonWritesPersonElement() {
             // Arrange
-            Personnel personnel = new Personnel();
+            LocalPersonnel personnel = new LocalPersonnel();
             Person person = new Person(campaign);
             UUID personId = person.getId();
             personnel.put(personId, person);
@@ -138,7 +138,7 @@ public class PersonnelTest {
     }
 
     /**
-     * Tests for {@link Personnel} as a {@link java.util.LinkedHashMap}
+     * Tests for {@link LocalPersonnel} as a {@link java.util.LinkedHashMap}
      */
     @Nested
     class MapBehavior {
@@ -146,7 +146,7 @@ public class PersonnelTest {
         @Test
         void newPersonnelIsEmpty() {
             // Arrange
-            Personnel personnel = new Personnel();
+            LocalPersonnel personnel = new LocalPersonnel();
 
             // Act — no act, testing initial state
 
@@ -158,7 +158,7 @@ public class PersonnelTest {
         @Test
         void putAndGetByUuid() {
             // Arrange
-            Personnel personnel = new Personnel();
+            LocalPersonnel personnel = new LocalPersonnel();
             Person person = mock(Person.class);
             UUID id = UUID.randomUUID();
 
@@ -173,7 +173,7 @@ public class PersonnelTest {
         @Test
         void removeByUuidLeavesMapEmpty() {
             // Arrange
-            Personnel personnel = new Personnel();
+            LocalPersonnel personnel = new LocalPersonnel();
             Person person = mock(Person.class);
             UUID id = UUID.randomUUID();
             personnel.put(id, person);
@@ -188,7 +188,7 @@ public class PersonnelTest {
         @Test
         void valuesCollectionReflectsInsertionOrder() {
             // Arrange
-            Personnel personnel = new Personnel();
+            LocalPersonnel personnel = new LocalPersonnel();
             Person first = mock(Person.class);
             Person second = mock(Person.class);
             Person third = mock(Person.class);
@@ -211,7 +211,7 @@ public class PersonnelTest {
         @Test
         void containsKeyReturnsTrueForInsertedId() {
             // Arrange
-            Personnel personnel = new Personnel();
+            LocalPersonnel personnel = new LocalPersonnel();
             UUID id = UUID.randomUUID();
             Person person = mock(Person.class);
             personnel.put(id, person);
@@ -226,7 +226,7 @@ public class PersonnelTest {
         @Test
         void containsKeyReturnsFalseForUnknownId() {
             // Arrange
-            Personnel personnel = new Personnel();
+            LocalPersonnel personnel = new LocalPersonnel();
             UUID knownId = UUID.randomUUID();
             Person person = mock(Person.class);
             personnel.put(knownId, person);
@@ -240,7 +240,7 @@ public class PersonnelTest {
     }
 
     /**
-     * Tests for {@link Personnel#loadFromXML(org.w3c.dom.Node, Campaign, megamek.common.Version)}
+     * Tests for {@link LocalPersonnel#loadFromXML(org.w3c.dom.Node, Campaign, megamek.common.Version)}
      * covering the XML parsing path directly.
      */
     @Nested
@@ -254,7 +254,7 @@ public class PersonnelTest {
 
             StringWriter stringWriter = new StringWriter();
             PrintWriter writer = new PrintWriter(stringWriter);
-            Personnel singlePerson = new Personnel();
+            LocalPersonnel singlePerson = new LocalPersonnel();
             singlePerson.put(original.getId(), original);
             singlePerson.writeToXML(writer, 0, campaign);
             writer.flush();
@@ -269,7 +269,7 @@ public class PersonnelTest {
                   .parse(new java.io.ByteArrayInputStream(xml.getBytes()));
             org.w3c.dom.Node personnelNode = doc.getDocumentElement();
             megamek.Version version = new megamek.Version();
-            Personnel.loadFromXML(personnelNode, fresh, version);
+            LocalPersonnel.loadFromXML(personnelNode, fresh, version);
 
             // Assert
             assertFalse(fresh.getHumanResources().getPersonnel().isEmpty(),

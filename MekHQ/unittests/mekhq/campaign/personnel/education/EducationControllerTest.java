@@ -50,9 +50,8 @@ import java.util.List;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.CampaignLocationManager;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.JumpPath;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.force.Detachment;
 import mekhq.campaign.force.PlayerForce;
@@ -102,10 +101,10 @@ class EducationControllerTest {
         when(options.getNaturalHealingWaitingPeriod()).thenReturn(0);
         when(campaign.getCampaignOptions()).thenReturn(options);
 
-        Hangar hangar = mock(Hangar.class);
+        mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
         when(campaign.getAllHangar()).thenReturn(hangar);
 
-        Warehouse warehouse = mock(Warehouse.class);
+        LocalWarehouse warehouse = mock(LocalWarehouse.class);
         when(warehouse.getParts()).thenReturn(Collections.emptyList());
         when(campaign.getAllWarehouse()).thenReturn(warehouse);
 

@@ -79,19 +79,19 @@ import org.w3c.dom.NodeList;
  * <p>
  * Do we use a separate shopping list for new units?
  */
-public class ShoppingList {
-    private static final MMLogger LOGGER = MMLogger.create(ShoppingList.class);
+public class ForceShoppingList {
+    private static final MMLogger LOGGER = MMLogger.create(ForceShoppingList.class);
 
     // region Variable Declarations
     private List<IAcquisitionWork> shoppingList;
     // endregion Variable Declarations
 
     // region Constructors
-    public ShoppingList() {
+    public ForceShoppingList() {
         setShoppingList(new ArrayList<>());
     }
 
-    public ShoppingList(List<IAcquisitionWork> shoppingList) {
+    public ForceShoppingList(List<IAcquisitionWork> shoppingList) {
         setShoppingList(shoppingList);
     }
     // endregion Constructors
@@ -254,8 +254,8 @@ public class ShoppingList {
         MHQXMLUtility.writeSimpleXMLCloseTag(pw, --indent, "shoppingList");
     }
 
-    public static ShoppingList generateInstanceFromXML(Node wn, Campaign c, Version version) {
-        ShoppingList retVal = new ShoppingList();
+    public static ForceShoppingList generateInstanceFromXML(Node wn, Campaign c, Version version) {
+        ForceShoppingList retVal = new ForceShoppingList();
 
         NodeList nl = wn.getChildNodes();
 

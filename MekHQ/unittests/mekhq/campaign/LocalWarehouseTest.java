@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2020-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -69,7 +69,7 @@ import mekhq.campaign.unit.Unit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-public class WarehouseTest {
+public class LocalWarehouseTest {
 
     @BeforeAll
     static void beforeAll() {
@@ -78,7 +78,7 @@ public class WarehouseTest {
 
     @Test
     public void testWarehouseSimplePartActions() {
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // A new warehouse is empty
         assertTrue(warehouse.getParts().isEmpty());
@@ -119,7 +119,7 @@ public class WarehouseTest {
 
     @Test
     public void testWarehouseAddNewPart() {
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Create a mock part without an ID
         Part mockPart = mock(Part.class, RETURNS_DEEP_STUBS);
@@ -161,7 +161,7 @@ public class WarehouseTest {
 
     @Test
     public void testWarehouseAddSecondNewPart() {
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Create a mock part without an ID
         Part mockPart0 = mock(Part.class, RETURNS_DEEP_STUBS);
@@ -191,7 +191,7 @@ public class WarehouseTest {
 
     @Test
     public void testWarehouseAddPartEvent() {
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Create a mock part
         int mockId = 10;
@@ -226,7 +226,7 @@ public class WarehouseTest {
 
     @Test
     public void testWarehouseRemovePart() {
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Create a mock part
         int mockId = 10;
@@ -260,7 +260,7 @@ public class WarehouseTest {
 
     @Test
     public void testWarehouseRemoveChildParts() {
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a parent part to the warehouse
         Part mockParentPart = createMockPart(1);
@@ -300,7 +300,7 @@ public class WarehouseTest {
 
     @Test
     public void testWarehouseRemoveRecursiveChildParts() {
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a parent part to the warehouse
         Part mockParentPart = createMockPart(1);
@@ -344,7 +344,7 @@ public class WarehouseTest {
     @Test
     public void testAddSpareRegularPart() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare part to the warehouse
         Part mockPart = spy(new MekLocation());
@@ -389,7 +389,7 @@ public class WarehouseTest {
     @Test
     public void testReturnSpareRegularPart() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare part to the warehouse
         Part mockPart = spy(new MekLocation());
@@ -450,7 +450,7 @@ public class WarehouseTest {
     @Test
     public void testAddSpareArmorPart() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add some spare armor to the warehouse
         Armor mockArmor = createMockArmor(mockCampaign, EquipmentType.T_ARMOR_STANDARD, 16);
@@ -496,7 +496,7 @@ public class WarehouseTest {
     @Test
     public void testAddSpareAmmoStoragePart() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add some spare ammo to the warehouse
         AmmoStorage mockAmmoStorage = createMockAmmoStorage(mockCampaign, getAmmoType("ISAC5 Ammo"), 20);
@@ -542,7 +542,7 @@ public class WarehouseTest {
     @Test
     public void testAddSparePartWontMixWithRefitPart() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare part to the warehouse reserved for a refit
         Part mockPart = spy(new MekLocation());
@@ -589,7 +589,7 @@ public class WarehouseTest {
     @Test
     public void testAddSparePartWontMixWithReplacementPart() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare part to the warehouse reserved for
         // an overnight task on a unit
@@ -637,7 +637,7 @@ public class WarehouseTest {
     @Test
     public void testAddSparePartWontMixWithPartUnderRepair() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare part under repair to the warehouse
         Part mockPart = spy(new MekLocation());
@@ -684,7 +684,7 @@ public class WarehouseTest {
     @Test
     public void testAddSpareArmorWontMixWithRefitArmor() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare armor to the warehouse reserved for a refit
         Armor mockArmor = createMockArmor(mockCampaign, EquipmentType.T_ARMOR_STANDARD, 16);
@@ -729,7 +729,7 @@ public class WarehouseTest {
     @Test
     public void testAddSpareArmorWontMixWithReplacementArmor() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare part to the warehouse reserved for
         // an overnight task on a unit
@@ -775,7 +775,7 @@ public class WarehouseTest {
     @Test
     public void testAddSpareAmmoStorageWonMixWithRefitAmmoStorage() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add some spare ammo to the warehouse reserved for a refit
         AmmoStorage mockAmmoStorage = createMockAmmoStorage(mockCampaign, getAmmoType("ISAC5 Ammo"), 20);
@@ -819,7 +819,7 @@ public class WarehouseTest {
     @Test
     public void testGetSpareParts() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // Spare
         Part mockSparePart = spy(new MekLocation());
@@ -887,7 +887,7 @@ public class WarehouseTest {
     @Test
     public void testForEachSpareParts() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // The warehouse is empty!
         warehouse.forEachSparePart(spare -> fail());
@@ -947,7 +947,7 @@ public class WarehouseTest {
     @Test
     public void testFindSparePart() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse warehouse = new Warehouse();
+        LocalWarehouse warehouse = new LocalWarehouse();
 
         // The warehouse is empty!
         assertNull(warehouse.findSparePart(spare -> true));

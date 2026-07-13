@@ -46,8 +46,7 @@ import megamek.common.equipment.WeaponType;
 import megamek.common.units.Entity;
 import megamek.common.units.Mek;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Quartermaster;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.base.PlayerBase;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.location.IPlace;
@@ -98,9 +97,9 @@ public class PartsInUseManager {
     private final Campaign campaign;
     private final IPlace place;
     private final CampaignOptions campaignOptions;
-    private final Warehouse warehouse;
-    private final ShoppingList shoppingList;
-    private final Quartermaster quartermaster;
+    private final LocalWarehouse warehouse;
+    private final ForceShoppingList shoppingList;
+    private final mekhq.campaign.ForceQuartermaster quartermaster;
     private final Map<String, Double> partsInUseRequestedStockMap;
 
     /**
@@ -125,7 +124,7 @@ public class PartsInUseManager {
         this.campaign = campaign;
         this.place = place;
         this.campaignOptions = campaign.getCampaignOptions();
-        Warehouse placeWarehouse = place.getWarehouse();
+        LocalWarehouse placeWarehouse = place.getWarehouse();
         this.warehouse = (placeWarehouse != null) ? placeWarehouse : campaign.getWarehouse();
         this.shoppingList = campaign.getShoppingList();
         this.quartermaster = campaign.getQuartermaster();

@@ -93,7 +93,7 @@ import mekhq.Utilities;
 import mekhq.campaign.*;
 import mekhq.campaign.againstTheBot.AtBConfiguration;
 import mekhq.campaign.base.PlayerBase;
-import mekhq.campaign.camOpsReputation.ReputationController;
+import mekhq.campaign.camOpsReputation.ForceReputationController;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.campaignOptions.CampaignOptionsUnmarshaller;
 import mekhq.campaign.enums.CampaignTransportType;
@@ -105,9 +105,9 @@ import mekhq.campaign.icons.UnitIcon;
 import mekhq.campaign.location.AcademyCampusLocation;
 import mekhq.campaign.location.ILocation;
 import mekhq.campaign.location.LocationNode;
+import mekhq.campaign.market.ForceShoppingList;
 import mekhq.campaign.market.PersonnelMarket;
 import mekhq.campaign.market.RequestedStockLevels;
-import mekhq.campaign.market.ShoppingList;
 import mekhq.campaign.market.contractMarket.AbstractContractMarket;
 import mekhq.campaign.market.contractMarket.AtbMonthlyContractMarket;
 import mekhq.campaign.mission.AtBContract;
@@ -171,689 +171,6 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
 
     public void close() throws IOException {
         this.is.close();
-    }
-
-    /**
-     * Designed to create a campaign object from an input stream containing an XML structure.
-     *
-     * @return The created Campaign object, or null if there was a problem.
-     *
-     * @throws CampaignXmlParseException Thrown when there was a problem parsing the CPNX file
-     * @throws NullEntityException       Thrown when an entity is referenced but cannot be loaded or found
-     */
-    public Campaign parse() throws CampaignXmlParseException, NullEntityException {
-        LOGGER.info("Starting load of campaign file from XML...");
-        // Initialize variables.
-        Campaign campaign = CampaignFactory.createCampaign();
-        campaign.setGUI(app.getCampaigngui());
-
-        Document xmlDoc;
-
-        try {
-            xmlDoc = MHQXMLUtility.parseDocument(is);
-        } catch (Exception ex) {
-            LOGGER.error("", ex);
-            throw new CampaignXmlParseException(ex);
-        }
-
-        Element campaignEle = xmlDoc.getDocumentElement();
-        NodeList nl = campaignEle.getChildNodes();
-
-        // Get rid of empty text nodes and adjacent text nodes...
-        // Stupid weird parsing of XML. At least this cleans it up.
-        campaignEle.normalize();
-
-        final Version version = new Version(campaignEle.getAttribute("version"));
-        if (version.is("0.0.0")) {
-            throw new CampaignXmlParseException(String.format("Illegal version of %s failed to parse",
-                  campaignEle.getAttribute("version")));
-        }
-        // Confirm the campaign version is compatible with the current MekHQ version. This function lives here so that
-        // we don't attempt to load incompatible campaigns and risk running into errors that might prevent the player
-        // from viewing this dialog
-        new MilestoneUpgradePathDialog(app, campaign, version);
-
-        // Assuming there is no upgrade path, we set version and continue parsing the campaign.
-        campaign.setVersion(version);
-
-        // Indicates whether new units were written to disk while
-        // loading the Campaign file. If so, we need to kick back off loading
-        // all the unit data from disk.
-        boolean reloadUnitData = false;
-
-        // we need to iterate through three times, the first time to collect
-        // any custom units that might not be written yet
-        for (int x = 0; x < nl.getLength(); x++) {
-            Node wn = nl.item(x);
-
-            if (!wn.getParentNode().equals(campaignEle)) {
-                continue;
-            }
-
-            int xc = wn.getNodeType();
-
-            if (xc == Node.ELEMENT_NODE) {
-                // This is what we really care about.
-                // All the meat of our document is in this node type, at this
-                // level.
-                // Okay, so what element is it?
-                String xn = wn.getNodeName();
-
-                if (xn.equalsIgnoreCase("info")) { // This is needed so that the campaign name gets set in campaign
-                    try {
-                        processInfoNode(campaign, wn, version);
-                    } catch (DOMException e) {
-                        throw new CampaignXmlParseException(e);
-                    }
-                } else if (xn.equalsIgnoreCase("custom")) {
-                    reloadUnitData |= processCustom(campaign, wn);
-                } else if (xn.equalsIgnoreCase("campaignOptions")) {
-                    campaign.setCampaignOptions(CampaignOptionsUnmarshaller.generateCampaignOptionsFromXml(wn,
-                          version));
-                } else if (xn.equalsIgnoreCase("gameOptions")) {
-                    campaign.getGameOptions().fillFromXML(wn.getChildNodes());
-                } else if (xn.equalsIgnoreCase(PlanetarySystemCampaignXmlIO.XML_TAG)) {
-                    processPlanetarySystemOverrides(campaign, wn);
-                }
-            }
-            // If it's a text node or attribute or whatever at this level,
-            // it's probably white-space.
-            // We can safely ignore it even if it isn't, for now.
-        }
-
-        // Only reload unit data if we updated files on disk
-        if (reloadUnitData) {
-            MekSummaryCache.getInstance().loadMekData();
-        }
-
-        // the second time to check for any null entities
-        for (int x = 0; x < nl.getLength(); x++) {
-            Node wn = nl.item(x);
-
-            if (!wn.getParentNode().equals(campaignEle)) {
-                continue;
-            }
-
-            int xc = wn.getNodeType();
-
-            if (xc == Node.ELEMENT_NODE) {
-                // This is what we really care about.
-                // All the meat of our document is in this node type, at this
-                // level.
-                // Okay, so what element is it?
-                String xn = wn.getNodeName();
-
-                if (xn.equalsIgnoreCase("units")) {
-                    String missingList = checkUnits(wn);
-                    if (null != missingList) {
-                        throw new NullEntityException(missingList);
-                    }
-                }
-            }
-            // If it's a text node or attribute or whatever at this level,
-            // it's probably white-space.
-            // We can safely ignore it even if it isn't, for now.
-        }
-
-        boolean foundPersonnelMarket = false;
-        boolean foundContractMarket = false;
-        boolean foundUnitMarket = false;
-
-        // Saves made in 0.51.00 do not have a <location> but will have a <locations> with a single item.
-        boolean foundMainForceLocation = false;
-
-        // Pending travel references persons, units, parts, and bases, so it is resolved after those are all loaded.
-        Node pendingTravelNode = null;
-
-        // Okay, lets iterate through the children, eh?
-        for (int x = 0; x < nl.getLength(); x++) {
-            Node workingNode = nl.item(x);
-
-            if (!workingNode.getParentNode().equals(campaignEle)) {
-                continue;
-            }
-
-            int xc = workingNode.getNodeType();
-
-            if (xc == Node.ELEMENT_NODE) {
-                // This is what we really care about.
-                // All the meat of our document is in this node type, at this level.
-                // Okay, so what element is it?
-                String nodeName = workingNode.getNodeName();
-
-                if (nodeName.equalsIgnoreCase("pastVersions")) {
-                    processPastVersionNodes(campaign, workingNode);
-                } else if (nodeName.equalsIgnoreCase("randomSkillPreferences")) {
-                    campaign.setRandomSkillPreferences(RandomSkillPreferences.generateRandomSkillPreferencesFromXml(
-                          workingNode,
-                          version));
-                } else if (nodeName.equalsIgnoreCase("humanResources")) {
-                    campaign.setHumanResources(
-                          mekhq.campaign.HumanResources.loadFromXML(workingNode, campaign, version));
-                } else if (nodeName.equalsIgnoreCase("parts")) {
-                    processPartNodes(campaign, workingNode, version);
-                } else if (nodeName.equalsIgnoreCase("personnel")) {
-                    // backward compat: old save without <humanResources> wrapper
-                    // TODO: Make this depending on campaign options
-                    // TODO: hoist registerAll out of this
-                    InjuryTypes.registerAll();
-                    processPersonnelNodes(campaign, workingNode, version);
-                } else if (nodeName.equalsIgnoreCase("units")) {
-                    processUnitNodes(campaign, workingNode, version);
-                } else if (nodeName.equalsIgnoreCase("missions")) {
-                    processMissionNodes(campaign, workingNode, version);
-                } else if (nodeName.equalsIgnoreCase("forces")) {
-                    processForces(campaign, workingNode, version);
-                } else if (nodeName.equalsIgnoreCase("formations")) {
-                    processFormations(campaign, workingNode, version);
-                } else if (nodeName.equalsIgnoreCase("finances")) {
-                    processFinances(campaign, workingNode);
-                } else if (nodeName.equalsIgnoreCase("locations")) {
-                    processLocations(campaign, workingNode);
-                } else if (nodeName.equalsIgnoreCase("playerBases")) {
-                    processPlayerBaseNodes(campaign, workingNode, version);
-                } else if (nodeName.equalsIgnoreCase("pendingTravel")) {
-                    pendingTravelNode = workingNode;
-                } else if (nodeName.equalsIgnoreCase("location")) {
-                    // Campaign's current location — written as a top-level tag in new saves;
-                    // same tag was used as the only location entry in pre-<locations>-list saves.
-                    campaign.setLocation(CurrentLocation.generateInstanceFromXML(workingNode, campaign));
-                    foundMainForceLocation = true;
-                } else if (nodeName.equalsIgnoreCase("locationNodeChildren")) {
-                    LocationNode.reconnectChildren(workingNode, campaign);
-                } else if (nodeName.equalsIgnoreCase("isAvoidingEmptySystems")) {
-                    campaign.setIsAvoidingEmptySystems(Boolean.parseBoolean(workingNode.getTextContent().trim()));
-                } else if (nodeName.equalsIgnoreCase("skillTypes")) {
-                    processSkillTypeNodes(workingNode, version);
-                } else if (nodeName.equalsIgnoreCase("specialAbilities")) {
-                    processSpecialAbilityNodes(campaign, workingNode, version);
-                } else if (nodeName.equalsIgnoreCase("storyArc")) {
-                    processStoryArcNodes(campaign, workingNode, version);
-                } else if (nodeName.equalsIgnoreCase("kills")) {
-                    processKillNodes(campaign, workingNode, version);
-                } else if (nodeName.equalsIgnoreCase("shoppingList")) {
-                    campaign.setShoppingList(ShoppingList.generateInstanceFromXML(workingNode, campaign, version));
-                } else if (nodeName.equalsIgnoreCase("personnelMarket")) {
-                    campaign.setPersonnelMarket(PersonnelMarket.generateInstanceFromXML(workingNode,
-                          campaign,
-                          version));
-                    foundPersonnelMarket = true;
-                } else if (nodeName.equalsIgnoreCase("contractMarket")) {
-                    // CAW: implicit DEPENDS-ON to the <missions> node
-                    campaign.setContractMarket(AbstractContractMarket.generateInstanceFromXML(workingNode,
-                          campaign,
-                          version));
-                    foundContractMarket = true;
-                } else if (nodeName.equalsIgnoreCase("unitMarket")) {
-                    // Windchild: implicit DEPENDS ON to the <campaignOptions> nodes
-                    campaign.setUnitMarket(campaign.getCampaignOptions().getUnitMarketMethod().getUnitMarket());
-                    campaign.getUnitMarket().fillFromXML(workingNode, campaign, version);
-                    foundUnitMarket = true;
-                } else if (nodeName.equalsIgnoreCase("lances") || nodeName.equalsIgnoreCase("combatTeams")) {
-                    processCombatTeamNodes(campaign, workingNode);
-                } else if (nodeName.equalsIgnoreCase("retirementDefectionTracker")) {
-                    campaign.setRetirementDefectionTracker(RetirementDefectionTracker.generateInstanceFromXML(
-                          workingNode,
-                          campaign));
-                } else if (nodeName.equalsIgnoreCase("personnelWhoAdvancedInXP")) {
-                    campaign.setPersonnelWhoAdvancedInXP(processPersonnelWhoAdvancedInXP(workingNode, campaign));
-                } else if (nodeName.equalsIgnoreCase("automatedMothballUnits")) {
-                    campaign.setAutomatedMothballUnits(processAutomatedMothballNodes(workingNode));
-                } else if (nodeName.equalsIgnoreCase("autoResolveBehaviorSettings")) {
-                    campaign.setAutoResolveBehaviorSettings(firstNonNull(BehaviorSettingsFactory.getInstance()
-                                                                               .getBehavior(workingNode.getTextContent()),
-                          BehaviorSettingsFactory.getInstance().DEFAULT_BEHAVIOR));
-                } else if (nodeName.equalsIgnoreCase("customPlanetaryEvents")) {
-                    //TODO: deal with this
-                    updatePlanetaryEventsFromXML(workingNode);
-                } else if (nodeName.equalsIgnoreCase("partsInUse")) {
-                    processPartsInUse(campaign, workingNode, version);
-                } else if (nodeName.equalsIgnoreCase("temporaryPrisonerCapacity")) {
-                    campaign.setTemporaryPrisonerCapacity(MathUtility.parseInt(workingNode.getTextContent().trim()));
-                } else if (nodeName.equalsIgnoreCase("processProcurement")) {
-                    campaign.setProcessProcurement(Boolean.parseBoolean(workingNode.getTextContent().trim()));
-                }
-            }
-            // If it's a text node or attribute or whatever at this level,
-            // it's probably white-space.
-            // We can safely ignore it even if it isn't, for now.
-        }
-
-        // Okay, after we've gone through all the nodes and constructed the
-        // Campaign object...
-        final CampaignOptions options = campaign.getCampaignOptions();
-
-        // We need to do a post-process pass to restore a number of references.
-        // Fix any Person ID References
-        PersonIdReference.fixPersonIdReferences(campaign);
-
-        // Fixup any ghost kills
-        cleanupGhostKills(campaign);
-
-        // Update the Personnel Modules
-        campaign.setDivorce(options.getRandomDivorceMethod().getMethod(options));
-        campaign.setMarriage(options.getRandomMarriageMethod().getMethod(options));
-        campaign.setProcreation(options.getRandomProcreationMethod().getMethod(options));
-
-        long timestamp = System.currentTimeMillis();
-
-        // loop through forces to set force id
-        for (Formation f : campaign.getAllFormations()) {
-            Scenario s = campaign.getScenario(f.getScenarioId());
-            if (null != s && (null == f.getParentFormation() || !f.getParentFormation().isDeployed())) {
-                s.addForces(f.getId());
-            }
-            // some units may need force id set for backwards compatibility
-            // some may also need scenario id set
-            for (UUID uid : f.getUnits()) {
-                Unit u = campaign.getUnit(uid);
-                if (null != u) {
-                    u.setFormationId(f.getId());
-                    if (f.isDeployed()) {
-                        u.setScenarioId(f.getScenarioId());
-                    }
-                }
-            }
-        }
-
-        // determine if we've missed any lances and add those back into the campaign
-        if (options.isUseStratCon()) {
-            Hashtable<Integer, CombatTeam> lances = campaign.getCombatTeamsAsMap();
-            for (Formation f : campaign.getAllFormations()) {
-                if (!f.getUnits().isEmpty() && (null == lances.get(f.getId()))) {
-                    lances.put(f.getId(), new CombatTeam(f.getId(), campaign));
-                    LOGGER.warn("Added missing Lance {} to AtB list", f.getName());
-                }
-            }
-        }
-
-        LOGGER.info("[Campaign Load] Force IDs set in {}ms", System.currentTimeMillis() - timestamp);
-        timestamp = System.currentTimeMillis();
-
-        // Process parts...
-        // Note: Units must have their Entities set prior to reaching this point!
-        postProcessParts(campaign, version);
-        rehomeBaseHangarUnitParts(campaign);
-
-        LOGGER.info("[Campaign Load] Parts processed in {}ms", System.currentTimeMillis() - timestamp);
-        timestamp = System.currentTimeMillis();
-
-        LOGGER.info("[Campaign Load] Rank references fixed in {}ms", System.currentTimeMillis() - timestamp);
-        timestamp = System.currentTimeMillis();
-
-        // Okay, Units, need their pilot references fixed.
-        campaign.getAllHangar().forEachUnit(unit -> {
-            // Also, the unit should have its campaign set.
-            unit.setCampaign(campaign);
-            unit.fixReferences(campaign);
-
-            if (null != unit.getRefit()) {
-                unit.getRefit().fixReferences(campaign);
-
-                unit.getRefit().reCalc();
-                if (!unit.getRefit().isCustomJob() && !unit.getRefit().kitFound()) {
-                    campaign.getShoppingList().addShoppingItemWithoutChecking(unit.getRefit());
-                }
-            }
-
-            // lets make sure the force id set actually corresponds to a force
-            // TODO: we have some reports of force id relics - need to fix
-            if ((unit.getFormationId() > 0) && (campaign.getFormation(unit.getFormationId()) == null)) {
-                unit.setFormationId(FORMATION_NONE);
-            }
-
-            // It's annoying to have to do this, but this helps to ensure
-            // that equipment numbers correspond to the right parts - its
-            // possible that these might have changed if changes were made to
-            // the ordering of equipment in the underlying data file for the unit.
-            // We're not checking for refit here.
-            final EquipmentUnscrambler unscrambler = EquipmentUnscrambler.create(unit);
-            final EquipmentUnscramblerResult result = unscrambler.unscramble();
-            if (!result.succeeded()) {
-                LOGGER.warn(result.getMessage());
-            }
-
-            // some units might need to be assigned to scenarios
-            Scenario s = campaign.getScenario(unit.getScenarioId());
-            if (null != s) {
-                // most units will be properly assigned through their
-                // force, so check to make sure they aren't already here
-                if (!s.isAssigned(unit, campaign)) {
-                    s.addUnit(unit.getId());
-                }
-            }
-
-            //Update the campaign transport availability if this is transport.
-            //If it's empty we should be able to just ignore it
-            for (CampaignTransportType campaignTransportType : CampaignTransportType.values()) {
-                if (unit.hasTransportedUnits(campaignTransportType)) {
-                    campaign.updateTransportInTransports(campaignTransportType, unit);
-                }
-            }
-        });
-
-        LOGGER.info("[Campaign Load] Pilot references fixed in {}ms", System.currentTimeMillis() - timestamp);
-        timestamp = System.currentTimeMillis();
-
-        // Fix campaign references for units in base hangars.
-        // These units are NOT in campaign.getHangar(), so the loop above skips them.
-        // They need setCampaign() and fixReferences() just like main-force units.
-        for (PlayerBase base : campaign.getCampaignLocationManager().getPlayerBases()) {
-            base.getBaseHangar().forEachUnit(unit -> initializeBaseUnit(unit, campaign));
-        }
-
-        LOGGER.info("[Campaign Load] Base hangar references fixed in {}ms", System.currentTimeMillis() - timestamp);
-        timestamp = System.currentTimeMillis();
-
-        boolean skipAllDeprecationChecks = false;
-        boolean refundAllDeprecatedSkills = false;
-        for (Person person : campaign.getAllPersonnel()) {
-            // skill types might need resetting
-            person.resetSkillTypes();
-
-            // Seeing as we're already looping through all personnel, we might as well have the deprecation checks
-            // here, too.
-            if (!DEPRECATED_SKILLS.isEmpty() && !skipAllDeprecationChecks) {
-                // This checks to ensure the character doesn't have any Deprecated skills.
-                SkillDeprecationTool deprecationTool = new SkillDeprecationTool(campaign,
-                      person,
-                      refundAllDeprecatedSkills);
-                skipAllDeprecationChecks = deprecationTool.isSkipAll();
-                refundAllDeprecatedSkills = deprecationTool.isRefundAll();
-            }
-
-            // Self-correct any invalid personnel statuses (handles <50.05 campaigns)
-            // Any characters with invalid statuses will have their status set to 'Active'
-            if (person.getPrisonerStatus().isCurrentPrisoner()) {
-                statusValidator(campaign, person, true);
-            }
-
-            // <50.10 compatibility handler
-            LocalDate today = campaign.getLocalDate();
-            if (Person.updateSkillsForVehicleProfessions(today, person, person.getPrimaryRole(), true) ||
-                      Person.updateSkillsForVehicleProfessions(today, person, person.getSecondaryRole(), false)) {
-                String report = getFormattedTextAt(RESOURCE_BUNDLE, "vehicleProfessionSkillChange",
-                      spanOpeningWithCustomColor(getWarningColor()),
-                      CLOSING_SPAN_TAG,
-                      person.getHyperlinkedFullTitle());
-                campaign.addReport(GENERAL, report);
-            }
-
-            // This resolves a bug squashed in 2025 (50.03) but lurked in our codebase
-            // potentially as far back as 2014. The next two handlers should never be removed.
-            if (!person.canPerformRole(today, person.getSecondaryRole(), false)) {
-                person.setSecondaryRole(PersonnelRole.NONE);
-
-                campaign.addReport(GENERAL, getFormattedTextAt(RESOURCE_BUNDLE, "ineligibleForSecondaryRole",
-                      spanOpeningWithCustomColor(getWarningColor()),
-                      CLOSING_SPAN_TAG,
-                      person.getHyperlinkedFullTitle()));
-            }
-
-            if (!person.canPerformRole(today, person.getPrimaryRole(), true)) {
-                person.setPrimaryRole(campaign.getLocalDate(), PersonnelRole.DEPENDENT);
-
-                campaign.addReport(GENERAL, getFormattedTextAt(RESOURCE_BUNDLE, "ineligibleForPrimaryRole",
-                      spanOpeningWithCustomColor(getNegativeColor()),
-                      CLOSING_SPAN_TAG,
-                      person.getHyperlinkedFullTitle()));
-            }
-        }
-
-        campaign.getAllHangar().forEachUnit(unit -> {
-            // Some units have been incorrectly assigned a null C3UUID as a string. This
-            // should
-            // correct that by setting a new C3UUID
-            if ((unit.getEntity().hasC3() || unit.getEntity().hasC3i() || unit.getEntity().hasNavalC3()) &&
-                      (unit.getEntity().getC3UUIDAsString() == null ||
-                             unit.getEntity().getC3UUIDAsString().equals("null"))) {
-                unit.getEntity().setC3UUID();
-                unit.getEntity().setC3NetIdSelf();
-            }
-
-            // This needs to be down here so that it can factor in any changes made to personnel prior to this point.
-            unit.resetPilotAndEntity();
-        });
-        campaign.refreshNetworks();
-
-        LOGGER.info("[Campaign Load] C3 networks refreshed in {}ms", System.currentTimeMillis() - timestamp);
-        timestamp = System.currentTimeMillis();
-
-        // This removes the risk of having forces with invalid leadership getting locked in
-        for (Formation formation : campaign.getAllFormations()) {
-            formation.updateCommander(campaign);
-        }
-
-        // ok, once we are sure that campaign has been set for all units, we can
-        // now go through and initializeParts and run diagnostics
-        List<Unit> removeUnits = new ArrayList<>();
-        campaign.getAllHangar().forEachUnit(unit -> {
-            // just in case parts are missing (i.e. because they weren't tracked
-            // in previous versions)
-            unit.initializeParts(true);
-            unit.runDiagnostic(false);
-            if (!unit.isRepairable()) {
-                if (!unit.hasSalvageableParts()) {
-                    // we shouldn't get here but some units seem to stick around
-                    // for some reason
-                    removeUnits.add(unit);
-                } else {
-                    unit.setSalvage(true);
-                }
-            }
-
-            List<String> reports = unit.checkForOverCrewing();
-            for (String report : reports) {
-                campaign.addReport(GENERAL, report);
-            }
-        });
-
-        for (Unit unit : removeUnits) {
-            campaign.removeUnit(unit.getId());
-        }
-
-        for (PlayerBase base : campaign.getCampaignLocationManager().getPlayerBases()) {
-            base.getBaseHangar().forEachUnit(unit -> {
-                unit.initializeParts(false);
-                unit.runDiagnostic(false);
-
-                List<String> reports = unit.checkForOverCrewing();
-                for (String report : reports) {
-                    campaign.addReport(GENERAL, report);
-                }
-            });
-        }
-
-        LOGGER.info("[Campaign Load] Units initialized in {}ms", System.currentTimeMillis() - timestamp);
-        timestamp = System.currentTimeMillis();
-
-        for (Person person : campaign.getAllPersonnel()) {
-            person.fixReferences(campaign);
-        }
-
-        LOGGER.info("[Campaign Load] Personnel initialized in {}ms", System.currentTimeMillis() - timestamp);
-        timestamp = System.currentTimeMillis();
-
-        campaign.reloadNews();
-
-        LOGGER.info("[Campaign Load] News loaded in {}ms", System.currentTimeMillis() - timestamp);
-        timestamp = System.currentTimeMillis();
-
-        // If we don't have a personnel market, create one.
-        if (!foundPersonnelMarket) {
-            campaign.setPersonnelMarket(new PersonnelMarket(campaign));
-        }
-
-        if (!foundContractMarket) {
-            campaign.setContractMarket(new AtbMonthlyContractMarket());
-        }
-
-        if (!foundUnitMarket) {
-            campaign.setUnitMarket(campaign.getCampaignOptions().getUnitMarketMethod().getUnitMarket());
-        }
-
-        if (null == campaign.getRetirementDefectionTracker()) {
-            campaign.setRetirementDefectionTracker(new RetirementDefectionTracker());
-        }
-
-        if (campaign.getCampaignOptions().isUseStratCon()) {
-            campaign.setHasActiveContract();
-            campaign.setAtBConfig(AtBConfiguration.loadFromXml());
-        }
-
-        // Sanity Checks
-        fixupUnitTechProblems(campaign);
-
-        // unload any ammo bins in the warehouse
-        List<AmmoBin> binsToUnload = new ArrayList<>();
-        campaign.getAllWarehouse().forEachSparePart(prt -> {
-            if (prt instanceof AmmoBin && !prt.isReservedForRefit() && ((AmmoBin) prt).getShotsNeeded() == 0) {
-                binsToUnload.add((AmmoBin) prt);
-            }
-        });
-        for (AmmoBin bin : binsToUnload) {
-            bin.unload();
-        }
-
-        LOGGER.info("[Campaign Load] Ammo bins cleared in {}ms", System.currentTimeMillis() - timestamp);
-        timestamp = System.currentTimeMillis();
-
-        // Check all parts that are reserved for refit and if the refit id unit
-        // is not refitting or is gone then un-reserve
-        for (Part part : campaign.getAllWarehouse().getParts()) {
-            if (part.isReservedForRefit()) {
-                Unit u = part.getRefitUnit();
-                if ((null == u) || !u.isRefitting()) {
-                    part.setRefitUnit(null);
-                }
-            }
-        }
-
-        LOGGER.info("[Campaign Load] Reserved refit parts fixed in {}ms", System.currentTimeMillis() - timestamp);
-        timestamp = System.currentTimeMillis();
-
-        // Build a new, clean warehouse from the current parts
-        Warehouse warehouse = new Warehouse();
-        for (Part part : campaign.getAllWarehouse().getParts()) {
-            // Remove empty AmmoStorage entries that shouldn't exist (see #7414)
-            if (part instanceof AmmoStorage ammoStorage && ammoStorage.getShots() <= 0 && part.isSpare()) {
-                LOGGER.info("Discarding empty AmmoStorage: {}", part.getName());
-                continue;
-            }
-
-            // < 50.08 compatibility handler
-            if (part instanceof SVArmor svArmor) {
-                final int PROHIBITED_BAR_RATING = 0;
-
-                int bar = svArmor.getBAR();
-                if (bar == PROHIBITED_BAR_RATING) {
-                    LOGGER.info("Discarding untracked BAR 0 armor");
-                    continue;
-                }
-            }
-
-            warehouse.addPart(part, true);
-        }
-
-        // This will have aggregated all the possible spare parts together
-        campaign.setWarehouse(warehouse);
-
-        LOGGER.info("[Campaign Load] Warehouse cleaned up in {}ms", System.currentTimeMillis() - timestamp);
-
-        campaign.setUnitRating(null);
-
-        // this is used to handle characters from pre-50.01 campaigns
-        campaign.getAllPersonnel().stream().filter(person -> person.getJoinedCampaign() == null).forEach(person -> {
-            if (person.getRecruitment() != null) {
-                person.setJoinedCampaign(person.getRecruitment());
-                LOGGER.info(
-                      "{} doesn't have a date recorded showing when they joined the campaign. Using recruitment date.",
-                      person.getFullTitle());
-            } else {
-                person.setJoinedCampaign(campaign.getLocalDate());
-                LOGGER.info("{} doesn't have a date recorded showing when they joined the campaign. Using current date.",
-                      person.getFullTitle());
-            }
-        });
-
-        // Reset Random Death to match current campaign options
-        campaign.resetRandomDeath();
-
-        // Fix sexual preferences
-        if (version.isLowerThan(new Version("0.50.10"))) {
-            correctSexualPreferencesForCurrentSpouse(campaign.getAllPersonnel());
-        }
-
-        // Reconnect persons to the main-force personnel node. Skip persons already placed by
-        // processPlayerBaseNodes or reconnectChildren (base / travel / campus persons).
-        for (Person person : campaign.getAllPersonnel()) {
-            if (!person.isParented()) {
-                person.setParent(campaign.getMainForcePersonnel());
-            }
-        }
-
-
-        // Backward compat: Saves prior to 0.51.00 will have a single <location> tag, like we do now.
-        // However, saves from 0.51.00 will not have a location tag, but will have a <locations> tag with only
-        // one item. If we didn't find an explicit main force location, use that one. To check for this, if we didn't
-        // find a main force location, check if we have more than one location in our list (by default,
-        // will set and add a location to Campaign during the constructor.
-        if ((!foundMainForceLocation) && (campaign.getCampaignLocationManager().getLocations().size() > 1)) {
-            // Remove the location that was set by default, then use a valid location out of our locations list.
-            campaign.getCampaignLocationManager().removeLocation(campaign.getCurrentLocation());
-            campaign.getCampaignLocationManager().getLocations().stream()
-                  .filter(loc -> loc instanceof CurrentLocation)
-                  .findFirst()
-                  .ifPresent(campaign::setLocation);
-        }
-
-        if (pendingTravelNode != null) {
-            processPendingTravel(campaign, pendingTravelNode);
-        }
-
-        migrateLegacyEducationTravel(campaign);
-        reconnectPersonsToTravelLocations(campaign);
-        LOGGER.info("Load of campaign file complete!");
-
-        return campaign;
-    }
-
-    /**
-     * This will fixup unit-tech problems seen in some save games, such as techs having been double-assigned or being
-     * assigned to mothballed units.
-     */
-    private void fixupUnitTechProblems(Campaign retVal) {
-        // Cleanup problems with techs and units
-        for (Person tech : retVal.getTechs()) {
-            for (Unit u : new ArrayList<>(tech.getTechUnits())) {
-                String reason = null;
-                String unitDesc = u.getId().toString();
-                if (null == u.getTech()) {
-                    reason = "was not referenced by unit";
-                    u.setTech(tech);
-                } else if (u.isMothballed()) {
-                    reason = "referenced mothballed unit";
-                    unitDesc = u.getName();
-                    tech.removeTechUnit(u);
-                } else if (u.getTech() != null && !tech.getId().equals(u.getTech().getId())) {
-                    reason = String.format("referenced tech %s's maintained unit", u.getTech().getFullName());
-                    unitDesc = u.getName();
-                    tech.removeTechUnit(u);
-                }
-                if (null != reason) {
-                    LOGGER.warn("Tech {} {} {} (fixed)", tech.getFullName(), reason, unitDesc);
-                }
-            }
-        }
-    }
-
-    private static void processPlanetarySystemOverrides(Campaign campaign, Node parentNode)
-          throws CampaignXmlParseException {
-        try {
-            campaign.setPlanetarySystemOverrides(PlanetarySystemCampaignXmlIO.parse(parentNode));
-        } catch (IOException ex) {
-            throw new CampaignXmlParseException(ex);
-        }
     }
 
     /**
@@ -1141,7 +458,7 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
                 } else if (nodeName.equalsIgnoreCase("dateOfLastCrime")) {
                     campaign.setDateOfLastCrime(LocalDate.parse(childNode.getTextContent()));
                 } else if (nodeName.equalsIgnoreCase("reputation")) {
-                    campaign.setReputation(new ReputationController().generateInstanceFromXML(childNode));
+                    campaign.setReputation(new ForceReputationController().generateInstanceFromXML(childNode));
                 } else if (nodeName.equalsIgnoreCase("newPersonnelMarket")) {
                     campaign.setNewPersonnelMarket(generatePersonnelMarketDataFromXML(campaign, childNode, version));
                 } else if (nodeName.equalsIgnoreCase("factionStandings")) {
@@ -1367,6 +684,209 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
             newTechnicalReports.add(report);
         }
         campaign.setNewTechnicalReports(newTechnicalReports);
+    }
+
+    private static void processPlanetarySystemOverrides(Campaign campaign, Node parentNode)
+          throws CampaignXmlParseException {
+        try {
+            campaign.setPlanetarySystemOverrides(PlanetarySystemCampaignXmlIO.parse(parentNode));
+        } catch (IOException ex) {
+            throw new CampaignXmlParseException(ex);
+        }
+    }
+
+    private static void processPersonnelNodes(Campaign campaign, Node wn, Version version) {
+        LOGGER.info("Loading Personnel Nodes from XML...");
+
+        LocalPersonnel.loadFromXML(wn, campaign, version);
+
+        // <50.10 compatibility handler (moves old SPA-based Edge to current Attribute-based)
+        for (Person person : campaign.getAllPersonnel()) {
+            performEdgeConversion(campaign, person);
+        }
+
+        // this block verifies all in-use academies are valid
+        List<String> missingList = new ArrayList<>();
+
+        for (Person person : campaign.getAllPersonnel()) {
+            String academySet = person.getEduAcademySet();
+            String academyNameInSet = person.getEduAcademyNameInSet();
+
+            if ((academyNameInSet != null) && (EducationController.getAcademy(academySet, academyNameInSet) == null)) {
+                String message = academyNameInSet + " from set " + academySet;
+                if ((!missingList.contains(message)) && (!missingList.contains('\n' + message))) {
+                    missingList.add((missingList.isEmpty() ? "" : "\n") + message);
+                }
+            }
+        }
+
+        if (!missingList.isEmpty()) {
+            throw new NullPointerException(missingList.toString());
+        }
+
+        LOGGER.info("Load Personnel Nodes Complete!");
+    }
+
+    /**
+     * Migrates persons mid-journey on legacy saves (pre-location-tree) into real {@link CurrentLocation} nodes so they
+     * are handled by the location-aware travel code.
+     *
+     * <p>For each person in JOURNEY_TO_CAMPUS or JOURNEY_FROM_CAMPUS whose location chain contains
+     * no {@link CurrentLocation}, a new {@code CurrentLocation} is created at the target system (academy system for
+     * outbound, campaign current system for return). Transit time is set from the jump-point approach time so they
+     * arrive on planet within a day or two via normal {@code newDay()} processing.</p>
+     */
+    private static void migrateLegacyEducationTravel(Campaign campaign) {
+        // Phase 1: scan for persons that need migration. All per-person logging here is DEBUG
+        // so post-refactor saves (where everyone is skipped) produce no INFO noise.
+        List<Person> toMigrate = new ArrayList<>();
+        for (Person person : campaign.getPersonnel().values()) {
+            EducationStage stage = person.getEduEducationStage();
+            if (stage != EducationStage.JOURNEY_TO_CAMPUS
+                      && stage != EducationStage.JOURNEY_FROM_CAMPUS
+                      && stage != EducationStage.EDUCATION
+                      && stage != EducationStage.GRADUATING
+                      && stage != EducationStage.DROPPING_OUT) {
+                continue;
+            }
+
+            // Skip persons already queued for (but not yet dispatched) travel — processPendingTravel re-queued them
+            // and they still sit at their origin. Migrating would wrongly move them into a travel node/campus.
+            if (campaign.getCampaignLocationManager().isQueuedForTravel(person)) {
+                LOGGER.debug("migrateLegacyEducationTravel: skipping {} — queued in pendingTravel (stage={})",
+                      person.getFullTitle(), stage);
+                continue;
+            }
+
+            Academy academy = getAcademy(person.getEduAcademySet(), person.getEduAcademyNameInSet());
+            if (academy != null && academy.isHomeSchool()) {
+                LOGGER.debug("migrateLegacyEducationTravel: skipping {} — homeSchool", person.getFullTitle());
+                continue;
+            }
+
+            if (stage == EducationStage.EDUCATION
+                      || stage == EducationStage.GRADUATING
+                      || stage == EducationStage.DROPPING_OUT) {
+                // Skip persons whose parent was already set to a non-Campaign-Personnel node
+                // during XML parsing (e.g., reconnected by an earlier load step). Without this
+                // guard, resolveAcademySystemId may return the wrong system for multi-location
+                // academies, creating a duplicate campus and displacing the person.
+                ILocation parentLocation = person.getParentLocation();
+                if (parentLocation != null
+                          && !(parentLocation instanceof LocalPersonnel personnel
+                                     && personnel.getParentLocation() instanceof Detachment)) {
+                    LOGGER.debug("migrateLegacyEducationTravel: skipping {} — already reconnected (stage={})",
+                          person.getFullTitle(), stage);
+                    continue;
+                }
+                // If a FixedLocation campus already holds this person's ID (post-refactor save),
+                // reconnectPersonsToTravelLocations will handle them.
+                if (hasFixedCampusPendingFor(campaign, person)) {
+                    LOGGER.debug(
+                          "migrateLegacyEducationTravel: skipping {} — pending in FixedLocation campus (stage={})",
+                          person.getFullTitle(),
+                          stage);
+                    continue;
+                }
+            } else {
+                // Journey stages: skip if a travel node already holds this person's pending ID
+                // (post-refactor save) — reconnectPersonsToTravelLocations will place them correctly.
+                if (hasTravelNodePendingFor(campaign, person)) {
+                    LOGGER.debug("migrateLegacyEducationTravel: skipping {} — pending in travel node (stage={})",
+                          person.getFullTitle(), stage);
+                    continue;
+                }
+            }
+
+            LOGGER.debug("migrateLegacyEducationTravel: {} needs migration (stage={}, academy='{}', set='{}')",
+                  person.getFullTitle(), stage, person.getEduAcademyNameInSet(), person.getEduAcademySet());
+            toMigrate.add(person);
+        }
+
+        // Phase 2: migrate. Only runs (and only logs at INFO) when legacy persons are found.
+        if (toMigrate.isEmpty()) {
+            LOGGER.debug("migrateLegacyEducationTravel: no persons need legacy migration");
+            return;
+        }
+
+        LOGGER.info("migrateLegacyEducationTravel: {} persons require legacy migration", toMigrate.size());
+        int campusMigrated = 0;
+        int travelMigrated = 0;
+
+        for (Person person : toMigrate) {
+            EducationStage stage = person.getEduEducationStage();
+
+            if (stage == EducationStage.EDUCATION
+                      || stage == EducationStage.GRADUATING
+                      || stage == EducationStage.DROPPING_OUT) {
+                String systemId = resolveAcademySystemId(campaign, person);
+                if (systemId == null) {
+                    LOGGER.warn("migrateLegacyEducationTravel: could not resolve academy system for {} (stage={})"
+                                      + " — skipping campus placement", person.getFullTitle(), stage);
+                    continue;
+                }
+                AcademyCampusLocation campusLocation = campaign.getCampaignLocationManager()
+                                                             .getOrCreateCampusLocation(campaign,
+                                                                   person.getEduAcademySet(),
+                                                                   person.getEduAcademyNameInSet(),
+                                                                   systemId);
+                if (campusLocation != null) {
+                    LOGGER.info("migrateLegacyEducationTravel: placed {} at campus '{}' in system {}",
+                          person.getFullTitle(), person.getEduAcademyNameInSet(), systemId);
+                    person.setParent(campusLocation.getPersonnel());
+                    campusMigrated++;
+                } else {
+                    LOGGER.warn("migrateLegacyEducationTravel: getOrCreateCampusLocation returned null for {}"
+                                      + " (academy='{}', system='{}') — skipping", person.getFullTitle(),
+                          person.getEduAcademyNameInSet(), systemId);
+                }
+                continue;
+            }
+
+            // Journey stages
+            String systemId = resolveAcademySystemId(campaign, person);
+            if (systemId == null) {
+                LOGGER.warn("migrateLegacyEducationTravel: could not resolve academy system for {} (stage={})"
+                                  + " — skipping travel node creation", person.getFullTitle(), stage);
+                continue;
+            }
+            PlanetarySystem targetSystem = campaign.getSystemById(systemId);
+            if (targetSystem == null) {
+                LOGGER.warn("migrateLegacyEducationTravel: system '{}' not found for {} (stage={})"
+                                  + " — skipping travel node creation", systemId, person.getFullTitle(), stage);
+                continue;
+            }
+
+            double transitTime = Math.max(0, person.getEduJourneyTime() - person.getEduDaysOfTravel());
+            LOGGER.info(
+                  "migrateLegacyEducationTravel: creating travel node for {} (stage={}, system={}, transitTime={} days)",
+                  person.getFullTitle(),
+                  stage,
+                  targetSystem.getId(),
+                  transitTime);
+
+            CurrentLocation travelLocation = new CurrentLocation(targetSystem, transitTime);
+            AcademyCampusLocation campusLocation = campaign.getCampaignLocationManager()
+                                                         .getOrCreateCampusLocation(campaign,
+                                                               person.getEduAcademySet(),
+                                                               person.getEduAcademyNameInSet(),
+                                                               systemId);
+            if (campusLocation != null) {
+                LOGGER.info("migrateLegacyEducationTravel: parenting travel node under campus '{}' for {}",
+                      person.getEduAcademyNameInSet(), person.getFullTitle());
+                travelLocation.setParent(campusLocation);
+            } else if (stage == EducationStage.JOURNEY_FROM_CAMPUS) {
+                LOGGER.info("migrateLegacyEducationTravel: no campus found for {} (JOURNEY_FROM_CAMPUS)"
+                                  + " — parenting travel node under the main force", person.getFullTitle());
+                travelLocation.setParent(campaign.getPlayerForce().getForceDetachment());
+            }
+            person.setParent(travelLocation);
+            campaign.getCampaignLocationManager().addLocation(travelLocation);
+            travelMigrated++;
+        }
+
+        LOGGER.info("migrateLegacyEducationTravel: complete — {} placed at campus, {} given travel nodes",
+              campusMigrated, travelMigrated);
     }
 
     private static void processCombatTeamNodes(Campaign campaign, Node workingNode) {
@@ -1616,36 +1136,25 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
         LOGGER.info("Load of Formation Organization complete!");
     }
 
-    private static void processPersonnelNodes(Campaign campaign, Node wn, Version version) {
-        LOGGER.info("Loading Personnel Nodes from XML...");
-
-        Personnel.loadFromXML(wn, campaign, version);
-
-        // <50.10 compatibility handler (moves old SPA-based Edge to current Attribute-based)
-        for (Person person : campaign.getAllPersonnel()) {
-            performEdgeConversion(campaign, person);
-        }
-
-        // this block verifies all in-use academies are valid
-        List<String> missingList = new ArrayList<>();
-
-        for (Person person : campaign.getAllPersonnel()) {
-            String academySet = person.getEduAcademySet();
-            String academyNameInSet = person.getEduAcademyNameInSet();
-
-            if ((academyNameInSet != null) && (EducationController.getAcademy(academySet, academyNameInSet) == null)) {
-                String message = academyNameInSet + " from set " + academySet;
-                if ((!missingList.contains(message)) && (!missingList.contains('\n' + message))) {
-                    missingList.add((missingList.isEmpty() ? "" : "\n") + message);
+    /**
+     * After {@link #postProcessParts} wires up unit references, parts that belong to base-hangar units are still
+     * locationNode-parented to the campaign warehouse (where they were loaded). Move them to the correct base warehouse
+     * so that {@link Part#getWarehouse()} returns the local warehouse for that base, keeping spare-part searches and
+     * fix-button availability scoped to the base the unit is stationed at.
+     */
+    private static void rehomeBaseHangarUnitParts(Campaign campaign) {
+        for (PlayerBase base : campaign.getCampaignLocationManager().getPlayerBases()) {
+            LocalWarehouse baseWarehouse = base.getBaseWarehouse();
+            base.getBaseHangar().forEachUnit(unit -> {
+                for (Part part : unit.getParts()) {
+                    LocalWarehouse current = part.getWarehouse();
+                    if (current != baseWarehouse) {
+                        current.removePart(part);
+                        baseWarehouse.addPart(part);
+                    }
                 }
-            }
+            });
         }
-
-        if (!missingList.isEmpty()) {
-            throw new NullPointerException(missingList.toString());
-        }
-
-        LOGGER.info("Load Personnel Nodes Complete!");
     }
 
     private static void performEdgeConversion(Campaign campaign, Person person) {
@@ -1940,154 +1449,192 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
         }
     }
 
-    /**
-     * Migrates persons mid-journey on legacy saves (pre-location-tree) into real {@link CurrentLocation} nodes so they
-     * are handled by the location-aware travel code.
-     *
-     * <p>For each person in JOURNEY_TO_CAMPUS or JOURNEY_FROM_CAMPUS whose location chain contains
-     * no {@link CurrentLocation}, a new {@code CurrentLocation} is created at the target system (academy system for
-     * outbound, campaign current system for return). Transit time is set from the jump-point approach time so they
-     * arrive on planet within a day or two via normal {@code newDay()} processing.</p>
-     */
-    private static void migrateLegacyEducationTravel(Campaign campaign) {
-        // Phase 1: scan for persons that need migration. All per-person logging here is DEBUG
-        // so post-refactor saves (where everyone is skipped) produce no INFO noise.
-        List<Person> toMigrate = new ArrayList<>();
-        for (Person person : campaign.getPersonnel().values()) {
-            EducationStage stage = person.getEduEducationStage();
-            if (stage != EducationStage.JOURNEY_TO_CAMPUS
-                      && stage != EducationStage.JOURNEY_FROM_CAMPUS
-                      && stage != EducationStage.EDUCATION
-                      && stage != EducationStage.GRADUATING
-                      && stage != EducationStage.DROPPING_OUT) {
+    private static void postProcessWarehouse(LocalWarehouse warehouse, Campaign retVal, List<Part> removeParts) {
+        Map<Integer, Part> replaceParts = new HashMap<>();
+        for (Part prt : warehouse.getParts()) {
+            prt.fixReferences(retVal);
+
+            // Remove fundamentally broken equipment parts
+            if (((prt instanceof EquipmentPart) && ((EquipmentPart) prt).getType() == null) ||
+                      ((prt instanceof MissingEquipmentPart) && ((MissingEquipmentPart) prt).getType() == null)) {
+                LOGGER.warn("Could not find matching EquipmentType for part {}", prt.getName());
+                removeParts.add(prt);
                 continue;
             }
 
-            // Skip persons already queued for (but not yet dispatched) travel — processPendingTravel re-queued them
-            // and they still sit at their origin. Migrating would wrongly move them into a travel node/campus.
-            if (campaign.getCampaignLocationManager().isQueuedForTravel(person)) {
-                LOGGER.debug("migrateLegacyEducationTravel: skipping {} — queued in pendingTravel (stage={})",
-                      person.getFullTitle(), stage);
-                continue;
+            // deal with equipment parts that are now sub typed
+            if (isLegacyMASC(prt) && prt instanceof EquipmentPart equipmentPart) {
+                Part replacement = new MASC(prt.getUnitTonnage(),
+                      equipmentPart.getType(),
+                      equipmentPart.getEquipmentNum(),
+                      retVal,
+                      0,
+                      prt.isOmniPodded());
+                replacement.setId(prt.getId());
+                replacement.setUnit(prt.getUnit());
+                replaceParts.put(prt.getId(), replacement);
             }
 
-            Academy academy = getAcademy(person.getEduAcademySet(), person.getEduAcademyNameInSet());
-            if (academy != null && academy.isHomeSchool()) {
-                LOGGER.debug("migrateLegacyEducationTravel: skipping {} — homeSchool", person.getFullTitle());
-                continue;
+            if (isLegacyMissingMASC(prt) && prt instanceof MissingEquipmentPart equipmentPart) {
+                Part replacement = new MissingMASC(prt.getUnitTonnage(),
+                      equipmentPart.getType(),
+                      equipmentPart.getEquipmentNum(),
+                      retVal,
+                      prt.getTonnage(),
+                      0,
+                      prt.isOmniPodded());
+                replacement.setId(prt.getId());
+                replacement.setUnit(prt.getUnit());
+                replaceParts.put(prt.getId(), replacement);
             }
-
-            if (stage == EducationStage.EDUCATION
-                      || stage == EducationStage.GRADUATING
-                      || stage == EducationStage.DROPPING_OUT) {
-                // Skip persons whose parent was already set to a non-Campaign-Personnel node
-                // during XML parsing (e.g., reconnected by an earlier load step). Without this
-                // guard, resolveAcademySystemId may return the wrong system for multi-location
-                // academies, creating a duplicate campus and displacing the person.
-                ILocation parentLocation = person.getParentLocation();
-                if (parentLocation != null
-                          && !(parentLocation instanceof Personnel personnel
-                                     && personnel.getParentLocation() instanceof Detachment)) {
-                    LOGGER.debug("migrateLegacyEducationTravel: skipping {} — already reconnected (stage={})",
-                          person.getFullTitle(), stage);
-                    continue;
-                }
-                // If a FixedLocation campus already holds this person's ID (post-refactor save),
-                // reconnectPersonsToTravelLocations will handle them.
-                if (hasFixedCampusPendingFor(campaign, person)) {
-                    LOGGER.debug("migrateLegacyEducationTravel: skipping {} — pending in FixedLocation campus (stage={})",
-                          person.getFullTitle(), stage);
-                    continue;
-                }
-            } else {
-                // Journey stages: skip if a travel node already holds this person's pending ID
-                // (post-refactor save) — reconnectPersonsToTravelLocations will place them correctly.
-                if (hasTravelNodePendingFor(campaign, person)) {
-                    LOGGER.debug("migrateLegacyEducationTravel: skipping {} — pending in travel node (stage={})",
-                          person.getFullTitle(), stage);
-                    continue;
-                }
-            }
-
-            LOGGER.debug("migrateLegacyEducationTravel: {} needs migration (stage={}, academy='{}', set='{}')",
-                  person.getFullTitle(), stage, person.getEduAcademyNameInSet(), person.getEduAcademySet());
-            toMigrate.add(person);
         }
 
-        // Phase 2: migrate. Only runs (and only logs at INFO) when legacy persons are found.
-        if (toMigrate.isEmpty()) {
-            LOGGER.debug("migrateLegacyEducationTravel: no persons need legacy migration");
-            return;
+        // Replace parts that need to be replaced
+        for (Entry<Integer, Part> entry : replaceParts.entrySet()) {
+            int partId = entry.getKey();
+            Part oldPart = warehouse.getPart(partId);
+            if (oldPart != null) {
+                warehouse.removePart(oldPart);
+            }
+            warehouse.addPart(entry.getValue());
         }
 
-        LOGGER.info("migrateLegacyEducationTravel: {} persons require legacy migration", toMigrate.size());
-        int campusMigrated = 0;
-        int travelMigrated = 0;
+        // After replacing parts, go back through and remove more broken parts
+        for (Part prt : warehouse.getParts()) {
+            // deal with the Weapon as Heat Sink problem from earlier versions
+            if ((prt instanceof HeatSink) && !prt.getName().contains("Heat Sink")) {
+                removeParts.add(prt);
+                continue;
+            }
 
-        for (Person person : toMigrate) {
-            EducationStage stage = person.getEduEducationStage();
+            Unit u = prt.getUnit();
+            if (u != null) {
+                // get rid of any equipment parts without types, locations or mounted
+                if (prt instanceof EquipmentPart ePart) {
 
-            if (stage == EducationStage.EDUCATION
-                      || stage == EducationStage.GRADUATING
-                      || stage == EducationStage.DROPPING_OUT) {
-                String systemId = resolveAcademySystemId(campaign, person);
-                if (systemId == null) {
-                    LOGGER.warn("migrateLegacyEducationTravel: could not resolve academy system for {} (stage={})"
-                          + " — skipping campus placement", person.getFullTitle(), stage);
+                    // Null Type... parsing failure
+                    if (ePart.getType() == null) {
+                        removeParts.add(prt);
+                        continue;
+                    }
+
+                    Mounted<?> m = u.getEntity().getEquipment(ePart.getEquipmentNum());
+
+                    // Remove equipment parts missing mounts
+                    if (m == null) {
+                        removeParts.add(prt);
+                        continue;
+                    }
+
+                    // Remove equipment parts without a valid location, unless they're an ammo bin
+                    // as they may not have a location
+                    if ((m.getLocation() == Entity.LOC_NONE) && !(prt instanceof AmmoBin)) {
+                        removeParts.add(prt);
+                        continue;
+                    }
+
+                    // Remove existing duplicate parts.
+                    Part duplicatePart = u.getPartForEquipmentNum(ePart.getEquipmentNum(), prt.getLocation());
+                    if ((duplicatePart instanceof EquipmentPart) &&
+                              ePart.getType().equals(((EquipmentPart) duplicatePart).getType())) {
+                        removeParts.add(prt);
+                        continue;
+                    }
+                }
+                if (prt instanceof MissingEquipmentPart) {
+                    Mounted<?> m = u.getEntity().getEquipment(((MissingEquipmentPart) prt).getEquipmentNum());
+
+                    // Remove equipment parts missing mounts
+                    if (m == null) {
+                        removeParts.add(prt);
+                        continue;
+                    }
+
+                    // Remove missing equipment parts without a valid location, unless they're an
+                    // ammo bin as they may not have a location
+                    if ((m.getLocation() == Entity.LOC_NONE) && !(prt instanceof MissingAmmoBin)) {
+                        removeParts.add(prt);
+                        continue;
+                    }
+                }
+
+                // if the type is a BayWeapon, remove
+                if ((prt instanceof EquipmentPart) && (((EquipmentPart) prt).getType() instanceof BayWeapon)) {
+                    removeParts.add(prt);
                     continue;
                 }
-                AcademyCampusLocation campusLocation = campaign.getCampaignLocationManager().getOrCreateCampusLocation(campaign, 
-                      person.getEduAcademySet(), person.getEduAcademyNameInSet(), systemId);
-                if (campusLocation != null) {
-                    LOGGER.info("migrateLegacyEducationTravel: placed {} at campus '{}' in system {}",
-                          person.getFullTitle(), person.getEduAcademyNameInSet(), systemId);
-                    person.setParent(campusLocation.getPersonnel());
-                    campusMigrated++;
+
+                if ((prt instanceof MissingEquipmentPart) &&
+                          (((MissingEquipmentPart) prt).getType() instanceof BayWeapon)) {
+                    removeParts.add(prt);
+                    continue;
+                }
+
+                // if actuators on units have no location (on version 1.23 and
+                // earlier) then remove them and let initializeParts (called
+                // later) create new ones
+                if ((prt instanceof MekActuator) && (prt.getLocation() == Entity.LOC_NONE)) {
+                    removeParts.add(prt);
+                } else if ((prt instanceof MissingMekActuator) && (prt.getLocation() == Entity.LOC_NONE)) {
+                    removeParts.add(prt);
+                } else if (((u.getEntity() instanceof SmallCraft) || (u.getEntity() instanceof Jumpship)) &&
+                                 ((prt instanceof EnginePart) || (prt instanceof MissingEnginePart))) {
+                    // units from earlier versions might have the wrong kind of engine
+                    removeParts.add(prt);
                 } else {
-                    LOGGER.warn("migrateLegacyEducationTravel: getOrCreateCampusLocation returned null for {}"
-                          + " (academy='{}', system='{}') — skipping", person.getFullTitle(),
-                          person.getEduAcademyNameInSet(), systemId);
+                    u.addPart(prt);
                 }
-                continue;
             }
 
-            // Journey stages
-            String systemId = resolveAcademySystemId(campaign, person);
-            if (systemId == null) {
-                LOGGER.warn("migrateLegacyEducationTravel: could not resolve academy system for {} (stage={})"
-                      + " — skipping travel node creation", person.getFullTitle(), stage);
-                continue;
-            }
-            PlanetarySystem targetSystem = campaign.getSystemById(systemId);
-            if (targetSystem == null) {
-                LOGGER.warn("migrateLegacyEducationTravel: system '{}' not found for {} (stage={})"
-                      + " — skipping travel node creation", systemId, person.getFullTitle(), stage);
-                continue;
+            // deal with true values for sensor and life support on non-Mek heads
+            if ((prt instanceof MekLocation) && (((MekLocation) prt).getLoc() != Mek.LOC_HEAD)) {
+                ((MekLocation) prt).setSensors(false);
+                ((MekLocation) prt).setLifeSupport(false);
             }
 
-            double transitTime = Math.max(0, person.getEduJourneyTime() - person.getEduDaysOfTravel());
-            LOGGER.info("migrateLegacyEducationTravel: creating travel node for {} (stage={}, system={}, transitTime={} days)",
-                  person.getFullTitle(), stage, targetSystem.getId(), transitTime);
-
-            CurrentLocation travelLocation = new CurrentLocation(targetSystem, transitTime);
-            AcademyCampusLocation campusLocation = campaign.getCampaignLocationManager().getOrCreateCampusLocation(campaign, 
-                  person.getEduAcademySet(), person.getEduAcademyNameInSet(), systemId);
-            if (campusLocation != null) {
-                LOGGER.info("migrateLegacyEducationTravel: parenting travel node under campus '{}' for {}",
-                      person.getEduAcademyNameInSet(), person.getFullTitle());
-                travelLocation.setParent(campusLocation);
-            } else if (stage == EducationStage.JOURNEY_FROM_CAMPUS) {
-                LOGGER.info("migrateLegacyEducationTravel: no campus found for {} (JOURNEY_FROM_CAMPUS)"
-                                  + " — parenting travel node under the main force", person.getFullTitle());
-                travelLocation.setParent(campaign.getPlayerForce().getForceDetachment());
+            if (prt instanceof MissingPart) {
+                // Missing Parts should only exist on units, but there have
+                // been cases where they continue to float around outside of units
+                // so this should clean that up
+                if (null == u) {
+                    removeParts.add(prt);
+                } else {
+                    // run this to make sure that slots for missing parts are set as
+                    // unrepairable
+                    // because they will not be in missing locations
+                    prt.updateConditionFromPart();
+                }
             }
-            person.setParent(travelLocation);
-            campaign.getCampaignLocationManager().addLocation(travelLocation);
-            travelMigrated++;
+
+            // old versions didn't distinguish tank engines
+            if ((prt instanceof EnginePart) && prt.getName().contains("Vehicle")) {
+                boolean isHover = null != u &&
+                                        u.getEntity().getMovementMode() == EntityMovementMode.HOVER &&
+                                        u.getEntity() instanceof Tank;
+                ((EnginePart) prt).fixTankFlag(isHover);
+            }
+
+            // clan flag might not have been properly set in early versions
+            if ((prt instanceof EnginePart) &&
+                      prt.getName().contains("(Clan") &&
+                      (prt.getTechBase() != TechBase.CLAN)) {
+                ((EnginePart) prt).fixClanFlag();
+            }
+            if ((prt instanceof MissingEnginePart) && (null != u) && (u.getEntity() instanceof Tank)) {
+                boolean isHover = u.getEntity().getMovementMode() == EntityMovementMode.HOVER;
+                ((MissingEnginePart) prt).fixTankFlag(isHover);
+            }
+            if ((prt instanceof MissingEnginePart) &&
+                      prt.getName().contains("(Clan") &&
+                      (prt.getTechBase() != TechBase.CLAN)) {
+                ((MissingEnginePart) prt).fixClanFlag();
+            }
+
+            // Spare Ammo bins are useless
+            if ((prt instanceof AmmoBin) && prt.isSpare()) {
+                removeParts.add(prt);
+            }
         }
-
-        LOGGER.info("migrateLegacyEducationTravel: complete — {} placed at campus, {} given travel nodes",
-              campusMigrated, travelMigrated);
     }
 
     private static boolean hasFixedCampusPendingFor(Campaign campaign, Person person) {
@@ -2602,28 +2149,6 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
         LOGGER.info("Load Part Nodes Complete!");
     }
 
-    /**
-     * After {@link #postProcessParts} wires up unit references, parts that belong to base-hangar
-     * units are still locationNode-parented to the campaign warehouse (where they were loaded).
-     * Move them to the correct base warehouse so that {@link Part#getWarehouse()} returns the
-     * local warehouse for that base, keeping spare-part searches and fix-button availability
-     * scoped to the base the unit is stationed at.
-     */
-    private static void rehomeBaseHangarUnitParts(Campaign campaign) {
-        for (PlayerBase base : campaign.getCampaignLocationManager().getPlayerBases()) {
-            Warehouse baseWarehouse = base.getBaseWarehouse();
-            base.getBaseHangar().forEachUnit(unit -> {
-                for (Part part : unit.getParts()) {
-                    Warehouse current = part.getWarehouse();
-                    if (current != baseWarehouse) {
-                        current.removePart(part);
-                        baseWarehouse.addPart(part);
-                    }
-                }
-            });
-        }
-    }
-
     private static void postProcessParts(Campaign retVal, Version version) {
         List<Part> removeParts = new ArrayList<>();
         postProcessWarehouse(retVal.getWarehouse(), retVal, removeParts);
@@ -2636,192 +2161,678 @@ public record CampaignXmlParser(InputStream is, MekHQ app) {
         }
     }
 
-    private static void postProcessWarehouse(Warehouse warehouse, Campaign retVal, List<Part> removeParts) {
-        Map<Integer, Part> replaceParts = new HashMap<>();
-        for (Part prt : warehouse.getParts()) {
-            prt.fixReferences(retVal);
+    /**
+     * This will fixup unit-tech problems seen in some save games, such as techs having been double-assigned or being
+     * assigned to mothballed units.
+     */
+    private void fixupUnitTechProblems(Campaign retVal) {
+        // Cleanup problems with techs and units
+        for (Person tech : retVal.getTechs()) {
+            for (Unit u : new ArrayList<>(tech.getTechUnits())) {
+                String reason = null;
+                String unitDesc = u.getId().toString();
+                if (null == u.getTech()) {
+                    reason = "was not referenced by unit";
+                    u.setTech(tech);
+                } else if (u.isMothballed()) {
+                    reason = "referenced mothballed unit";
+                    unitDesc = u.getName();
+                    tech.removeTechUnit(u);
+                } else if (u.getTech() != null && !tech.getId().equals(u.getTech().getId())) {
+                    reason = String.format("referenced tech %s's maintained unit", u.getTech().getFullName());
+                    unitDesc = u.getName();
+                    tech.removeTechUnit(u);
+                }
+                if (null != reason) {
+                    LOGGER.warn("Tech {} {} {} (fixed)", tech.getFullName(), reason, unitDesc);
+                }
+            }
+        }
+    }
 
-            // Remove fundamentally broken equipment parts
-            if (((prt instanceof EquipmentPart) && ((EquipmentPart) prt).getType() == null) ||
-                      ((prt instanceof MissingEquipmentPart) && ((MissingEquipmentPart) prt).getType() == null)) {
-                LOGGER.warn("Could not find matching EquipmentType for part {}", prt.getName());
-                removeParts.add(prt);
+    /**
+     * Designed to create a campaign object from an input stream containing an XML structure.
+     *
+     * @return The created Campaign object, or null if there was a problem.
+     *
+     * @throws CampaignXmlParseException Thrown when there was a problem parsing the CPNX file
+     * @throws NullEntityException       Thrown when an entity is referenced but cannot be loaded or found
+     */
+    public Campaign parse() throws CampaignXmlParseException, NullEntityException {
+        LOGGER.info("Starting load of campaign file from XML...");
+        // Initialize variables.
+        Campaign campaign = CampaignFactory.createCampaign();
+        campaign.setGUI(app.getCampaigngui());
+
+        Document xmlDoc;
+
+        try {
+            xmlDoc = MHQXMLUtility.parseDocument(is);
+        } catch (Exception ex) {
+            LOGGER.error("", ex);
+            throw new CampaignXmlParseException(ex);
+        }
+
+        Element campaignEle = xmlDoc.getDocumentElement();
+        NodeList nl = campaignEle.getChildNodes();
+
+        // Get rid of empty text nodes and adjacent text nodes...
+        // Stupid weird parsing of XML. At least this cleans it up.
+        campaignEle.normalize();
+
+        final Version version = new Version(campaignEle.getAttribute("version"));
+        if (version.is("0.0.0")) {
+            throw new CampaignXmlParseException(String.format("Illegal version of %s failed to parse",
+                  campaignEle.getAttribute("version")));
+        }
+        // Confirm the campaign version is compatible with the current MekHQ version. This function lives here so that
+        // we don't attempt to load incompatible campaigns and risk running into errors that might prevent the player
+        // from viewing this dialog
+        new MilestoneUpgradePathDialog(app, campaign, version);
+
+        // Assuming there is no upgrade path, we set version and continue parsing the campaign.
+        campaign.setVersion(version);
+
+        // Indicates whether new units were written to disk while
+        // loading the Campaign file. If so, we need to kick back off loading
+        // all the unit data from disk.
+        boolean reloadUnitData = false;
+
+        // we need to iterate through three times, the first time to collect
+        // any custom units that might not be written yet
+        for (int x = 0; x < nl.getLength(); x++) {
+            Node wn = nl.item(x);
+
+            if (!wn.getParentNode().equals(campaignEle)) {
                 continue;
             }
 
-            // deal with equipment parts that are now sub typed
-            if (isLegacyMASC(prt) && prt instanceof EquipmentPart equipmentPart) {
-                Part replacement = new MASC(prt.getUnitTonnage(),
-                      equipmentPart.getType(),
-                      equipmentPart.getEquipmentNum(),
-                      retVal,
-                      0,
-                      prt.isOmniPodded());
-                replacement.setId(prt.getId());
-                replacement.setUnit(prt.getUnit());
-                replaceParts.put(prt.getId(), replacement);
-            }
+            int xc = wn.getNodeType();
 
-            if (isLegacyMissingMASC(prt) && prt instanceof MissingEquipmentPart equipmentPart) {
-                Part replacement = new MissingMASC(prt.getUnitTonnage(),
-                      equipmentPart.getType(),
-                      equipmentPart.getEquipmentNum(),
-                      retVal,
-                      prt.getTonnage(),
-                      0,
-                      prt.isOmniPodded());
-                replacement.setId(prt.getId());
-                replacement.setUnit(prt.getUnit());
-                replaceParts.put(prt.getId(), replacement);
+            if (xc == Node.ELEMENT_NODE) {
+                // This is what we really care about.
+                // All the meat of our document is in this node type, at this
+                // level.
+                // Okay, so what element is it?
+                String xn = wn.getNodeName();
+
+                if (xn.equalsIgnoreCase("info")) { // This is needed so that the campaign name gets set in campaign
+                    try {
+                        processInfoNode(campaign, wn, version);
+                    } catch (DOMException e) {
+                        throw new CampaignXmlParseException(e);
+                    }
+                } else if (xn.equalsIgnoreCase("custom")) {
+                    reloadUnitData |= processCustom(campaign, wn);
+                } else if (xn.equalsIgnoreCase("campaignOptions")) {
+                    campaign.setCampaignOptions(CampaignOptionsUnmarshaller.generateCampaignOptionsFromXml(wn,
+                          version));
+                } else if (xn.equalsIgnoreCase("gameOptions")) {
+                    campaign.getGameOptions().fillFromXML(wn.getChildNodes());
+                } else if (xn.equalsIgnoreCase(PlanetarySystemCampaignXmlIO.XML_TAG)) {
+                    processPlanetarySystemOverrides(campaign, wn);
+                }
             }
+            // If it's a text node or attribute or whatever at this level,
+            // it's probably white-space.
+            // We can safely ignore it even if it isn't, for now.
         }
 
-        // Replace parts that need to be replaced
-        for (Entry<Integer, Part> entry : replaceParts.entrySet()) {
-            int partId = entry.getKey();
-            Part oldPart = warehouse.getPart(partId);
-            if (oldPart != null) {
-                warehouse.removePart(oldPart);
-            }
-            warehouse.addPart(entry.getValue());
+        // Only reload unit data if we updated files on disk
+        if (reloadUnitData) {
+            MekSummaryCache.getInstance().loadMekData();
         }
 
-        // After replacing parts, go back through and remove more broken parts
-        for (Part prt : warehouse.getParts()) {
-            // deal with the Weapon as Heat Sink problem from earlier versions
-            if ((prt instanceof HeatSink) && !prt.getName().contains("Heat Sink")) {
-                removeParts.add(prt);
+        // the second time to check for any null entities
+        for (int x = 0; x < nl.getLength(); x++) {
+            Node wn = nl.item(x);
+
+            if (!wn.getParentNode().equals(campaignEle)) {
                 continue;
             }
 
-            Unit u = prt.getUnit();
-            if (u != null) {
-                // get rid of any equipment parts without types, locations or mounted
-                if (prt instanceof EquipmentPart ePart) {
+            int xc = wn.getNodeType();
 
-                    // Null Type... parsing failure
-                    if (ePart.getType() == null) {
-                        removeParts.add(prt);
-                        continue;
-                    }
+            if (xc == Node.ELEMENT_NODE) {
+                // This is what we really care about.
+                // All the meat of our document is in this node type, at this
+                // level.
+                // Okay, so what element is it?
+                String xn = wn.getNodeName();
 
-                    Mounted<?> m = u.getEntity().getEquipment(ePart.getEquipmentNum());
-
-                    // Remove equipment parts missing mounts
-                    if (m == null) {
-                        removeParts.add(prt);
-                        continue;
-                    }
-
-                    // Remove equipment parts without a valid location, unless they're an ammo bin
-                    // as they may not have a location
-                    if ((m.getLocation() == Entity.LOC_NONE) && !(prt instanceof AmmoBin)) {
-                        removeParts.add(prt);
-                        continue;
-                    }
-
-                    // Remove existing duplicate parts.
-                    Part duplicatePart = u.getPartForEquipmentNum(ePart.getEquipmentNum(), prt.getLocation());
-                    if ((duplicatePart instanceof EquipmentPart) &&
-                              ePart.getType().equals(((EquipmentPart) duplicatePart).getType())) {
-                        removeParts.add(prt);
-                        continue;
+                if (xn.equalsIgnoreCase("units")) {
+                    String missingList = checkUnits(wn);
+                    if (null != missingList) {
+                        throw new NullEntityException(missingList);
                     }
                 }
-                if (prt instanceof MissingEquipmentPart) {
-                    Mounted<?> m = u.getEntity().getEquipment(((MissingEquipmentPart) prt).getEquipmentNum());
+            }
+            // If it's a text node or attribute or whatever at this level,
+            // it's probably white-space.
+            // We can safely ignore it even if it isn't, for now.
+        }
 
-                    // Remove equipment parts missing mounts
-                    if (m == null) {
-                        removeParts.add(prt);
-                        continue;
+        boolean foundPersonnelMarket = false;
+        boolean foundContractMarket = false;
+        boolean foundUnitMarket = false;
+
+        // Saves made in 0.51.00 do not have a <location> but will have a <locations> with a single item.
+        boolean foundMainForceLocation = false;
+
+        // Pending travel references persons, units, parts, and bases, so it is resolved after those are all loaded.
+        Node pendingTravelNode = null;
+
+        // Okay, lets iterate through the children, eh?
+        for (int x = 0; x < nl.getLength(); x++) {
+            Node workingNode = nl.item(x);
+
+            if (!workingNode.getParentNode().equals(campaignEle)) {
+                continue;
+            }
+
+            int xc = workingNode.getNodeType();
+
+            if (xc == Node.ELEMENT_NODE) {
+                // This is what we really care about.
+                // All the meat of our document is in this node type, at this level.
+                // Okay, so what element is it?
+                String nodeName = workingNode.getNodeName();
+
+                if (nodeName.equalsIgnoreCase("pastVersions")) {
+                    processPastVersionNodes(campaign, workingNode);
+                } else if (nodeName.equalsIgnoreCase("randomSkillPreferences")) {
+                    campaign.setRandomSkillPreferences(RandomSkillPreferences.generateRandomSkillPreferencesFromXml(
+                          workingNode,
+                          version));
+                } else if (nodeName.equalsIgnoreCase("humanResources")) {
+                    campaign.setHumanResources(
+                          mekhq.campaign.ForceHumanResources.loadFromXML(workingNode, campaign, version));
+                } else if (nodeName.equalsIgnoreCase("parts")) {
+                    processPartNodes(campaign, workingNode, version);
+                } else if (nodeName.equalsIgnoreCase("personnel")) {
+                    // backward compat: old save without <humanResources> wrapper
+                    // TODO: Make this depending on campaign options
+                    // TODO: hoist registerAll out of this
+                    InjuryTypes.registerAll();
+                    processPersonnelNodes(campaign, workingNode, version);
+                } else if (nodeName.equalsIgnoreCase("units")) {
+                    processUnitNodes(campaign, workingNode, version);
+                } else if (nodeName.equalsIgnoreCase("missions")) {
+                    processMissionNodes(campaign, workingNode, version);
+                } else if (nodeName.equalsIgnoreCase("forces")) {
+                    processForces(campaign, workingNode, version);
+                } else if (nodeName.equalsIgnoreCase("formations")) {
+                    processFormations(campaign, workingNode, version);
+                } else if (nodeName.equalsIgnoreCase("finances")) {
+                    processFinances(campaign, workingNode);
+                } else if (nodeName.equalsIgnoreCase("locations")) {
+                    processLocations(campaign, workingNode);
+                } else if (nodeName.equalsIgnoreCase("playerBases")) {
+                    processPlayerBaseNodes(campaign, workingNode, version);
+                } else if (nodeName.equalsIgnoreCase("pendingTravel")) {
+                    pendingTravelNode = workingNode;
+                } else if (nodeName.equalsIgnoreCase("location")) {
+                    // Campaign's current location — written as a top-level tag in new saves;
+                    // same tag was used as the only location entry in pre-<locations>-list saves.
+                    campaign.setLocation(CurrentLocation.generateInstanceFromXML(workingNode, campaign));
+                    foundMainForceLocation = true;
+                } else if (nodeName.equalsIgnoreCase("locationNodeChildren")) {
+                    LocationNode.reconnectChildren(workingNode, campaign);
+                } else if (nodeName.equalsIgnoreCase("isAvoidingEmptySystems")) {
+                    campaign.setIsAvoidingEmptySystems(Boolean.parseBoolean(workingNode.getTextContent().trim()));
+                } else if (nodeName.equalsIgnoreCase("skillTypes")) {
+                    processSkillTypeNodes(workingNode, version);
+                } else if (nodeName.equalsIgnoreCase("specialAbilities")) {
+                    processSpecialAbilityNodes(campaign, workingNode, version);
+                } else if (nodeName.equalsIgnoreCase("storyArc")) {
+                    processStoryArcNodes(campaign, workingNode, version);
+                } else if (nodeName.equalsIgnoreCase("kills")) {
+                    processKillNodes(campaign, workingNode, version);
+                } else if (nodeName.equalsIgnoreCase("shoppingList")) {
+                    campaign.setShoppingList(ForceShoppingList.generateInstanceFromXML(workingNode, campaign, version));
+                } else if (nodeName.equalsIgnoreCase("personnelMarket")) {
+                    campaign.setPersonnelMarket(PersonnelMarket.generateInstanceFromXML(workingNode,
+                          campaign,
+                          version));
+                    foundPersonnelMarket = true;
+                } else if (nodeName.equalsIgnoreCase("contractMarket")) {
+                    // CAW: implicit DEPENDS-ON to the <missions> node
+                    campaign.setContractMarket(AbstractContractMarket.generateInstanceFromXML(workingNode,
+                          campaign,
+                          version));
+                    foundContractMarket = true;
+                } else if (nodeName.equalsIgnoreCase("unitMarket")) {
+                    // Windchild: implicit DEPENDS ON to the <campaignOptions> nodes
+                    campaign.setUnitMarket(campaign.getCampaignOptions().getUnitMarketMethod().getUnitMarket());
+                    campaign.getUnitMarket().fillFromXML(workingNode, campaign, version);
+                    foundUnitMarket = true;
+                } else if (nodeName.equalsIgnoreCase("lances") || nodeName.equalsIgnoreCase("combatTeams")) {
+                    processCombatTeamNodes(campaign, workingNode);
+                } else if (nodeName.equalsIgnoreCase("retirementDefectionTracker")) {
+                    campaign.setRetirementDefectionTracker(RetirementDefectionTracker.generateInstanceFromXML(
+                          workingNode,
+                          campaign));
+                } else if (nodeName.equalsIgnoreCase("personnelWhoAdvancedInXP")) {
+                    campaign.setPersonnelWhoAdvancedInXP(processPersonnelWhoAdvancedInXP(workingNode, campaign));
+                } else if (nodeName.equalsIgnoreCase("automatedMothballUnits")) {
+                    campaign.setAutomatedMothballUnits(processAutomatedMothballNodes(workingNode));
+                } else if (nodeName.equalsIgnoreCase("autoResolveBehaviorSettings")) {
+                    campaign.setAutoResolveBehaviorSettings(firstNonNull(BehaviorSettingsFactory.getInstance()
+                                                                               .getBehavior(workingNode.getTextContent()),
+                          BehaviorSettingsFactory.getInstance().DEFAULT_BEHAVIOR));
+                } else if (nodeName.equalsIgnoreCase("customPlanetaryEvents")) {
+                    //TODO: deal with this
+                    updatePlanetaryEventsFromXML(workingNode);
+                } else if (nodeName.equalsIgnoreCase("partsInUse")) {
+                    processPartsInUse(campaign, workingNode, version);
+                } else if (nodeName.equalsIgnoreCase("temporaryPrisonerCapacity")) {
+                    campaign.setTemporaryPrisonerCapacity(MathUtility.parseInt(workingNode.getTextContent().trim()));
+                } else if (nodeName.equalsIgnoreCase("processProcurement")) {
+                    campaign.setProcessProcurement(Boolean.parseBoolean(workingNode.getTextContent().trim()));
+                }
+            }
+            // If it's a text node or attribute or whatever at this level,
+            // it's probably white-space.
+            // We can safely ignore it even if it isn't, for now.
+        }
+
+        // Okay, after we've gone through all the nodes and constructed the
+        // Campaign object...
+        final CampaignOptions options = campaign.getCampaignOptions();
+
+        // We need to do a post-process pass to restore a number of references.
+        // Fix any Person ID References
+        PersonIdReference.fixPersonIdReferences(campaign);
+
+        // Fixup any ghost kills
+        cleanupGhostKills(campaign);
+
+        // Update the Personnel Modules
+        campaign.setDivorce(options.getRandomDivorceMethod().getMethod(options));
+        campaign.setMarriage(options.getRandomMarriageMethod().getMethod(options));
+        campaign.setProcreation(options.getRandomProcreationMethod().getMethod(options));
+
+        long timestamp = System.currentTimeMillis();
+
+        // loop through forces to set force id
+        for (Formation f : campaign.getAllFormations()) {
+            Scenario s = campaign.getScenario(f.getScenarioId());
+            if (null != s && (null == f.getParentFormation() || !f.getParentFormation().isDeployed())) {
+                s.addForces(f.getId());
+            }
+            // some units may need force id set for backwards compatibility
+            // some may also need scenario id set
+            for (UUID uid : f.getUnits()) {
+                Unit u = campaign.getUnit(uid);
+                if (null != u) {
+                    u.setFormationId(f.getId());
+                    if (f.isDeployed()) {
+                        u.setScenarioId(f.getScenarioId());
                     }
-
-                    // Remove missing equipment parts without a valid location, unless they're an
-                    // ammo bin as they may not have a location
-                    if ((m.getLocation() == Entity.LOC_NONE) && !(prt instanceof MissingAmmoBin)) {
-                        removeParts.add(prt);
-                        continue;
-                    }
                 }
-
-                // if the type is a BayWeapon, remove
-                if ((prt instanceof EquipmentPart) && (((EquipmentPart) prt).getType() instanceof BayWeapon)) {
-                    removeParts.add(prt);
-                    continue;
-                }
-
-                if ((prt instanceof MissingEquipmentPart) &&
-                          (((MissingEquipmentPart) prt).getType() instanceof BayWeapon)) {
-                    removeParts.add(prt);
-                    continue;
-                }
-
-                // if actuators on units have no location (on version 1.23 and
-                // earlier) then remove them and let initializeParts (called
-                // later) create new ones
-                if ((prt instanceof MekActuator) && (prt.getLocation() == Entity.LOC_NONE)) {
-                    removeParts.add(prt);
-                } else if ((prt instanceof MissingMekActuator) && (prt.getLocation() == Entity.LOC_NONE)) {
-                    removeParts.add(prt);
-                } else if (((u.getEntity() instanceof SmallCraft) || (u.getEntity() instanceof Jumpship)) &&
-                                 ((prt instanceof EnginePart) || (prt instanceof MissingEnginePart))) {
-                    // units from earlier versions might have the wrong kind of engine
-                    removeParts.add(prt);
-                } else {
-                    u.addPart(prt);
-                }
-            }
-
-            // deal with true values for sensor and life support on non-Mek heads
-            if ((prt instanceof MekLocation) && (((MekLocation) prt).getLoc() != Mek.LOC_HEAD)) {
-                ((MekLocation) prt).setSensors(false);
-                ((MekLocation) prt).setLifeSupport(false);
-            }
-
-            if (prt instanceof MissingPart) {
-                // Missing Parts should only exist on units, but there have
-                // been cases where they continue to float around outside of units
-                // so this should clean that up
-                if (null == u) {
-                    removeParts.add(prt);
-                } else {
-                    // run this to make sure that slots for missing parts are set as
-                    // unrepairable
-                    // because they will not be in missing locations
-                    prt.updateConditionFromPart();
-                }
-            }
-
-            // old versions didn't distinguish tank engines
-            if ((prt instanceof EnginePart) && prt.getName().contains("Vehicle")) {
-                boolean isHover = null != u &&
-                                        u.getEntity().getMovementMode() == EntityMovementMode.HOVER &&
-                                        u.getEntity() instanceof Tank;
-                ((EnginePart) prt).fixTankFlag(isHover);
-            }
-
-            // clan flag might not have been properly set in early versions
-            if ((prt instanceof EnginePart) &&
-                      prt.getName().contains("(Clan") &&
-                      (prt.getTechBase() != TechBase.CLAN)) {
-                ((EnginePart) prt).fixClanFlag();
-            }
-            if ((prt instanceof MissingEnginePart) && (null != u) && (u.getEntity() instanceof Tank)) {
-                boolean isHover = u.getEntity().getMovementMode() == EntityMovementMode.HOVER;
-                ((MissingEnginePart) prt).fixTankFlag(isHover);
-            }
-            if ((prt instanceof MissingEnginePart) &&
-                      prt.getName().contains("(Clan") &&
-                      (prt.getTechBase() != TechBase.CLAN)) {
-                ((MissingEnginePart) prt).fixClanFlag();
-            }
-
-            // Spare Ammo bins are useless
-            if ((prt instanceof AmmoBin) && prt.isSpare()) {
-                removeParts.add(prt);
             }
         }
+
+        // determine if we've missed any lances and add those back into the campaign
+        if (options.isUseStratCon()) {
+            Hashtable<Integer, CombatTeam> lances = campaign.getCombatTeamsAsMap();
+            for (Formation f : campaign.getAllFormations()) {
+                if (!f.getUnits().isEmpty() && (null == lances.get(f.getId()))) {
+                    lances.put(f.getId(), new CombatTeam(f.getId(), campaign));
+                    LOGGER.warn("Added missing Lance {} to AtB list", f.getName());
+                }
+            }
+        }
+
+        LOGGER.info("[Campaign Load] Force IDs set in {}ms", System.currentTimeMillis() - timestamp);
+        timestamp = System.currentTimeMillis();
+
+        // Process parts...
+        // Note: Units must have their Entities set prior to reaching this point!
+        postProcessParts(campaign, version);
+        rehomeBaseHangarUnitParts(campaign);
+
+        LOGGER.info("[Campaign Load] Parts processed in {}ms", System.currentTimeMillis() - timestamp);
+        timestamp = System.currentTimeMillis();
+
+        LOGGER.info("[Campaign Load] Rank references fixed in {}ms", System.currentTimeMillis() - timestamp);
+        timestamp = System.currentTimeMillis();
+
+        // Okay, Units, need their pilot references fixed.
+        campaign.getAllHangar().forEachUnit(unit -> {
+            // Also, the unit should have its campaign set.
+            unit.setCampaign(campaign);
+            unit.fixReferences(campaign);
+
+            if (null != unit.getRefit()) {
+                unit.getRefit().fixReferences(campaign);
+
+                unit.getRefit().reCalc();
+                if (!unit.getRefit().isCustomJob() && !unit.getRefit().kitFound()) {
+                    campaign.getShoppingList().addShoppingItemWithoutChecking(unit.getRefit());
+                }
+            }
+
+            // lets make sure the force id set actually corresponds to a force
+            // TODO: we have some reports of force id relics - need to fix
+            if ((unit.getFormationId() > 0) && (campaign.getFormation(unit.getFormationId()) == null)) {
+                unit.setFormationId(FORMATION_NONE);
+            }
+
+            // It's annoying to have to do this, but this helps to ensure
+            // that equipment numbers correspond to the right parts - its
+            // possible that these might have changed if changes were made to
+            // the ordering of equipment in the underlying data file for the unit.
+            // We're not checking for refit here.
+            final EquipmentUnscrambler unscrambler = EquipmentUnscrambler.create(unit);
+            final EquipmentUnscramblerResult result = unscrambler.unscramble();
+            if (!result.succeeded()) {
+                LOGGER.warn(result.getMessage());
+            }
+
+            // some units might need to be assigned to scenarios
+            Scenario s = campaign.getScenario(unit.getScenarioId());
+            if (null != s) {
+                // most units will be properly assigned through their
+                // force, so check to make sure they aren't already here
+                if (!s.isAssigned(unit, campaign)) {
+                    s.addUnit(unit.getId());
+                }
+            }
+
+            //Update the campaign transport availability if this is transport.
+            //If it's empty we should be able to just ignore it
+            for (CampaignTransportType campaignTransportType : CampaignTransportType.values()) {
+                if (unit.hasTransportedUnits(campaignTransportType)) {
+                    campaign.updateTransportInTransports(campaignTransportType, unit);
+                }
+            }
+        });
+
+        LOGGER.info("[Campaign Load] Pilot references fixed in {}ms", System.currentTimeMillis() - timestamp);
+        timestamp = System.currentTimeMillis();
+
+        // Fix campaign references for units in base hangars.
+        // These units are NOT in campaign.getHangar(), so the loop above skips them.
+        // They need setCampaign() and fixReferences() just like main-force units.
+        for (PlayerBase base : campaign.getCampaignLocationManager().getPlayerBases()) {
+            base.getBaseHangar().forEachUnit(unit -> initializeBaseUnit(unit, campaign));
+        }
+
+        LOGGER.info("[Campaign Load] Base hangar references fixed in {}ms", System.currentTimeMillis() - timestamp);
+        timestamp = System.currentTimeMillis();
+
+        boolean skipAllDeprecationChecks = false;
+        boolean refundAllDeprecatedSkills = false;
+        for (Person person : campaign.getAllPersonnel()) {
+            // skill types might need resetting
+            person.resetSkillTypes();
+
+            // Seeing as we're already looping through all personnel, we might as well have the deprecation checks
+            // here, too.
+            if (!DEPRECATED_SKILLS.isEmpty() && !skipAllDeprecationChecks) {
+                // This checks to ensure the character doesn't have any Deprecated skills.
+                SkillDeprecationTool deprecationTool = new SkillDeprecationTool(campaign,
+                      person,
+                      refundAllDeprecatedSkills);
+                skipAllDeprecationChecks = deprecationTool.isSkipAll();
+                refundAllDeprecatedSkills = deprecationTool.isRefundAll();
+            }
+
+            // Self-correct any invalid personnel statuses (handles <50.05 campaigns)
+            // Any characters with invalid statuses will have their status set to 'Active'
+            if (person.getPrisonerStatus().isCurrentPrisoner()) {
+                statusValidator(campaign, person, true);
+            }
+
+            // <50.10 compatibility handler
+            LocalDate today = campaign.getLocalDate();
+            if (Person.updateSkillsForVehicleProfessions(today, person, person.getPrimaryRole(), true) ||
+                      Person.updateSkillsForVehicleProfessions(today, person, person.getSecondaryRole(), false)) {
+                String report = getFormattedTextAt(RESOURCE_BUNDLE, "vehicleProfessionSkillChange",
+                      spanOpeningWithCustomColor(getWarningColor()),
+                      CLOSING_SPAN_TAG,
+                      person.getHyperlinkedFullTitle());
+                campaign.addReport(GENERAL, report);
+            }
+
+            // This resolves a bug squashed in 2025 (50.03) but lurked in our codebase
+            // potentially as far back as 2014. The next two handlers should never be removed.
+            if (!person.canPerformRole(today, person.getSecondaryRole(), false)) {
+                person.setSecondaryRole(PersonnelRole.NONE);
+
+                campaign.addReport(GENERAL, getFormattedTextAt(RESOURCE_BUNDLE, "ineligibleForSecondaryRole",
+                      spanOpeningWithCustomColor(getWarningColor()),
+                      CLOSING_SPAN_TAG,
+                      person.getHyperlinkedFullTitle()));
+            }
+
+            if (!person.canPerformRole(today, person.getPrimaryRole(), true)) {
+                person.setPrimaryRole(campaign.getLocalDate(), PersonnelRole.DEPENDENT);
+
+                campaign.addReport(GENERAL, getFormattedTextAt(RESOURCE_BUNDLE, "ineligibleForPrimaryRole",
+                      spanOpeningWithCustomColor(getNegativeColor()),
+                      CLOSING_SPAN_TAG,
+                      person.getHyperlinkedFullTitle()));
+            }
+        }
+
+        campaign.getAllHangar().forEachUnit(unit -> {
+            // Some units have been incorrectly assigned a null C3UUID as a string. This
+            // should
+            // correct that by setting a new C3UUID
+            if ((unit.getEntity().hasC3() || unit.getEntity().hasC3i() || unit.getEntity().hasNavalC3()) &&
+                      (unit.getEntity().getC3UUIDAsString() == null ||
+                             unit.getEntity().getC3UUIDAsString().equals("null"))) {
+                unit.getEntity().setC3UUID();
+                unit.getEntity().setC3NetIdSelf();
+            }
+
+            // This needs to be down here so that it can factor in any changes made to personnel prior to this point.
+            unit.resetPilotAndEntity();
+        });
+        campaign.refreshNetworks();
+
+        LOGGER.info("[Campaign Load] C3 networks refreshed in {}ms", System.currentTimeMillis() - timestamp);
+        timestamp = System.currentTimeMillis();
+
+        // This removes the risk of having forces with invalid leadership getting locked in
+        for (Formation formation : campaign.getAllFormations()) {
+            formation.updateCommander(campaign);
+        }
+
+        // ok, once we are sure that campaign has been set for all units, we can
+        // now go through and initializeParts and run diagnostics
+        List<Unit> removeUnits = new ArrayList<>();
+        campaign.getAllHangar().forEachUnit(unit -> {
+            // just in case parts are missing (i.e. because they weren't tracked
+            // in previous versions)
+            unit.initializeParts(true);
+            unit.runDiagnostic(false);
+            if (!unit.isRepairable()) {
+                if (!unit.hasSalvageableParts()) {
+                    // we shouldn't get here but some units seem to stick around
+                    // for some reason
+                    removeUnits.add(unit);
+                } else {
+                    unit.setSalvage(true);
+                }
+            }
+
+            List<String> reports = unit.checkForOverCrewing();
+            for (String report : reports) {
+                campaign.addReport(GENERAL, report);
+            }
+        });
+
+        for (Unit unit : removeUnits) {
+            campaign.removeUnit(unit.getId());
+        }
+
+        for (PlayerBase base : campaign.getCampaignLocationManager().getPlayerBases()) {
+            base.getBaseHangar().forEachUnit(unit -> {
+                unit.initializeParts(false);
+                unit.runDiagnostic(false);
+
+                List<String> reports = unit.checkForOverCrewing();
+                for (String report : reports) {
+                    campaign.addReport(GENERAL, report);
+                }
+            });
+        }
+
+        LOGGER.info("[Campaign Load] Units initialized in {}ms", System.currentTimeMillis() - timestamp);
+        timestamp = System.currentTimeMillis();
+
+        for (Person person : campaign.getAllPersonnel()) {
+            person.fixReferences(campaign);
+        }
+
+        LOGGER.info("[Campaign Load] Personnel initialized in {}ms", System.currentTimeMillis() - timestamp);
+        timestamp = System.currentTimeMillis();
+
+        campaign.reloadNews();
+
+        LOGGER.info("[Campaign Load] News loaded in {}ms", System.currentTimeMillis() - timestamp);
+        timestamp = System.currentTimeMillis();
+
+        // If we don't have a personnel market, create one.
+        if (!foundPersonnelMarket) {
+            campaign.setPersonnelMarket(new PersonnelMarket(campaign));
+        }
+
+        if (!foundContractMarket) {
+            campaign.setContractMarket(new AtbMonthlyContractMarket());
+        }
+
+        if (!foundUnitMarket) {
+            campaign.setUnitMarket(campaign.getCampaignOptions().getUnitMarketMethod().getUnitMarket());
+        }
+
+        if (null == campaign.getRetirementDefectionTracker()) {
+            campaign.setRetirementDefectionTracker(new RetirementDefectionTracker());
+        }
+
+        if (campaign.getCampaignOptions().isUseStratCon()) {
+            campaign.setHasActiveContract();
+            campaign.setAtBConfig(AtBConfiguration.loadFromXml());
+        }
+
+        // Sanity Checks
+        fixupUnitTechProblems(campaign);
+
+        // unload any ammo bins in the warehouse
+        List<AmmoBin> binsToUnload = new ArrayList<>();
+        campaign.getAllWarehouse().forEachSparePart(prt -> {
+            if (prt instanceof AmmoBin && !prt.isReservedForRefit() && ((AmmoBin) prt).getShotsNeeded() == 0) {
+                binsToUnload.add((AmmoBin) prt);
+            }
+        });
+        for (AmmoBin bin : binsToUnload) {
+            bin.unload();
+        }
+
+        LOGGER.info("[Campaign Load] Ammo bins cleared in {}ms", System.currentTimeMillis() - timestamp);
+        timestamp = System.currentTimeMillis();
+
+        // Check all parts that are reserved for refit and if the refit id unit
+        // is not refitting or is gone then un-reserve
+        for (Part part : campaign.getAllWarehouse().getParts()) {
+            if (part.isReservedForRefit()) {
+                Unit u = part.getRefitUnit();
+                if ((null == u) || !u.isRefitting()) {
+                    part.setRefitUnit(null);
+                }
+            }
+        }
+
+        LOGGER.info("[Campaign Load] Reserved refit parts fixed in {}ms", System.currentTimeMillis() - timestamp);
+        timestamp = System.currentTimeMillis();
+
+        // Build a new, clean warehouse from the current parts
+        LocalWarehouse warehouse = new LocalWarehouse();
+        for (Part part : campaign.getAllWarehouse().getParts()) {
+            // Remove empty AmmoStorage entries that shouldn't exist (see #7414)
+            if (part instanceof AmmoStorage ammoStorage && ammoStorage.getShots() <= 0 && part.isSpare()) {
+                LOGGER.info("Discarding empty AmmoStorage: {}", part.getName());
+                continue;
+            }
+
+            // < 50.08 compatibility handler
+            if (part instanceof SVArmor svArmor) {
+                final int PROHIBITED_BAR_RATING = 0;
+
+                int bar = svArmor.getBAR();
+                if (bar == PROHIBITED_BAR_RATING) {
+                    LOGGER.info("Discarding untracked BAR 0 armor");
+                    continue;
+                }
+            }
+
+            warehouse.addPart(part, true);
+        }
+
+        // This will have aggregated all the possible spare parts together
+        campaign.setWarehouse(warehouse);
+
+        LOGGER.info("[Campaign Load] Warehouse cleaned up in {}ms", System.currentTimeMillis() - timestamp);
+
+        campaign.setUnitRating(null);
+
+        // this is used to handle characters from pre-50.01 campaigns
+        campaign.getAllPersonnel().stream().filter(person -> person.getJoinedCampaign() == null).forEach(person -> {
+            if (person.getRecruitment() != null) {
+                person.setJoinedCampaign(person.getRecruitment());
+                LOGGER.info(
+                      "{} doesn't have a date recorded showing when they joined the campaign. Using recruitment date.",
+                      person.getFullTitle());
+            } else {
+                person.setJoinedCampaign(campaign.getLocalDate());
+                LOGGER.info("{} doesn't have a date recorded showing when they joined the campaign. Using current date.",
+                      person.getFullTitle());
+            }
+        });
+
+        // Reset Random Death to match current campaign options
+        campaign.resetRandomDeath();
+
+        // Fix sexual preferences
+        if (version.isLowerThan(new Version("0.50.10"))) {
+            correctSexualPreferencesForCurrentSpouse(campaign.getAllPersonnel());
+        }
+
+        // Reconnect persons to the main-force personnel node. Skip persons already placed by
+        // processPlayerBaseNodes or reconnectChildren (base / travel / campus persons).
+        for (Person person : campaign.getAllPersonnel()) {
+            if (!person.isParented()) {
+                person.setParent(campaign.getMainForcePersonnel());
+            }
+        }
+
+
+        // Backward compat: Saves prior to 0.51.00 will have a single <location> tag, like we do now.
+        // However, saves from 0.51.00 will not have a location tag, but will have a <locations> tag with only
+        // one item. If we didn't find an explicit main force location, use that one. To check for this, if we didn't
+        // find a main force location, check if we have more than one location in our list (by default,
+        // will set and add a location to Campaign during the constructor.
+        if ((!foundMainForceLocation) && (campaign.getCampaignLocationManager().getLocations().size() > 1)) {
+            // Remove the location that was set by default, then use a valid location out of our locations list.
+            campaign.getCampaignLocationManager().removeLocation(campaign.getCurrentLocation());
+            campaign.getCampaignLocationManager().getLocations().stream()
+                  .filter(loc -> loc instanceof CurrentLocation)
+                  .findFirst()
+                  .ifPresent(campaign::setLocation);
+        }
+
+        if (pendingTravelNode != null) {
+            processPendingTravel(campaign, pendingTravelNode);
+        }
+
+        migrateLegacyEducationTravel(campaign);
+        reconnectPersonsToTravelLocations(campaign);
+        LOGGER.info("Load of campaign file complete!");
+
+        return campaign;
     }
 
     /**

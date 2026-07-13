@@ -73,7 +73,7 @@ import mekhq.campaign.AbstractMobileLocation;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.CurrentLocation;
 import mekhq.campaign.JumpPath;
-import mekhq.campaign.Personnel;
+import mekhq.campaign.LocalPersonnel;
 import mekhq.campaign.base.PlayerBase;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.events.persons.PersonChangedEvent;
@@ -940,7 +940,7 @@ public class EducationController {
           @Nullable AbstractMobileLocation returnLocation) {
         Academy returningFromAcademy = getAcademy(person.getEduAcademySet(), person.getEduAcademyNameInSet());
         boolean isLocal = returningFromAcademy != null && returningFromAcademy.isLocal();
-        Personnel arrivingAtPersonnel = isLocal ?
+        LocalPersonnel arrivingAtPersonnel = isLocal ?
                                               findPersonnelWhenReturningFromLocal(campaign,
                                                     person.getEduAcademySystem()) :
                                               campaign.getMainForcePersonnel();
@@ -958,7 +958,7 @@ public class EducationController {
         LocationDispatch.removeTravelNode(returnLocation, campaign.getCampaignLocationManager());
     }
 
-    private static Personnel findPersonnelWhenReturningFromLocal(Campaign campaign, @Nullable String systemId) {
+    private static LocalPersonnel findPersonnelWhenReturningFromLocal(Campaign campaign, @Nullable String systemId) {
         if (systemId != null) {
             for (PlayerBase base : campaign.getCampaignLocationManager().getPlayerBases()) {
                 PlanetarySystem system = base.getCurrentSystem();

@@ -33,9 +33,9 @@
 package mekhq.campaign.force;
 
 import mekhq.campaign.DetachmentLocationManager;
-import mekhq.campaign.Hangar;
-import mekhq.campaign.Personnel;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalHangar;
+import mekhq.campaign.LocalPersonnel;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.market.RequestedStockLevels;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.parts.PartInventory;
@@ -60,19 +60,19 @@ public interface SingleDetachmentForce {
     /** The single detachment this force tracks. */
     Detachment getForceDetachment();
 
-    default Hangar getHangar() {
+    default LocalHangar getHangar() {
         return getForceDetachment().getHangar();
     }
 
-    default Warehouse getWarehouse() {
+    default LocalWarehouse getWarehouse() {
         return getForceDetachment().getWarehouse();
     }
 
-    default void setWarehouse(Warehouse warehouse) {
+    default void setWarehouse(LocalWarehouse warehouse) {
         getForceDetachment().setWarehouse(warehouse);
     }
 
-    default Personnel getPersonnel() {
+    default LocalPersonnel getPersonnel() {
         return getForceDetachment().getPersonnel();
     }
 
