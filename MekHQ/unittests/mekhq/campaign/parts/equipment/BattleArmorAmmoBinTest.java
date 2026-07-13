@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2020-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -52,13 +52,12 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 
 import megamek.Version;
-import megamek.common.equipment.AmmoType;
 import megamek.common.battleArmor.BattleArmor;
-import megamek.common.equipment.Mounted;
 import megamek.common.equipment.AmmoMounted;
+import megamek.common.equipment.AmmoType;
+import megamek.common.equipment.Mounted;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Quartermaster;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.unit.Unit;
@@ -312,8 +311,8 @@ public class BattleArmorAmmoBinTest {
 
         Campaign mockCampaign;
         CampaignOptions mockCampaignOptions;
-        Warehouse warehouse;
-        Quartermaster quartermaster;
+        LocalWarehouse warehouse;
+        mekhq.campaign.ForceQuartermaster quartermaster;
         Unit mockUnit;
         BattleArmor mockEntity;
         AmmoMounted mockMounted;
@@ -323,9 +322,9 @@ public class BattleArmorAmmoBinTest {
             mockCampaign = mock(Campaign.class);
             mockCampaignOptions = mock(CampaignOptions.class);
             when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
-            warehouse = new Warehouse();
+            warehouse = new LocalWarehouse();
             when(mockCampaign.getWarehouse()).thenReturn(warehouse);
-            quartermaster = new Quartermaster(mockCampaign);
+            quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
             when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
             mockUnit = mock(Unit.class);

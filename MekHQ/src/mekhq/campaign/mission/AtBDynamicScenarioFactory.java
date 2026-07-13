@@ -108,7 +108,7 @@ import megamek.logging.MMLogger;
 import mekhq.MHQConstants;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
+import mekhq.campaign.LocalHangar;
 import mekhq.campaign.againstTheBot.AtBConfiguration;
 import mekhq.campaign.camOpsReputation.IUnitRating;
 import mekhq.campaign.campaignOptions.BoardScalingType;
@@ -4540,7 +4540,7 @@ public class AtBDynamicScenarioFactory {
         // deployment turn explicitly or use a stagger algorithm.
         // For player forces where there's not an associated force template, we calculate the
         // deployment turn as if they were reinforcements
-        Hangar hangar = campaign.getAllHangar();
+        mekhq.campaign.LocalHangar hangar = campaign.getAllHangar();
         for (int forceID : scenario.getForceIDs()) {
             ScenarioForceTemplate forceTemplate = scenario.getPlayerForceTemplates().get(forceID);
 
@@ -4657,13 +4657,14 @@ public class AtBDynamicScenarioFactory {
      * setDeploymentTurnsForReinforcements}, including an additional delay reduction based on the scenario.</p>
      *
      * @param scenario the {@link AtBDynamicScenario} defining friendly delayed reinforcements
-     * @param hangar   the {@link Hangar} containing all possible entities for deployment
+     * @param hangar   the {@link LocalHangar} containing all possible entities for deployment
      * @param strategy an {@link Integer} value affecting the calculated delay for the arrivals
      *
      * @author Illiani
      * @since 0.50.07
      */
-    private static void processDelayedArrivals(AtBDynamicScenario scenario, Hangar hangar, int strategy) {
+    private static void processDelayedArrivals(AtBDynamicScenario scenario, mekhq.campaign.LocalHangar hangar,
+            int strategy) {
         List<Entity> delayedEntities = new ArrayList<>();
         for (UUID unitId : scenario.getFriendlyDelayedReinforcements()) {
             Entity entity = EntityUtilities.getEntityFromUnitId(hangar, unitId);
@@ -4689,12 +4690,12 @@ public class AtBDynamicScenarioFactory {
      * them available immediately.</p>
      *
      * @param scenario the {@link AtBDynamicScenario} defining friendly delayed reinforcements
-     * @param hangar   the {@link Hangar} containing all possible entities for deployment
+     * @param hangar   the {@link LocalHangar} containing all possible entities for deployment
      *
      * @author Illiani
      * @since 0.50.07
      */
-    private static void processInstantArrivals(AtBDynamicScenario scenario, Hangar hangar) {
+    private static void processInstantArrivals(AtBDynamicScenario scenario, mekhq.campaign.LocalHangar hangar) {
         List<UUID> instantReinforcements = scenario.getFriendlyInstantReinforcements();
         for (UUID unitId : instantReinforcements) {
             Unit unit = hangar.getUnit(unitId);
@@ -4804,7 +4805,7 @@ public class AtBDynamicScenarioFactory {
      * speeds, with an optional adjustment via the {@code turnModifier}. It assumes that the reinforcements are not
      * delayed, simplifying the calculation logic compared to the main method.</p>
      *
-     * @param hangar       The {@link Hangar} instance containing the available entities. Used to resolve
+     * @param hangar       The {@link LocalHangar} instance containing the available entities. Used to resolve
      *                     player-transported entities via unit IDs.
      * @param scenario     The {@link Scenario} under which the entities are being deployed. Provides transport linkage
      *                     information and overall deployment context.
@@ -4812,10 +4813,11 @@ public class AtBDynamicScenarioFactory {
      * @param turnModifier A value to subtract from the calculated deployment turn, typically reflecting a strategy
      *                     skill or similar modifier.
      *
-     * @see #setDeploymentTurnsForReinforcements(Hangar, Scenario, List, int, boolean)
+     * @see #setDeploymentTurnsForReinforcements(LocalHangar, Scenario, List, int, boolean)
      */
-    public static void setDeploymentTurnsForReinforcements(Hangar hangar, Scenario scenario, List<Entity> entityList,
-          int turnModifier) {
+    public static void setDeploymentTurnsForReinforcements(mekhq.campaign.LocalHangar hangar, Scenario scenario,
+            List<Entity> entityList,
+            int turnModifier) {
         setDeploymentTurnsForReinforcements(hangar, scenario, entityList, turnModifier, false);
     }
 
@@ -4839,7 +4841,7 @@ public class AtBDynamicScenarioFactory {
      *   <li>Updates the deployment round for all entities in the list to the calculated arrival turn.</li>
      * </ul>
      *
-     * @param hangar       The {@link Hangar} instance containing the available entities. Used to resolve
+     * @param hangar       The {@link LocalHangar} instance containing the available entities. Used to resolve
      *                     player-transported entities via unit IDs.
      * @param scenario     The {@link Scenario} under which the entities are being deployed. Provides transport linkage
      *                     information and overall deployment context.
@@ -4849,8 +4851,9 @@ public class AtBDynamicScenarioFactory {
      * @param isDelayed    A flag indicating whether the reinforcements were delayed. Delayed reinforcements are
      *                     assigned a higher arrival scale, increasing their arrival turn.
      */
-    public static void setDeploymentTurnsForReinforcements(Hangar hangar, Scenario scenario, List<Entity> entityList,
-          int turnModifier, boolean isDelayed) {
+    public static void setDeploymentTurnsForReinforcements(mekhq.campaign.LocalHangar hangar, Scenario scenario,
+            List<Entity> entityList,
+            int turnModifier, boolean isDelayed) {
         // Build a set of all player transported entities. We don't need to do this for NPC entities
         // as how they're transported is different and their arrival times are better isolated when
         // dealing with transported vs. untransported units.

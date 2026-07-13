@@ -128,11 +128,11 @@ import org.w3c.dom.NodeList;
  *
  * <p>No back-reference to Campaign is stored; dependencies are injected per call.</p>
  */
-public class HumanResources {
-    private static final MMLogger LOGGER = MMLogger.create(HumanResources.class);
+public class ForceHumanResources {
+    private static final MMLogger LOGGER = MMLogger.create(ForceHumanResources.class);
 
 
-    private final Personnel personnel = new Personnel();
+    private final LocalPersonnel personnel = new LocalPersonnel();
 
     /**
      * Transient cache of active personnel lists, keyed by filter options string. Can be null; rebuilt lazily.
@@ -1504,10 +1504,60 @@ public class HumanResources {
               noZeroMinute, eliteFirst, expanded);
     }
 
-    public boolean isWorkingOnRefit(Hangar hangar, Person person) {
-        Objects.requireNonNull(person);
-        Unit unit = hangar.findUnit(u -> u.isRefitting() && person.equals(u.getRefit().getTech()));
-        return unit != null;
+    /**
+     * Parses a {@code <humanResources>} node and returns a populated {@link ForceHumanResources} instance.
+     *
+     * @param wn       the {@code <humanResources>} node
+     * @param campaign the campaign (for context during personnel parsing)
+     * @param version  the save file version
+     *
+     * @return a populated {@link ForceHumanResources} instance
+     */
+    public static ForceHumanResources loadFromXML(Node wn, Campaign campaign, Version version) {
+        LOGGER.info("Loading HumanResources from XML...");
+        ForceHumanResources hr = campaign.getHumanResources();
+
+        NodeList wList = wn.getChildNodes();
+        for (int x = 0; x < wList.getLength(); x++) {
+            Node childNode = wList.item(x);
+            if (childNode.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+
+            String nodeName = childNode.getNodeName();
+            try {
+                if (nodeName.equalsIgnoreCase("asTechPool") || nodeName.equalsIgnoreCase("astechPool")) {
+                    hr.asTechPool = MathUtility.parseInt(childNode.getTextContent().trim());
+                } else if (nodeName.equalsIgnoreCase("asTechPoolMinutes") ||
+                                 nodeName.equalsIgnoreCase("astechPoolMinutes")) {
+                    hr.asTechPoolMinutes = MathUtility.parseInt(
+                          childNode.getTextContent().trim());
+                } else if (nodeName.equalsIgnoreCase("asTechPoolOvertime") ||
+                                 nodeName.equalsIgnoreCase("astechPoolOvertime")) {
+                    hr.asTechPoolOvertime = MathUtility.parseInt(
+                          childNode.getTextContent().trim());
+                } else if (nodeName.equalsIgnoreCase("medicPool")) {
+                    hr.medicPool = MathUtility.parseInt(childNode.getTextContent().trim());
+                } else if (nodeName.equalsIgnoreCase("tempCrewPools")) {
+                    parseTempCrewPools(hr, childNode);
+                } else if (nodeName.equalsIgnoreCase("personnelWhoAdvancedInXP")) {
+                    hr.personnelWhoAdvancedInXP = parsePersonnelWhoAdvancedInXP(childNode, campaign);
+                } else if (nodeName.equalsIgnoreCase("personnel")) {
+                    InjuryTypes.registerAll();
+                    LocalPersonnel.loadFromXML(childNode, campaign, version);
+                } else if (nodeName.equalsIgnoreCase("personnelMarket")) {
+                    hr.personnelMarket = PersonnelMarket.generateInstanceFromXML(childNode, campaign, version);
+                } else if (nodeName.equalsIgnoreCase("retirementDefectionTracker")) {
+                    hr.retirementDefectionTracker = RetirementDefectionTracker.generateInstanceFromXML(childNode,
+                          campaign);
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error loading humanResources child node '{}'", nodeName, e);
+            }
+        }
+
+        LOGGER.info("Load HumanResources from XML complete.");
+        return hr;
     }
 
 
@@ -2537,63 +2587,7 @@ public class HumanResources {
         MHQXMLUtility.writeSimpleXMLCloseTag(writer, --indent, "humanResources");
     }
 
-    /**
-     * Parses a {@code <humanResources>} node and returns a populated {@link HumanResources} instance.
-     *
-     * @param wn       the {@code <humanResources>} node
-     * @param campaign the campaign (for context during personnel parsing)
-     * @param version  the save file version
-     *
-     * @return a populated {@link HumanResources} instance
-     */
-    public static HumanResources loadFromXML(Node wn, Campaign campaign, Version version) {
-        LOGGER.info("Loading HumanResources from XML...");
-        HumanResources hr = campaign.getHumanResources();
-
-        NodeList wList = wn.getChildNodes();
-        for (int x = 0; x < wList.getLength(); x++) {
-            Node childNode = wList.item(x);
-            if (childNode.getNodeType() != Node.ELEMENT_NODE) {
-                continue;
-            }
-
-            String nodeName = childNode.getNodeName();
-            try {
-                if (nodeName.equalsIgnoreCase("asTechPool") || nodeName.equalsIgnoreCase("astechPool")) {
-                    hr.asTechPool = MathUtility.parseInt(childNode.getTextContent().trim());
-                } else if (nodeName.equalsIgnoreCase("asTechPoolMinutes") ||
-                                 nodeName.equalsIgnoreCase("astechPoolMinutes")) {
-                    hr.asTechPoolMinutes = MathUtility.parseInt(
-                          childNode.getTextContent().trim());
-                } else if (nodeName.equalsIgnoreCase("asTechPoolOvertime") ||
-                                 nodeName.equalsIgnoreCase("astechPoolOvertime")) {
-                    hr.asTechPoolOvertime = MathUtility.parseInt(
-                          childNode.getTextContent().trim());
-                } else if (nodeName.equalsIgnoreCase("medicPool")) {
-                    hr.medicPool = MathUtility.parseInt(childNode.getTextContent().trim());
-                } else if (nodeName.equalsIgnoreCase("tempCrewPools")) {
-                    parseTempCrewPools(hr, childNode);
-                } else if (nodeName.equalsIgnoreCase("personnelWhoAdvancedInXP")) {
-                    hr.personnelWhoAdvancedInXP = parsePersonnelWhoAdvancedInXP(childNode, campaign);
-                } else if (nodeName.equalsIgnoreCase("personnel")) {
-                    InjuryTypes.registerAll();
-                    Personnel.loadFromXML(childNode, campaign, version);
-                } else if (nodeName.equalsIgnoreCase("personnelMarket")) {
-                    hr.personnelMarket = PersonnelMarket.generateInstanceFromXML(childNode, campaign, version);
-                } else if (nodeName.equalsIgnoreCase("retirementDefectionTracker")) {
-                    hr.retirementDefectionTracker = RetirementDefectionTracker.generateInstanceFromXML(childNode,
-                          campaign);
-                }
-            } catch (Exception e) {
-                LOGGER.error("Error loading humanResources child node '{}'", nodeName, e);
-            }
-        }
-
-        LOGGER.info("Load HumanResources from XML complete.");
-        return hr;
-    }
-
-    private static void parseTempCrewPools(HumanResources hr, Node tempCrewPoolsNode) {
+    private static void parseTempCrewPools(ForceHumanResources hr, Node tempCrewPoolsNode) {
         NodeList tempCrewNodes = tempCrewPoolsNode.getChildNodes();
         for (int i = 0; i < tempCrewNodes.getLength(); i++) {
             Node tempCrewNode = tempCrewNodes.item(i);
@@ -2627,6 +2621,12 @@ public class HumanResources {
                 }
             }
         }
+    }
+
+    public boolean isWorkingOnRefit(LocalHangar hangar, Person person) {
+        Objects.requireNonNull(person);
+        Unit unit = hangar.findUnit(u -> u.isRefitting() && person.equals(u.getRefit().getTech()));
+        return unit != null;
     }
 
     private static List<Person> parsePersonnelWhoAdvancedInXP(Node workingNode, Campaign campaign) {

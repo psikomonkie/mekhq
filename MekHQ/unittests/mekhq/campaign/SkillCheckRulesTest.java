@@ -42,12 +42,13 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Field;
+
 import megamek.common.TechConstants;
 import megamek.common.enums.TechBase;
 import megamek.common.rolls.TargetRoll;
 import mekhq.campaign.campaignOptions.AcquisitionsType;
 import mekhq.campaign.campaignOptions.CampaignOptions;
-import mekhq.campaign.market.ShoppingList;
 import mekhq.campaign.personnel.Person;
 import mekhq.campaign.personnel.skills.ActionCheck;
 import mekhq.campaign.personnel.skills.SkillCheck;
@@ -59,8 +60,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-
-import java.lang.reflect.Field;
 
 
 public class SkillCheckRulesTest {
@@ -80,7 +79,7 @@ public class SkillCheckRulesTest {
             Faction faction = new Faction();
             when(campaign.getCampaignOptions()).thenReturn(options);
             when(campaign.getFaction()).thenReturn(faction);
-            ShoppingList shoppingList = mock(ShoppingList.class);
+            mekhq.campaign.market.ForceShoppingList shoppingList = mock(mekhq.campaign.market.ForceShoppingList.class);
             when(campaign.getShoppingList()).thenReturn(shoppingList);
             return campaign;
         }
@@ -155,7 +154,7 @@ public class SkillCheckRulesTest {
             CampaignOptions options = mock(CampaignOptions.class);
             Campaign campaign = createCampaignMock(options);
             IAcquisitionWork acquisition = mock(IAcquisitionWork.class);
-            ShoppingList shoppingList = mock(ShoppingList.class);
+            mekhq.campaign.market.ForceShoppingList shoppingList = mock(mekhq.campaign.market.ForceShoppingList.class);
             when(campaign.getShoppingList()).thenReturn(shoppingList);
             when(options.getAcquisitionType()).thenReturn(AcquisitionsType.ADMINISTRATION);
             when(shoppingList.getShoppingItem(any())).thenReturn(mock(IAcquisitionWork.class));

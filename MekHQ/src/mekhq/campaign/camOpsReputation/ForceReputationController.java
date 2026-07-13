@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2024-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -63,9 +63,9 @@ import mekhq.utilities.MHQXMLUtility;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class ReputationController {
+public class ForceReputationController {
     // utilities
-    private static final MMLogger LOGGER = MMLogger.create(ReputationController.class);
+    private static final MMLogger LOGGER = MMLogger.create(ForceReputationController.class);
 
     private final ResourceBundle resources = ResourceBundle.getBundle("mekhq.resources.CamOpsReputation",
           MekHQ.getMHQOptions().getLocale());
@@ -132,7 +132,7 @@ public class ReputationController {
     /**
      * Initializes the ReputationController class with default values.
      */
-    public ReputationController() {
+    public ForceReputationController() {
     }
 
     /**
@@ -696,7 +696,7 @@ public class ReputationController {
         }
     }
 
-    public ReputationController generateInstanceFromXML(final Node workingNode) {
+    public ForceReputationController generateInstanceFromXML(final Node workingNode) {
         NodeList newLine = workingNode.getChildNodes();
 
         try {

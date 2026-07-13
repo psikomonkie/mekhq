@@ -54,7 +54,6 @@ import megamek.common.ui.FastJScrollPane;
 import megamek.common.units.Entity;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.camOpsReputation.ReputationController;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.events.OrganizationChangedEvent;
 import mekhq.campaign.parts.AmmoStorage;
@@ -64,7 +63,6 @@ import mekhq.campaign.personnel.Person;
 import mekhq.campaign.personnel.autoAwards.AutoAwardsController;
 import mekhq.campaign.personnel.enums.PersonnelRole;
 import mekhq.campaign.personnel.ranks.AutoAssignRankForCompanyGenerator;
-import mekhq.campaign.personnel.skills.RandomSkillPreferences;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.companyGeneration.CompanyGenerationOptions;
@@ -214,7 +212,7 @@ public class CompanyGenerationDialog extends AbstractMHQValidationButtonDialog {
             autoAwardsController.ManualController(campaign, false);
         }
 
-        ReputationController reputationController = new ReputationController();
+        mekhq.campaign.camOpsReputation.ForceReputationController reputationController = new mekhq.campaign.camOpsReputation.ForceReputationController();
         reputationController.initializeReputation(campaign);
         campaign.setReputation(reputationController);
 

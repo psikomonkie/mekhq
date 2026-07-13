@@ -587,7 +587,7 @@ public class Resupply {
      */
     private Set<PartInUse> collectPartsInUseAcrossLocations() {
         List<IPlace> places = new ArrayList<>();
-        places.add(campaign);
+        places.add(campaign.getPlayerForce().getForceDetachment());
         places.addAll(campaign.getCampaignLocationManager().getPlayerBases());
 
         Map<PartInUse, PartInUse> merged = new HashMap<>();
