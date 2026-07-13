@@ -30,14 +30,11 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.stratCon;
+package mekhq.campaign.digitalGM.stratCon;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import mekhq.campaign.digitalGM.stratCon.StratConCoords;
-import mekhq.campaign.digitalGM.stratCon.StratConTerrainPlacer;
-import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 import org.junit.jupiter.api.Test;
 
 /**

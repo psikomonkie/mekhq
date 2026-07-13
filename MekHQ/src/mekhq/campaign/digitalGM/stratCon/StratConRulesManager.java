@@ -73,7 +73,6 @@ import static mekhq.utilities.MHQInternationalization.getTextAt;
 import static mekhq.utilities.ReportingUtilities.CLOSING_SPAN_TAG;
 import static mekhq.utilities.ReportingUtilities.spanOpeningWithCustomColor;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.Map.Entry;
@@ -82,7 +81,6 @@ import megamek.codeUtilities.ObjectUtility;
 import megamek.common.TargetRollModifier;
 import megamek.common.annotations.Nullable;
 import megamek.common.equipment.Minefield;
-import megamek.common.event.Subscribe;
 import megamek.common.options.OptionsConstants;
 import megamek.common.rolls.TargetRoll;
 import megamek.common.units.Entity;
@@ -95,7 +93,6 @@ import mekhq.campaign.ResolveScenarioTracker;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.digitalGM.stratCon.StratConContractDefinition.StrategicObjectiveType;
 import mekhq.campaign.digitalGM.stratCon.StratConScenario.ScenarioState;
-import mekhq.campaign.events.NewDayEvent;
 import mekhq.campaign.events.StratConDeploymentEvent;
 import mekhq.campaign.events.scenarios.ScenarioChangedEvent;
 import mekhq.campaign.force.CombatTeam;
@@ -1562,7 +1559,7 @@ public class StratConRulesManager {
     /**
      * Applies time-sensitive facility effects.
      */
-    private static void processFacilityEffects(StratConTrackState track, StratConCampaignState campaignState,
+    static void processFacilityEffects(StratConTrackState track, StratConCampaignState campaignState,
           boolean isStartOfMonth) {
         for (StratConFacility facility : track.getFacilities().values()) {
             if (isStartOfMonth) {
@@ -3955,112 +3952,5 @@ public class StratConRulesManager {
 
         // Remove the scenario from the track
         track.removeScenario(scenario);
-    }
-
-    public void startup() {
-        MekHQ.registerHandler(this);
-    }
-
-    /**
-     * Event handler for the new day event.
-     */
-    @Subscribe
-    public void handleNewDay(NewDayEvent ev) {
-        Campaign campaign = ev.getCampaign();
-
-        // don't do any of this if StratCon isn't turned on
-        CampaignOptions campaignOptions = campaign.getCampaignOptions();
-        if (!campaignOptions.isUseStratCon()) {
-            return;
-        }
-
-        boolean isUseStratConSingles = campaignOptions.isUseStratConSinglesMode();
-        boolean isUseStratConMapless = campaignOptions.isUseStratConMaplessMode();
-
-        LocalDate today = campaign.getLocalDate();
-        boolean isMonday = today.getDayOfWeek() == DayOfWeek.MONDAY;
-        boolean isStartOfMonth = today.getDayOfMonth() == 1;
-
-        // run scenario generation routine for every track attached to an active contract
-        for (AtBContract contract : campaign.getActiveAtBContracts()) {
-            StratConCampaignState campaignState = contract.getStratConCampaignState();
-
-            if (campaignState != null) {
-                List<StratConTrackState> tracks = campaignState.getTracks();
-                boolean hasAssignedSingleDropScenario = false;
-                for (StratConTrackState track : tracks) {
-                    cleanupPhantomScenarios(track);
-
-                    // check if some of the forces have finished deployment
-                    // please do this before generating scenarios for track
-                    // to avoid unintentionally cleaning out integrated force deployments on
-                    // 0-deployment-length tracks
-                    processTrackForceReturnDates(track, campaign);
-
-                    if (!isUseStratConMapless) {
-                        processFacilityEffects(track, campaignState, isStartOfMonth);
-                    }
-
-                    // loop through scenarios - if we haven't deployed in time,
-                    // fail it and apply consequences
-                    for (StratConScenario scenario : track.getScenarios().values()) {
-                        if ((scenario.getDeploymentDate() != null) &&
-                                  scenario.getDeploymentDate().isBefore(campaign.getLocalDate()) &&
-                                  scenario.getPrimaryForceIDs().isEmpty()) {
-                            processIgnoredStratConScenario(scenario, track, campaignState);
-                        }
-                    }
-
-                    // on monday, generate new scenario dates
-                    if (isMonday && !hasAssignedSingleDropScenario) {
-                        generateScenariosDatesForWeek(campaign, campaignState, contract, track, isUseStratConSingles);
-                    }
-
-                    // Only one scenario/week for Single Drop
-                    if (isUseStratConSingles) {
-                        hasAssignedSingleDropScenario = true;
-                    }
-                }
-
-                List<LocalDate> weeklyScenarioDates = campaignState.getWeeklyScenarios();
-
-                if (weeklyScenarioDates.contains(today)) {
-                    int scenarioCount = 0;
-                    for (LocalDate date : weeklyScenarioDates) {
-                        if (date.equals(today)) {
-                            scenarioCount++;
-                        }
-                    }
-                    weeklyScenarioDates.removeIf(date -> date.equals(today));
-
-                    // If the OpFor is routed, we want to just discard any scheduled scenarios, clearly they've been
-                    // canceled due to impending defeat
-                    if (!contract.getMoraleLevel().isRouted()) {
-                        generateDailyScenariosForTrack(campaign, campaignState, contract, scenarioCount);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Worker function that goes through a track and cleans up scenarios missing required data
-     */
-    private void cleanupPhantomScenarios(StratConTrackState track) {
-        List<StratConScenario> cleanupList = track.getScenarios()
-                                                   .values()
-                                                   .stream()
-                                                   .filter(scenario -> (scenario.getDeploymentDate() == null) &&
-                                                                             !scenario.isStrategicObjective())
-                                                   .toList();
-
-        for (StratConScenario scenario : cleanupList) {
-            track.removeScenario(scenario);
-        }
-    }
-
-    @Deprecated(since = "0.51.0", forRemoval = true)
-    public void shutdown() {
-        MekHQ.unregisterHandler(this);
     }
 }
