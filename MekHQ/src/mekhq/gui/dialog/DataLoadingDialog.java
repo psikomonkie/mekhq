@@ -373,8 +373,18 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
                     Thread.currentThread().interrupt();
                     return null;
                 } catch (InvocationTargetException exception) {
+                    // Let a genuine UI-construction failure propagate through the worker so done() reports it via its
+                    // ExecutionException handling, rather than returning null (which looks like a normal cancel and
+                    // silently hides the error). The Runnable can only fail with an unchecked throwable, so unwrap the
+                    // cause to keep done()'s per-type error dialogs working.
                     LOGGER.error("Failed to display the Campaign Options dialog", exception);
-                    return null;
+                    if (exception.getCause() instanceof RuntimeException runtimeException) {
+                        throw runtimeException;
+                    }
+                    if (exception.getCause() instanceof Error error) {
+                        throw error;
+                    }
+                    throw exception;
                 }
                 if (optionsCanceled[0]) {
                     return null;
