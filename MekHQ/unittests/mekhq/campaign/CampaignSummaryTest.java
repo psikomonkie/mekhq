@@ -60,7 +60,7 @@ class CampaignSummaryTest {
 
     private static Campaign campaignWithEmptySummaryInputs() {
         Campaign campaign = mock(Campaign.class);
-        Hangar hangar = mock(Hangar.class);
+        LocalHangar hangar = mock(LocalHangar.class);
         CargoStatistics cargoStatistics = mock(CargoStatistics.class);
 
         when(campaign.getActivePersonnel(false, false)).thenReturn(List.of());

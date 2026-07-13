@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import mekhq.campaign.finances.Money;
 import org.junit.jupiter.api.Test;
 
-public class UnableToAffordShoppingListNagLogicTest {
+public class UnableToAffordForceShoppingListNagLogicTest {
 
     @Test
     void canAfford() {

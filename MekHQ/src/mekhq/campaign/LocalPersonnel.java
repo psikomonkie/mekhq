@@ -53,8 +53,8 @@ import org.w3c.dom.NodeList;
  * Adds {@link #writeToXML} and {@link #loadFromXML} to own the canonical save/load loop for
  * the {@code <personnel>} XML block.</p>
  */
-public class Personnel extends LinkedHashMap<UUID, Person> implements ILocation {
-    private static final MMLogger logger = MMLogger.create(Personnel.class);
+public class LocalPersonnel extends LinkedHashMap<UUID, Person> implements ILocation {
+    private static final MMLogger logger = MMLogger.create(LocalPersonnel.class);
 
     private final LocationNode locationNode = new LocationNode(this);
 
@@ -64,8 +64,8 @@ public class Personnel extends LinkedHashMap<UUID, Person> implements ILocation 
     }
 
     @Override
-    public Personnel clone() {
-        return (Personnel) super.clone();
+    public LocalPersonnel clone() {
+        return (LocalPersonnel) super.clone();
     }
 
     public void writeToXML(PrintWriter writer, int indent, Campaign campaign) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2024-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -53,7 +53,6 @@ import megamek.common.universe.FactionTag;
 import megamek.logging.MMLogger;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.camOpsReputation.ReputationController;
 import mekhq.campaign.enums.DragoonRating;
 import mekhq.campaign.market.enums.ContractMarketMethod;
 import mekhq.campaign.mission.AtBContract;
@@ -85,7 +84,7 @@ public class CamOpsContractMarket extends AbstractContractMarket {
     @Override
     public AtBContract addAtBContract(Campaign campaign) {
         HiringHallModifiers hiringHallModifiers = getHiringHallModifiers(campaign);
-        ReputationController reputation = campaign.getReputation();
+        mekhq.campaign.camOpsReputation.ForceReputationController reputation = campaign.getReputation();
         Optional<AtBContract> c = generateContract(campaign, reputation, hiringHallModifiers);
         if (c.isPresent()) {
             AtBContract atbContract = c.get();
@@ -249,7 +248,8 @@ public class CamOpsContractMarket extends AbstractContractMarket {
         }
     }
 
-    private Optional<AtBContract> generateContract(Campaign campaign, ReputationController reputation,
+    private Optional<AtBContract> generateContract(Campaign campaign,
+            mekhq.campaign.camOpsReputation.ForceReputationController reputation,
           HiringHallModifiers hiringHallModifiers) {
         AtBContract contract = new AtBContract("UnnamedContract");
         lastId++;
