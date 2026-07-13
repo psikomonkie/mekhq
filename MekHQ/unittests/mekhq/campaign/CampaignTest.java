@@ -200,13 +200,47 @@ public class CampaignTest {
 
         Campaign testCampaign = mock(Campaign.class);
         when(testCampaign.getTechs()).thenAnswer(inv ->
-              HumanResources.getTechsExpanded(testActivePersonList, noUnits, campaignOptions, false, today, false, false, false));
+                                                         ForceHumanResources.getTechsExpanded(testActivePersonList,
+                                                                 noUnits,
+                                                                 campaignOptions,
+                                                                 false,
+                                                                 today,
+                                                                 false,
+                                                                 false,
+                                                                 false));
         when(testCampaign.getTechs(anyBoolean())).thenAnswer(inv ->
-              HumanResources.getTechsExpanded(testActivePersonList, noUnits, campaignOptions, false, today, (boolean) inv.getArgument(0), false, false));
+                                                                     ForceHumanResources.getTechsExpanded(
+                                                                             testActivePersonList,
+                                                                             noUnits,
+                                                                             campaignOptions,
+                                                                             false,
+                                                                             today,
+                                                                             (boolean) inv.getArgument(0),
+                                                                             false,
+                                                                             false));
         when(testCampaign.getTechs(anyBoolean(), anyBoolean())).thenAnswer(inv ->
-              HumanResources.getTechsExpanded(testActivePersonList, noUnits, campaignOptions, false, today, (boolean) inv.getArgument(0), (boolean) inv.getArgument(1), false));
+                                                                                   ForceHumanResources.getTechsExpanded(
+                                                                                           testActivePersonList,
+                                                                                           noUnits,
+                                                                                           campaignOptions,
+                                                                                           false,
+                                                                                           today,
+                                                                                           (boolean) inv.getArgument(0),
+                                                                                           (boolean) inv.getArgument(1),
+                                                                                           false));
         when(testCampaign.getTechsExpanded(anyBoolean(), anyBoolean(), anyBoolean())).thenAnswer(inv ->
-              HumanResources.getTechsExpanded(testActivePersonList, noUnits, campaignOptions, false, today, (boolean) inv.getArgument(0), (boolean) inv.getArgument(1), (boolean) inv.getArgument(2)));
+                                                                                                         ForceHumanResources.getTechsExpanded(
+                                                                                                                 testActivePersonList,
+                                                                                                                 noUnits,
+                                                                                                                 campaignOptions,
+                                                                                                                 false,
+                                                                                                                 today,
+                                                                                                                 (boolean) inv.getArgument(
+                                                                                                                         0),
+                                                                                                                 (boolean) inv.getArgument(
+                                                                                                                         1),
+                                                                                                                 (boolean) inv.getArgument(
+                                                                                                                         2)));
 
         // Test just getting the list of active techs.
         List<Person> expected = new ArrayList<>(3);
@@ -303,7 +337,7 @@ public class CampaignTest {
         Person flaggedSecond = mock(Person.class);
         when(flaggedSecond.isSecondInCommand()).thenReturn(true);
 
-        Person[] result = HumanResources.findTopCommanders(
+        Person[] result = ForceHumanResources.findTopCommanders(
               List.of(flaggedCommander, flaggedSecond), opts, false, today);
 
         assertSame(flaggedCommander, result[0]);
@@ -324,7 +358,7 @@ public class CampaignTest {
         when(aPerson.outRanksUsingSkillTiebreaker(any(), anyBoolean(), any(), eq(bPerson))).thenReturn(true);
         when(bPerson.outRanksUsingSkillTiebreaker(any(), anyBoolean(), any(), eq(aPerson))).thenReturn(false);
 
-        Person[] result = HumanResources.findTopCommanders(
+        Person[] result = ForceHumanResources.findTopCommanders(
               List.of(flaggedCommander, bPerson, aPerson), opts, false, today);
 
         assertSame(flaggedCommander, result[0], "Flagged commander must remain commander");
@@ -344,7 +378,7 @@ public class CampaignTest {
 
         when(bPerson.outRanksUsingSkillTiebreaker(any(), anyBoolean(), any(), eq(aPerson))).thenReturn(true);
 
-        Person[] result = HumanResources.findTopCommanders(
+        Person[] result = ForceHumanResources.findTopCommanders(
               List.of(aPerson, flaggedSecond, bPerson), opts, false, today);
 
         assertSame(bPerson, result[0], "Commander should be the top-ranked among non-flagged-second personnel");
@@ -364,7 +398,7 @@ public class CampaignTest {
         when(person3.outRanksUsingSkillTiebreaker(any(), anyBoolean(), any(), eq(person2))).thenReturn(false);
         when(person3.outRanksUsingSkillTiebreaker(any(), anyBoolean(), any(), eq(person1))).thenReturn(true);
 
-        Person[] result = HumanResources.findTopCommanders(
+        Person[] result = ForceHumanResources.findTopCommanders(
               List.of(person1, person2, person3), opts, false, today);
 
         assertSame(person2, result[0], "Commander should be the best overall");
@@ -378,7 +412,7 @@ public class CampaignTest {
 
         Person only = mock(Person.class);
 
-        Person[] result = HumanResources.findTopCommanders(List.of(only), opts, false, today);
+        Person[] result = ForceHumanResources.findTopCommanders(List.of(only), opts, false, today);
 
         assertSame(only, result[0]);
         assertNull(result[1], "Second-in-command must be null when only one eligible person exists");

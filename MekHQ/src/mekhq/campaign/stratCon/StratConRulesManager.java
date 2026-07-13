@@ -90,7 +90,7 @@ import megamek.logging.MMLogger;
 import mekhq.MHQConstants;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
+import mekhq.campaign.LocalHangar;
 import mekhq.campaign.ResolveScenarioTracker;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.events.NewDayEvent;
@@ -1930,7 +1930,7 @@ public class StratConRulesManager {
      * returned as a list. Units with no crew are logged and skipped.</p>
      *
      * @param formation the {@link Formation} containing units to evaluate
-     * @param hangar    the {@link Hangar} used to help retrieve units from the force
+     * @param hangar    the {@link LocalHangar} used to help retrieve units from the force
      * @param campaign  the {@link Campaign} context
      *
      * @return a list of {@link ScoutRecord} objects, each representing the best scout and their skill details for a
@@ -1939,7 +1939,7 @@ public class StratConRulesManager {
      * @author Illiani
      * @since 0.50.07
      */
-    static List<ScoutRecord> buildScoutMap(Formation formation, Hangar hangar, Campaign campaign) {
+    static List<ScoutRecord> buildScoutMap(Formation formation, LocalHangar hangar, Campaign campaign) {
         if (formation == null) {
             return new ArrayList<>();
         }
@@ -2249,12 +2249,12 @@ public class StratConRulesManager {
      *
      * @param formation The {@link Formation} instance that the scenario is based on. The force composition is used to
      *                  determine the appropriate scenario template.
-     * @param hangar    The {@link Hangar} instance from which to retrieve the {@link Unit}.
+     * @param hangar    The {@link LocalHangar} instance from which to retrieve the {@link Unit}.
      *
      * @return A {@link ScenarioTemplate} instance representing the chosen scenario template file based on the logic
      *       described, or a default template if no special conditions are satisfied.
      */
-    private static ScenarioTemplate getInterceptionScenarioTemplate(Formation formation, Hangar hangar) {
+    private static ScenarioTemplate getInterceptionScenarioTemplate(Formation formation, LocalHangar hangar) {
         String templateString = "data/scenariotemplates/%sReinforcements Intercepted.xml";
 
         ScenarioTemplate scenarioTemplate = ScenarioTemplate.Deserialize(String.format(templateString, ""));
@@ -2452,7 +2452,7 @@ public class StratConRulesManager {
      * Categorizes a list of force IDs into groups based on the type of map they can primarily support.
      *
      * <p>This overloaded method analyzes each force associated with the given force IDs in the context of
-     * the provided {@link Hangar} and a pre-resolved list of {@link Formation} objects. It determines whether each
+     * the provided {@link LocalHangar} and a pre-resolved list of {@link Formation} objects. It determines whether each
      * force is suited for ground, atmospheric, or space maps, assigning them to the appropriate map types. Forces may
      * belong to multiple map types based on their composition.</p>
      *
@@ -2472,7 +2472,7 @@ public class StratConRulesManager {
      * </ul>
      *
      * @param forceIDs      A list of force IDs to classify.
-     * @param hangar        The {@link Hangar} instance containing aerial or aerospace-related information about
+     * @param hangar        The {@link LocalHangar} instance containing aerial or aerospace-related information about
      *                      forces.
      * @param allFormations A pre-resolved list of {@link Formation} objects. Forces are accessed using their IDs as
      *                      indices, providing performance benefits when compared to fetching forces on demand.
@@ -2480,7 +2480,7 @@ public class StratConRulesManager {
      * @return A {@link Map} where each {@link MapLocation} key corresponds to a map type, and the value is a list of
      *       force IDs that can operate in that map type.
      */
-    public static Map<MapLocation, List<Integer>> sortForcesByMapType(List<Integer> forceIDs, Hangar hangar,
+    public static Map<MapLocation, List<Integer>> sortForcesByMapType(List<Integer> forceIDs, LocalHangar hangar,
           List<Formation> allFormations) {
         boolean airborneOnly;
         boolean aerospaceOnly;

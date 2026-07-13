@@ -63,7 +63,6 @@ import megamek.common.units.Entity;
 import megamek.common.units.UnitType;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.CurrentLocation;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.force.CombatTeam;
 import mekhq.campaign.force.Formation;
@@ -291,7 +290,7 @@ class StratConRulesManagerTest {
 
         // processForceDeployment needs LocalDate and Hangar
         when(campaign.getLocalDate()).thenReturn(LocalDate.of(3025, 1, 15));
-        when(campaign.getAllHangar()).thenReturn(mock(Hangar.class));
+        when(campaign.getAllHangar()).thenReturn(mock(mekhq.campaign.LocalHangar.class));
 
         // Track setup for processForceDeployment
         when(track.getAssignedCoordForces()).thenReturn(new HashMap<>());
@@ -1043,7 +1042,9 @@ class StratConRulesManagerTest {
         @Test
         void testBuildScoutMap_NullFormation() {
             List<ScoutRecord> scouts =
-                  StratConRulesManager.buildScoutMap(null, mock(Hangar.class), mock(Campaign.class));
+                  StratConRulesManager.buildScoutMap(null,
+                        mock(mekhq.campaign.LocalHangar.class),
+                        mock(Campaign.class));
             assertNotNull(scouts);
             assertTrue(scouts.isEmpty());
         }
@@ -1161,7 +1162,7 @@ class StratConRulesManagerTest {
         @Test
         void testBuildScoutMap_EmptyCrewSkipsUnit() {
             Formation formation = mock(Formation.class);
-            Hangar hangar = mock(Hangar.class);
+            mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
             Unit unit = mock(Unit.class);
 
             when(formation.getAllUnitsAsUnits(hangar, false)).thenReturn(Collections.singletonList(unit));
@@ -1205,7 +1206,7 @@ class StratConRulesManagerTest {
         private ScoutRecord getBestScoutForUnit(List<Person> crew, double unitWeight, int unitSpeed,
               boolean hasImprovedSensors, boolean hasActiveProbe, boolean useAgingEffects, boolean isClanCampaign) {
             Formation formation = mock(Formation.class);
-            Hangar hangar = mock(Hangar.class);
+            mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
             Unit unit = mock(Unit.class);
             Entity entity = mock(Entity.class);
 
@@ -1235,7 +1236,7 @@ class StratConRulesManagerTest {
         private List<ScoutRecord> getBestScoutsForUnits(List<Person> crews,
               boolean hasImprovedSensors, boolean hasActiveProbe) {
             Formation formation = mock(Formation.class);
-            Hangar hangar = mock(Hangar.class);
+            mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
 
             try (MockedStatic<AtBDynamicScenarioFactory> scenarioFactory = mockStatic(AtBDynamicScenarioFactory.class);
                   MockedStatic<EntityUtilities> entityUtils = mockStatic(EntityUtilities.class);

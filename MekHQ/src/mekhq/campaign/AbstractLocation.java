@@ -210,7 +210,7 @@ public abstract class AbstractLocation implements IPlace {
               isSilentProcessing);
     }
 
-    void checkForDiseaseOrBioweaponOutbreaks(Campaign campaign, LocalDate today) {
+    public void checkForDiseaseOrBioweaponOutbreaks(Campaign campaign, LocalDate today) {
         Set<InjuryType> availableCures = getAllSystemSpecificDiseasesWithCures(currentSystem.getId(), today, true);
 
         Set<InjuryType> activeBioweapons = getAllActiveBioweapons(currentSystem.getId(), today, true);
@@ -249,7 +249,7 @@ public abstract class AbstractLocation implements IPlace {
      *
      * @param campaign The {@link Campaign} instance.
      */
-    void testForEarlyArrival(Campaign campaign) {
+    public void testForEarlyArrival(Campaign campaign) {
         for (Contract contract : campaign.getFutureContracts()) {
             if (Objects.equals(currentSystem, contract.getSystem())) {
                 int daysTillStart = campaign.getLocalDate().until(contract.getStartDate()).getDays();

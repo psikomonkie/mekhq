@@ -73,7 +73,7 @@ import mekhq.campaign.AbstractMobileLocation;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.CurrentLocation;
 import mekhq.campaign.JumpPath;
-import mekhq.campaign.Personnel;
+import mekhq.campaign.LocalPersonnel;
 import mekhq.campaign.base.PlayerBase;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.events.persons.PersonChangedEvent;
@@ -800,7 +800,8 @@ public class EducationController {
             // the travel-progress display; arrival is driven by the travel node.
             person.setEduJourneyTime(2);
             person.setEduDaysOfTravel(0);
-            campaign.getCampaignLocationManager().queueTravel(List.of(person), campaign);
+            campaign.getCampaignLocationManager()
+                  .queueTravel(List.of(person), campaign.getPlayerForce().getForceDetachment());
             campaign.addReport(PERSONNEL, String.format(resources.getString("returningFromSchool.text"),
                   person.getHyperlinkedFullTitle(), 2));
             person.setEduEducationStage(EducationStage.JOURNEY_FROM_CAMPUS);
@@ -829,7 +830,8 @@ public class EducationController {
             }
         }
 
-        campaign.getCampaignLocationManager().queueTravel(List.of(person), campaign);
+        campaign.getCampaignLocationManager()
+              .queueTravel(List.of(person), campaign.getPlayerForce().getForceDetachment());
 
         JumpPath returnPath = LocationUtils.planJumpPath(academySystem, campaign.getCurrentSystem(), campaign);
         int travelDays = returnPath != null
@@ -853,7 +855,7 @@ public class EducationController {
             }
             current = current.getParentLocation();
         }
-        return campaign;
+        return campaign.getPlayerForce().getForceDetachment();
     }
 
     /**
@@ -938,7 +940,7 @@ public class EducationController {
           @Nullable AbstractMobileLocation returnLocation) {
         Academy returningFromAcademy = getAcademy(person.getEduAcademySet(), person.getEduAcademyNameInSet());
         boolean isLocal = returningFromAcademy != null && returningFromAcademy.isLocal();
-        Personnel arrivingAtPersonnel = isLocal ?
+        LocalPersonnel arrivingAtPersonnel = isLocal ?
                                               findPersonnelWhenReturningFromLocal(campaign,
                                                     person.getEduAcademySystem()) :
                                               campaign.getMainForcePersonnel();
@@ -956,7 +958,7 @@ public class EducationController {
         LocationDispatch.removeTravelNode(returnLocation, campaign.getCampaignLocationManager());
     }
 
-    private static Personnel findPersonnelWhenReturningFromLocal(Campaign campaign, @Nullable String systemId) {
+    private static LocalPersonnel findPersonnelWhenReturningFromLocal(Campaign campaign, @Nullable String systemId) {
         if (systemId != null) {
             for (PlayerBase base : campaign.getCampaignLocationManager().getPlayerBases()) {
                 PlanetarySystem system = base.getCurrentSystem();

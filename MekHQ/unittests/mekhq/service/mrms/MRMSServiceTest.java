@@ -54,14 +54,11 @@ import megamek.common.compute.Compute;
 import megamek.common.enums.SkillLevel;
 import megamek.common.equipment.EquipmentType;
 import megamek.common.rolls.TargetRoll;
-import megamek.common.units.Aero;
 import megamek.common.units.Entity;
 import megamek.common.units.Mek;
-import megamek.common.units.ProtoMek;
-import megamek.common.units.Tank;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Quartermaster;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.ForceQuartermaster;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.parts.Armor;
 import mekhq.campaign.parts.Part;
@@ -98,8 +95,8 @@ public class MRMSServiceTest {
 
     Campaign mockCampaign;
     CampaignOptions mockCampaignOptions;
-    Warehouse warehouse;
-    Quartermaster mockQuartermaster;
+    LocalWarehouse warehouse;
+    ForceQuartermaster mockQuartermaster;
     PartInventory mockPartInventory;
     MRMSConfiguredOptions configuredOptions;
 
@@ -129,9 +126,9 @@ public class MRMSServiceTest {
         mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaignOptions.getMRMSOptions()).thenReturn(new ArrayList<>());
 
-        warehouse = new Warehouse();
+        warehouse = new LocalWarehouse();
 
-        mockQuartermaster = mock(Quartermaster.class);
+        mockQuartermaster = mock(ForceQuartermaster.class);
 
         mockPartInventory = mock(PartInventory.class);
         when(mockPartInventory.getTransitOrderedDetails()).thenReturn("");

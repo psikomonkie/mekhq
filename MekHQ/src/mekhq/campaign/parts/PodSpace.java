@@ -46,7 +46,6 @@ import megamek.common.units.Mek;
 import megamek.common.units.Tank;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Warehouse;
 import mekhq.campaign.events.parts.PartChangedEvent;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.location.LocationNode;
@@ -313,7 +312,7 @@ public class PodSpace implements IPartWork {
     }
 
     @Override
-    public Warehouse getWarehouse() {
+    public mekhq.campaign.LocalWarehouse getWarehouse() {
         return campaign.getWarehouse();
     }
 

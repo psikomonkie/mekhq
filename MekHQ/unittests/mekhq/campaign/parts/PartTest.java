@@ -51,7 +51,7 @@ import megamek.common.units.Entity;
 import megamek.common.units.Mek;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.FixedLocation;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.base.PlayerBase;
 import mekhq.campaign.location.LocationNode;
 import mekhq.campaign.parts.meks.MekLocation;
@@ -152,7 +152,7 @@ public class PartTest {
     @Test
     public void decrementQuantity() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
@@ -179,7 +179,7 @@ public class PartTest {
     @Test
     public void decrementQuantityDoesNotGoNegative() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
@@ -200,7 +200,7 @@ public class PartTest {
     @Test
     public void decrementQuantityZeroRemovesChildParts() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
@@ -228,7 +228,7 @@ public class PartTest {
     @Test
     public void setQuantity() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
@@ -250,7 +250,7 @@ public class PartTest {
     @Test
     public void setNegativeQuantity() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
@@ -272,7 +272,7 @@ public class PartTest {
     @Test
     public void setQuantityZeroRemovesChildParts() {
         Campaign mockCampaign = mock(Campaign.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
@@ -461,7 +461,7 @@ public class PartTest {
         @Test
         void getWarehouse_sparePartInCampaignWarehouse_returnsCampaignWarehouse() {
             Campaign mockCampaign = mock(Campaign.class);
-            Warehouse campaignWarehouse = new Warehouse();
+            LocalWarehouse campaignWarehouse = new LocalWarehouse();
             when(mockCampaign.getWarehouse()).thenReturn(campaignWarehouse);
 
             Part part = new MekSensor();
@@ -474,7 +474,7 @@ public class PartTest {
         @Test
         void getWarehouse_sparePartInBaseWarehouse_returnsBaseWarehouse() {
             Campaign mockCampaign = mock(Campaign.class);
-            Warehouse campaignWarehouse = new Warehouse();
+            LocalWarehouse campaignWarehouse = new LocalWarehouse();
             when(mockCampaign.getWarehouse()).thenReturn(campaignWarehouse);
 
             PlayerBase base = new PlayerBase(new FixedLocation(mock(PlanetarySystem.class)));
@@ -489,7 +489,7 @@ public class PartTest {
         @Test
         void getWarehouse_partOnUnitAtBase_returnsBaseWarehouse() {
             Campaign mockCampaign = mock(Campaign.class);
-            Warehouse campaignWarehouse = new Warehouse();
+            LocalWarehouse campaignWarehouse = new LocalWarehouse();
             when(mockCampaign.getWarehouse()).thenReturn(campaignWarehouse);
 
             PlayerBase base = new PlayerBase(new FixedLocation(mock(PlanetarySystem.class)));
@@ -514,7 +514,7 @@ public class PartTest {
         @Test
         void getWarehouse_partOnMainForceUnit_returnsCampaignWarehouse() {
             Campaign mockCampaign = mock(Campaign.class);
-            Warehouse campaignWarehouse = new Warehouse();
+            LocalWarehouse campaignWarehouse = new LocalWarehouse();
             when(mockCampaign.getWarehouse()).thenReturn(campaignWarehouse);
 
             // Unit with a locationNode that has no IPlace ancestor.

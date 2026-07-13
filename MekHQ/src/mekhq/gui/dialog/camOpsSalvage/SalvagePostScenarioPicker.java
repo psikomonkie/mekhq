@@ -72,7 +72,6 @@ import megamek.common.units.Tank;
 import megamek.logging.MMLogger;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.enums.CampaignTransportType;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.force.Formation;
@@ -353,7 +352,7 @@ public class SalvagePostScenarioPicker {
     private List<Integer> setSalvageUnits(Campaign campaign, Scenario scenario) {
         List<Integer> salvageFormations = new ArrayList<>();
         salvageUnits = new ArrayList<>();
-        Hangar hangar = campaign.getHangar();
+        mekhq.campaign.LocalHangar hangar = campaign.getHangar();
         for (Integer forceId : scenario.getSalvageFormations()) {
             salvageFormations.add(forceId);
 
