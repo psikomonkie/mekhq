@@ -705,7 +705,7 @@ public class AmmoBinTest {
     public void unloadEmptyBinTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -726,7 +726,7 @@ public class AmmoBinTest {
     public void unloadFullBinTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -756,7 +756,7 @@ public class AmmoBinTest {
     public void unloadPartialBinTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -788,7 +788,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -812,7 +812,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -845,7 +845,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -876,7 +876,7 @@ public class AmmoBinTest {
     public void loadBinWithoutUnitDoesNothing() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -899,7 +899,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -934,7 +934,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -976,7 +976,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1017,7 +1017,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1059,7 +1059,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1122,7 +1122,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1184,7 +1184,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1236,7 +1236,7 @@ public class AmmoBinTest {
     public void fixBinWithoutUnitDoesNothing() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1259,7 +1259,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1294,7 +1294,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1336,7 +1336,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1377,7 +1377,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1419,7 +1419,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1482,7 +1482,7 @@ public class AmmoBinTest {
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 

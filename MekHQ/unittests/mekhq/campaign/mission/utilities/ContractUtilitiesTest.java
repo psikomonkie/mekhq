@@ -68,7 +68,7 @@ public class ContractUtilitiesTest {
     void beforeEach() {
         mockCombatTeams = new ArrayList<>();
 
-        when(mockCampaign.getCombatTeamsAsList()).thenReturn(mockCombatTeams);
+        when(mockCampaign.getPlayerForce().getCombatTeamsAsList(mockCampaign)).thenReturn(mockCombatTeams);
     }
 
     @Nested

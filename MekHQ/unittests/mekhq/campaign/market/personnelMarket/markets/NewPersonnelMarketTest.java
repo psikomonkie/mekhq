@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -45,9 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
@@ -58,7 +56,6 @@ import java.util.List;
 import java.util.Map;
 
 import megamek.common.compute.Compute;
-import megamek.common.enums.Gender;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.market.personnelMarket.records.PersonnelMarketEntry;
 import mekhq.campaign.personnel.Person;
@@ -504,9 +501,13 @@ class NewPersonnelMarketTest {
         Faction faction = new Faction();
         market.setApplicantOriginFactions(List.of(faction));
 
-        when(mockCampaign.newPerson(any(PersonnelRole.class),
-              eq(faction.getShortName()),
-              eq(Gender.RANDOMIZE))).thenReturn(null);
+        final String factionCode = ArgumentMatchers.eq(faction.getShortName());
+        when(mockCampaign.getPlayerForce()
+                   .getHumanResources()
+                   .newPerson(mockCampaign,
+                         ArgumentMatchers.any(mekhq.campaign.personnel.enums.PersonnelRole.class),
+                         factionCode,
+                         ArgumentMatchers.eq(megamek.common.enums.Gender.RANDOMIZE))).thenReturn(null);
 
         PersonnelMarketEntry soldier = new PersonnelMarketEntry(1, SOLDIER, 1, 3050, 3100, SOLDIER);
 
@@ -538,9 +539,13 @@ class NewPersonnelMarketTest {
         when(mockCampaign.getFaction()).thenReturn(faction);
 
         Person person = new Person(mockCampaign);
-        when(mockCampaign.newPerson(any(PersonnelRole.class),
-              eq(faction.getShortName()),
-              eq(Gender.RANDOMIZE))).thenReturn(person);
+        final String factionCode = ArgumentMatchers.eq(faction.getShortName());
+        when(mockCampaign.getPlayerForce()
+                   .getHumanResources()
+                   .newPerson(mockCampaign,
+                         ArgumentMatchers.any(mekhq.campaign.personnel.enums.PersonnelRole.class),
+                         factionCode,
+                         ArgumentMatchers.eq(megamek.common.enums.Gender.RANDOMIZE))).thenReturn(person);
 
         PersonnelMarketEntry soldier = new PersonnelMarketEntry(1, SOLDIER, 1, 3050, 3100, SOLDIER);
 

@@ -93,7 +93,7 @@ public class TotalBuyCostTest {
     @Test
     public void onePartInShoppingList() {
         mekhq.campaign.market.ForceShoppingList testShoppingList = new mekhq.campaign.market.ForceShoppingList();
-        mockCampaign.setShoppingList(testShoppingList);
+        mockCampaign.getPlayerForce().setShoppingList(testShoppingList);
         Part part = new MekSensor(1, mockCampaign);
         IAcquisitionWork shoppingListItem = part.getAcquisitionWork();
         Money partValue = shoppingListItem.getBuyCost();
@@ -105,7 +105,7 @@ public class TotalBuyCostTest {
     @Test
     public void incrementPartInShoppingList() {
         mekhq.campaign.market.ForceShoppingList testShoppingList = new mekhq.campaign.market.ForceShoppingList();
-        mockCampaign.setShoppingList(testShoppingList);
+        mockCampaign.getPlayerForce().setShoppingList(testShoppingList);
         Part part = new MekSensor(1, mockCampaign);
         IAcquisitionWork shoppingListItem = part.getAcquisitionWork();
         Money partValue = shoppingListItem.getBuyCost();
@@ -122,7 +122,7 @@ public class TotalBuyCostTest {
     @Test
     public void decrementPartInShoppingList() {
         mekhq.campaign.market.ForceShoppingList testShoppingList = new mekhq.campaign.market.ForceShoppingList();
-        mockCampaign.setShoppingList(testShoppingList);
+        mockCampaign.getPlayerForce().setShoppingList(testShoppingList);
         Part part = new MekSensor(1, mockCampaign);
         IAcquisitionWork shoppingListItem = part.getAcquisitionWork();
         shoppingListItem.incrementQuantity();
@@ -144,7 +144,7 @@ public class TotalBuyCostTest {
     @Test
     public void addDifferentPartsInShoppingList() {
         mekhq.campaign.market.ForceShoppingList testShoppingList = new mekhq.campaign.market.ForceShoppingList();
-        mockCampaign.setShoppingList(testShoppingList);
+        mockCampaign.getPlayerForce().setShoppingList(testShoppingList);
         Part partA = new MekSensor(1, mockCampaign);
         Part partB = new MekCockpit(2, Mek.COCKPIT_SMALL, false, mockCampaign);
         IAcquisitionWork shoppingListItemA = partA.getAcquisitionWork();

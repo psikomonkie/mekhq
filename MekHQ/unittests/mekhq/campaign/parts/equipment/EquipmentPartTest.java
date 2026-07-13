@@ -537,7 +537,7 @@ public class EquipmentPartTest {
     public void removeTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -602,7 +602,7 @@ public class EquipmentPartTest {
     public void salvageTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1126,7 +1126,7 @@ public class EquipmentPartTest {
         CampaignOptions campaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(campaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1221,7 +1221,7 @@ public class EquipmentPartTest {
     public void updateConditionFromEntityMissingTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1449,7 +1449,7 @@ public class EquipmentPartTest {
     public void checkWeaponBayOnlyWeaponRemovedTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1531,7 +1531,7 @@ public class EquipmentPartTest {
     public void checkWeaponBayWeaponRemovedOthersOkayTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1619,7 +1619,7 @@ public class EquipmentPartTest {
     public void checkWeaponBayWeaponRemovedOthersDestroyedTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1708,7 +1708,7 @@ public class EquipmentPartTest {
     public void checkWeaponBayUpdateConditionFromPartGoodWeaponTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 

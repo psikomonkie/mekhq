@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2024-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -73,7 +73,7 @@ class UnableToAffordLoanPaymentNagLogicTest {
         secondLoan = mock(Loan.class);
 
         // Stubs
-        when(campaign.getFinances()).thenReturn(finances);
+        when(campaign.getPlayerForce().getFinances()).thenReturn(finances);
         when(campaign.getLocalDate()).thenReturn(today);
 
         when(firstLoan.getPaymentAmount()).thenReturn(Money.of(5));

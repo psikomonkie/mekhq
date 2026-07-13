@@ -272,7 +272,7 @@ class StratConRulesManagerTest {
 
         // increaseFatigue needs Formation -> Units -> Crew
         Formation formation = mock(Formation.class);
-        when(campaign.getFormation(forceID)).thenReturn(formation);
+        when(campaign.getPlayerForce().getFormation(forceID)).thenReturn(formation);
 
         UUID unitId = UUID.randomUUID();
         Vector<UUID> unitIds = new Vector<>();
@@ -289,7 +289,7 @@ class StratConRulesManagerTest {
 
         // processForceDeployment needs LocalDate and Hangar
         when(campaign.getLocalDate()).thenReturn(LocalDate.of(3025, 1, 15));
-        when(campaign.getAllHangar()).thenReturn(mock(mekhq.campaign.LocalHangar.class));
+        when(campaign.getPlayerForce().getHangar()).thenReturn(mock(mekhq.campaign.LocalHangar.class));
 
         // Track setup for processForceDeployment
         when(track.getAssignedCoordForces()).thenReturn(new HashMap<>());
@@ -332,7 +332,7 @@ class StratConRulesManagerTest {
         when(combatTeam.getRole()).thenReturn(combatRole);
         var combatTeamsMap = new Hashtable<Integer, CombatTeam>();
         combatTeamsMap.put(forceID, combatTeam);
-        when(campaign.getCombatTeamsAsMap()).thenReturn(combatTeamsMap);
+        when(campaign.getPlayerForce().getCombatTeamsAsMap(campaign)).thenReturn(combatTeamsMap);
 
         setupProcessForceDeploymentMocks(campaign, options, track, forceID);
 
@@ -380,7 +380,7 @@ class StratConRulesManagerTest {
         when(combatTeam.getRole()).thenReturn(combatRole);
         var combatTeamsMap = new Hashtable<Integer, CombatTeam>();
         combatTeamsMap.put(forceID, combatTeam);
-        when(campaign.getCombatTeamsAsMap()).thenReturn(combatTeamsMap);
+        when(campaign.getPlayerForce().getCombatTeamsAsMap(campaign)).thenReturn(combatTeamsMap);
 
         setupProcessForceDeploymentMocks(campaign, options, track, forceID);
 
@@ -420,7 +420,7 @@ class StratConRulesManagerTest {
         when(combatTeam.getRole()).thenReturn(combatRole);
         var combatTeamsMap = new Hashtable<Integer, CombatTeam>();
         combatTeamsMap.put(forceID, combatTeam);
-        when(campaign.getCombatTeamsAsMap()).thenReturn(combatTeamsMap);
+        when(campaign.getPlayerForce().getCombatTeamsAsMap(campaign)).thenReturn(combatTeamsMap);
 
         setupProcessForceDeploymentMocks(campaign, options, track, forceID);
 
@@ -572,7 +572,7 @@ class StratConRulesManagerTest {
         when(combatTeam.getRole()).thenReturn(combatRole);
         var combatTeamsMap = new Hashtable<Integer, CombatTeam>();
         combatTeamsMap.put(forceID, combatTeam);
-        when(campaign.getCombatTeamsAsMap()).thenReturn(combatTeamsMap);
+        when(campaign.getPlayerForce().getCombatTeamsAsMap(campaign)).thenReturn(combatTeamsMap);
 
         setupProcessForceDeploymentMocks(campaign, options, track, forceID);
 
@@ -710,7 +710,7 @@ class StratConRulesManagerTest {
         when(campaign.getLocalDate()).thenReturn(LocalDate.of(3025, 1, 15));
 
         CurrentLocation location = mock(CurrentLocation.class);
-        when(campaign.getCurrentLocation()).thenReturn(location);
+        when(campaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         if (atmosphere != null) {
             Planet planet = mock(Planet.class);

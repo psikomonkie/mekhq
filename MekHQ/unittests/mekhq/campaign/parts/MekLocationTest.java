@@ -1468,7 +1468,7 @@ class MekLocationTest {
     void removeSimpleTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
         Unit unit = mock(Unit.class);
@@ -1510,7 +1510,7 @@ class MekLocationTest {
     void removeHeadWithoutComponentsTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
         Unit unit = mock(Unit.class);
@@ -1541,7 +1541,7 @@ class MekLocationTest {
     void removeHeadWithSensorComponentTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
         Unit unit = mock(Unit.class);
@@ -1578,7 +1578,7 @@ class MekLocationTest {
     void removeHeadWithLifeSupportComponentTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
         Unit unit = mock(Unit.class);
@@ -1615,7 +1615,7 @@ class MekLocationTest {
     void removeHeadWithComponentsTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
         Unit unit = mock(Unit.class);
@@ -1654,7 +1654,7 @@ class MekLocationTest {
     void removeCenterTorsoDoesntAddMissingPartTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
         Unit unit = mock(Unit.class);
@@ -1685,7 +1685,7 @@ class MekLocationTest {
     void updateConditionFromEntityNoInternalsRemovesLocationTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         mekhq.campaign.ForceQuartermaster mockQuartermaster = mock(mekhq.campaign.ForceQuartermaster.class);
         when(mockCampaign.getQuartermaster()).thenReturn(mockQuartermaster);
         Unit unit = mock(Unit.class);
@@ -1721,7 +1721,7 @@ class MekLocationTest {
     void salvageSimpleTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
         Unit unit = mock(Unit.class);
@@ -1767,7 +1767,7 @@ class MekLocationTest {
     void salvageCenterTorsoDoesntAddMissingPartTest() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
         Unit unit = mock(Unit.class);

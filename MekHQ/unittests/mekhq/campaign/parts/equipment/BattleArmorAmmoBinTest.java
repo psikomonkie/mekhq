@@ -323,7 +323,7 @@ public class BattleArmorAmmoBinTest {
             mockCampaignOptions = mock(CampaignOptions.class);
             when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
             warehouse = new LocalWarehouse();
-            when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+            when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
             quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
             when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 

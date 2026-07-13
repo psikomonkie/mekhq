@@ -79,7 +79,7 @@ public class QuartermasterTest {
     public void addPartDoesntAddTestUnitParts() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockPart = mock(Part.class);
@@ -97,7 +97,7 @@ public class QuartermasterTest {
     public void addPartDoesntAddSpareMissingParts() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         MissingPart mockPart = mock(MissingPart.class);
@@ -113,7 +113,7 @@ public class QuartermasterTest {
     public void addPartTransitDaysNeverNegative() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockPart = mock(Part.class);
@@ -132,7 +132,7 @@ public class QuartermasterTest {
     public void addPartPlacesSparePartInWarehouse() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockPart = mock(Part.class);
@@ -149,7 +149,7 @@ public class QuartermasterTest {
     public void addPartPlacesUnitPartInWarehouse() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockPart = mock(Part.class);
@@ -168,7 +168,7 @@ public class QuartermasterTest {
     public void addPartPlacesUnitMissingPartInWarehouse() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         MissingPart mockPart = mock(MissingPart.class);
@@ -186,7 +186,7 @@ public class QuartermasterTest {
     public void arrivePartDoesNothingForUnitParts() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockPart = mock(Part.class);
@@ -204,7 +204,7 @@ public class QuartermasterTest {
     public void arrivePartSetsDaysToArrivalToZero() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockPart = mock(Part.class);
@@ -225,7 +225,7 @@ public class QuartermasterTest {
     public void arrivePartPlacesPartInWarehouse() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockPart = mock(Part.class);
@@ -242,7 +242,7 @@ public class QuartermasterTest {
     public void arrivePartNotifiesPartArrival() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockPart = mock(Part.class);
@@ -296,7 +296,7 @@ public class QuartermasterTest {
 
         // ...but can't afford a unit...
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         doReturn(false).when(mockFinances).debit(eq(TransactionType.UNIT_PURCHASE), any(), any(), anyString());
 
         Entity mockEntity = mock(Entity.class);
@@ -322,7 +322,7 @@ public class QuartermasterTest {
 
         // ...and can afford a unit...
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ArgumentCaptor<Money> captor = ArgumentCaptor.forClass(Money.class);
         doReturn(true).when(mockFinances)
               .debit(eq(TransactionType.UNIT_PURCHASE), any(), captor.capture(), anyString());
@@ -354,7 +354,7 @@ public class QuartermasterTest {
 
         // ...and can afford a unit...
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ArgumentCaptor<Money> captor = ArgumentCaptor.forClass(Money.class);
         doReturn(true).when(mockFinances)
               .debit(eq(TransactionType.UNIT_PURCHASE), any(), captor.capture(), anyString());
@@ -389,7 +389,7 @@ public class QuartermasterTest {
 
         // ...and can afford a unit...
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ArgumentCaptor<Money> captor = ArgumentCaptor.forClass(Money.class);
         doReturn(true).when(mockFinances)
               .debit(eq(TransactionType.UNIT_PURCHASE), any(), captor.capture(), anyString());
@@ -426,7 +426,7 @@ public class QuartermasterTest {
 
         // ...and can afford a unit...
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ArgumentCaptor<Money> captor = ArgumentCaptor.forClass(Money.class);
         doReturn(true).when(mockFinances)
               .debit(eq(TransactionType.UNIT_PURCHASE), any(), captor.capture(), anyString());
@@ -451,7 +451,7 @@ public class QuartermasterTest {
     public void sellUnitCreditsCorrectAmount() {
         Campaign mockCampaign = mock(Campaign.class);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Unit mockUnit = mock(Unit.class);
@@ -470,7 +470,7 @@ public class QuartermasterTest {
     public void sellUnitRemovesTheUnitFromTheCampaign() {
         Campaign mockCampaign = mock(Campaign.class);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Unit mockUnit = mock(Unit.class);
@@ -491,7 +491,7 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we don't pay for parts...
@@ -516,7 +516,7 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we don't pay for parts...
@@ -539,9 +539,9 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we pay for parts...
@@ -567,9 +567,9 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we pay for parts...
@@ -595,9 +595,9 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we pay for parts...
@@ -624,9 +624,9 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we pay for parts...
@@ -654,9 +654,9 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we pay for parts...
@@ -683,9 +683,9 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we pay for parts...
@@ -713,9 +713,9 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we pay for parts...
@@ -741,9 +741,9 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we pay for parts...
@@ -769,9 +769,9 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we don't pay for parts...
@@ -794,9 +794,9 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we pay for parts...
@@ -819,9 +819,9 @@ public class QuartermasterTest {
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // If we pay for parts...
@@ -842,9 +842,9 @@ public class QuartermasterTest {
     public void sellPartWontSellZeroParts() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockPart = mock(Part.class);
@@ -860,9 +860,9 @@ public class QuartermasterTest {
     public void sellPartWontSellNegativeParts() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockPart = mock(Part.class);
@@ -878,9 +878,9 @@ public class QuartermasterTest {
     public void sellPartWontSellMoreThanInStock() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Zero parts on hand...
@@ -899,9 +899,9 @@ public class QuartermasterTest {
     public void sellPartCalculatesSalePrice() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Two parts on hand worth 1 C-bill each...
@@ -923,9 +923,9 @@ public class QuartermasterTest {
     public void sellPartRemovesPartsFromWarehouse() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Ten parts on hand worth 1 C-bill each...
@@ -945,9 +945,9 @@ public class QuartermasterTest {
     public void sellPartRemovesNoMorePartsFromWarehouseThanOnHand() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Five parts on hand worth 1 C-bill each...
@@ -968,9 +968,9 @@ public class QuartermasterTest {
     public void sellPartCalculatesSalePriceWhenFewerPartsOnHand() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Five parts on hand worth 1 C-bill each...
@@ -993,9 +993,9 @@ public class QuartermasterTest {
     public void sellAllPartsSellsNothingIfYouHaveNothing() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Zero parts on hand...
@@ -1014,9 +1014,9 @@ public class QuartermasterTest {
     public void sellAllPartsRemovesPartsFromWarehouse() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Ten parts on hand worth 1 C-bill each...
@@ -1040,9 +1040,9 @@ public class QuartermasterTest {
     public void sellAmmoWontSellZeroAmmo() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         AmmoStorage mockAmmo = mock(AmmoStorage.class);
@@ -1058,9 +1058,9 @@ public class QuartermasterTest {
     public void sellAmmoWontSellNegativeAmmo() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         AmmoStorage mockAmmo = mock(AmmoStorage.class);
@@ -1076,9 +1076,9 @@ public class QuartermasterTest {
     public void sellAmmoWontSellMoreThanInStock() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Zero parts on hand...
@@ -1097,9 +1097,9 @@ public class QuartermasterTest {
     public void sellAmmoCalculatesSalePrice() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // One hundred rounds of ammo on hand worth 1 C-bill each...
@@ -1121,9 +1121,9 @@ public class QuartermasterTest {
     public void sellAmmoRemovesAmmoFromWarehouse() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Ten rounds of ammo on hand worth 1 C-bill each...
@@ -1143,9 +1143,9 @@ public class QuartermasterTest {
     public void sellAmmoRemovesNoMoreAmmoFromWarehouseThanOnHand() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Five rounds of ammo on hand worth 1 C-bill each...
@@ -1166,9 +1166,9 @@ public class QuartermasterTest {
     public void sellAmmoCalculatesSalePriceWhenFewerAmmoOnHand() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Five rounds of ammo on hand worth 1 C-bill each...
@@ -1193,9 +1193,9 @@ public class QuartermasterTest {
     public void sellAllAmmoSellsNothingIfYouHaveNothing() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Zero rounds of ammo on hand...
@@ -1214,9 +1214,9 @@ public class QuartermasterTest {
     public void sellAllAmmoRemovesAmmoFromWarehouse() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // One hundred rounds of ammo on hand worth 1 C-bill each...
@@ -1240,9 +1240,9 @@ public class QuartermasterTest {
     public void sellPartWithAmmoSellsAmmo() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Ten rounds of ammo on hand worth 1 C-bill each...
@@ -1266,9 +1266,9 @@ public class QuartermasterTest {
     public void sellAllPartsWithAmmoSellsAllAmmo() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // One hundred rounds of ammo on hand worth 1 C-bill each...
@@ -1292,9 +1292,9 @@ public class QuartermasterTest {
     public void sellArmorWontSellZeroArmor() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Armor mockArmor = mock(Armor.class);
@@ -1310,9 +1310,9 @@ public class QuartermasterTest {
     public void sellArmorWontSellNegativeArmor() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Armor mockArmor = mock(Armor.class);
@@ -1328,9 +1328,9 @@ public class QuartermasterTest {
     public void sellArmorWontSellMoreThanInStock() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Zero parts on hand...
@@ -1349,9 +1349,9 @@ public class QuartermasterTest {
     public void sellArmorCalculatesSalePrice() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // One hundred points of armor on hand worth 1 C-bill each...
@@ -1373,9 +1373,9 @@ public class QuartermasterTest {
     public void sellArmorRemovesArmorFromWarehouse() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Ten points of armor on hand worth 1 C-bill each...
@@ -1395,9 +1395,9 @@ public class QuartermasterTest {
     public void sellArmorRemovesNoMoreArmorFromWarehouseThanOnHand() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Five points of armor on hand worth 1 C-bill each...
@@ -1418,9 +1418,9 @@ public class QuartermasterTest {
     public void sellArmorCalculatesSalePriceWhenFewerArmorOnHand() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Five points of armor on hand worth 1 C-bill each...
@@ -1445,9 +1445,9 @@ public class QuartermasterTest {
     public void sellAllArmorSellsNothingIfYouHaveNothing() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Zero points of armor on hand...
@@ -1466,9 +1466,9 @@ public class QuartermasterTest {
     public void sellAllArmorRemovesArmorFromWarehouse() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // One hundred points of armor on hand worth 1 C-bill each...
@@ -1492,9 +1492,9 @@ public class QuartermasterTest {
     public void sellPartWithArmorSellsArmor() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Ten points of armor on hand worth 1 C-bill each...
@@ -1518,9 +1518,9 @@ public class QuartermasterTest {
     public void sellAllPartsWithArmorSellsAllArmor() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Finances mockFinances = mock(Finances.class);
-        when(mockCampaign.getFinances()).thenReturn(mockFinances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(mockFinances);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // One hundred points of armor on hand worth 1 C-bill each...
@@ -1544,7 +1544,7 @@ public class QuartermasterTest {
     public void remotePartFromPodOnlyDepodsOmniPoddedParts() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockOmniPart = mock(Part.class);
@@ -1560,7 +1560,7 @@ public class QuartermasterTest {
     public void depodPartDoesNotRemoteZeroPartsFromPod() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockOmniPart = mock(Part.class);
@@ -1576,7 +1576,7 @@ public class QuartermasterTest {
     public void depodPartDoesNotRemoteNegativePartsFromPod() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         Part mockOmniPart = mock(Part.class);
@@ -1598,7 +1598,7 @@ public class QuartermasterTest {
 
         Campaign mockCampaign = mock(Campaign.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
 
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
@@ -1643,7 +1643,7 @@ public class QuartermasterTest {
     public void remotePartAddsCorrectNumberOfPartFromPodAndOmniPod() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Create a spare omni-podded part...
@@ -1673,7 +1673,7 @@ public class QuartermasterTest {
     public void remotePartAddsCorrectNumberOfPartFromPodAndOmniPodIfLessOnHand() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Create a spare omni-podded part...
@@ -1704,7 +1704,7 @@ public class QuartermasterTest {
     public void depodAllPartsAddsCorrectNumberOfPartAndOmniPod() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Create a spare omni-podded part...
@@ -1734,7 +1734,7 @@ public class QuartermasterTest {
     public void remotePartFromPodRaisesChangedEventIfSomeRemain() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Create a spare omni-podded part...
@@ -1756,7 +1756,7 @@ public class QuartermasterTest {
     public void remotePartFromPodDoesNotRaiseChangedEventIfNoneRemain() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
 
         // Create a spare omni-podded part...
@@ -1793,7 +1793,7 @@ public class QuartermasterTest {
 
         // Set up an empty warehouse
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -1835,7 +1835,7 @@ public class QuartermasterTest {
         AmmoStorage inTransit = new AmmoStorage(0, ammoType, ammoType.getShots(), mockCampaign);
         inTransit.setDaysToArrival(10);
         warehouse.addPart(inTransit);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -1878,7 +1878,7 @@ public class QuartermasterTest {
         AmmoType otherAmmoType = getAmmoType("ISSRM4 Inferno Ammo");
         AmmoStorage otherAmmo = new AmmoStorage(0, otherAmmoType, otherAmmoType.getShots(), mockCampaign);
         warehouse.addPart(otherAmmo);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -1927,7 +1927,7 @@ public class QuartermasterTest {
         AmmoStorage existing = new AmmoStorage(0, ammoType, originalShots, mockCampaign);
         warehouse.addPart(existing);
         existing.setBrandNew(false);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -1972,7 +1972,7 @@ public class QuartermasterTest {
         AmmoStorage existing = new AmmoStorage(0, ammoType, originalShots, mockCampaign);
         existing.setBrandNew(false);
         warehouse.addPart(existing);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2012,7 +2012,7 @@ public class QuartermasterTest {
         int originalShots = 1;
         AmmoStorage existing = new AmmoStorage(0, ammoType, originalShots, mockCampaign);
         warehouse.addPart(existing);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2050,7 +2050,7 @@ public class QuartermasterTest {
         int originalShots = 1;
         AmmoStorage existing = new AmmoStorage(0, ammoType, originalShots, mockCampaign);
         warehouse.addPart(existing);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2083,7 +2083,7 @@ public class QuartermasterTest {
 
         // Set up an empty warehouse
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2114,7 +2114,7 @@ public class QuartermasterTest {
         AmmoStorage inTransit = new AmmoStorage(0, ammoType, originalShots, mockCampaign);
         inTransit.setDaysToArrival(10);
         warehouse.addPart(inTransit);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2155,7 +2155,7 @@ public class QuartermasterTest {
         int originalShots = 100;
         AmmoStorage existing = new AmmoStorage(0, ammoType, originalShots, mockCampaign);
         warehouse.addPart(existing);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2197,7 +2197,7 @@ public class QuartermasterTest {
         int originalShots = 100;
         AmmoStorage existing = new AmmoStorage(0, ammoType, originalShots, mockCampaign);
         warehouse.addPart(existing);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2235,7 +2235,7 @@ public class QuartermasterTest {
         int originalShots = 100;
         AmmoStorage existing = new AmmoStorage(0, ammoType, originalShots, mockCampaign);
         warehouse.addPart(existing);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2267,7 +2267,7 @@ public class QuartermasterTest {
         warehouse.addPart(inTransit);
         AmmoStorage existing = new AmmoStorage(0, ammoType, originalShots, mockCampaign);
         warehouse.addPart(existing);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2298,7 +2298,7 @@ public class QuartermasterTest {
 
         // Set up a warehouse with compatible ammo types
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // We only have one ton of the ammo we want.
         int originalShots = ammoType.getShots();
@@ -2358,7 +2358,7 @@ public class QuartermasterTest {
 
         // Set up a warehouse with compatible ammo types
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // We have JUST enough compatible ammo
         int compatibleShots = compatibleAmmoType.getShots();
@@ -2397,7 +2397,7 @@ public class QuartermasterTest {
 
         // Set up a warehouse with compatible ammo types
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // We have JUST enough compatible ammo
         int compatibleShots = compatibleAmmoType.getShots();
@@ -2437,7 +2437,7 @@ public class QuartermasterTest {
 
         // Set up a warehouse with compatible ammo types
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // We only have one ton of the ammo we want.
         int originalShots = ammoType.getShots();
@@ -2502,7 +2502,7 @@ public class QuartermasterTest {
 
         // Set up a warehouse with compatible ammo types
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // We only have one ton of the ammo we want.
         int originalShots = ammoType.getShots();
@@ -2554,7 +2554,7 @@ public class QuartermasterTest {
 
         // Set up a warehouse with compatible ammo types
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // We have enough compatible ammo
         int compatibleShots = compatibleAmmoType.getShots();
@@ -2596,7 +2596,7 @@ public class QuartermasterTest {
 
         // Set up a warehouse with compatible ammo types
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // We have JUST enough compatible ammo
         int compatibleShots = compatibleAmmoType.getShots();
@@ -2633,7 +2633,7 @@ public class QuartermasterTest {
 
         // Set up an empty warehouse
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2681,7 +2681,7 @@ public class QuartermasterTest {
               mockCampaign);
         inTransit.setDaysToArrival(10);
         warehouse.addPart(inTransit);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2729,7 +2729,7 @@ public class QuartermasterTest {
               otherWeaponType,
               mockCampaign);
         warehouse.addPart(otherAmmo);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2781,7 +2781,7 @@ public class QuartermasterTest {
         InfantryAmmoStorage existing = new InfantryAmmoStorage(0, ammoType, originalShots, weaponType, mockCampaign);
         existing.setBrandNew(false);
         warehouse.addPart(existing);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2817,7 +2817,7 @@ public class QuartermasterTest {
 
         // Set up an empty warehouse
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2850,7 +2850,7 @@ public class QuartermasterTest {
         InfantryAmmoStorage inTransit = new InfantryAmmoStorage(0, ammoType, originalShots, weaponType, mockCampaign);
         inTransit.setDaysToArrival(10);
         warehouse.addPart(inTransit);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2893,7 +2893,7 @@ public class QuartermasterTest {
         int originalShots = 100;
         InfantryAmmoStorage existing = new InfantryAmmoStorage(0, ammoType, originalShots, weaponType, mockCampaign);
         warehouse.addPart(existing);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2936,7 +2936,7 @@ public class QuartermasterTest {
         int originalShots = 100;
         InfantryAmmoStorage existing = new InfantryAmmoStorage(0, ammoType, originalShots, weaponType, mockCampaign);
         warehouse.addPart(existing);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -2966,7 +2966,7 @@ public class QuartermasterTest {
         int originalShots = 100;
         InfantryAmmoStorage existing = new InfantryAmmoStorage(0, ammoType, originalShots, weaponType, mockCampaign);
         warehouse.addPart(existing);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         // And a basic quartermaster
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
@@ -3093,7 +3093,7 @@ public class QuartermasterTest {
         LocalWarehouse warehouse = new LocalWarehouse();
         AmmoStorage emptyAmmo = new AmmoStorage(0, ammoType, 0, mockCampaign);
         warehouse.addPart(emptyAmmo);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
         ForceQuartermaster quartermaster = new ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);

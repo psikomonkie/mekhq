@@ -62,8 +62,8 @@ class AverageExperienceRatingTest {
     @Test
     void returnsNoCampaignExperience_whenNoCombatTeams() throws Exception {
         Campaign campaign = mock(Campaign.class);
-        when(campaign.getAllHangar()).thenReturn(mock(mekhq.campaign.LocalHangar.class));
-        when(campaign.getCombatTeamsAsList()).thenReturn(new ArrayList<>());
+        when(campaign.getPlayerForce().getHangar()).thenReturn(mock(mekhq.campaign.LocalHangar.class));
+        when(campaign.getPlayerForce().getCombatTeamsAsList(campaign)).thenReturn(new ArrayList<>());
 
         assertEquals(7, invokeCalculateAverageExperienceRating(campaign, false));
         assertEquals(7, invokeCalculateAverageExperienceRating(campaign, true));
@@ -73,13 +73,13 @@ class AverageExperienceRatingTest {
     void returnsNoCampaignExperience_whenAllCombatTeamsReturnNullForce() throws Exception {
         Campaign campaign = mock(Campaign.class);
         mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-        when(campaign.getAllHangar()).thenReturn(hangar);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
         CombatTeam team = mock(CombatTeam.class);
         when(team.getFormation(campaign)).thenReturn(null);
         when(team.getFormationId()).thenReturn(123);
 
-        when(campaign.getCombatTeamsAsList()).thenReturn(new ArrayList<>(List.of(team)));
+        when(campaign.getPlayerForce().getCombatTeamsAsList(campaign)).thenReturn(new ArrayList<>(List.of(team)));
 
         assertEquals(7, invokeCalculateAverageExperienceRating(campaign, false));
     }
@@ -88,7 +88,7 @@ class AverageExperienceRatingTest {
     void returnsNoCampaignExperience_whenAllForcesAreTraining() throws Exception {
         Campaign campaign = mock(Campaign.class);
         mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-        when(campaign.getAllHangar()).thenReturn(hangar);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
         Formation trainingFormation = mock(Formation.class, RETURNS_DEEP_STUBS);
         when(trainingFormation.getCombatRoleInMemory().isTraining()).thenReturn(true);
@@ -96,7 +96,7 @@ class AverageExperienceRatingTest {
         CombatTeam team = mock(CombatTeam.class);
         when(team.getFormation(campaign)).thenReturn(trainingFormation);
 
-        when(campaign.getCombatTeamsAsList()).thenReturn(new ArrayList<>(List.of(team)));
+        when(campaign.getPlayerForce().getCombatTeamsAsList(campaign)).thenReturn(new ArrayList<>(List.of(team)));
 
         assertEquals(7, invokeCalculateAverageExperienceRating(campaign, false));
     }
@@ -105,7 +105,7 @@ class AverageExperienceRatingTest {
     void returnsNoCampaignExperience_whenUnitsAreUncrewed() throws Exception {
         Campaign campaign = mock(Campaign.class);
         mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-        when(campaign.getAllHangar()).thenReturn(hangar);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
         Entity entity = mock(Entity.class);
         Unit unit = mock(Unit.class);
@@ -119,7 +119,7 @@ class AverageExperienceRatingTest {
         CombatTeam team = mock(CombatTeam.class);
         when(team.getFormation(campaign)).thenReturn(formation);
 
-        when(campaign.getCombatTeamsAsList()).thenReturn(new ArrayList<>(List.of(team)));
+        when(campaign.getPlayerForce().getCombatTeamsAsList(campaign)).thenReturn(new ArrayList<>(List.of(team)));
 
         assertEquals(7, invokeCalculateAverageExperienceRating(campaign, false));
     }
@@ -128,7 +128,7 @@ class AverageExperienceRatingTest {
     void ignoresJumpships_entirely() throws Exception {
         Campaign campaign = mock(Campaign.class);
         mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-        when(campaign.getAllHangar()).thenReturn(hangar);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
         Jumpship jumpship = mock(Jumpship.class); // instanceof Jumpship => must be skipped
         Unit unit = mock(Unit.class);
@@ -141,7 +141,7 @@ class AverageExperienceRatingTest {
         CombatTeam team = mock(CombatTeam.class);
         when(team.getFormation(campaign)).thenReturn(formation);
 
-        when(campaign.getCombatTeamsAsList()).thenReturn(new ArrayList<>(List.of(team)));
+        when(campaign.getPlayerForce().getCombatTeamsAsList(campaign)).thenReturn(new ArrayList<>(List.of(team)));
 
         assertEquals(7, invokeCalculateAverageExperienceRating(campaign, false));
     }
@@ -152,7 +152,7 @@ class AverageExperienceRatingTest {
         // unitCount=1 => divisor=2 => rawAverage=3.5 => fractional==0.5 => round DOWN => 3
         Campaign campaign = mock(Campaign.class);
         mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-        when(campaign.getAllHangar()).thenReturn(hangar);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
         Entity entity = mock(Entity.class);
 
@@ -183,7 +183,7 @@ class AverageExperienceRatingTest {
             CombatTeam team = mock(CombatTeam.class);
             when(team.getFormation(campaign)).thenReturn(formation);
 
-            when(campaign.getCombatTeamsAsList()).thenReturn(new ArrayList<>(List.of(team)));
+            when(campaign.getPlayerForce().getCombatTeamsAsList(campaign)).thenReturn(new ArrayList<>(List.of(team)));
 
             assertEquals(3, invokeCalculateAverageExperienceRating(campaign, false));
         }
@@ -196,7 +196,7 @@ class AverageExperienceRatingTest {
         // totalExperience=15, units=2 => divisor=4 => rawAverage=3.75 => fractional>0.5 => ceil => 4
         Campaign campaign = mock(Campaign.class);
         mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-        when(campaign.getAllHangar()).thenReturn(hangar);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
         Entity entityA = mock(Entity.class);
         Entity entityB = mock(Entity.class);
@@ -243,7 +243,7 @@ class AverageExperienceRatingTest {
             CombatTeam team = mock(CombatTeam.class);
             when(team.getFormation(campaign)).thenReturn(formation);
 
-            when(campaign.getCombatTeamsAsList()).thenReturn(new ArrayList<>(List.of(team)));
+            when(campaign.getPlayerForce().getCombatTeamsAsList(campaign)).thenReturn(new ArrayList<>(List.of(team)));
 
             assertEquals(4, invokeCalculateAverageExperienceRating(campaign, false));
         }
@@ -255,7 +255,7 @@ class AverageExperienceRatingTest {
         // Set target=5 => returns 6 for driving and 6 for gunnery => total=12 => divisor=2 => avg=6
         Campaign campaign = mock(Campaign.class);
         mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-        when(campaign.getAllHangar()).thenReturn(hangar);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
         Entity entity = mock(Entity.class);
 
@@ -287,7 +287,7 @@ class AverageExperienceRatingTest {
             CombatTeam team = mock(CombatTeam.class);
             when(team.getFormation(campaign)).thenReturn(formation);
 
-            when(campaign.getCombatTeamsAsList()).thenReturn(new ArrayList<>(List.of(team)));
+            when(campaign.getPlayerForce().getCombatTeamsAsList(campaign)).thenReturn(new ArrayList<>(List.of(team)));
 
             assertEquals(6, invokeCalculateAverageExperienceRating(campaign, false));
         }
@@ -301,7 +301,7 @@ class AverageExperienceRatingTest {
         // totalExperience=8 => divisor=2 => avg=4
         Campaign campaign = mock(Campaign.class);
         mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-        when(campaign.getAllHangar()).thenReturn(hangar);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
         SmallCraft smallCraft = mock(SmallCraft.class);
 
@@ -348,7 +348,7 @@ class AverageExperienceRatingTest {
             CombatTeam team = mock(CombatTeam.class);
             when(team.getFormation(campaign)).thenReturn(formation);
 
-            when(campaign.getCombatTeamsAsList()).thenReturn(new ArrayList<>(List.of(team)));
+            when(campaign.getPlayerForce().getCombatTeamsAsList(campaign)).thenReturn(new ArrayList<>(List.of(team)));
 
             assertEquals(4, invokeCalculateAverageExperienceRating(campaign, false));
         }
@@ -361,7 +361,7 @@ class AverageExperienceRatingTest {
         // So (1 driver, 1 gunner) leaves hasAtLeastOneCrew false and should return NO_CAMPAIGN_EXPERIENCE.
         Campaign campaign = mock(Campaign.class);
         mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-        when(campaign.getAllHangar()).thenReturn(hangar);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
         SmallCraft smallCraft = mock(SmallCraft.class);
 
@@ -395,7 +395,7 @@ class AverageExperienceRatingTest {
             CombatTeam team = mock(CombatTeam.class);
             when(team.getFormation(campaign)).thenReturn(formation);
 
-            when(campaign.getCombatTeamsAsList()).thenReturn(new ArrayList<>(List.of(team)));
+            when(campaign.getPlayerForce().getCombatTeamsAsList(campaign)).thenReturn(new ArrayList<>(List.of(team)));
 
             assertEquals(7, invokeCalculateAverageExperienceRating(campaign, false));
         }
@@ -405,7 +405,7 @@ class AverageExperienceRatingTest {
     void logFlag_doesNotChangeComputedResult() throws Exception {
         Campaign campaign = mock(Campaign.class);
         mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-        when(campaign.getAllHangar()).thenReturn(hangar);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
         Entity entity = mock(Entity.class);
 
@@ -435,7 +435,7 @@ class AverageExperienceRatingTest {
             CombatTeam team = mock(CombatTeam.class);
             when(team.getFormation(campaign)).thenReturn(formation);
 
-            when(campaign.getCombatTeamsAsList()).thenReturn(new ArrayList<>(List.of(team)));
+            when(campaign.getPlayerForce().getCombatTeamsAsList(campaign)).thenReturn(new ArrayList<>(List.of(team)));
 
             assertEquals(invokeCalculateAverageExperienceRating(campaign, false),
                   invokeCalculateAverageExperienceRating(campaign, true));

@@ -72,8 +72,9 @@ class BloodmarkTest {
         when(campaign.getCampaignOptions()).thenReturn(campaignOptions);
         when(campaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
-        when(campaign.getAllHangar()).thenReturn(campaignHangar);
-        when(campaign.getAllWarehouse()).thenReturn(campaignWarehouse);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(campaignHangar);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(campaign.getPlayerForce().getWarehouse()).thenReturn(campaignWarehouse);
 
         target = new Person(campaign);
     }

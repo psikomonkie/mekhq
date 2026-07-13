@@ -186,7 +186,7 @@ public class UnitOrder extends Unit implements IAcquisitionWork {
 
     @Override
     public mekhq.campaign.LocalWarehouse getWarehouse() {
-        return getCampaign().getWarehouse();
+        return getCampaign().getPlayerForce().getWarehouse();
     }
 
     @Override

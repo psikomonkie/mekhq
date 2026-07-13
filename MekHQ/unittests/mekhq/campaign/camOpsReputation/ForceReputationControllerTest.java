@@ -66,9 +66,12 @@ class ForceReputationControllerTest {
     void setUp() {
         reputation = new ForceReputationController();
         campaign = mock(Campaign.class);
-        when(campaign.getCommander()).thenReturn(null);
-        when(campaign.getFinances()).thenReturn(null);
-        when(campaign.getDateOfLastCrime()).thenReturn(null);
+        when(campaign.getPlayerForce().getHumanResources()
+                   .getCommander(campaign.getCampaignOptions(),
+                         campaign.isClanCampaign(),
+                         campaign.getLocalDate())).thenReturn(null);
+        when(campaign.getPlayerForce().getFinances()).thenReturn(null);
+        when(campaign.getPlayerForce().getDateOfLastCrime()).thenReturn(null);
         averageExperienceRating = mockStatic(AverageExperienceRating.class);
         commandRating = mockStatic(CommandRating.class);
         combatRecordRating = mockStatic(CombatRecordRating.class);
@@ -127,7 +130,7 @@ class ForceReputationControllerTest {
               .thenReturn(supportData);
 
         financialRating.when(() ->
-                                   FinancialRating.calculateFinancialRating(campaign.getFinances()))
+                                   FinancialRating.calculateFinancialRating(campaign.getPlayerForce().getFinances()))
               .thenReturn(Collections.singletonMap("total", 3));
 
         crimeRating.when(() ->
@@ -179,7 +182,7 @@ class ForceReputationControllerTest {
               .thenReturn(supportData);
 
         financialRating.when(() ->
-                                   FinancialRating.calculateFinancialRating(campaign.getFinances()))
+                                   FinancialRating.calculateFinancialRating(campaign.getPlayerForce().getFinances()))
               .thenReturn(Collections.singletonMap("total", 0));
 
         crimeRating.when(() ->

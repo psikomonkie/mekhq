@@ -90,7 +90,7 @@ public class ArmorTest {
     @BeforeEach
     public void beforeEach() {
         warehouse = new mekhq.campaign.LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
     }
 
     @ParameterizedTest

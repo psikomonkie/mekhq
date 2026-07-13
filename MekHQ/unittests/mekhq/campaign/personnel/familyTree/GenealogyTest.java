@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2020-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -707,9 +707,11 @@ public class GenealogyTest {
     @Test
     public void testGenerateInstanceFromXMLWithMultipleFamilyRelationships() throws Exception {
         final Person parent = new Person(mockCampaign);
-        given(mockCampaign.getPerson(argThat(matchPersonUUID(parent.getId())))).willReturn(parent);
+        final java.util.UUID id1 = ArgumentMatchers.argThat(PersonnelTestUtilities.matchPersonUUID(parent.getId()));
+        given(mockCampaign.getPlayerForce().getHumanResources().getPerson(id1)).willReturn(parent);
         final Person child = new Person(mockCampaign);
-        given(mockCampaign.getPerson(argThat(matchPersonUUID(child.getId())))).willReturn(child);
+        final java.util.UUID id = ArgumentMatchers.argThat(PersonnelTestUtilities.matchPersonUUID(child.getId()));
+        given(mockCampaign.getPlayerForce().getHumanResources().getPerson(id)).willReturn(child);
 
         final String text = String.format(
               "<genealogy><family>"

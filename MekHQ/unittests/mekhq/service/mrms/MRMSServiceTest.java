@@ -135,7 +135,7 @@ public class MRMSServiceTest {
 
         mockCampaign = mock(Campaign.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         when(mockCampaign.getQuartermaster()).thenReturn(mockQuartermaster);
         when(mockCampaign.getPartInventory(any(Part.class))).thenReturn(mockPartInventory);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
@@ -182,7 +182,13 @@ public class MRMSServiceTest {
         when(mockCampaignOptions.isMRMSUseRepair()).thenReturn(true);
 
         Person mockTech = mock(Person.class);
-        when(mockCampaign.getTechs(anyBoolean())).thenReturn(List.of(mockTech));
+        when(mockCampaign.getPlayerForce()
+                   .getHumanResources()
+                   .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
+                         mockCampaign.getCampaignOptions(),
+                         mockCampaign.isClanCampaign(),
+                         mockCampaign.getLocalDate(),
+                         ArgumentMatchers.anyBoolean())).thenReturn(List.of(mockTech));
         when(mockTech.canTech(unit.getEntity())).thenReturn(true);
         when(mockTech.getSkillLevel(any(Campaign.class), anyBoolean())).thenReturn(SkillLevel.VETERAN);
         when(mockTech.getSkillForWorkingOn(any(IPartWork.class))).thenReturn(new Skill(SkillType.S_TECH_MEK, 7, 0));
@@ -267,7 +273,12 @@ public class MRMSServiceTest {
         MRMSService.mrmsUnits(mockCampaign, List.of(), configuredOptions);
 
         verify(mockCampaign, times(1)).addReport(any(), any(String.class));
-        verify(mockCampaign, times(0)).getTechs(anyBoolean());
+        Campaign campaign = verify(mockCampaign, times(0));
+        campaign.getPlayerForce().getHumanResources().getTechs(campaign.getPlayerForce().getHangar().getUnits(),
+              campaign.getCampaignOptions(),
+              campaign.isClanCampaign(),
+              campaign.getLocalDate(),
+              ArgumentMatchers.anyBoolean());
         verify(mockCampaign, times(0)).fixPart(any(IPartWork.class), any(Person.class));
     }
 
@@ -285,8 +296,19 @@ public class MRMSServiceTest {
     @Test
     public void testMRMSUnitsWithNoTechsDoesNotRepair() {
         when(mockCampaignOptions.isMRMSUseRepair()).thenReturn(true);
-        when(mockCampaign.getTechs(anyBoolean())).thenReturn(new ArrayList<>());
-        when(mockCampaign.getTechs()).thenReturn(new ArrayList<>());
+        when(mockCampaign.getPlayerForce()
+                   .getHumanResources()
+                   .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
+                         mockCampaign.getCampaignOptions(),
+                         mockCampaign.isClanCampaign(),
+                         mockCampaign.getLocalDate(),
+                         ArgumentMatchers.anyBoolean())).thenReturn(new ArrayList<>());
+        when(mockCampaign.getPlayerForce()
+                   .getHumanResources()
+                   .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
+                         mockCampaign.getCampaignOptions(),
+                         mockCampaign.isClanCampaign(),
+                         mockCampaign.getLocalDate())).thenReturn(new ArrayList<>());
 
         Entity entity = getUrbanMek();
         Unit unit = new Unit(entity, mockCampaign);
@@ -856,7 +878,13 @@ public class MRMSServiceTest {
 
     private void addMockTech() {
         Person mockTech = mock(Person.class);
-        when(mockCampaign.getTechs(anyBoolean())).thenReturn(List.of(mockTech));
+        when(mockCampaign.getPlayerForce()
+                   .getHumanResources()
+                   .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
+                         mockCampaign.getCampaignOptions(),
+                         mockCampaign.isClanCampaign(),
+                         mockCampaign.getLocalDate(),
+                         ArgumentMatchers.anyBoolean())).thenReturn(List.of(mockTech));
         when(mockTech.canTech(any(Entity.class))).thenReturn(true);
         when(mockTech.getSkillLevel(any(Campaign.class), anyBoolean())).thenReturn(SkillLevel.VETERAN);
         when(mockTech.getSkillForWorkingOn(any(IPartWork.class))).thenReturn(new Skill(SkillType.S_TECH_MEK,
@@ -987,7 +1015,13 @@ public class MRMSServiceTest {
                   targetNumberMax, dailyTimeMin);
             configuredOptions = new MRMSConfiguredOptions(mockCampaign);
 
-            when(mockCampaign.getTechs(anyBoolean())).thenReturn(realTechs);
+            when(mockCampaign.getPlayerForce()
+                       .getHumanResources()
+                       .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
+                             mockCampaign.getCampaignOptions(),
+                             mockCampaign.isClanCampaign(),
+                             mockCampaign.getLocalDate(),
+                             ArgumentMatchers.anyBoolean())).thenReturn(realTechs);
 
             unit.getParts()
                   .stream()
@@ -1047,7 +1081,13 @@ public class MRMSServiceTest {
             addMRMSOption(PartRepairType.ARMOUR, skillMin, skillMax, targetNumberPreferred,
                   targetNumberMax, dailyTimeMin);
             configuredOptions = new MRMSConfiguredOptions(mockCampaign);
-            when(mockCampaign.getTechs(anyBoolean())).thenReturn(realTechs);
+            when(mockCampaign.getPlayerForce()
+                       .getHumanResources()
+                       .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
+                             mockCampaign.getCampaignOptions(),
+                             mockCampaign.isClanCampaign(),
+                             mockCampaign.getLocalDate(),
+                             ArgumentMatchers.anyBoolean())).thenReturn(realTechs);
 
             // Act
             MRMSService.mrmsUnits(mockCampaign, List.of(unit), configuredOptions);
@@ -1069,7 +1109,13 @@ public class MRMSServiceTest {
 
             Person realTech = createRealTech("Test Tech", skillLevel, techMinutesLeft);
             realTechs.add(realTech);
-            when(mockCampaign.getTechs(anyBoolean())).thenReturn(realTechs);
+            when(mockCampaign.getPlayerForce()
+                       .getHumanResources()
+                       .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
+                             mockCampaign.getCampaignOptions(),
+                             mockCampaign.isClanCampaign(),
+                             mockCampaign.getLocalDate(),
+                             ArgumentMatchers.anyBoolean())).thenReturn(realTechs);
 
             unit.getParts()
                   .stream()

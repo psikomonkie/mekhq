@@ -86,8 +86,11 @@ import mekhq.campaign.mission.atb.AtBScenarioModifier;
 import mekhq.campaign.personnel.Bloodname;
 import mekhq.campaign.personnel.SpecialAbility;
 import mekhq.campaign.personnel.backgrounds.RandomCompanyNameGenerator;
+import mekhq.campaign.personnel.divorce.AbstractDivorce;
 import mekhq.campaign.personnel.enums.PersonnelRole;
+import mekhq.campaign.personnel.marriage.AbstractMarriage;
 import mekhq.campaign.personnel.medical.advancedMedical.InjuryTypes;
+import mekhq.campaign.personnel.procreation.AbstractProcreation;
 import mekhq.campaign.personnel.ranks.Ranks;
 import mekhq.campaign.personnel.skills.SkillType;
 import mekhq.campaign.unit.Unit;
@@ -260,6 +263,80 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
         }
 
         /**
+         * Unassigns the crew from unsupported units in the given collection of units.
+         *
+         * <p>This method iterates through the provided {@link Collection} of {@link Unit} objects
+         * and checks if each unit's associated {@link Entity} is of an unsupported type.
+         *
+         * <p>If the entity is {@code null}, it is skipped. For unsupported unit types, the unit's
+         * crew is cleared using {@link Unit#clearCrew()}.</p>
+         *
+         * @param units The {@link Collection} of {@link Unit} instances to process. Must not be {@code null}.
+         */
+        private static void showRarePersonnelDialog(Campaign campaign, boolean isCampaignStart) {
+            if (!campaign.getPlayerForce().getHumanResources().getNewPersonnelMarket().getHasRarePersonnel()) {
+                return;
+            }
+
+            StringBuilder oocReport = new StringBuilder(
+                  campaign.getResources().getString("personnelMarket.rareProfession.outOfCharacter"));
+            for (PersonnelRole profession : campaign.getPlayerForce()
+                                                  .getHumanResources()
+                                                  .getNewPersonnelMarket()
+                                                  .getRareProfessions()) {
+                oocReport.append("<p>- ").append(profession.getLabel(campaign.isClanCampaign())).append("</p>");
+            }
+
+            List<String> buttons = new ArrayList<>();
+            buttons.add(campaign.getResources().getString("personnelMarket.rareProfession.button.later"));
+            buttons.add(campaign.getResources().getString("personnelMarket.rareProfession.button.decline"));
+            if (!isCampaignStart) {
+                buttons.add(campaign.getResources().getString("personnelMarket.rareProfession.button.immediate"));
+            }
+
+            ImmersiveDialogSimple dialog = new ImmersiveDialogSimple(campaign,
+                  campaign.getPlayerForce().getHumanResources()
+                        .getSeniorAdminPerson(AdministratorSpecialization.HR,
+                              campaign.getCampaignOptions(),
+                              campaign.isClanCampaign(),
+                              campaign.getLocalDate()),
+                  null,
+                  campaign.getResources().getString("personnelMarket.rareProfession.inCharacter"),
+                  buttons,
+                  oocReport.toString(),
+                  null,
+                  true);
+
+            if (dialog.getDialogChoice() == 2) {
+                campaign.getPlayerForce().getHumanResources().getNewPersonnelMarket().showPersonnelMarketDialog();
+            }
+        }
+
+        /**
+         * Handles the upgrade process for a campaign in a thread-safe and blocking manner.
+         *
+         * <p>This method initiates the campaign upgrade dialog for the specified {@link Campaign}. While the upgrade
+         * is in progress, the method blocks further execution by using a {@link CountDownLatch}. This ensures that
+         * campaign loading or other interactions do not proceed while the campaign data may be in an inconsistent,
+         * mid-upgrade state, which can prevent a variety of random and challenging-to-debug errors.</p>
+         *
+         * <p>Once the upgrade dialog completes, the provided callback triggers an {@link OptionsChangedEvent}
+         * and signals the latch, allowing the method to return.</p>
+         *
+         * <p><b>Note:</b> This method should not be called from the Event Dispatch Thread (EDT), as it will block
+         * the thread until the upgrade is finished.</p>
+         *
+         * @param app      the application context
+         * @param campaign the {@link Campaign} instance to be upgraded
+         *
+         * @author Illiani
+         * @since 0.50.07
+         */
+        private static void handleCampaignUpgrading(MekHQ app, Campaign campaign) {
+            CampaignUpgradeDialog.campaignUpgradeDialog(app, campaign);
+        }
+
+        /**
          * This uses the following stages of loading:
          * <ol>
          *     <li>Basics</li>
@@ -379,12 +456,12 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
                 // initialize reputation
                 ForceReputationController reputationController = new ForceReputationController();
                 reputationController.initializeReputation(campaign);
-                campaign.setReputation(reputationController);
+                campaign.getPlayerForce().setReputation(reputationController);
 
                 // initialize starting faction standings
                 CampaignOptions campaignOptions = campaign.getCampaignOptions();
                 if (campaignOptions.isTrackFactionStanding()) {
-                    FactionStandings factionStandings = campaign.getFactionStandings();
+                    FactionStandings factionStandings = campaign.getPlayerForce().getFactionStandings();
                     String report = factionStandings.updateClimateRegard(campaign.getFaction(),
                           campaign.getLocalDate(), campaignOptions.getRegardMultiplier(),
                           true);
@@ -399,18 +476,21 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
                                            "</b>");
 
                 // Setup Personnel Modules
-                campaign.setMarriage(campaignOptions
+                final AbstractMarriage marriage = campaignOptions
                                            .getRandomMarriageMethod()
-                                           .getMethod(campaignOptions));
-                campaign.setDivorce(campaignOptions
+                                                        .getMethod(campaignOptions);
+                campaign.getPlayerForce().getHumanResources().setMarriage(marriage);
+                final AbstractDivorce divorce = campaignOptions
                                           .getRandomDivorceMethod()
-                                          .getMethod(campaignOptions));
-                campaign.setProcreation(campaignOptions
+                                                      .getMethod(campaignOptions);
+                campaign.getPlayerForce().getHumanResources().setDivorce(divorce);
+                final AbstractProcreation procreation = campaignOptions
                                               .getRandomProcreationMethod()
-                                              .getMethod(campaignOptions));
+                                                              .getMethod(campaignOptions);
+                campaign.getPlayerForce().getHumanResources().setProcreation(procreation);
 
                 // Setup Markets
-                campaign.refreshApplicants(true);
+                campaign.getPlayerForce().getHumanResources().refreshApplicants(campaign, true);
                 showRarePersonnelDialog(campaign, true);
                 ContractMarketMethod contractMarketMethod = campaignOptions.getContractMarketMethod();
                 campaign.setContractMarket(contractMarketMethod.getContractMarket());
@@ -479,73 +559,6 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
             }
 
             return campaign;
-        }
-
-        /**
-         * Handles the upgrade process for a campaign in a thread-safe and blocking manner.
-         *
-         * <p>This method initiates the campaign upgrade dialog for the specified {@link Campaign}. While the upgrade
-         * is in progress, the method blocks further execution by using a {@link CountDownLatch}. This ensures that
-         * campaign loading or other interactions do not proceed while the campaign data may be in an inconsistent,
-         * mid-upgrade state, which can prevent a variety of random and challenging-to-debug errors.</p>
-         *
-         * <p>Once the upgrade dialog completes, the provided callback triggers an {@link OptionsChangedEvent}
-         * and signals the latch, allowing the method to return.</p>
-         *
-         * <p><b>Note:</b> This method should not be called from the Event Dispatch Thread (EDT), as it will block
-         * the thread until the upgrade is finished.</p>
-         *
-         * @param app      the application context
-         * @param campaign the {@link Campaign} instance to be upgraded
-         *
-         * @author Illiani
-         * @since 0.50.07
-         */
-        private static void handleCampaignUpgrading(MekHQ app, Campaign campaign) {
-            CampaignUpgradeDialog.campaignUpgradeDialog(app, campaign);
-        }
-
-        /**
-         * Unassigns the crew from unsupported units in the given collection of units.
-         *
-         * <p>This method iterates through the provided {@link Collection} of {@link Unit} objects
-         * and checks if each unit's associated {@link Entity} is of an unsupported type.
-         *
-         * <p>If the entity is {@code null}, it is skipped. For unsupported unit types, the unit's
-         * crew is cleared using {@link Unit#clearCrew()}.</p>
-         *
-         * @param units The {@link Collection} of {@link Unit} instances to process. Must not be {@code null}.
-         */
-        private static void showRarePersonnelDialog(Campaign campaign, boolean isCampaignStart) {
-            if (!campaign.getNewPersonnelMarket().getHasRarePersonnel()) {
-                return;
-            }
-
-            StringBuilder oocReport = new StringBuilder(
-                  campaign.getResources().getString("personnelMarket.rareProfession.outOfCharacter"));
-            for (PersonnelRole profession : campaign.getNewPersonnelMarket().getRareProfessions()) {
-                oocReport.append("<p>- ").append(profession.getLabel(campaign.isClanCampaign())).append("</p>");
-            }
-
-            List<String> buttons = new ArrayList<>();
-            buttons.add(campaign.getResources().getString("personnelMarket.rareProfession.button.later"));
-            buttons.add(campaign.getResources().getString("personnelMarket.rareProfession.button.decline"));
-            if (!isCampaignStart) {
-                buttons.add(campaign.getResources().getString("personnelMarket.rareProfession.button.immediate"));
-            }
-
-            ImmersiveDialogSimple dialog = new ImmersiveDialogSimple(campaign,
-                  campaign.getSeniorAdminPerson(AdministratorSpecialization.HR),
-                  null,
-                  campaign.getResources().getString("personnelMarket.rareProfession.inCharacter"),
-                  buttons,
-                  oocReport.toString(),
-                  null,
-                  true);
-
-            if (dialog.getDialogChoice() == 2) {
-                campaign.getNewPersonnelMarket().showPersonnelMarketDialog();
-            }
         }
 
         private void unassignCrewFromUnsupportedUnits(Collection<Unit> units) {

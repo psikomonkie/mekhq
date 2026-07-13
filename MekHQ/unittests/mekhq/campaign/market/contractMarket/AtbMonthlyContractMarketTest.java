@@ -162,9 +162,9 @@ class AtbMonthlyContractMarketTest {
             when(campaign.getLocalDate()).thenReturn(TODAY);
             when(campaign.getGameYear()).thenReturn(GAME_YEAR);
             when(campaign.getCampaignOptions()).thenReturn(campaignOptions);
-            when(campaign.getReputation()).thenReturn(reputation);
+            when(campaign.getPlayerForce().getReputation()).thenReturn(reputation);
             when(campaign.getAccountant()).thenReturn(accountant);
-            when(campaign.getAllHangar()).thenReturn(hangar);
+            when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
             when(campaign.getCurrentSystem()).thenReturn(currentSystem);
             when(campaign.getFutureAtBContracts()).thenReturn(List.of());
         }

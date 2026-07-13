@@ -153,7 +153,7 @@ public class PartTest {
     public void decrementQuantity() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
 
@@ -180,7 +180,7 @@ public class PartTest {
     public void decrementQuantityDoesNotGoNegative() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
 
@@ -201,7 +201,7 @@ public class PartTest {
     public void decrementQuantityZeroRemovesChildParts() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
 
@@ -229,7 +229,7 @@ public class PartTest {
     public void setQuantity() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
 
@@ -251,7 +251,7 @@ public class PartTest {
     public void setNegativeQuantity() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
 
@@ -273,7 +273,7 @@ public class PartTest {
     public void setQuantityZeroRemovesChildParts() {
         Campaign mockCampaign = mock(Campaign.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
 
@@ -462,7 +462,7 @@ public class PartTest {
         void getWarehouse_sparePartInCampaignWarehouse_returnsCampaignWarehouse() {
             Campaign mockCampaign = mock(Campaign.class);
             LocalWarehouse campaignWarehouse = new LocalWarehouse();
-            when(mockCampaign.getWarehouse()).thenReturn(campaignWarehouse);
+            when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(campaignWarehouse);
 
             Part part = new MekSensor();
             part.setCampaign(mockCampaign);
@@ -475,7 +475,7 @@ public class PartTest {
         void getWarehouse_sparePartInBaseWarehouse_returnsBaseWarehouse() {
             Campaign mockCampaign = mock(Campaign.class);
             LocalWarehouse campaignWarehouse = new LocalWarehouse();
-            when(mockCampaign.getWarehouse()).thenReturn(campaignWarehouse);
+            when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(campaignWarehouse);
 
             PlayerBase base = new PlayerBase(new FixedLocation(mock(PlanetarySystem.class)));
 
@@ -490,7 +490,7 @@ public class PartTest {
         void getWarehouse_partOnUnitAtBase_returnsBaseWarehouse() {
             Campaign mockCampaign = mock(Campaign.class);
             LocalWarehouse campaignWarehouse = new LocalWarehouse();
-            when(mockCampaign.getWarehouse()).thenReturn(campaignWarehouse);
+            when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(campaignWarehouse);
 
             PlayerBase base = new PlayerBase(new FixedLocation(mock(PlanetarySystem.class)));
 
@@ -515,7 +515,7 @@ public class PartTest {
         void getWarehouse_partOnMainForceUnit_returnsCampaignWarehouse() {
             Campaign mockCampaign = mock(Campaign.class);
             LocalWarehouse campaignWarehouse = new LocalWarehouse();
-            when(mockCampaign.getWarehouse()).thenReturn(campaignWarehouse);
+            when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(campaignWarehouse);
 
             // Unit with a locationNode that has no IPlace ancestor.
             Entity mockEntity = mock(Mek.class);

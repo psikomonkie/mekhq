@@ -36,7 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -97,7 +96,10 @@ class CompanyGenerationMethodTest {
     @Test
     void testGetGenerator() {
         final Campaign mockCampaign = mock(Campaign.class);
-        when(mockCampaign.getPersonnelGenerator(any(), any())).thenReturn(mock(AbstractPersonnelGenerator.class));
+        when(mockCampaign.getPlayerForce().getHumanResources()
+                   .getPersonnelGenerator(mockCampaign.getCampaignOptions(),
+                         ArgumentMatchers.any(),
+                         ArgumentMatchers.any())).thenReturn(mock(AbstractPersonnelGenerator.class));
         when(mockCampaign.getRandomSkillPreferences()).thenReturn(mock(RandomSkillPreferences.class));
 
         final CompanyGenerationOptions mockOptions = mock(CompanyGenerationOptions.class);

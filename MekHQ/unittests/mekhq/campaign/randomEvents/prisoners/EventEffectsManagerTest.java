@@ -130,7 +130,7 @@ class EventEffectsManagerTest {
         PrisonerEventData eventData = new PrisonerEventData(BREAKOUT, List.of(responseEntry));
 
         Person prisoner = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner));
 
         new EventEffectsManager(mockCampaign, eventData, 0, true);
 
@@ -151,7 +151,7 @@ class EventEffectsManagerTest {
         PrisonerEventData eventData = new PrisonerEventData(BREAKOUT, List.of(responseEntry));
 
         Person prisoner = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner));
 
         new EventEffectsManager(mockCampaign, eventData, 0, true);
 
@@ -175,12 +175,15 @@ class EventEffectsManagerTest {
         Person prisoner1 = new Person(mockCampaign);
         Person prisoner2 = new Person(mockCampaign);
         Person prisoner3 = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner0, prisoner1, prisoner2, prisoner3));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner0,
+              prisoner1,
+              prisoner2,
+              prisoner3));
 
         new EventEffectsManager(mockCampaign, eventData, 0, true);
 
         int injuredCharacters = 0;
-        for (Person person : mockCampaign.getCurrentPrisoners()) {
+        for (Person person : mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()) {
             if (person.getHits() > 0) {
                 injuredCharacters++;
             }
@@ -206,12 +209,15 @@ class EventEffectsManagerTest {
         Person prisoner1 = new Person(mockCampaign);
         Person prisoner2 = new Person(mockCampaign);
         Person prisoner3 = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner0, prisoner1, prisoner2, prisoner3));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner0,
+              prisoner1,
+              prisoner2,
+              prisoner3));
 
         new EventEffectsManager(mockCampaign, eventData, 0, true);
 
         int injuredCharacters = 0;
-        for (Person person : mockCampaign.getCurrentPrisoners()) {
+        for (Person person : mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()) {
             if (!person.getInjuries().isEmpty()) {
                 injuredCharacters++;
             }
@@ -231,7 +237,7 @@ class EventEffectsManagerTest {
         PrisonerEventData eventData = new PrisonerEventData(BREAKOUT, List.of(responseEntry));
 
         Person prisoner = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner));
 
         EventEffectsManager effectsManager = new EventEffectsManager(mockCampaign, eventData, 0, true);
         String report = effectsManager.getEventReport();
@@ -260,7 +266,10 @@ class EventEffectsManagerTest {
         Person prisoner1 = new Person(mockCampaign);
         Person prisoner2 = new Person(mockCampaign);
         Person prisoner3 = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner0, prisoner1, prisoner2, prisoner3));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner0,
+              prisoner1,
+              prisoner2,
+              prisoner3));
 
         EventEffectsManager effectsManager = new EventEffectsManager(mockCampaign, eventData, 0, true);
         String report = effectsManager.getEventReport();
@@ -286,7 +295,7 @@ class EventEffectsManagerTest {
         PrisonerEventData eventData = new PrisonerEventData(BREAKOUT, List.of(responseEntry));
 
         Person prisoner = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner));
 
         SkillType.initializeTypes();
 
@@ -309,7 +318,7 @@ class EventEffectsManagerTest {
         PrisonerEventData eventData = new PrisonerEventData(BREAKOUT, List.of(responseEntry));
 
         Person prisoner = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner));
         int oldLoyalty = prisoner.getBaseLoyalty();
 
         new EventEffectsManager(mockCampaign, eventData, 0, true);
@@ -333,7 +342,10 @@ class EventEffectsManagerTest {
         Person prisoner1 = new Person(mockCampaign);
         Person prisoner2 = new Person(mockCampaign);
         Person prisoner3 = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner0, prisoner1, prisoner2, prisoner3));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner0,
+              prisoner1,
+              prisoner2,
+              prisoner3));
         List<Integer> oldLoyalties = List.of(prisoner0.getBaseLoyalty(),
               prisoner1.getBaseLoyalty(),
               prisoner2.getBaseLoyalty(),
@@ -341,7 +353,7 @@ class EventEffectsManagerTest {
 
         new EventEffectsManager(mockCampaign, eventData, 0, true);
 
-        List<Person> currentPrisoners = mockCampaign.getCurrentPrisoners();
+        List<Person> currentPrisoners = mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners();
         for (int i = 0; i < currentPrisoners.size(); i++) {
             assertEquals(oldLoyalties.get(i) + MAGNITUDE, currentPrisoners.get(i).getBaseLoyalty());
         }
@@ -361,7 +373,10 @@ class EventEffectsManagerTest {
         Person prisoner1 = new Person(mockCampaign);
         Person prisoner2 = new Person(mockCampaign);
         Person prisoner3 = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner0, prisoner1, prisoner2, prisoner3));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner0,
+              prisoner1,
+              prisoner2,
+              prisoner3));
 
         new EventEffectsManager(mockCampaign, eventData, 0, true);
 
@@ -387,7 +402,10 @@ class EventEffectsManagerTest {
         Person prisoner1 = new Person(mockCampaign);
         Person prisoner2 = new Person(mockCampaign);
         Person prisoner3 = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner0, prisoner1, prisoner2, prisoner3));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner0,
+              prisoner1,
+              prisoner2,
+              prisoner3));
 
         new EventEffectsManager(mockCampaign, eventData, 0, true);
 
@@ -407,9 +425,9 @@ class EventEffectsManagerTest {
         when(mockCampaignOptions.getFatigueRate()).thenReturn(1);
 
         mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
-        when(mockCampaign.getHangar()).thenReturn(mockHangar);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
 
         EventResult eventResult = new EventResult(FATIGUE_ONE, false, MAGNITUDE, "");
         PrisonerResponseEntry responseEntry = new PrisonerResponseEntry(RESPONSE_NEUTRAL,
@@ -418,7 +436,7 @@ class EventEffectsManagerTest {
         PrisonerEventData eventData = new PrisonerEventData(BREAKOUT, List.of(responseEntry));
 
         Person prisoner = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner));
         int oldFatigue = prisoner.getFatigueDirect();
 
         new EventEffectsManager(mockCampaign, eventData, 0, true);
@@ -434,9 +452,9 @@ class EventEffectsManagerTest {
         when(mockCampaignOptions.getFatigueRate()).thenReturn(1);
 
         mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
-        when(mockCampaign.getHangar()).thenReturn(mockHangar);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
 
         EventResult eventResult = new EventResult(FATIGUE_ALL, false, MAGNITUDE, "");
         PrisonerResponseEntry responseEntry = new PrisonerResponseEntry(RESPONSE_NEUTRAL,
@@ -448,7 +466,10 @@ class EventEffectsManagerTest {
         Person prisoner1 = new Person(mockCampaign);
         Person prisoner2 = new Person(mockCampaign);
         Person prisoner3 = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner0, prisoner1, prisoner2, prisoner3));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner0,
+              prisoner1,
+              prisoner2,
+              prisoner3));
         List<Integer> oldFatigues = List.of(prisoner0.getFatigueDirect(),
               prisoner1.getFatigueDirect(),
               prisoner2.getFatigueDirect(),
@@ -456,7 +477,7 @@ class EventEffectsManagerTest {
 
         new EventEffectsManager(mockCampaign, eventData, 0, true);
 
-        List<Person> currentPrisoners = mockCampaign.getCurrentPrisoners();
+        List<Person> currentPrisoners = mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners();
         for (int i = 0; i < currentPrisoners.size(); i++) {
             assertEquals(oldFatigues.get(i) + MAGNITUDE, currentPrisoners.get(i).getFatigueDirect());
         }
@@ -520,7 +541,7 @@ class EventEffectsManagerTest {
         SkillType.initializeTypes();
 
         Person prisoner = new Person(mockCampaign);
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner));
 
         // Just some random skills, so we can get whether they were removed
         prisoner.addSkill(S_ADMIN, 1, 0);
@@ -560,7 +581,7 @@ class EventEffectsManagerTest {
 
         Person prisoner = new Person(mockCampaign);
         prisoner.setOriginFaction(new Faction());
-        when(mockCampaign.getCurrentPrisoners()).thenReturn(List.of(prisoner));
+        when(mockCampaign.getPlayerForce().getHumanResources().getCurrentPrisoners()).thenReturn(List.of(prisoner));
 
         new EventEffectsManager(mockCampaign, eventData, 0, true);
 
@@ -575,9 +596,9 @@ class EventEffectsManagerTest {
         when(mockCampaignOptions.getFatigueRate()).thenReturn(1);
 
         mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
-        when(mockCampaign.getHangar()).thenReturn(mockHangar);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
 
         EventResult eventResult = new EventResult(UNIQUE, false, MAGNITUDE, "");
         PrisonerResponseEntry responseEntry = new PrisonerResponseEntry(RESPONSE_NEUTRAL,
@@ -589,7 +610,9 @@ class EventEffectsManagerTest {
         Person soldier1 = new Person(mockCampaign);
         Person soldier2 = new Person(mockCampaign);
         List<Person> potentialTargets = List.of(soldier0, soldier1, soldier2);
-        when(mockCampaign.getActivePersonnel(false, true)).thenReturn(new ArrayList<>(potentialTargets));
+        when(mockCampaign.getPlayerForce()
+                   .getHumanResources()
+                   .getActivePersonnel(false, true)).thenReturn(new ArrayList<>(potentialTargets));
 
         new EventEffectsManager(mockCampaign, eventData, 0, true);
 

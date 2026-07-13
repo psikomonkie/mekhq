@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2022-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -71,7 +71,7 @@ public class PersonIdReferenceTest {
         final List<Person> personnel = IntStream.range(0, 100)
                                              .mapToObj(i -> new Person(mockCampaign, "MERC"))
                                              .collect(Collectors.toList());
-        when(mockCampaign.getAllPersonnel()).thenReturn(personnel);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(personnel);
         PersonIdReference.fixPersonIdReferences(mockCampaign);
     }
 

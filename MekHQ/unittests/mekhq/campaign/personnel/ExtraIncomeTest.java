@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -180,7 +180,7 @@ class ExtraIncomeTest {
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
-        when(mockCampaign.getFinances()).thenReturn(finances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(finances);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
 
@@ -197,7 +197,7 @@ class ExtraIncomeTest {
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
-        when(mockCampaign.getFinances()).thenReturn(finances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(finances);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
 
@@ -215,7 +215,7 @@ class ExtraIncomeTest {
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
-        when(mockCampaign.getFinances()).thenReturn(finances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(finances);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
 
@@ -234,7 +234,7 @@ class ExtraIncomeTest {
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
-        when(mockCampaign.getFinances()).thenReturn(finances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(finances);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
 
@@ -253,7 +253,7 @@ class ExtraIncomeTest {
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
-        when(mockCampaign.getFinances()).thenReturn(finances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(finances);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
 
@@ -271,7 +271,7 @@ class ExtraIncomeTest {
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
-        when(mockCampaign.getFinances()).thenReturn(finances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(finances);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
 
@@ -290,7 +290,7 @@ class ExtraIncomeTest {
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
-        when(mockCampaign.getFinances()).thenReturn(finances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(finances);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
 
@@ -298,12 +298,12 @@ class ExtraIncomeTest {
         person.setExtraIncomeDirect(POSITIVE_TEN);
         person.setDateOfBirth(TODAY.minusYears(15));
 
-        Money campaignFinancesBefore = mockCampaign.getFinances().getBalance();
+        Money campaignFinancesBefore = mockCampaign.getPlayerForce().getFinances().getBalance();
         Money personalFinancesBefore = person.getTotalEarnings();
 
         ExtraIncome.processExtraIncome(finances, person, TODAY, false);
 
-        Money campaignFinancesAfter = mockCampaign.getFinances().getBalance();
+        Money campaignFinancesAfter = mockCampaign.getPlayerForce().getFinances().getBalance();
         Money personalFinancesAfter = person.getTotalEarnings();
 
         Money campaignFinancesExpected = campaignFinancesBefore.plus(Money.of(0));
@@ -319,7 +319,7 @@ class ExtraIncomeTest {
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
-        when(mockCampaign.getFinances()).thenReturn(finances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(finances);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
 
@@ -328,12 +328,12 @@ class ExtraIncomeTest {
         person.setDateOfBirth(TODAY.minusYears(15));
         person.setCommander(true);
 
-        Money campaignFinancesBefore = mockCampaign.getFinances().getBalance();
+        Money campaignFinancesBefore = mockCampaign.getPlayerForce().getFinances().getBalance();
         Money personalFinancesBefore = person.getTotalEarnings();
 
         ExtraIncome.processExtraIncome(finances, person, TODAY, false);
 
-        Money campaignFinancesAfter = mockCampaign.getFinances().getBalance();
+        Money campaignFinancesAfter = mockCampaign.getPlayerForce().getFinances().getBalance();
         Money personalFinancesAfter = person.getTotalEarnings();
 
         Money campaignFinancesExpected = campaignFinancesBefore.plus(POSITIVE_TEN.getMonthlyIncomeDirect());
@@ -349,7 +349,7 @@ class ExtraIncomeTest {
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
-        when(mockCampaign.getFinances()).thenReturn(finances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(finances);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
 
@@ -357,12 +357,12 @@ class ExtraIncomeTest {
         person.setExtraIncomeDirect(POSITIVE_TEN);
         person.setDateOfBirth(TODAY.minusYears(30));
 
-        Money campaignFinancesBefore = mockCampaign.getFinances().getBalance();
+        Money campaignFinancesBefore = mockCampaign.getPlayerForce().getFinances().getBalance();
         Money personalFinancesBefore = person.getTotalEarnings();
 
         ExtraIncome.processExtraIncome(finances, person, TODAY, false);
 
-        Money campaignFinancesAfter = mockCampaign.getFinances().getBalance();
+        Money campaignFinancesAfter = mockCampaign.getPlayerForce().getFinances().getBalance();
         Money personalFinancesAfter = person.getTotalEarnings();
 
         Money campaignFinancesExpected = campaignFinancesBefore.plus(Money.of(0));
@@ -378,7 +378,7 @@ class ExtraIncomeTest {
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
-        when(mockCampaign.getFinances()).thenReturn(finances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(finances);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
 
@@ -387,12 +387,12 @@ class ExtraIncomeTest {
         person.setDateOfBirth(TODAY.minusYears(30));
         person.setCommander(true);
 
-        Money campaignFinancesBefore = mockCampaign.getFinances().getBalance();
+        Money campaignFinancesBefore = mockCampaign.getPlayerForce().getFinances().getBalance();
         Money personalFinancesBefore = person.getTotalEarnings();
 
         ExtraIncome.processExtraIncome(finances, person, TODAY, false);
 
-        Money campaignFinancesAfter = mockCampaign.getFinances().getBalance();
+        Money campaignFinancesAfter = mockCampaign.getPlayerForce().getFinances().getBalance();
         Money personalFinancesAfter = person.getTotalEarnings();
 
         Money campaignFinancesExpected = campaignFinancesBefore.plus(POSITIVE_TEN.getMonthlyIncomeDirect());
@@ -408,7 +408,7 @@ class ExtraIncomeTest {
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
-        when(mockCampaign.getFinances()).thenReturn(finances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(finances);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
 
@@ -417,12 +417,12 @@ class ExtraIncomeTest {
         person.setDateOfBirth(TODAY.minusYears(30));
         person.setCommander(true);
 
-        Money campaignFinancesBefore = mockCampaign.getFinances().getBalance();
+        Money campaignFinancesBefore = mockCampaign.getPlayerForce().getFinances().getBalance();
         Money personalFinancesBefore = person.getTotalEarnings();
 
         ExtraIncome.processExtraIncome(finances, person, TODAY, false);
 
-        Money campaignFinancesAfter = mockCampaign.getFinances().getBalance();
+        Money campaignFinancesAfter = mockCampaign.getPlayerForce().getFinances().getBalance();
         Money personalFinancesAfter = person.getTotalEarnings();
 
         Money campaignFinancesExpected = campaignFinancesBefore.plus(NEGATIVE_TEN.getMonthlyIncomeDirect());

@@ -102,13 +102,14 @@ class EducationControllerTest {
         when(campaign.getCampaignOptions()).thenReturn(options);
 
         mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-        when(campaign.getAllHangar()).thenReturn(hangar);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
         LocalWarehouse warehouse = mock(LocalWarehouse.class);
         when(warehouse.getParts()).thenReturn(Collections.emptyList());
-        when(campaign.getAllWarehouse()).thenReturn(warehouse);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(campaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
-        when(campaign.getAllFormations()).thenReturn(Collections.emptyList());
+        when(campaign.getPlayerForce().getAllFormations()).thenReturn(Collections.emptyList());
 
         PlanetarySystem currentSystem = mock(PlanetarySystem.class);
         when(currentSystem.getId()).thenReturn("CurrentSystem");

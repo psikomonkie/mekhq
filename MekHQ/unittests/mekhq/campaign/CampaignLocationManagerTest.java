@@ -187,7 +187,7 @@ class CampaignLocationManagerTest {
             manager.gmTeleport(campaign, List.of(unit), destination);
             dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), destination, campaign));
         }
-        verify(campaign).processArrivals(campaign);
+        Mockito.verify(campaign).getPlayerForce().getDetachmentLocationManager().processArrivals(campaign);
     }
 
     @Test
@@ -205,7 +205,7 @@ class CampaignLocationManagerTest {
             dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), destination, campaign));
         }
         assertFalse(manager.isQueuedForTravel(unit));
-        verify(campaign).processArrivals(campaign);
+        Mockito.verify(campaign).getPlayerForce().getDetachmentLocationManager().processArrivals(campaign);
     }
 
     @Test
@@ -218,7 +218,7 @@ class CampaignLocationManagerTest {
             manager.gmCompleteTravel(campaign, List.of(unit));
             dispatch.verifyNoInteractions();
         }
-        verify(campaign).processArrivals(campaign);
+        Mockito.verify(campaign).getPlayerForce().getDetachmentLocationManager().processArrivals(campaign);
     }
 
     @Test
@@ -236,7 +236,7 @@ class CampaignLocationManagerTest {
 
         verify(travelNode).setTransitTime(0);
         verify(travelNode).setJumpPath(null);
-        verify(campaign).processArrivals(campaign);
+        Mockito.verify(campaign).getPlayerForce().getDetachmentLocationManager().processArrivals(campaign);
     }
 
     @Test

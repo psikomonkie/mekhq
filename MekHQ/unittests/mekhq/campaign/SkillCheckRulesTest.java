@@ -80,7 +80,7 @@ public class SkillCheckRulesTest {
             when(campaign.getCampaignOptions()).thenReturn(options);
             when(campaign.getFaction()).thenReturn(faction);
             mekhq.campaign.market.ForceShoppingList shoppingList = mock(mekhq.campaign.market.ForceShoppingList.class);
-            when(campaign.getShoppingList()).thenReturn(shoppingList);
+            when(campaign.getPlayerForce().getShoppingList()).thenReturn(shoppingList);
             return campaign;
         }
 
@@ -155,7 +155,7 @@ public class SkillCheckRulesTest {
             Campaign campaign = createCampaignMock(options);
             IAcquisitionWork acquisition = mock(IAcquisitionWork.class);
             mekhq.campaign.market.ForceShoppingList shoppingList = mock(mekhq.campaign.market.ForceShoppingList.class);
-            when(campaign.getShoppingList()).thenReturn(shoppingList);
+            when(campaign.getPlayerForce().getShoppingList()).thenReturn(shoppingList);
             when(options.getAcquisitionType()).thenReturn(AcquisitionsType.ADMINISTRATION);
             when(shoppingList.getShoppingItem(any())).thenReturn(mock(IAcquisitionWork.class));
 

@@ -695,8 +695,9 @@ public class PersonTest {
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
         when(mockCampaign.getLocalDate()).thenReturn(currentDate);
-        when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
-        when(mockCampaign.getAllWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
 
         Person person = new Person(mockCampaign);
@@ -720,8 +721,9 @@ public class PersonTest {
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
         when(mockCampaign.getLocalDate()).thenReturn(currentDate);
-        when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
-        when(mockCampaign.getAllWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
 
         Person person = new Person(mockCampaign);
@@ -807,8 +809,9 @@ public class PersonTest {
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
         when(mockCampaign.getLocalDate()).thenReturn(currentDate);
-        when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
-        when(mockCampaign.getAllWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
 
         Person person = new Person(mockCampaign);
@@ -831,8 +834,9 @@ public class PersonTest {
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
         when(mockCampaign.getLocalDate()).thenReturn(currentDate);
-        when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
-        when(mockCampaign.getAllWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
 
         Person person = new Person(mockCampaign);
@@ -1062,8 +1066,9 @@ public class PersonTest {
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
         when(mockCampaign.getLocalDate()).thenReturn(currentDate);
-        when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
-        when(mockCampaign.getAllWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
 
         Person person = new Person(mockCampaign);
@@ -1087,8 +1092,9 @@ public class PersonTest {
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
         when(mockCampaign.getLocalDate()).thenReturn(currentDate);
-        when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
-        when(mockCampaign.getAllWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
 
         Person person = new Person(mockCampaign);
@@ -1173,8 +1179,9 @@ public class PersonTest {
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
         when(mockCampaign.getLocalDate()).thenReturn(currentDate);
-        when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
-        when(mockCampaign.getAllWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
 
         Person person = new Person(mockCampaign);
@@ -1197,8 +1204,9 @@ public class PersonTest {
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
         when(mockCampaign.getLocalDate()).thenReturn(currentDate);
-        when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
-        when(mockCampaign.getAllWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
 
         Person person = new Person(mockCampaign);
@@ -1283,8 +1291,9 @@ public class PersonTest {
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
         when(mockCampaign.getLocalDate()).thenReturn(currentDate);
-        when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
-        when(mockCampaign.getAllWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
 
         Person person = new Person(mockCampaign);
@@ -1307,8 +1316,9 @@ public class PersonTest {
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
         when(mockCampaign.getLocalDate()).thenReturn(currentDate);
-        when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
-        when(mockCampaign.getAllWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
 
         Person person = new Person(mockCampaign);
@@ -1412,8 +1422,9 @@ public class PersonTest {
         Campaign mockCampaign = Mockito.mock(Campaign.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(new CampaignOptions());
         // Couple prereqs for removeAllTechJobs this test doesn't otherwise exercise
-        when(mockCampaign.getAllHangar()).thenReturn(new mekhq.campaign.LocalHangar());
-        when(mockCampaign.getAllWarehouse()).thenReturn(new LocalWarehouse());
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(new mekhq.campaign.LocalHangar());
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(new LocalWarehouse());
 
         Faction mockFaction = mock(Faction.class);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
@@ -1422,7 +1433,10 @@ public class PersonTest {
         Person secondInCommand = new Person(mockCampaign);
         secondInCommand.setFullNameDirect("Second Incommand");
         secondInCommand.setSecondInCommand(true);
-        when(mockCampaign.getSecondInCommand()).thenReturn(secondInCommand);
+        when(mockCampaign.getPlayerForce().getHumanResources()
+                   .getSecondInCommand(mockCampaign.getCampaignOptions(),
+                         mockCampaign.isClanCampaign(),
+                         mockCampaign.getLocalDate())).thenReturn(secondInCommand);
 
         Person person = new Person(mockCampaign);
         person.setFullNameDirect("First Incommand");
@@ -1442,7 +1456,8 @@ public class PersonTest {
         // Check that second in command is now the commander
         assertFalse(secondInCommand.isSecondInCommand());
         assertTrue(secondInCommand.isCommander());
-        verify(mockCampaign).personUpdated(secondInCommand);
+        Campaign campaign = verify(mockCampaign);
+        campaign.getPlayerForce().getHumanResources().personUpdated(campaign, secondInCommand);
         // Should have been at least one report for the person, announcing their death.
         verify(mockCampaign, atLeastOnce()).addReport(eq(DailyReportType.PERSONNEL),
               argThat(s -> s.contains(person.getHyperlinkedFullTitle())));
@@ -1457,8 +1472,9 @@ public class PersonTest {
         Campaign mockCampaign = Mockito.mock(Campaign.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(new CampaignOptions());
         // Couple prereqs for removeAllTechJobs this test doesn't otherwise exercise
-        when(mockCampaign.getAllHangar()).thenReturn(new mekhq.campaign.LocalHangar());
-        when(mockCampaign.getAllWarehouse()).thenReturn(new LocalWarehouse());
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(new mekhq.campaign.LocalHangar());
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(new LocalWarehouse());
 
         Faction mockFaction = mock(Faction.class);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
@@ -1609,13 +1625,14 @@ public class PersonTest {
                 when(campaign.getCampaignOptions()).thenReturn(options);
 
                 mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-                when(campaign.getAllHangar()).thenReturn(hangar);
+                when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
                 LocalWarehouse warehouse = mock(LocalWarehouse.class);
                 when(warehouse.getParts()).thenReturn(Collections.emptyList());
-                when(campaign.getAllWarehouse()).thenReturn(warehouse);
+                //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+                when(campaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
-                when(campaign.getAllFormations()).thenReturn(Collections.emptyList());
+                when(campaign.getPlayerForce().getAllFormations()).thenReturn(Collections.emptyList());
 
                 PlanetarySystem currentSystem = mock(PlanetarySystem.class);
                 when(currentSystem.getId()).thenReturn("CurrentSystem");
@@ -1693,13 +1710,14 @@ public class PersonTest {
                 when(campaign.getCampaignOptions()).thenReturn(options);
 
                 mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-                when(campaign.getAllHangar()).thenReturn(hangar);
+                when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
 
                 LocalWarehouse warehouse = mock(LocalWarehouse.class);
                 when(warehouse.getParts()).thenReturn(Collections.emptyList());
-                when(campaign.getAllWarehouse()).thenReturn(warehouse);
+                //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+                when(campaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
 
-                when(campaign.getAllFormations()).thenReturn(Collections.emptyList());
+                when(campaign.getPlayerForce().getAllFormations()).thenReturn(Collections.emptyList());
             }
 
             @Test

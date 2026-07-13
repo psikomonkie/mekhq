@@ -149,7 +149,7 @@ public class AccountantTest {
         Person prisoner = new Person(mockCampaign);
         prisoner.setPrisonerStatus(mockCampaign, PRISONER, false);
         List<Person> prisoners = List.of(prisoner, prisoner, prisoner);
-        when(mockCampaign.getAllPersonnel()).thenReturn(prisoners);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(prisoners);
 
         // Act
         int expensesFood = FOOD_PRISONER_OR_DEPENDENT * prisoners.size();
@@ -182,7 +182,7 @@ public class AccountantTest {
         Person prisoner = new Person(mockCampaign);
         prisoner.setPrisonerStatus(mockCampaign, PRISONER, false);
         List<Person> prisoners = List.of(prisoner, prisoner, prisoner);
-        when(mockCampaign.getAllPersonnel()).thenReturn(prisoners);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(prisoners);
 
         // Act
         int expensesHousing = HOUSING_PRISONER_OR_DEPENDENT * prisoners.size();
@@ -206,7 +206,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -214,7 +214,7 @@ public class AccountantTest {
         Person prisoner = new Person(mockCampaign);
         prisoner.setPrisonerStatus(mockCampaign, PRISONER, false);
         List<Person> prisoners = List.of(prisoner, prisoner, prisoner);
-        when(mockCampaign.getAllPersonnel()).thenReturn(prisoners);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(prisoners);
 
         // Act
         int expensesFood = FOOD_PRISONER_OR_DEPENDENT * prisoners.size();
@@ -238,7 +238,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -246,7 +246,7 @@ public class AccountantTest {
         Person dependent = new Person(mockCampaign);
         dependent.setPrimaryRoleDirect(DEPENDENT);
         List<Person> dependents = List.of(dependent, dependent, dependent);
-        when(mockCampaign.getAllPersonnel()).thenReturn(dependents);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(dependents);
 
         // Act
         int expensesFood = FOOD_PRISONER_OR_DEPENDENT * dependents.size();
@@ -271,7 +271,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -279,7 +279,7 @@ public class AccountantTest {
         Person dependent = new Person(mockCampaign);
         dependent.setPrimaryRoleDirect(DEPENDENT);
         List<Person> dependents = List.of(dependent, dependent, dependent);
-        when(mockCampaign.getAllPersonnel()).thenReturn(dependents);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(dependents);
 
         // Act
         int expensesHousing = HOUSING_PRISONER_OR_DEPENDENT * dependents.size();
@@ -303,7 +303,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -311,7 +311,7 @@ public class AccountantTest {
         Person dependent = new Person(mockCampaign);
         dependent.setPrimaryRoleDirect(DEPENDENT);
         List<Person> dependents = List.of(dependent, dependent, dependent);
-        when(mockCampaign.getAllPersonnel()).thenReturn(dependents);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(dependents);
 
         // Act
         int expensesFood = FOOD_PRISONER_OR_DEPENDENT * dependents.size();
@@ -335,7 +335,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -344,7 +344,7 @@ public class AccountantTest {
         enlisted.setPrimaryRoleDirect(MEKWARRIOR);
         enlisted.setRank(RWO_MIN - 1);
         List<Person> enlistedPersonnel = List.of(enlisted, enlisted, enlisted);
-        when(mockCampaign.getAllPersonnel()).thenReturn(enlistedPersonnel);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(enlistedPersonnel);
 
         // Act
         int expensesFood = FOOD_ENLISTED * enlistedPersonnel.size();
@@ -369,7 +369,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -378,7 +378,7 @@ public class AccountantTest {
         enlisted.setPrimaryRoleDirect(MEKWARRIOR);
         enlisted.setRank(RWO_MIN - 1);
         List<Person> enlistedPersonnel = List.of(enlisted, enlisted, enlisted);
-        when(mockCampaign.getAllPersonnel()).thenReturn(enlistedPersonnel);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(enlistedPersonnel);
 
         // Act
         int expensesHousing = HOUSING_ENLISTED * enlistedPersonnel.size();
@@ -402,7 +402,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -411,7 +411,7 @@ public class AccountantTest {
         enlisted.setPrimaryRoleDirect(MEKWARRIOR);
         enlisted.setRank(RWO_MIN - 1);
         List<Person> enlistedPersonnel = List.of(enlisted, enlisted, enlisted);
-        when(mockCampaign.getAllPersonnel()).thenReturn(enlistedPersonnel);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(enlistedPersonnel);
 
         // Act
         int expensesFood = FOOD_ENLISTED * enlistedPersonnel.size();
@@ -435,7 +435,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -444,7 +444,7 @@ public class AccountantTest {
         officer.setPrimaryRoleDirect(MEKWARRIOR);
         officer.setRank(RWO_MIN + 1);
         List<Person> officerPersonnel = List.of(officer, officer, officer);
-        when(mockCampaign.getAllPersonnel()).thenReturn(officerPersonnel);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(officerPersonnel);
 
         // Act
         int expensesFood = FOOD_OFFICER * officerPersonnel.size();
@@ -469,7 +469,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -478,7 +478,7 @@ public class AccountantTest {
         officer.setPrimaryRoleDirect(MEKWARRIOR);
         officer.setRank(RWO_MIN + 1);
         List<Person> officerPersonnel = List.of(officer, officer, officer);
-        when(mockCampaign.getAllPersonnel()).thenReturn(officerPersonnel);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(officerPersonnel);
 
         // Act
         int expensesHousing = HOUSING_OFFICER * officerPersonnel.size();
@@ -502,7 +502,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -511,7 +511,7 @@ public class AccountantTest {
         officer.setPrimaryRoleDirect(MEKWARRIOR);
         officer.setRank(RWO_MIN + 1);
         List<Person> officerPersonnel = List.of(officer, officer, officer);
-        when(mockCampaign.getAllPersonnel()).thenReturn(officerPersonnel);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(officerPersonnel);
 
         // Act
         int expensesFood = FOOD_OFFICER * officerPersonnel.size();
@@ -535,7 +535,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -563,7 +563,7 @@ public class AccountantTest {
         allPersonnel.addAll(dependents);
         allPersonnel.addAll(enlistedPersonnel);
         allPersonnel.addAll(officerPersonnel);
-        when(mockCampaign.getAllPersonnel()).thenReturn(allPersonnel);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(allPersonnel);
 
         // Act
         int expensesFood = FOOD_PRISONER_OR_DEPENDENT * (prisoners.size() + dependents.size());
@@ -594,7 +594,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -622,7 +622,7 @@ public class AccountantTest {
         allPersonnel.addAll(dependents);
         allPersonnel.addAll(enlistedPersonnel);
         allPersonnel.addAll(officerPersonnel);
-        when(mockCampaign.getAllPersonnel()).thenReturn(allPersonnel);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(allPersonnel);
 
         // Act
         int expensesHousing = HOUSING_PRISONER_OR_DEPENDENT * (prisoners.size() + dependents.size());
@@ -649,7 +649,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -677,7 +677,7 @@ public class AccountantTest {
         allPersonnel.addAll(dependents);
         allPersonnel.addAll(enlistedPersonnel);
         allPersonnel.addAll(officerPersonnel);
-        when(mockCampaign.getAllPersonnel()).thenReturn(allPersonnel);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(allPersonnel);
 
         // Act
         int expensesFood = FOOD_PRISONER_OR_DEPENDENT * (prisoners.size() + dependents.size());
@@ -705,7 +705,7 @@ public class AccountantTest {
 
         CurrentLocation location = new CurrentLocation();
         location.setTransitTime(1);
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -733,7 +733,7 @@ public class AccountantTest {
         allPersonnel.addAll(dependents);
         allPersonnel.addAll(enlistedPersonnel);
         allPersonnel.addAll(officerPersonnel);
-        when(mockCampaign.getAllPersonnel()).thenReturn(allPersonnel);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(allPersonnel);
 
         // Act
         int expensesFood = FOOD_PRISONER_OR_DEPENDENT * (prisoners.size() + dependents.size());
@@ -762,7 +762,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -803,7 +803,7 @@ public class AccountantTest {
         allPersonnel.addAll(enlistedPersonnel);
         allPersonnel.addAll(officerPersonnel);
         allPersonnel.addAll(warShipPersonnel);
-        when(mockCampaign.getAllPersonnel()).thenReturn(allPersonnel);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(allPersonnel);
 
         // Act
         int expensesFood = FOOD_PRISONER_OR_DEPENDENT * (prisoners.size() + dependents.size());
@@ -836,7 +836,7 @@ public class AccountantTest {
 
         PlanetarySystem mockSystem = mock(PlanetarySystem.class);
         CurrentLocation location = new CurrentLocation(mockSystem, 0);
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -853,12 +853,12 @@ public class AccountantTest {
 
         FactionStandings factionStandings = mock(FactionStandings.class);
         when(factionStandings.getRegardForFaction("EMPLOYER", true)).thenReturn(20.0);
-        when(mockCampaign.getFactionStandings()).thenReturn(factionStandings);
+        when(mockCampaign.getPlayerForce().getFactionStandings()).thenReturn(factionStandings);
 
         Person officer = new Person(mockCampaign);
         officer.setPrimaryRoleDirect(MEKWARRIOR);
         officer.setRank(RWO_MIN + 1);
-        when(mockCampaign.getAllPersonnel()).thenReturn(List.of(officer));
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(List.of(officer));
 
         double expectedMultiplier = FactionStandingUtilities.getBarrackCostsMultiplier(20.0);
         Money expected = Money.of(HOUSING_OFFICER).multipliedBy(expectedMultiplier);
@@ -881,7 +881,7 @@ public class AccountantTest {
 
         PlanetarySystem mockSystem = mock(PlanetarySystem.class);
         CurrentLocation location = new CurrentLocation(mockSystem, 0);
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -899,12 +899,12 @@ public class AccountantTest {
 
         FactionStandings factionStandings = mock(FactionStandings.class);
         when(factionStandings.getRegardForFaction("LOCAL", true)).thenReturn(15.0);
-        when(mockCampaign.getFactionStandings()).thenReturn(factionStandings);
+        when(mockCampaign.getPlayerForce().getFactionStandings()).thenReturn(factionStandings);
 
         Person officer = new Person(mockCampaign);
         officer.setPrimaryRoleDirect(MEKWARRIOR);
         officer.setRank(RWO_MIN + 1);
-        when(mockCampaign.getAllPersonnel()).thenReturn(List.of(officer));
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(List.of(officer));
 
         double expectedMultiplier = FactionStandingUtilities.getBarrackCostsMultiplier(15.0);
         Money expected = Money.of(HOUSING_OFFICER).multipliedBy(expectedMultiplier);
@@ -934,7 +934,7 @@ public class AccountantTest {
             accountant = new Accountant(mockCampaign);
             when(mockCampaign.isClanCampaign()).thenReturn(false);
             when(mockCampaign.getLocalDate()).thenReturn(TODAY);
-            when(mockCampaign.getHumanResources()).thenReturn(mockHumanResources);
+            when(mockCampaign.getPlayerForce().getHumanResources()).thenReturn(mockHumanResources);
         }
 
 
@@ -958,7 +958,8 @@ public class AccountantTest {
             Person mockPerson = getMockPerson();
 
             when(mockCampaign.getCampaignOptions()).thenReturn(campaignOptions);
-            when(mockCampaign.getSalaryEligiblePersonnel()).thenReturn(List.of(mockPerson));
+            when(mockCampaign.getPlayerForce().getHumanResources().getSalaryEligiblePersonnel()).thenReturn(List.of(
+                  mockPerson));
 
             // Act
             Map<Person, Money> expectedMap = accountant.getPayRollSummary();
@@ -974,7 +975,7 @@ public class AccountantTest {
         @Test
         void testGetAstechPoolPay() {
             // Arrange
-            when(mockCampaign.getTemporaryAsTechPool()).thenReturn(5);
+            when(mockCampaign.getPlayerForce().getHumanResources().getTemporaryAsTechPool()).thenReturn(5);
             when(mockCampaign.getCampaignOptions()).thenReturn(campaignOptions);
 
             // Act
@@ -990,7 +991,7 @@ public class AccountantTest {
         @Test
         void testGetMedicPoolPay() {
             // Arrange
-            when(mockCampaign.getTemporaryMedicPool()).thenReturn(5);
+            when(mockCampaign.getPlayerForce().getHumanResources().getTemporaryMedicPool()).thenReturn(5);
             when(mockCampaign.getCampaignOptions()).thenReturn(campaignOptions);
 
             // Act
@@ -1433,10 +1434,11 @@ public class AccountantTest {
             accountant = new Accountant(mockCampaign);
 
             when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
-            when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
+            when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
             when(mockCampaign.isClanCampaign()).thenReturn(false);
             when(mockCampaign.getLocalDate()).thenReturn(TODAY);
-            when(mockCampaign.getHumanResources()).thenReturn(mock(mekhq.campaign.ForceHumanResources.class));
+            when(mockCampaign.getPlayerForce()
+                       .getHumanResources()).thenReturn(mock(mekhq.campaign.ForceHumanResources.class));
             mockCampaignOptions.setPayForSalaries(true);
             mockCampaignOptions.setUseInfantryDontCount(false);
 
@@ -1469,7 +1471,9 @@ public class AccountantTest {
             when(person2.getSalary(mockCampaignOptions, false, TODAY)).thenReturn(Money.of(1500));
             when(unit2.getCrew()).thenReturn(List.of(person2));
 
-            when(mockCampaign.getSalaryEligiblePersonnel()).thenReturn(List.of(person1, person2));
+            when(mockCampaign.getPlayerForce().getHumanResources().getSalaryEligiblePersonnel()).thenReturn(List.of(
+                  person1,
+                  person2));
 
             // Every unit is reachable from the top-level formations Accountant now passes along
             Formation formationA = mock(Formation.class);
@@ -1483,7 +1487,7 @@ public class AccountantTest {
             Formation rootFormation = mock(Formation.class);
             when(rootFormation.getSubFormations()).thenReturn(new Vector<>(List.of(formationA, formationB)));
 
-            when(mockCampaign.getFormations()).thenReturn(rootFormation);
+            when(mockCampaign.getPlayerForce().getFormations()).thenReturn(rootFormation);
         }
 
         @Test
@@ -1493,7 +1497,9 @@ public class AccountantTest {
             Money legacyTotal = getSparePartsTotal(mockCampaign.getAllUnits())
                                       .plus(getFuelTotal(mockCampaign.getAllUnits()))
                                       .plus(getAmmoTotal(mockCampaign.getAllUnits()))
-                                      .plus(getSalaryTotal(mockCampaign.getSalaryEligiblePersonnel(),
+                                      .plus(getSalaryTotal(mockCampaign.getPlayerForce()
+                                                                 .getHumanResources()
+                                                                 .getSalaryEligiblePersonnel(),
                                             mockCampaignOptions,
                                             false,
                                             TODAY,
@@ -1551,7 +1557,10 @@ public class AccountantTest {
         void testGetPayRoll_stillMatchesWholeCampaignSalaryTotal() {
             Money actual = accountant.getPayRoll();
 
-            assertEquals(getSalaryTotal(mockCampaign.getSalaryEligiblePersonnel(), mockCampaignOptions, false, TODAY,
+            assertEquals(getSalaryTotal(mockCampaign.getPlayerForce().getHumanResources().getSalaryEligiblePersonnel(),
+                  mockCampaignOptions,
+                  false,
+                  TODAY,
                   false), actual);
         }
 
@@ -2401,10 +2410,11 @@ public class AccountantTest {
             accountant = new Accountant(mockCampaign);
 
             when(mockCampaign.getCampaignOptions()).thenReturn(campaignOptions);
-            when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
+            when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
             when(mockCampaign.isClanCampaign()).thenReturn(false);
             when(mockCampaign.getLocalDate()).thenReturn(TODAY);
-            when(mockCampaign.getHumanResources()).thenReturn(mock(mekhq.campaign.ForceHumanResources.class));
+            when(mockCampaign.getPlayerForce()
+                       .getHumanResources()).thenReturn(mock(mekhq.campaign.ForceHumanResources.class));
         }
 
         @Test
@@ -2455,7 +2465,8 @@ public class AccountantTest {
             Person person = mock(Person.class);
             when(person.getPrimaryRole()).thenReturn(MEKWARRIOR);
             when(person.getSalary(campaignOptions, false, TODAY)).thenReturn(Money.of(1000));
-            when(mockCampaign.getSalaryEligiblePersonnel()).thenReturn(List.of(person));
+            when(mockCampaign.getPlayerForce().getHumanResources().getSalaryEligiblePersonnel()).thenReturn(List.of(
+                  person));
 
             Money actual = accountant.getOverheadExpenses();
 
@@ -2469,7 +2480,8 @@ public class AccountantTest {
             Person person = mock(Person.class);
             when(person.getPrimaryRole()).thenReturn(MEKWARRIOR);
             when(person.getSalary(campaignOptions, false, TODAY)).thenReturn(Money.of(1000));
-            when(mockCampaign.getSalaryEligiblePersonnel()).thenReturn(List.of(person));
+            when(mockCampaign.getPlayerForce().getHumanResources().getSalaryEligiblePersonnel()).thenReturn(List.of(
+                  person));
 
             Money actual = accountant.getOverheadExpenses();
 
@@ -2490,7 +2502,7 @@ public class AccountantTest {
             when(formation.getFormationType()).thenReturn(FormationType.STANDARD);
             when(formation.getCombatRoleInMemory()).thenReturn(CombatRole.MANEUVER);
             when(formation.getUnits()).thenReturn(new Vector<>(List.of(unitId)));
-            when(mockCampaign.getAllFormations()).thenReturn(List.of(formation));
+            when(mockCampaign.getPlayerForce().getAllFormations()).thenReturn(List.of(formation));
 
             Faction faction = new Faction();
             when(mockCampaign.getFaction()).thenReturn(faction);
@@ -2533,7 +2545,8 @@ public class AccountantTest {
             Person person = mock(Person.class);
             when(person.getPrimaryRole()).thenReturn(MEKWARRIOR);
             when(person.getSalary(campaignOptions, false, TODAY)).thenReturn(Money.of(1000));
-            when(mockCampaign.getSalaryEligiblePersonnel()).thenReturn(List.of(person));
+            when(mockCampaign.getPlayerForce().getHumanResources().getSalaryEligiblePersonnel()).thenReturn(List.of(
+                  person));
 
             Money actual = accountant.getContractBase();
 

@@ -100,7 +100,7 @@ public class ShoppingListPriorityDialog extends JDialog {
         super(owner);
 
         // needs to be static to expose it to the table
-        this.shoppingList = campaign.getShoppingList();
+        this.shoppingList = campaign.getPlayerForce().getShoppingList();
         this.tableModel = new ShoppingListTableModel(campaign, shoppingList);
         this.shoppingTable = new JTable(tableModel);
 

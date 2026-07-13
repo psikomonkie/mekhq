@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2020-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -41,7 +41,6 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -558,7 +557,11 @@ public class UnitPersonTest {
 
             // Enable blob crew for all roles (required for temp crew to work)
             // Using doReturn for spy to avoid calling real method
-            doReturn(true).when(mockCampaign).isBlobCrewEnabled(any(PersonnelRole.class));
+            mekhq.campaign.Campaign campaign = Mockito.doReturn(true).when(mockCampaign);
+            campaign.getPlayerForce()
+                  .getHumanResources()
+                  .isBlobCrewEnabled(ArgumentMatchers.any(mekhq.campaign.personnel.enums.PersonnelRole.class),
+                        campaign.getCampaignOptions());
 
             mockEntity = mock(Entity.class);
             when(mockEntity.getId()).thenReturn(1);

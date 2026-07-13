@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -85,7 +85,7 @@ public class PrisonerEventManagerTest {
 
         // Setup
         Campaign mockCampaign = mock(Campaign.class);
-        when(mockCampaign.getTemporaryPrisonerCapacity()).thenReturn(INITIAL_TEMPORARY_CAPACITY);
+        when(mockCampaign.getPlayerForce().getTemporaryPrisonerCapacity()).thenReturn(INITIAL_TEMPORARY_CAPACITY);
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
@@ -115,7 +115,7 @@ public class PrisonerEventManagerTest {
 
         // Setup
         Campaign mockCampaign = mock(Campaign.class);
-        when(mockCampaign.getTemporaryPrisonerCapacity()).thenReturn(INITIAL_TEMPORARY_CAPACITY);
+        when(mockCampaign.getPlayerForce().getTemporaryPrisonerCapacity()).thenReturn(INITIAL_TEMPORARY_CAPACITY);
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
@@ -143,7 +143,7 @@ public class PrisonerEventManagerTest {
 
         // Setup
         Campaign mockCampaign = mock(Campaign.class);
-        when(mockCampaign.getTemporaryPrisonerCapacity()).thenReturn(INITIAL_TEMPORARY_CAPACITY);
+        when(mockCampaign.getPlayerForce().getTemporaryPrisonerCapacity()).thenReturn(INITIAL_TEMPORARY_CAPACITY);
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
@@ -174,7 +174,7 @@ public class PrisonerEventManagerTest {
 
         // Setup
         Campaign mockCampaign = mock(Campaign.class);
-        when(mockCampaign.getTemporaryPrisonerCapacity()).thenReturn(INITIAL_TEMPORARY_CAPACITY);
+        when(mockCampaign.getPlayerForce().getTemporaryPrisonerCapacity()).thenReturn(INITIAL_TEMPORARY_CAPACITY);
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
@@ -252,7 +252,8 @@ public class PrisonerEventManagerTest {
 
 
         Person friendlyPrisonerOfWar = new Person(mockCampaign);
-        when(mockCampaign.getFriendlyPrisoners()).thenReturn(List.of(friendlyPrisonerOfWar));
+        when(mockCampaign.getPlayerForce().getHumanResources().getFriendlyPrisoners()).thenReturn(List.of(
+              friendlyPrisonerOfWar));
 
         PrisonerEventManager realEventManager = new PrisonerEventManager(mockCampaign) {
             @Override
@@ -296,10 +297,11 @@ public class PrisonerEventManagerTest {
         when(mockCampaign.getLocalDate()).thenReturn(today);
 
         Person friendlyPrisonerOfWar = new Person(mockCampaign);
-        when(mockCampaign.getFriendlyPrisoners()).thenReturn(List.of(friendlyPrisonerOfWar));
+        when(mockCampaign.getPlayerForce().getHumanResources().getFriendlyPrisoners()).thenReturn(List.of(
+              friendlyPrisonerOfWar));
 
         Finances finances = new Finances();
-        when(mockCampaign.getFinances()).thenReturn(finances);
+        when(mockCampaign.getPlayerForce().getFinances()).thenReturn(finances);
 
         PrisonerEventManager realEventManager = new PrisonerEventManager(mockCampaign) {
             @Override
@@ -542,9 +544,9 @@ public class PrisonerEventManagerTest {
 
             Campaign mockCampaign = mock(Campaign.class);
             when(mockCampaign.getCampaignOptions()).thenReturn(mockOptions);
-            when(mockCampaign.getTemporaryPrisonerCapacity()).thenReturn(temporaryCapacity);
+            when(mockCampaign.getPlayerForce().getTemporaryPrisonerCapacity()).thenReturn(temporaryCapacity);
             when(mockCampaign.getActiveContracts()).thenReturn(List.of());
-            when(mockCampaign.getAllFormations()).thenReturn(List.of());
+            when(mockCampaign.getPlayerForce().getAllFormations()).thenReturn(List.of());
             return mockCampaign;
         }
 
@@ -613,7 +615,7 @@ public class PrisonerEventManagerTest {
                 when(mockCampaign.getUnit(id)).thenReturn(unit);
             }
             Formation formation = securityFormation(unitIds);
-            when(mockCampaign.getAllFormations()).thenReturn(List.of(formation));
+            when(mockCampaign.getPlayerForce().getAllFormations()).thenReturn(List.of(formation));
             return mockCampaign;
         }
 
@@ -646,7 +648,7 @@ public class PrisonerEventManagerTest {
             // Arrange
             // isFormationType returns false by default — formation is not SECURITY
             Campaign campaign = buildCampaign(PrisonerCaptureStyle.MEKHQ, 100);
-            when(campaign.getAllFormations()).thenReturn(List.of(mock(Formation.class)));
+            when(campaign.getPlayerForce().getAllFormations()).thenReturn(List.of(mock(Formation.class)));
 
             // Act
             int result = calculatePrisonerCapacity(campaign);
