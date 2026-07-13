@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -60,8 +60,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.personnel.Person;
@@ -407,9 +406,9 @@ class EventEffectsManagerTest {
         when(mockCampaignOptions.isUseFatigue()).thenReturn(true);
         when(mockCampaignOptions.getFatigueRate()).thenReturn(1);
 
-        Hangar mockHangar = mock(Hangar.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
         when(mockCampaign.getHangar()).thenReturn(mockHangar);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
 
         EventResult eventResult = new EventResult(FATIGUE_ONE, false, MAGNITUDE, "");
@@ -434,9 +433,9 @@ class EventEffectsManagerTest {
         when(mockCampaignOptions.isUseFatigue()).thenReturn(true);
         when(mockCampaignOptions.getFatigueRate()).thenReturn(1);
 
-        Hangar mockHangar = mock(Hangar.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
         when(mockCampaign.getHangar()).thenReturn(mockHangar);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
 
         EventResult eventResult = new EventResult(FATIGUE_ALL, false, MAGNITUDE, "");
@@ -575,9 +574,9 @@ class EventEffectsManagerTest {
         when(mockCampaignOptions.isUseFatigue()).thenReturn(true);
         when(mockCampaignOptions.getFatigueRate()).thenReturn(1);
 
-        Hangar mockHangar = mock(Hangar.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
         when(mockCampaign.getHangar()).thenReturn(mockHangar);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
 
         EventResult eventResult = new EventResult(UNIQUE, false, MAGNITUDE, "");

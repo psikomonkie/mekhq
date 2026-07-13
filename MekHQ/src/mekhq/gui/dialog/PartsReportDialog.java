@@ -60,7 +60,6 @@ import megamek.common.equipment.WeaponType;
 import megamek.common.ui.FastJScrollPane;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Quartermaster;
 import mekhq.campaign.base.PlayerBase;
 import mekhq.campaign.location.IPlace;
 import mekhq.campaign.market.PartsInUseManager;
@@ -130,8 +129,8 @@ public class PartsReportDialog extends JDialog {
         super(gui.getFrame(), modal);
         this.gui = gui;
         this.campaign = gui.getCampaign();
-        this.activePlace = campaign;
-        this.partsInUseManager = new PartsInUseManager(campaign, campaign);
+        this.activePlace = campaign.getPlayerForce().getForceDetachment();
+        this.partsInUseManager = new PartsInUseManager(campaign, campaign.getPlayerForce().getForceDetachment());
         initComponents();
         // initComponents() selects the dropdown to match the main GUI's active location; sync the scoped manager to it.
         activePlace = getSelectedPlace();
@@ -265,7 +264,7 @@ public class PartsReportDialog extends JDialog {
                 if (sellQty > spareQty) {
                     sellQty = spareQty;
                 }
-                Quartermaster quartermaster = campaign.getQuartermaster();
+                mekhq.campaign.ForceQuartermaster quartermaster = campaign.getQuartermaster();
                 int i = 0;
                 while (sellQty > 0 && i < spares.size()) {
                     Part spare = spares.get(i);
@@ -655,7 +654,7 @@ public class PartsReportDialog extends JDialog {
     private IPlace getSelectedPlace() {
         LocationFilterItem item = (LocationFilterItem) choiceLocation.getSelectedItem();
         if (item == null || item.isMainForce()) {
-            return campaign;
+            return campaign.getPlayerForce().getForceDetachment();
         }
         return item.getBase();
     }

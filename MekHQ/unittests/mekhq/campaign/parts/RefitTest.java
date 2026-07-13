@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2020-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -64,12 +64,11 @@ import megamek.common.options.GameOptions;
 import megamek.common.options.OptionsConstants;
 import megamek.common.units.Entity;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
-import mekhq.campaign.Quartermaster;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalHangar;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.finances.Money;
-import mekhq.campaign.market.ShoppingList;
+import mekhq.campaign.market.ForceShoppingList;
 import mekhq.campaign.parts.equipment.AmmoBin;
 import mekhq.campaign.parts.equipment.EquipmentPart;
 import mekhq.campaign.parts.equipment.MissingEquipmentPart;
@@ -109,10 +108,10 @@ public class RefitTest {
     private Board mockBoard;
 
     @Mock
-    private Quartermaster mockQuartermaster;
+    private mekhq.campaign.ForceQuartermaster mockQuartermaster;
 
     @Mock
-    private Warehouse mockWarehouse;
+    private LocalWarehouse mockWarehouse;
 
     @BeforeAll
     static void before() {
@@ -788,9 +787,9 @@ public class RefitTest {
     @MockitoSettings(strictness = Strictness.LENIENT)
     // Allegedly unnecessary stubbing for the mockHanger & mockShoppingList
     public void heavyTrackedApcMgToStandard() throws EntityLoadingException, IOException {
-        final Hangar mockHangar = mock(Hangar.class);
+        final LocalHangar mockHangar = mock(LocalHangar.class);
         when(mockCampaign.getHangar()).thenReturn(mockHangar);
-        final ShoppingList mockShoppingList = mock(ShoppingList.class);
+        final ForceShoppingList mockShoppingList = mock(ForceShoppingList.class);
         when(mockCampaign.getShoppingList()).thenReturn(mockShoppingList);
 
         // Create the original entity backing the unit

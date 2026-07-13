@@ -107,7 +107,7 @@ import mekhq.Utilities;
 import mekhq.campaign.AbstractLocation;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.ExtraData;
-import mekhq.campaign.Personnel;
+import mekhq.campaign.LocalPersonnel;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.events.persons.PersonChangedEvent;
 import mekhq.campaign.events.persons.PersonStatusChangedEvent;
@@ -2613,7 +2613,8 @@ public class Person implements ILocatable {
 
         boolean isIgnoreSPAEligibility = !campaignOptions.isAwardRelevantVeterancySPAs();
         SingleSpecialAbilityGenerator singleSpecialAbilityGenerator = new SingleSpecialAbilityGenerator();
-        String spaGained = singleSpecialAbilityGenerator.rollSPA(campaign, this, true, isIgnoreSPAEligibility, true);
+        String spaGained = singleSpecialAbilityGenerator.rollSPA(campaign, this, true, isIgnoreSPAEligibility, true,
+              false);
         if (spaGained == null) {
             return;
         } else {
@@ -9465,10 +9466,10 @@ public class Person implements ILocatable {
     public boolean setParent(ILocation parent) {
         ILocation oldParent = getParentLocation();
         if (ILocatable.super.setParent(parent)) {
-            if (oldParent instanceof Personnel personnel) {
+            if (oldParent instanceof LocalPersonnel personnel) {
                 personnel.remove(getId());
             }
-            if (parent instanceof Personnel personnel) {
+            if (parent instanceof LocalPersonnel personnel) {
                 personnel.put(getId(), this);
             }
             return true;

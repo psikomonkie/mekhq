@@ -463,16 +463,19 @@ public class Resupply {
     /**
      * Determines if the given entity is a prohibited unit type based on specific criteria.
      *
-     * @param entity                       the entity to check for prohibited unit type
-     * @param excludeDropShipsFromCheck    if true, DropShip entities are excluded from being considered prohibited
-     * @param excludeSuperHeaviesFromCheck if true, Super Heavy entities are excluded from being considered prohibited
+     * @param entity                                 the entity to check for prohibited unit type
+     * @param excludeSmallCraftAndDropShipsFromCheck if true, Small Craft and DropShip entities are excluded from being
+     *                                               considered prohibited
+     * @param excludeSuperHeaviesFromCheck           if true, Super Heavy entities are excluded from being considered
+     *                                               prohibited
      *
      * @return {@code true} if the entity is a prohibited unit type such as Small Craft, Large Craft, or Conventional
      *       Infantry, and not excluded by the specified parameters; {@code false} otherwise
      */
-    public static boolean isProhibitedUnitType(Entity entity, boolean excludeDropShipsFromCheck,
+    public static boolean isProhibitedUnitType(Entity entity, boolean excludeSmallCraftAndDropShipsFromCheck,
           boolean excludeSuperHeaviesFromCheck) {
-        if (entity.isDropShip() && excludeDropShipsFromCheck) {
+        boolean isSmallCraftOrDropShip = entity.isSmallCraft() || entity.isDropShip();
+        if (isSmallCraftOrDropShip && excludeSmallCraftAndDropShipsFromCheck) {
             return false;
         }
 
@@ -480,7 +483,7 @@ public class Resupply {
             return false;
         }
 
-        return entity.isSmallCraft() || entity.isLargeCraft() || entity.isConventionalInfantry();
+        return entity.isLargeCraft() || entity.isConventionalInfantry();
     }
 
     /**
@@ -584,7 +587,7 @@ public class Resupply {
      */
     private Set<PartInUse> collectPartsInUseAcrossLocations() {
         List<IPlace> places = new ArrayList<>();
-        places.add(campaign);
+        places.add(campaign.getPlayerForce().getForceDetachment());
         places.addAll(campaign.getCampaignLocationManager().getPlayerBases());
 
         Map<PartInUse, PartInUse> merged = new HashMap<>();

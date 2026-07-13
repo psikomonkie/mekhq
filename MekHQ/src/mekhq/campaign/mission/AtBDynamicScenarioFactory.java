@@ -108,7 +108,7 @@ import megamek.logging.MMLogger;
 import mekhq.MHQConstants;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
+import mekhq.campaign.LocalHangar;
 import mekhq.campaign.againstTheBot.AtBConfiguration;
 import mekhq.campaign.camOpsReputation.IUnitRating;
 import mekhq.campaign.campaignOptions.BoardScalingType;
@@ -1655,7 +1655,7 @@ public class AtBDynamicScenarioFactory {
                              templateObjective.getAssociatedForceNames()
                                    .contains(ScenarioObjective.FORCE_SHORTCUT_ALL_ENEMY_FORCES))) {
                 objectiveForceNames.add(botForce.getName());
-                calculatedDestinationZone = OffBoardDirection.translateBoardStart(getOppositeEdge(forceTemplate.getActualDeploymentZone()));
+                calculatedDestinationZone = OffBoardDirection.translateStartPosition(getOppositeEdge(forceTemplate.getActualDeploymentZone()));
             }
         }
 
@@ -1666,7 +1666,7 @@ public class AtBDynamicScenarioFactory {
                       templateObjective.getAssociatedForceNames()
                             .contains(ScenarioObjective.FORCE_SHORTCUT_ALL_PRIMARY_PLAYER_FORCES)) {
                 objectiveForceNames.add(campaign.getFormation(forceID).getName());
-                calculatedDestinationZone = OffBoardDirection.translateBoardStart(getOppositeEdge(playerForceTemplate.getActualDeploymentZone()));
+                calculatedDestinationZone = OffBoardDirection.translateStartPosition(getOppositeEdge(playerForceTemplate.getActualDeploymentZone()));
             }
         }
 
@@ -1677,7 +1677,7 @@ public class AtBDynamicScenarioFactory {
                       templateObjective.getAssociatedForceNames()
                             .contains(ScenarioObjective.FORCE_SHORTCUT_ALL_PRIMARY_PLAYER_FORCES)) {
                 objectiveUnitIDs.add(unitID.toString());
-                calculatedDestinationZone = OffBoardDirection.translateBoardStart(getOppositeEdge(playerForceTemplate.getActualDeploymentZone()));
+                calculatedDestinationZone = OffBoardDirection.translateStartPosition(getOppositeEdge(playerForceTemplate.getActualDeploymentZone()));
             }
         }
 
@@ -1687,7 +1687,7 @@ public class AtBDynamicScenarioFactory {
 
             if (templateObjective.isApplicableToForceTemplate(botForceTemplate, scenario)) {
                 objectiveUnitIDs.add(unitID.toString());
-                calculatedDestinationZone = OffBoardDirection.translateBoardStart(getOppositeEdge(botForceTemplate.getActualDeploymentZone()));
+                calculatedDestinationZone = OffBoardDirection.translateStartPosition(getOppositeEdge(botForceTemplate.getActualDeploymentZone()));
             }
         }
 
@@ -1701,11 +1701,23 @@ public class AtBDynamicScenarioFactory {
 
         // if the objective specifies that it's to reach or prevent reaching a map edge
         // and has been set to "force destination edge", set that here
-        if (actualObjective.getDestinationEdge() == OffBoardDirection.NONE &&
+        boolean destinationEdgeIsNone = actualObjective.getDestinationEdge() == OffBoardDirection.NONE;
+        boolean objectiveIsReachMapEdge = actualObjective.getObjectiveCriterion() == ObjectiveCriterion.ReachMapEdge;
+        boolean objectiveIsPreventReachMapEdge = actualObjective.getObjectiveCriterion() ==
+                                                       ObjectiveCriterion.PreventReachMapEdge;
+        boolean objectiveIsMapEdgeRelevant = objectiveIsReachMapEdge || objectiveIsPreventReachMapEdge;
+        if (destinationEdgeIsNone &&
                   calculatedDestinationZone != OffBoardDirection.NONE &&
-                  (actualObjective.getObjectiveCriterion() == ObjectiveCriterion.ReachMapEdge ||
-                         actualObjective.getObjectiveCriterion() == ObjectiveCriterion.PreventReachMapEdge)) {
+                  objectiveIsMapEdgeRelevant) {
             actualObjective.setDestinationEdge(calculatedDestinationZone);
+        } else if (destinationEdgeIsNone &&
+                         objectiveIsMapEdgeRelevant) {
+            // The edge could not be auto-derived (e.g. the associated force deploys from the map center, so there is
+            // no "opposite" edge to flee toward). Such an objective can never validate, so warn instead of failing
+            // silently; the template should set an explicit <destinationEdge> in this case.
+            LOGGER.warn("Reach/prevent-edge objective '{}' could not auto-resolve a destination edge; " +
+                              "it will never complete unless the scenario template sets an explicit <destinationEdge>.",
+                  actualObjective.getDescription());
         }
 
         return actualObjective;
@@ -1859,28 +1871,30 @@ public class AtBDynamicScenarioFactory {
         } else {
             StratConBiomeManifest biomeManifest = StratConBiomeManifest.getInstance();
             int kelvinTemp = scenario.getTemperature() + StratConContractInitializer.ZERO_CELSIUS_IN_KELVIN;
-            var facilityTempMap = biomeManifest.getTempMap(StratConBiomeManifest.TERRAN_FACILITY_BIOME);
-            var facilityBiomeEntry = facilityTempMap.floorEntry(kelvinTemp);
-            if (facilityBiomeEntry == null) {
-                facilityBiomeEntry = facilityTempMap.firstEntry();
-            }
-            List<String> allowedFacility = facilityBiomeEntry.getValue().allowedTerrainTypes;
+
             var terrainTempMap = biomeManifest.getTempMap(StratConBiomeManifest.TERRAN_BIOME);
             var terrainBiomeEntry = terrainTempMap.floorEntry(kelvinTemp);
             if (terrainBiomeEntry == null) {
                 terrainBiomeEntry = terrainTempMap.firstEntry();
             }
-            List<String> allowedTerrain = terrainBiomeEntry.getValue().allowedTerrainTypes;
-            List<String> allowedTemplate = scenario.getTemplate().mapParameters.allowedTerrainTypes;
-            // try to filter on temp
-            allowedTerrain.addAll(allowedFacility);
-            allowedTemplate.retainAll(allowedTerrain);
-            allowedTemplate = !allowedTemplate.isEmpty() ?
-                                    allowedTemplate :
-                                    scenario.getTemplate().mapParameters.allowedTerrainTypes;
+
+            List<String> allowedTemplate = new ArrayList<>(scenario.getTemplate().mapParameters.allowedTerrainTypes);
+            allowedTemplate.retainAll(terrainBiomeEntry.getValue().allowedTerrainTypes);
+
+            if (allowedTemplate.isEmpty()) {
+                allowedTemplate = scenario.getTemplate().mapParameters.allowedTerrainTypes;
+            }
+
+            if (allowedTemplate.isEmpty()) {
+                // This should never happen. If it does, it means that both allowedTemplate and allowedTerrainTypes
+                // were empty, which likely points to a malformed scenario template.
+                LOGGER.error("No allowed terrain types found for scenario template '{}'; skipping terrain assignment.",
+                      scenario.getTemplate().name);
+                return;
+            }
 
             int terrainIndex = randomInt(allowedTemplate.size());
-            scenario.setTerrainType(scenario.getTemplate().mapParameters.allowedTerrainTypes.get(terrainIndex));
+            scenario.setTerrainType(allowedTemplate.get(terrainIndex));
             scenario.setMapFile();
         }
     }
@@ -4526,7 +4540,7 @@ public class AtBDynamicScenarioFactory {
         // deployment turn explicitly or use a stagger algorithm.
         // For player forces where there's not an associated force template, we calculate the
         // deployment turn as if they were reinforcements
-        Hangar hangar = campaign.getAllHangar();
+        mekhq.campaign.LocalHangar hangar = campaign.getAllHangar();
         for (int forceID : scenario.getForceIDs()) {
             ScenarioForceTemplate forceTemplate = scenario.getPlayerForceTemplates().get(forceID);
 
@@ -4643,13 +4657,14 @@ public class AtBDynamicScenarioFactory {
      * setDeploymentTurnsForReinforcements}, including an additional delay reduction based on the scenario.</p>
      *
      * @param scenario the {@link AtBDynamicScenario} defining friendly delayed reinforcements
-     * @param hangar   the {@link Hangar} containing all possible entities for deployment
+     * @param hangar   the {@link LocalHangar} containing all possible entities for deployment
      * @param strategy an {@link Integer} value affecting the calculated delay for the arrivals
      *
      * @author Illiani
      * @since 0.50.07
      */
-    private static void processDelayedArrivals(AtBDynamicScenario scenario, Hangar hangar, int strategy) {
+    private static void processDelayedArrivals(AtBDynamicScenario scenario, mekhq.campaign.LocalHangar hangar,
+            int strategy) {
         List<Entity> delayedEntities = new ArrayList<>();
         for (UUID unitId : scenario.getFriendlyDelayedReinforcements()) {
             Entity entity = EntityUtilities.getEntityFromUnitId(hangar, unitId);
@@ -4675,12 +4690,12 @@ public class AtBDynamicScenarioFactory {
      * them available immediately.</p>
      *
      * @param scenario the {@link AtBDynamicScenario} defining friendly delayed reinforcements
-     * @param hangar   the {@link Hangar} containing all possible entities for deployment
+     * @param hangar   the {@link LocalHangar} containing all possible entities for deployment
      *
      * @author Illiani
      * @since 0.50.07
      */
-    private static void processInstantArrivals(AtBDynamicScenario scenario, Hangar hangar) {
+    private static void processInstantArrivals(AtBDynamicScenario scenario, mekhq.campaign.LocalHangar hangar) {
         List<UUID> instantReinforcements = scenario.getFriendlyInstantReinforcements();
         for (UUID unitId : instantReinforcements) {
             Unit unit = hangar.getUnit(unitId);
@@ -4790,7 +4805,7 @@ public class AtBDynamicScenarioFactory {
      * speeds, with an optional adjustment via the {@code turnModifier}. It assumes that the reinforcements are not
      * delayed, simplifying the calculation logic compared to the main method.</p>
      *
-     * @param hangar       The {@link Hangar} instance containing the available entities. Used to resolve
+     * @param hangar       The {@link LocalHangar} instance containing the available entities. Used to resolve
      *                     player-transported entities via unit IDs.
      * @param scenario     The {@link Scenario} under which the entities are being deployed. Provides transport linkage
      *                     information and overall deployment context.
@@ -4798,10 +4813,11 @@ public class AtBDynamicScenarioFactory {
      * @param turnModifier A value to subtract from the calculated deployment turn, typically reflecting a strategy
      *                     skill or similar modifier.
      *
-     * @see #setDeploymentTurnsForReinforcements(Hangar, Scenario, List, int, boolean)
+     * @see #setDeploymentTurnsForReinforcements(LocalHangar, Scenario, List, int, boolean)
      */
-    public static void setDeploymentTurnsForReinforcements(Hangar hangar, Scenario scenario, List<Entity> entityList,
-          int turnModifier) {
+    public static void setDeploymentTurnsForReinforcements(mekhq.campaign.LocalHangar hangar, Scenario scenario,
+            List<Entity> entityList,
+            int turnModifier) {
         setDeploymentTurnsForReinforcements(hangar, scenario, entityList, turnModifier, false);
     }
 
@@ -4825,7 +4841,7 @@ public class AtBDynamicScenarioFactory {
      *   <li>Updates the deployment round for all entities in the list to the calculated arrival turn.</li>
      * </ul>
      *
-     * @param hangar       The {@link Hangar} instance containing the available entities. Used to resolve
+     * @param hangar       The {@link LocalHangar} instance containing the available entities. Used to resolve
      *                     player-transported entities via unit IDs.
      * @param scenario     The {@link Scenario} under which the entities are being deployed. Provides transport linkage
      *                     information and overall deployment context.
@@ -4835,8 +4851,9 @@ public class AtBDynamicScenarioFactory {
      * @param isDelayed    A flag indicating whether the reinforcements were delayed. Delayed reinforcements are
      *                     assigned a higher arrival scale, increasing their arrival turn.
      */
-    public static void setDeploymentTurnsForReinforcements(Hangar hangar, Scenario scenario, List<Entity> entityList,
-          int turnModifier, boolean isDelayed) {
+    public static void setDeploymentTurnsForReinforcements(mekhq.campaign.LocalHangar hangar, Scenario scenario,
+            List<Entity> entityList,
+            int turnModifier, boolean isDelayed) {
         // Build a set of all player transported entities. We don't need to do this for NPC entities
         // as how they're transported is different and their arrival times are better isolated when
         // dealing with transported vs. untransported units.

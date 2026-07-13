@@ -69,7 +69,6 @@ import mekhq.MHQConstants;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.JumpPath;
-import mekhq.campaign.camOpsReputation.ReputationController;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.enums.DragoonRating;
 import mekhq.campaign.market.enums.ContractMarketMethod;
@@ -559,7 +558,7 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
                   campaign.getCurrentSystem().getName(campaign.getLocalDate()));
             return generateAtBContract(campaign, employer, unitRatingMod, retries - 1);
         }
-        final ReputationController reputation = campaign.getReputation();
+        final mekhq.campaign.camOpsReputation.ForceReputationController reputation = campaign.getReputation();
         final SkillLevel campaignSkillLevel = reputation == null ? REGULAR : reputation.getAverageSkillLevel();
         final boolean useDynamicDifficulty = campaign.getCampaignOptions().isUseDynamicDifficulty();
         final boolean useBolsterContractSkill = campaign.getCampaignOptions().isUseBolsterContractSkill();

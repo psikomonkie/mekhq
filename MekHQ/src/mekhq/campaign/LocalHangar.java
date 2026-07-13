@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2020-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -55,7 +55,7 @@ import mekhq.utilities.MHQXMLUtility;
 /**
  * Represents a hangar which contains zero or more units.
  */
-public class Hangar implements ILocation {
+public class LocalHangar implements ILocation {
     private final Map<UUID, Unit> units = new LinkedHashMap<>();
     private final LocationNode locationNode = new LocationNode(this);
 

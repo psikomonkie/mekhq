@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2020-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -48,7 +48,6 @@ import megamek.common.Player;
 import megamek.common.game.Game;
 import megamek.common.units.Entity;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Quartermaster;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.parts.equipment.EquipmentPart;
 import mekhq.campaign.parts.equipment.MissingEquipmentPart;
@@ -65,7 +64,7 @@ public class RestoreUnitActionTest {
         when(mockCampaign.getGame()).thenReturn(mockGame);
         Player mockPlayer = new Player(1, "Player");
         when(mockCampaign.getPlayer()).thenReturn(mockPlayer);
-        Quartermaster mockQuartermaster = mock(Quartermaster.class);
+        mekhq.campaign.ForceQuartermaster mockQuartermaster = mock(mekhq.campaign.ForceQuartermaster.class);
         when(mockCampaign.getQuartermaster()).thenReturn(mockQuartermaster);
 
         int entityId = 42;
@@ -113,7 +112,7 @@ public class RestoreUnitActionTest {
     public void restoreUnitUsingOldStrategy() {
         IEntityCopyFactory mockEntityCopyFactory = mock(IEntityCopyFactory.class);
         Campaign mockCampaign = mock(Campaign.class);
-        Quartermaster mockQuartermaster = mock(Quartermaster.class);
+        mekhq.campaign.ForceQuartermaster mockQuartermaster = mock(mekhq.campaign.ForceQuartermaster.class);
         when(mockCampaign.getQuartermaster()).thenReturn(mockQuartermaster);
         Entity mockEntity = mock(Entity.class);
         when(mockEntity.getShortNameRaw()).thenReturn("Test Mek TST-01X");

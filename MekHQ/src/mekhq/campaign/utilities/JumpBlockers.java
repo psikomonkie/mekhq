@@ -49,7 +49,6 @@ import megamek.common.units.Jumpship;
 import megamek.common.units.SpaceStation;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Quartermaster;
 import mekhq.campaign.base.PlayerBase;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.Planet;
@@ -246,7 +245,7 @@ public class JumpBlockers {
             case gmOverrideChoiceIndex -> true;
             case leaveAtNewBase -> true; // units dispatched to base in loop above
             case sellUnits -> {
-                Quartermaster quartermaster = campaign.getQuartermaster();
+                mekhq.campaign.ForceQuartermaster quartermaster = campaign.getQuartermaster();
                 for (Unit unit : nonJumpCapableUnits) {
                     quartermaster.sellUnit(unit);
                 }

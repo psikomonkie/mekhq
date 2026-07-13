@@ -59,8 +59,7 @@ import megamek.common.equipment.Engine;
 import megamek.common.units.Entity;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.CurrentLocation;
-import mekhq.campaign.Hangar;
-import mekhq.campaign.HumanResources;
+import mekhq.campaign.LocalHangar;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.force.FormationType;
@@ -920,7 +919,7 @@ public class AccountantTest {
     @Nested
     class TestGetPayrollSummary {
         Campaign mockCampaign;
-        HumanResources mockHumanResources;
+        mekhq.campaign.ForceHumanResources mockHumanResources;
         CampaignOptions campaignOptions;
         Accountant accountant;
         final int EXPECTEDPAY = 100;
@@ -930,7 +929,7 @@ public class AccountantTest {
         @BeforeEach
         void beforeEach() {
             mockCampaign = mock(Campaign.class);
-            mockHumanResources = mock(HumanResources.class);
+            mockHumanResources = mock(mekhq.campaign.ForceHumanResources.class);
             campaignOptions = new CampaignOptions();
             accountant = new Accountant(mockCampaign);
             when(mockCampaign.isClanCampaign()).thenReturn(false);
@@ -1220,13 +1219,13 @@ public class AccountantTest {
 
     /**
      * tests
-     * {@link Accountant#getPeacetimeOperatingCosts(java.util.Collection, Hangar, CampaignOptions, boolean, LocalDate,
+     * {@link Accountant#getPeacetimeOperatingCosts(java.util.Collection, LocalHangar, CampaignOptions, boolean, LocalDate,
      * int, int, java.util.Map, boolean)}
      */
     @Nested
     class TestGetPeacetimeOperatingCosts {
         CampaignOptions campaignOptions;
-        Hangar mockHangar;
+        LocalHangar mockHangar;
         final LocalDate TODAY = LocalDate.of(3025, 1, 1);
 
         @BeforeEach
@@ -1235,7 +1234,7 @@ public class AccountantTest {
             // getRoleBaseSalaries() - consulted internally while totaling temporary crew pay - resolve to
             // real, non-null values instead of requiring exhaustive stubbing.
             campaignOptions = new CampaignOptions();
-            mockHangar = mock(Hangar.class);
+            mockHangar = mock(LocalHangar.class);
         }
 
         @Test
@@ -1406,7 +1405,7 @@ public class AccountantTest {
      * These tests confirm that, for a campaign where every hangar unit is assigned somewhere in the TO&E and every
      * salary-eligible person crews one of those units (i.e. the common case today), routing
      * {@link Accountant#getPeacetimeCost(boolean)} through the new formation-based
-     * {@link Accountant#getPeacetimeOperatingCosts(java.util.Collection, Hangar, CampaignOptions, boolean, LocalDate,
+     * {@link Accountant#getPeacetimeOperatingCosts(java.util.Collection, LocalHangar, CampaignOptions, boolean, LocalDate,
      * int, int, java.util.Map, boolean)} produces the exact same total that the old whole-campaign calculation used to
      * produce.
      */
@@ -1414,7 +1413,7 @@ public class AccountantTest {
     class TestPeacetimeCostMatchesLegacyBehavior {
         Campaign mockCampaign;
         CampaignOptions mockCampaignOptions;
-        Hangar mockHangar;
+        LocalHangar mockHangar;
         Accountant accountant;
         final LocalDate TODAY = LocalDate.of(3025, 1, 1);
 
@@ -1430,14 +1429,14 @@ public class AccountantTest {
             // getRoleBaseSalaries() - consulted internally while totaling temporary crew pay - resolve to
             // real, non-null values instead of requiring exhaustive stubbing.
             mockCampaignOptions = new CampaignOptions();
-            mockHangar = mock(Hangar.class);
+            mockHangar = mock(LocalHangar.class);
             accountant = new Accountant(mockCampaign);
 
             when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
             when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
             when(mockCampaign.isClanCampaign()).thenReturn(false);
             when(mockCampaign.getLocalDate()).thenReturn(TODAY);
-            when(mockCampaign.getHumanResources()).thenReturn(mock(HumanResources.class));
+            when(mockCampaign.getHumanResources()).thenReturn(mock(mekhq.campaign.ForceHumanResources.class));
             mockCampaignOptions.setPayForSalaries(true);
             mockCampaignOptions.setUseInfantryDontCount(false);
 
@@ -1825,18 +1824,18 @@ public class AccountantTest {
 
     /**
      * tests
-     * {@link Accountant#getForceValue(java.util.Collection, Hangar, Faction, CampaignOptions, boolean, boolean, double,
+     * {@link Accountant#getForceValue(java.util.Collection, LocalHangar, Faction, CampaignOptions, boolean, boolean, double,
      * double, double, boolean)}
      */
     @Nested
     class TestGetForceValueStatic {
-        Hangar mockHangar;
+        LocalHangar mockHangar;
         CampaignOptions campaignOptions;
         Faction faction;
 
         @BeforeEach
         void beforeEach() {
-            mockHangar = mock(Hangar.class);
+            mockHangar = mock(LocalHangar.class);
             // A mock is used (rather than a real CampaignOptions) because the real setters clamp contract
             // percentages to small real-game maximums (e.g. 5% for combat equipment), which would get in the
             // way of asserting simple round-number totals here.
@@ -2174,7 +2173,7 @@ public class AccountantTest {
 
     /**
      * tests
-     * {@link Accountant#getContractBase(CampaignOptions, Faction, LocalDate, Hangar, java.util.List, int, int,
+     * {@link Accountant#getContractBase(CampaignOptions, Faction, LocalDate, LocalHangar, java.util.List, int, int,
      * java.util.Map, java.util.List)}
      */
     @Nested
@@ -2195,7 +2194,7 @@ public class AccountantTest {
             when(person.getPrimaryRole()).thenReturn(MEKWARRIOR);
             when(person.getSalary(campaignOptions, false, TODAY)).thenReturn(Money.of(1000));
 
-            Hangar mockHangar = mock(Hangar.class);
+            LocalHangar mockHangar = mock(LocalHangar.class);
 
             Money actual = getContractBase(campaignOptions, faction, TODAY, mockHangar, List.of(person), 0, 0,
                   Map.of(), List.of());
@@ -2217,7 +2216,7 @@ public class AccountantTest {
             when(unit.getBuyCost()).thenReturn(Money.of(2000));
             when(unit.isConventionalInfantry()).thenReturn(false);
 
-            Hangar mockHangar = mock(Hangar.class);
+            LocalHangar mockHangar = mock(LocalHangar.class);
             when(mockHangar.getUnit(unitId)).thenReturn(unit);
 
             Formation formation = mock(Formation.class);
@@ -2239,7 +2238,7 @@ public class AccountantTest {
             when(person.getPrimaryRole()).thenReturn(MEKWARRIOR);
             when(person.getSalary(campaignOptions, false, TODAY)).thenReturn(Money.of(1000));
 
-            Hangar mockHangar = mock(Hangar.class);
+            LocalHangar mockHangar = mock(LocalHangar.class);
 
             Money actual = getContractBase(campaignOptions, faction, TODAY, mockHangar, List.of(person), 0, 0,
                   Map.of(), List.of());
@@ -2263,7 +2262,7 @@ public class AccountantTest {
             Unit unit = mock(Unit.class);
             when(unit.getEntity()).thenReturn(entity);
 
-            Hangar mockHangar = mock(Hangar.class);
+            LocalHangar mockHangar = mock(LocalHangar.class);
             when(mockHangar.getUnit(unitId)).thenReturn(unit);
 
             Formation formation = mock(Formation.class);
@@ -2291,7 +2290,7 @@ public class AccountantTest {
             Unit unit = mock(Unit.class);
             when(unit.getEntity()).thenReturn(entity);
 
-            Hangar mockHangar = mock(Hangar.class);
+            LocalHangar mockHangar = mock(LocalHangar.class);
             when(mockHangar.getUnit(unitId)).thenReturn(unit);
 
             Formation formation = mock(Formation.class);
@@ -2319,7 +2318,7 @@ public class AccountantTest {
             when(unit.getAmmoCost()).thenReturn(Money.of(5));
             when(unit.getFuelCost(anyInt())).thenReturn(Money.zero());
 
-            Hangar mockHangar = mock(Hangar.class);
+            LocalHangar mockHangar = mock(LocalHangar.class);
             when(mockHangar.getUnit(unitId)).thenReturn(unit);
 
             Formation formation = mock(Formation.class);
@@ -2390,7 +2389,7 @@ public class AccountantTest {
     class TestInstanceMethodDelegation {
         Campaign mockCampaign;
         CampaignOptions campaignOptions;
-        Hangar mockHangar;
+        LocalHangar mockHangar;
         Accountant accountant;
         final LocalDate TODAY = LocalDate.of(3025, 1, 1);
 
@@ -2398,14 +2397,14 @@ public class AccountantTest {
         void beforeEach() {
             mockCampaign = mock(Campaign.class);
             campaignOptions = new CampaignOptions();
-            mockHangar = mock(Hangar.class);
+            mockHangar = mock(LocalHangar.class);
             accountant = new Accountant(mockCampaign);
 
             when(mockCampaign.getCampaignOptions()).thenReturn(campaignOptions);
             when(mockCampaign.getAllHangar()).thenReturn(mockHangar);
             when(mockCampaign.isClanCampaign()).thenReturn(false);
             when(mockCampaign.getLocalDate()).thenReturn(TODAY);
-            when(mockCampaign.getHumanResources()).thenReturn(mock(HumanResources.class));
+            when(mockCampaign.getHumanResources()).thenReturn(mock(mekhq.campaign.ForceHumanResources.class));
         }
 
         @Test

@@ -73,7 +73,6 @@ import megamek.common.enums.Gender;
 import megamek.common.units.Entity;
 import megamek.logging.MMLogger;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.AtBDynamicScenario;
@@ -648,7 +647,7 @@ public class PerformResupply {
         if (targetConvoy != null) {
             speaker = campaign.getPerson(targetConvoy.getFormationCommanderID());
 
-            Hangar hangar = campaign.getAllHangar();
+            mekhq.campaign.LocalHangar hangar = campaign.getAllHangar();
             if (targetConvoy.formationContainsOnlyVTOLForces(hangar, false) ||
                       targetConvoy.formationContainsOnlyAerialForces(hangar, false, false)) {
                 inCharacterMessage = getFormattedTextAt(RESOURCE_BUNDLE,

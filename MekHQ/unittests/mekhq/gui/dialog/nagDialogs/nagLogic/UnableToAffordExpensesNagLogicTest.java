@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2024-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -38,8 +38,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.finances.Finances;
 import mekhq.campaign.finances.FinancialReport;
@@ -73,10 +72,10 @@ class UnableToAffordExpensesNagLogicTest {
         Finances finances = mock(Finances.class);
 
         Unit unit = mock(Unit.class);
-        Hangar hangar = mock(Hangar.class);
+        mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
         hangar.addUnit(unit);
 
-        Warehouse warehouse = mock(Warehouse.class);
+        LocalWarehouse warehouse = mock(LocalWarehouse.class);
 
         report = mock(FinancialReport.class);
 
