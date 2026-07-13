@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -44,8 +44,7 @@ import java.util.List;
 
 import megamek.common.compute.Compute;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.personnel.enums.BloodmarkLevel;
 import mekhq.campaign.personnel.enums.PersonnelStatus;
@@ -67,8 +66,8 @@ class BloodmarkTest {
         campaign = mock(Campaign.class);
         campaignOptions = mock(CampaignOptions.class);
         Faction campaignFaction = mock(Faction.class);
-        Hangar campaignHangar = mock(Hangar.class);
-        Warehouse campaignWarehouse = mock(Warehouse.class);
+        mekhq.campaign.LocalHangar campaignHangar = mock(mekhq.campaign.LocalHangar.class);
+        LocalWarehouse campaignWarehouse = mock(LocalWarehouse.class);
 
         when(campaign.getCampaignOptions()).thenReturn(campaignOptions);
         when(campaign.getFaction()).thenReturn(campaignFaction);
