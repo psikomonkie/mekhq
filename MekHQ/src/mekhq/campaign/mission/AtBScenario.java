@@ -75,7 +75,6 @@ import mekhq.MHQConstants;
 import mekhq.MekHQ;
 import mekhq.Utilities;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.againstTheBot.AtBConfiguration;
 import mekhq.campaign.againstTheBot.AtBStaticWeightGenerator;
 import mekhq.campaign.campaignOptions.CampaignOptions;
@@ -875,7 +874,7 @@ public abstract class AtBScenario extends Scenario implements IAtBScenario {
         if (campaign.getCampaignOptions().isUseDropShips()) {
             if (canAddDropShips()) {
                 boolean dropshipFound = false;
-                Hangar hangar = campaign.getAllHangar();
+                mekhq.campaign.LocalHangar hangar = campaign.getAllHangar();
                 List<UUID> allCombatUnits = campaign.getAllUnitsInTheTOE(true);
                 Collections.shuffle(allCombatUnits); // Remove bias
                 for (UUID unitId : allCombatUnits) {

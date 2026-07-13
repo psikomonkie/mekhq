@@ -69,11 +69,12 @@ import mekhq.campaign.Campaign;
 import mekhq.campaign.CampaignLocationManager;
 import mekhq.campaign.CurrentLocation;
 import mekhq.campaign.FixedLocation;
-import mekhq.campaign.Hangar;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.enums.DailyReportType;
 import mekhq.campaign.events.persons.PersonStatusChangedEvent;
+import mekhq.campaign.force.Detachment;
+import mekhq.campaign.force.PlayerForce;
 import mekhq.campaign.location.AcademyCampusLocation;
 import mekhq.campaign.personnel.education.Academy;
 import mekhq.campaign.personnel.education.EducationController;
@@ -688,8 +689,8 @@ public class PersonTest {
         Campaign mockCampaign = mock(Campaign.class);
         Faction mockFaction = mock(Faction.class);
         LocalDate currentDate = LocalDate.of(3151, 1, 1);
-        Hangar mockHangar = mock(Hangar.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
@@ -713,8 +714,8 @@ public class PersonTest {
         Campaign mockCampaign = mock(Campaign.class);
         Faction mockFaction = mock(Faction.class);
         LocalDate currentDate = LocalDate.of(3151, 1, 1);
-        Hangar mockHangar = mock(Hangar.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
@@ -800,8 +801,8 @@ public class PersonTest {
         Campaign mockCampaign = mock(Campaign.class);
         Faction mockFaction = mock(Faction.class);
         LocalDate currentDate = LocalDate.of(3151, 1, 1);
-        Hangar mockHangar = mock(Hangar.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
@@ -824,8 +825,8 @@ public class PersonTest {
         Campaign mockCampaign = mock(Campaign.class);
         Faction mockFaction = mock(Faction.class);
         LocalDate currentDate = LocalDate.of(3151, 1, 1);
-        Hangar mockHangar = mock(Hangar.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
@@ -1054,8 +1055,8 @@ public class PersonTest {
         Campaign mockCampaign = mock(Campaign.class);
         Faction mockFaction = mock(Faction.class);
         LocalDate currentDate = LocalDate.of(3151, 1, 1);
-        Hangar mockHangar = mock(Hangar.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
 
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
@@ -1079,8 +1080,8 @@ public class PersonTest {
         Campaign mockCampaign = mock(Campaign.class);
         Faction mockFaction = mock(Faction.class);
         LocalDate currentDate = LocalDate.of(3151, 1, 1);
-        Hangar mockHangar = mock(Hangar.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
 
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
@@ -1166,8 +1167,8 @@ public class PersonTest {
         Campaign mockCampaign = mock(Campaign.class);
         Faction mockFaction = mock(Faction.class);
         LocalDate currentDate = LocalDate.of(3151, 1, 1);
-        Hangar mockHangar = mock(Hangar.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
@@ -1190,8 +1191,8 @@ public class PersonTest {
         Campaign mockCampaign = mock(Campaign.class);
         Faction mockFaction = mock(Faction.class);
         LocalDate currentDate = LocalDate.of(3151, 1, 1);
-        Hangar mockHangar = mock(Hangar.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
@@ -1276,8 +1277,8 @@ public class PersonTest {
         Campaign mockCampaign = mock(Campaign.class);
         Faction mockFaction = mock(Faction.class);
         LocalDate currentDate = LocalDate.of(3151, 1, 1);
-        Hangar mockHangar = mock(Hangar.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
@@ -1300,8 +1301,8 @@ public class PersonTest {
         Campaign mockCampaign = mock(Campaign.class);
         Faction mockFaction = mock(Faction.class);
         LocalDate currentDate = LocalDate.of(3151, 1, 1);
-        Hangar mockHangar = mock(Hangar.class);
-        Warehouse mockWarehouse = mock(Warehouse.class);
+        mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
+        LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
         when(mockFaction.getShortName()).thenReturn("MERC");
@@ -1411,8 +1412,8 @@ public class PersonTest {
         Campaign mockCampaign = Mockito.mock(Campaign.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(new CampaignOptions());
         // Couple prereqs for removeAllTechJobs this test doesn't otherwise exercise
-        when(mockCampaign.getAllHangar()).thenReturn(new Hangar());
-        when(mockCampaign.getAllWarehouse()).thenReturn(new Warehouse());
+        when(mockCampaign.getAllHangar()).thenReturn(new mekhq.campaign.LocalHangar());
+        when(mockCampaign.getAllWarehouse()).thenReturn(new LocalWarehouse());
 
         Faction mockFaction = mock(Faction.class);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
@@ -1456,8 +1457,8 @@ public class PersonTest {
         Campaign mockCampaign = Mockito.mock(Campaign.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(new CampaignOptions());
         // Couple prereqs for removeAllTechJobs this test doesn't otherwise exercise
-        when(mockCampaign.getAllHangar()).thenReturn(new Hangar());
-        when(mockCampaign.getAllWarehouse()).thenReturn(new Warehouse());
+        when(mockCampaign.getAllHangar()).thenReturn(new mekhq.campaign.LocalHangar());
+        when(mockCampaign.getAllWarehouse()).thenReturn(new LocalWarehouse());
 
         Faction mockFaction = mock(Faction.class);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
@@ -1597,6 +1598,9 @@ public class PersonTest {
             @BeforeEach
             void setUp() {
                 campaign = mock(Campaign.class);
+                PlayerForce playerForce = mock(PlayerForce.class);
+                when(campaign.getPlayerForce()).thenReturn(playerForce);
+                when(playerForce.getForceDetachment()).thenReturn(mock(Detachment.class));
                 when(campaign.getCampaignLocationManager()).thenReturn(mock(CampaignLocationManager.class));
                 when(campaign.getLocalDate()).thenReturn(LocalDate.of(3025, 1, 1));
 
@@ -1604,10 +1608,10 @@ public class PersonTest {
                 when(options.getNaturalHealingWaitingPeriod()).thenReturn(0);
                 when(campaign.getCampaignOptions()).thenReturn(options);
 
-                Hangar hangar = mock(Hangar.class);
+                mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
                 when(campaign.getAllHangar()).thenReturn(hangar);
 
-                Warehouse warehouse = mock(Warehouse.class);
+                LocalWarehouse warehouse = mock(LocalWarehouse.class);
                 when(warehouse.getParts()).thenReturn(Collections.emptyList());
                 when(campaign.getAllWarehouse()).thenReturn(warehouse);
 
@@ -1678,6 +1682,9 @@ public class PersonTest {
             @BeforeEach
             void setUp() {
                 campaign = mock(Campaign.class);
+                PlayerForce playerForce = mock(PlayerForce.class);
+                when(campaign.getPlayerForce()).thenReturn(playerForce);
+                when(playerForce.getForceDetachment()).thenReturn(mock(Detachment.class));
                 when(campaign.getCampaignLocationManager()).thenReturn(mock(CampaignLocationManager.class));
                 when(campaign.getLocalDate()).thenReturn(LocalDate.of(3025, 1, 1));
 
@@ -1685,10 +1692,10 @@ public class PersonTest {
                 when(options.getNaturalHealingWaitingPeriod()).thenReturn(0);
                 when(campaign.getCampaignOptions()).thenReturn(options);
 
-                Hangar hangar = mock(Hangar.class);
+                mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
                 when(campaign.getAllHangar()).thenReturn(hangar);
 
-                Warehouse warehouse = mock(Warehouse.class);
+                LocalWarehouse warehouse = mock(LocalWarehouse.class);
                 when(warehouse.getParts()).thenReturn(Collections.emptyList());
                 when(campaign.getAllWarehouse()).thenReturn(warehouse);
 

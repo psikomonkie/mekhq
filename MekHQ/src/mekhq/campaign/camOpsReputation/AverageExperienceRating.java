@@ -45,7 +45,6 @@ import megamek.common.units.Jumpship;
 import megamek.common.units.SmallCraft;
 import megamek.logging.MMLogger;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.force.CombatTeam;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.personnel.Person;
@@ -123,7 +122,7 @@ public class AverageExperienceRating {
         int unitCount = 0;
         double totalExperience = 0;
 
-        Hangar hangar = campaign.getAllHangar();
+        mekhq.campaign.LocalHangar hangar = campaign.getAllHangar();
         ArrayList<CombatTeam> combatTeams = campaign.getCombatTeamsAsList();
 
         if (combatTeams.isEmpty()) {

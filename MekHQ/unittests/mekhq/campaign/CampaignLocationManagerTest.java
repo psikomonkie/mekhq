@@ -76,8 +76,9 @@ class CampaignLocationManagerTest {
         CampaignLocationManager manager = new CampaignLocationManager();
         Campaign campaign = mock(Campaign.class);
         Unit unit = mock(Unit.class);
+        ILocation destination = mock(ILocation.class);
 
-        manager.queueTravel(List.of(unit), campaign);
+        manager.queueTravel(List.of(unit), destination);
 
         assertTrue(manager.isQueuedForTravel(unit));
     }
@@ -90,8 +91,9 @@ class CampaignLocationManagerTest {
         UUID unitId = UUID.randomUUID();
         when(soldUnit.getId()).thenReturn(unitId);
         when(campaign.getUnit(unitId)).thenReturn(null);
+        ILocation destination = mock(ILocation.class);
 
-        manager.queueTravel(List.of(soldUnit), campaign);
+        manager.queueTravel(List.of(soldUnit), destination);
 
         try (MockedStatic<LocationDispatch> dispatch = mockStatic(LocationDispatch.class)) {
             manager.dispatchPendingTravel(campaign);
@@ -108,12 +110,13 @@ class CampaignLocationManagerTest {
         UUID unitId = UUID.randomUUID();
         when(unit.getId()).thenReturn(unitId);
         when(campaign.getUnit(unitId)).thenReturn(unit);
+        ILocation destination = mock(ILocation.class);
 
-        manager.queueTravel(List.of(unit), campaign);
+        manager.queueTravel(List.of(unit), destination);
 
         try (MockedStatic<LocationDispatch> dispatch = mockStatic(LocationDispatch.class)) {
             manager.dispatchPendingTravel(campaign);
-            dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), campaign, campaign));
+            dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), destination, campaign));
         }
         assertFalse(manager.isQueuedForTravel(unit));
     }
@@ -178,10 +181,11 @@ class CampaignLocationManagerTest {
         CampaignLocationManager manager = new CampaignLocationManager();
         Campaign campaign = mock(Campaign.class);
         Unit unit = mock(Unit.class);
+        ILocation destination = mock(ILocation.class);
 
         try (MockedStatic<LocationDispatch> dispatch = mockStatic(LocationDispatch.class)) {
-            manager.gmTeleport(campaign, List.of(unit), campaign);
-            dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), campaign, campaign));
+            manager.gmTeleport(campaign, List.of(unit), destination);
+            dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), destination, campaign));
         }
         verify(campaign).processArrivals(campaign);
     }
@@ -192,12 +196,13 @@ class CampaignLocationManagerTest {
         Campaign campaign = mock(Campaign.class);
         Unit unit = mock(Unit.class);
 
-        // Queue the unit to travel to the campaign (used here as the destination ILocation).
-        manager.queueTravel(List.of(unit), campaign);
+        // Queue the unit to travel to a destination ILocation (the main force, in production).
+        ILocation destination = mock(ILocation.class);
+        manager.queueTravel(List.of(unit), destination);
 
         try (MockedStatic<LocationDispatch> dispatch = mockStatic(LocationDispatch.class)) {
             manager.gmCompleteTravel(campaign, List.of(unit));
-            dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), campaign, campaign));
+            dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), destination, campaign));
         }
         assertFalse(manager.isQueuedForTravel(unit));
         verify(campaign).processArrivals(campaign);

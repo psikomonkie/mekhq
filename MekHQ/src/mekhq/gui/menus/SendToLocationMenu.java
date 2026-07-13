@@ -124,16 +124,16 @@ public class SendToLocationMenu extends JScrollableMenu {
               ? currentLocations.iterator().next()
               : null;
 
-        // Main Force entry (= the campaign itself).
-        // Items at main force are parented to mainForcePersonnel, hangar, or warehouse — not
-        // to the campaign object directly — so check all three sub-resources.
-        boolean alreadyAtMainForce = sharedCurrent == campaign
+        // Main Force entry (= the main force's Detachment).
+        // Items at main force are parented to mainForcePersonnel, hangar, or warehouse — not to the
+        // Detachment itself — so check the Detachment and all three sub-resources.
+        boolean alreadyAtMainForce = sharedCurrent == campaign.getPlayerForce().getForceDetachment()
               || sharedCurrent == campaign.getMainForcePersonnel()
               || sharedCurrent == campaign.getHangar()
               || sharedCurrent == campaign.getWarehouse();
         if (!alreadyAtMainForce) {
             JMenuItem mainForce = new JMenuItem(getTextAt(RESOURCE_BUNDLE, "label.mainForce.text"));
-            mainForce.addActionListener(e -> dispatcher.accept(campaign));
+            mainForce.addActionListener(e -> dispatcher.accept(campaign.getPlayerForce().getForceDetachment()));
             add(mainForce);
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2020-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -60,8 +60,8 @@ import mekhq.utilities.MHQXMLUtility;
 /**
  * Stores parts for a Campaign.
  */
-public class Warehouse implements ILocation {
-    private static final MMLogger LOGGER = MMLogger.create(Warehouse.class);
+public class LocalWarehouse implements ILocation {
+    private static final MMLogger LOGGER = MMLogger.create(LocalWarehouse.class);
 
     private final LocationNode locationNode = new LocationNode(this);
     private final TreeMap<Integer, Part> parts = new TreeMap<>();
@@ -346,7 +346,11 @@ public class Warehouse implements ILocation {
      * @return A list of spare parts in the warehouse.
      */
     public List<Part> getSpareParts() {
-        return getParts().stream()
+        return getSpareParts(getParts());
+    }
+
+    public static List<Part> getSpareParts(Collection<Part> parts) {
+        return parts.stream()
                      .filter(Part::isSpare)
                      .collect(Collectors.toList());
     }
