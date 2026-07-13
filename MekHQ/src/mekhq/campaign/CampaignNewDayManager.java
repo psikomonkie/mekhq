@@ -480,7 +480,7 @@ public class CampaignNewDayManager {
 
         processAllArrivals();
 
-        campaign.getCampaignLocationManager().pruneEmptyLocations(campaign);
+        campaign.getCampaignLocationManager().pruneEmptyLocations();
 
         if (campaignOptions.isUseRandomDiseases() && campaignOptions.isUseAlternativeAdvancedMedical()) {
             PlanetarySystem currentSystem = updatedLocation.getCurrentSystem();
@@ -580,7 +580,7 @@ public class CampaignNewDayManager {
         if (campaign.getTopUpWeekly() && isMonday) {
             // Each location keeps its own stock levels, so top up the main force and every base independently.
             List<IPlace> places = new ArrayList<>();
-            places.add(campaign);
+            places.add(campaign.getPlayerForce().getForceDetachment());
             places.addAll(campaign.getCampaignLocationManager().getPlayerBases());
 
             int bought = 0;

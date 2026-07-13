@@ -55,7 +55,6 @@ import megamek.common.equipment.EquipmentType;
 import megamek.common.units.Entity;
 import megamek.common.units.UnitType;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.force.CombatTeam;
 import mekhq.campaign.force.Formation;
@@ -271,7 +270,7 @@ public class AtBContractTest {
         Faction mockFaction;
         Campaign mockCampaign;
 
-        Hangar hangar;
+        mekhq.campaign.LocalHangar hangar;
 
         public static Stream<Arguments> getFormationSizesForTests() {
             return Stream.of(
@@ -285,7 +284,7 @@ public class AtBContractTest {
         @BeforeEach
         void beforeEach() {
             nextForceId = 0;
-            hangar = new Hangar();
+            hangar = new mekhq.campaign.LocalHangar();
 
             mockFaction = mock(Faction.class);
             mockCampaign = mock(Campaign.class);

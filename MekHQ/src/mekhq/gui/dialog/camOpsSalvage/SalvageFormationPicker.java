@@ -64,7 +64,6 @@ import megamek.common.util.sorter.NaturalOrderComparator;
 import megamek.logging.MMLogger;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.force.FormationType;
 import mekhq.campaign.mission.ScenarioTemplate;
@@ -594,7 +593,7 @@ public class SalvageFormationPicker extends JDialog {
             }
         }
 
-        private int getCrewTechCount(Hangar hangar, Formation formation) {
+        private int getCrewTechCount(mekhq.campaign.LocalHangar hangar, Formation formation) {
             int counter = 0;
             for (Unit unit : formation.getAllUnitsAsUnits(hangar, false)) {
                 for (Person crew : unit.getCrew()) {

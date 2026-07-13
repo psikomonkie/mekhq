@@ -46,7 +46,6 @@ import megamek.common.rolls.TargetRoll;
 import megamek.common.units.*;
 import megamek.logging.MMLogger;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Warehouse;
 import mekhq.campaign.parts.Availability;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.personnel.Person;
@@ -186,7 +185,7 @@ public class UnitOrder extends Unit implements IAcquisitionWork {
     }
 
     @Override
-    public Warehouse getWarehouse() {
+    public mekhq.campaign.LocalWarehouse getWarehouse() {
         return getCampaign().getWarehouse();
     }
 

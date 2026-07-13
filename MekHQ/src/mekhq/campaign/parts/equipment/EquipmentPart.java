@@ -50,7 +50,6 @@ import megamek.common.units.Entity;
 import megamek.common.weapons.bayWeapons.BayWeapon;
 import megamek.logging.MMLogger;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Warehouse;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.unit.Unit;
@@ -260,7 +259,9 @@ public class EquipmentPart extends Part {
             }
 
             // Capture target warehouse before detaching from unit
-            Warehouse targetWarehouse = unit.getWarehouse() != null ? unit.getWarehouse() : campaign.getWarehouse();
+            mekhq.campaign.LocalWarehouse targetWarehouse = unit.getWarehouse() != null ?
+                                                                    unit.getWarehouse() :
+                                                                    campaign.getWarehouse();
 
             unit.removePart(this);
             setUnit(null);
