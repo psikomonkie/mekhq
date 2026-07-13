@@ -363,24 +363,12 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
                 campaign.getGameOptions().getOption(OptionsConstants.ALLOWED_YEAR).setValue(campaign.getGameYear());
 
                 CampaignOptionsDialogMode mode = isSelect ? STARTUP_ABRIDGED : STARTUP;
-                // The Campaign Options dialog and its entire component tree must be built and shown on the EDT.
-                // doInBackground() runs on a SwingWorker worker thread, so constructing the dialog here touched Swing
-                // off the EDT and intermittently crashed (e.g. RankSystemsPane rebuilt its shared table columns on this
-                // worker thread while a deferred EDT task read them). invokeAndWait builds and shows the modal dialog on
-                // the EDT and blocks this worker thread until the user closes it, preserving the original sequencing.
+                // This method runs in a worker thread, but the construction of the UI for Campaign Options must run on
+                // the EDT, so dispatch it there using invokeAndWait.
                 final boolean[] optionsCanceled = { false };
                 try {
-                    SwingUtilities.invokeAndWait(() -> {
-                        CampaignOptionsDialog optionsDialog = new CampaignOptionsDialog(getFrame(), campaign, preset,
-                              mode);
-                        setVisible(false); // cede visibility to `optionsDialog`
-                        optionsDialog.setVisible(true);
-                        if (optionsDialog.wasCanceled()) {
-                            optionsCanceled[0] = true;
-                        } else {
-                            setVisible(true); // restore loader visibility
-                        }
-                    });
+                    SwingUtilities.invokeAndWait(
+                          () -> optionsCanceled[0] = showStartupCampaignOptionsDialog(campaign, preset, mode));
                 } catch (InterruptedException exception) {
                     Thread.currentThread().interrupt();
                     return null;
@@ -525,6 +513,31 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
          */
         private static void handleCampaignUpgrading(MekHQ app, Campaign campaign) {
             CampaignUpgradeDialog.campaignUpgradeDialog(app, campaign);
+        }
+
+        /**
+         * Builds and shows the modal Campaign Options dialog for a brand-new campaign, then reports whether the user
+         * canceled it.
+         *
+         * <p>Must run on the Event Dispatch Thread (it is invoked through {@link SwingUtilities#invokeAndWait} from the
+         * worker thread) because it constructs the dialog's entire Swing component tree.</p>
+         *
+         * @param campaign the new campaign being configured
+         * @param preset   the preset to seed the dialog with, or {@code null}
+         * @param mode     the dialog mode (abridged or full startup)
+         *
+         * @return {@code true} if the user canceled the dialog; {@code false} if the settings were applied
+         */
+        private boolean showStartupCampaignOptionsDialog(final Campaign campaign, final @Nullable CampaignPreset preset,
+              final CampaignOptionsDialogMode mode) {
+            final CampaignOptionsDialog optionsDialog = new CampaignOptionsDialog(getFrame(), campaign, preset, mode);
+            setVisible(false); // cede visibility to `optionsDialog`
+            optionsDialog.setVisible(true);
+            if (optionsDialog.wasCanceled()) {
+                return true;
+            }
+            setVisible(true); // restore loader visibility
+            return false;
         }
 
         /**
