@@ -30,11 +30,11 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.stratCon;
+package mekhq.campaign.digitalGM.stratCon;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static mekhq.campaign.stratCon.SupportPointNegotiation.negotiateInitialSupportPoints;
+import static mekhq.campaign.digitalGM.stratCon.SupportPointNegotiation.negotiateInitialSupportPoints;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -48,6 +48,8 @@ import megamek.common.util.weightedMaps.WeightedIntMap;
 import megamek.logging.MMLogger;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.campaignOptions.CampaignOptions;
+import mekhq.campaign.digitalGM.stratCon.StratConContractDefinition.ObjectiveParameters;
+import mekhq.campaign.digitalGM.stratCon.StratConContractDefinition.StrategicObjectiveType;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.AtBDynamicScenario;
@@ -57,8 +59,6 @@ import mekhq.campaign.mission.ScenarioForceTemplate.ForceAlignment;
 import mekhq.campaign.mission.ScenarioTemplate;
 import mekhq.campaign.mission.atb.AtBScenarioModifier;
 import mekhq.campaign.mission.enums.AtBMoraleLevel;
-import mekhq.campaign.stratCon.StratConContractDefinition.ObjectiveParameters;
-import mekhq.campaign.stratCon.StratConContractDefinition.StrategicObjectiveType;
 import mekhq.campaign.universe.Planet;
 import mekhq.campaign.universe.PlanetarySystem;
 

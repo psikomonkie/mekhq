@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.stratCon;
+package mekhq.campaign.digitalGM.stratCon;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.max;
@@ -44,6 +44,14 @@ import static megamek.common.units.UnitType.CONV_FIGHTER;
 import static megamek.common.units.UnitType.DROPSHIP;
 import static megamek.common.units.UnitType.JUMPSHIP;
 import static megamek.common.units.UnitType.MEK;
+import static mekhq.campaign.digitalGM.stratCon.StratConContractInitializer.getUnoccupiedCoords;
+import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementEligibilityType.AUXILIARY;
+import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementResultsType.DELAYED;
+import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementResultsType.FAILED;
+import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementResultsType.INSTANT;
+import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementResultsType.INTERCEPTED;
+import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementResultsType.SUCCESS;
+import static mekhq.campaign.digitalGM.stratCon.StratConScenarioFactory.convertSpecificUnitTypeToGeneral;
 import static mekhq.campaign.enums.DailyReportType.BATTLE;
 import static mekhq.campaign.enums.DailyReportType.SKILL_CHECKS;
 import static mekhq.campaign.force.Formation.FORMATION_NONE;
@@ -59,14 +67,6 @@ import static mekhq.campaign.personnel.PersonnelOptions.ADMIN_COORDINATOR;
 import static mekhq.campaign.personnel.PersonnelOptions.EDGE_RECON_FAIL;
 import static mekhq.campaign.personnel.skills.SkillType.S_ADMIN;
 import static mekhq.campaign.personnel.skills.SkillType.S_TACTICS;
-import static mekhq.campaign.stratCon.StratConContractInitializer.getUnoccupiedCoords;
-import static mekhq.campaign.stratCon.StratConRulesManager.ReinforcementEligibilityType.AUXILIARY;
-import static mekhq.campaign.stratCon.StratConRulesManager.ReinforcementResultsType.DELAYED;
-import static mekhq.campaign.stratCon.StratConRulesManager.ReinforcementResultsType.FAILED;
-import static mekhq.campaign.stratCon.StratConRulesManager.ReinforcementResultsType.INSTANT;
-import static mekhq.campaign.stratCon.StratConRulesManager.ReinforcementResultsType.INTERCEPTED;
-import static mekhq.campaign.stratCon.StratConRulesManager.ReinforcementResultsType.SUCCESS;
-import static mekhq.campaign.stratCon.StratConScenarioFactory.convertSpecificUnitTypeToGeneral;
 import static mekhq.utilities.EntityUtilities.hasActiveProbe;
 import static mekhq.utilities.EntityUtilities.hasImprovedSensors;
 import static mekhq.utilities.MHQInternationalization.getTextAt;
@@ -93,6 +93,8 @@ import mekhq.campaign.Campaign;
 import mekhq.campaign.LocalHangar;
 import mekhq.campaign.ResolveScenarioTracker;
 import mekhq.campaign.campaignOptions.CampaignOptions;
+import mekhq.campaign.digitalGM.stratCon.StratConContractDefinition.StrategicObjectiveType;
+import mekhq.campaign.digitalGM.stratCon.StratConScenario.ScenarioState;
 import mekhq.campaign.events.NewDayEvent;
 import mekhq.campaign.events.StratConDeploymentEvent;
 import mekhq.campaign.events.scenarios.ScenarioChangedEvent;
@@ -123,8 +125,6 @@ import mekhq.campaign.personnel.skills.Skill;
 import mekhq.campaign.personnel.skills.SkillCheck;
 import mekhq.campaign.personnel.skills.SkillModifierData;
 import mekhq.campaign.personnel.turnoverAndRetention.Fatigue;
-import mekhq.campaign.stratCon.StratConContractDefinition.StrategicObjectiveType;
-import mekhq.campaign.stratCon.StratConScenario.ScenarioState;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.Planet;
 import mekhq.gui.dialog.StratConAmbushedDialog;

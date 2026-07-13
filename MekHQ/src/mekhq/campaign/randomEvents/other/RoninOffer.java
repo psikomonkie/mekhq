@@ -57,6 +57,7 @@ import megamek.codeUtilities.ObjectUtility;
 import megamek.common.annotations.Nullable;
 import megamek.common.enums.SkillLevel;
 import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.personnel.Person;
 import mekhq.campaign.personnel.enums.PersonnelRole;
@@ -65,7 +66,6 @@ import mekhq.campaign.randomEvents.personalities.Ambition;
 import mekhq.campaign.randomEvents.personalities.Greed;
 import mekhq.campaign.randomEvents.personalities.PersonalityTraitType;
 import mekhq.campaign.randomEvents.personalities.Social;
-import mekhq.campaign.stratCon.StratConCampaignState;
 import mekhq.gui.baseComponents.immersiveDialogs.ImmersiveDialogSimple;
 import mekhq.gui.dialog.randomEvents.RoninEventDialog;
 

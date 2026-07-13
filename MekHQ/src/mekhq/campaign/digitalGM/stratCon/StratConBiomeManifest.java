@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.stratCon;
+package mekhq.campaign.digitalGM.stratCon;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -163,8 +163,8 @@ public class StratConBiomeManifest {
     private static StratConBiomeManifest instance;
 
     /**
-     * Gets the singleton biome manifest instance.
-     * If the manifest file cannot be loaded, returns a default instance with minimal biome data.
+     * Gets the singleton biome manifest instance. If the manifest file cannot be loaded, returns a default instance
+     * with minimal biome data.
      */
     public static StratConBiomeManifest getInstance() {
         if (instance == null) {

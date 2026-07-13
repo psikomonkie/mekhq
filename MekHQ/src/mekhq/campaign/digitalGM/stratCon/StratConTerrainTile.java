@@ -30,16 +30,12 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
+package mekhq.campaign.digitalGM.stratCon;
 
-package mekhq.campaign.stratCon;
+import java.util.List;
 
-/**
- * This interface defines a StratCon element (a facility or a scenario currently) that is able to provide various kinds
- * of information for display in some UI elements.
- *
- * @author NickAragua
- *
- */
-public interface IStratConDisplayable {
-    String getInfo();
+@Deprecated(since = "0.51.0", forRemoval = true)
+public class StratConTerrainTile {
+    public String terrainName;
+    public List<String> battleTerrainTypes;
 }

@@ -52,11 +52,11 @@ import java.time.LocalDate;
 import megamek.common.rolls.TargetRoll;
 import megamek.logging.MMLogger;
 import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
 import mekhq.campaign.mission.enums.AtBMoraleLevel;
 import mekhq.campaign.mission.enums.ScenarioStatus;
 import mekhq.campaign.randomEvents.prisoners.PrisonerEventManager;
 import mekhq.campaign.randomEvents.prisoners.PrisonerMissionEndEvent;
-import mekhq.campaign.stratCon.StratConCampaignState;
 import mekhq.campaign.universe.Faction;
 import mekhq.gui.baseComponents.immersiveDialogs.ImmersiveDialogNotification;
 

@@ -35,6 +35,9 @@ package mekhq.campaign.stratCon;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import mekhq.campaign.digitalGM.stratCon.StratConCoords;
+import mekhq.campaign.digitalGM.stratCon.StratConTerrainPlacer;
+import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 import org.junit.jupiter.api.Test;
 
 /**

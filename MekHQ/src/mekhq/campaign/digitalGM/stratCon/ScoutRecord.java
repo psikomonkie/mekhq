@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -30,12 +30,13 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.stratCon;
+package mekhq.campaign.digitalGM.stratCon;
 
-import java.util.List;
+import mekhq.campaign.personnel.Person;
+import mekhq.campaign.personnel.skills.SkillCheck;
 
-@Deprecated(since = "0.51.0", forRemoval = true)
-public class StratConTerrainTile {
-    public String terrainName;
-    public List<String> battleTerrainTypes;
-}
+public record ScoutRecord(
+      Person scout,
+      SkillCheck skillCheck,
+      double unitWeight
+) {}

@@ -41,14 +41,14 @@ import megamek.common.compute.Compute;
 import megamek.common.units.Entity;
 import megamek.common.units.EntityWeightClass;
 import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.stratCon.StratConBiomeManifest;
+import mekhq.campaign.digitalGM.stratCon.StratConBiomeManifest.MapTypeList;
 import mekhq.campaign.force.CombatTeam;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.AtBScenario;
 import mekhq.campaign.mission.CommonObjectiveFactory;
 import mekhq.campaign.mission.ScenarioObjective;
 import mekhq.campaign.mission.atb.AtBScenarioEnabled;
-import mekhq.campaign.stratCon.StratConBiomeManifest;
-import mekhq.campaign.stratCon.StratConBiomeManifest.MapTypeList;
 
 @AtBScenarioEnabled
 public class HideAndSeekBuiltInScenario extends AtBScenario {

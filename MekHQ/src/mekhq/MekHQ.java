@@ -106,6 +106,7 @@ import mekhq.campaign.CampaignController;
 import mekhq.campaign.ResolveScenarioTracker;
 import mekhq.campaign.autoResolve.MekHQSetupForces;
 import mekhq.campaign.autoResolve.StratConSetupForces;
+import mekhq.campaign.digitalGM.stratCon.StratConRulesManager;
 import mekhq.campaign.handler.PostScenarioDialogHandler;
 import mekhq.campaign.handler.XPHandler;
 import mekhq.campaign.mission.AtBDynamicScenario;
@@ -114,7 +115,6 @@ import mekhq.campaign.mission.Scenario;
 import mekhq.campaign.mission.ScenarioTemplate;
 import mekhq.campaign.mission.ScenarioTemplate.BattlefieldControlType;
 import mekhq.campaign.personnel.Person;
-import mekhq.campaign.stratCon.StratConRulesManager;
 import mekhq.campaign.unit.Unit;
 import mekhq.gui.CampaignGUI;
 import mekhq.gui.baseComponents.immersiveDialogs.ImmersiveDialogSimple;
@@ -367,9 +367,9 @@ public class MekHQ implements GameListener {
     }
 
     /**
-     * Disposes all CampaignGUI components and deactivates the current campaign. Since event bus registration is
-     * linked to UI lifecycle, it also unregisters them from the event bus. Manually unsubscribes non-UI components.
-     * Logs remaining event bus listeners for debug purposes.
+     * Disposes all CampaignGUI components and deactivates the current campaign. Since event bus registration is linked
+     * to UI lifecycle, it also unregisters them from the event bus. Manually unsubscribes non-UI components. Logs
+     * remaining event bus listeners for debug purposes.
      */
     private void deactivateCampaign() {
         if (campaignGUI != null) {

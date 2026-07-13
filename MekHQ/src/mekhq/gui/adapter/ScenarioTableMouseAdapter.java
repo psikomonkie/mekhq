@@ -40,15 +40,13 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 
 import mekhq.MekHQ;
+import mekhq.campaign.digitalGM.stratCon.MaplessStratCon;
 import mekhq.campaign.events.scenarios.ScenarioChangedEvent;
 import mekhq.campaign.mission.AtBDynamicScenario;
 import mekhq.campaign.mission.Mission;
 import mekhq.campaign.mission.Scenario;
-import mekhq.campaign.stratCon.MaplessStratCon;
 import mekhq.gui.CampaignGUI;
-import mekhq.gui.StratConTab;
 import mekhq.gui.dialog.CustomizeScenarioDialog;
-import mekhq.gui.enums.MHQTabType;
 import mekhq.gui.model.ScenarioTableModel;
 
 public class ScenarioTableMouseAdapter extends JPopupMenuAdapter {

@@ -30,9 +30,9 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.stratCon;
+package mekhq.campaign.digitalGM.stratCon;
 
-import static mekhq.campaign.stratCon.StratConScenario.ScenarioState.UNRESOLVED;
+import static mekhq.campaign.digitalGM.stratCon.StratConScenario.ScenarioState.UNRESOLVED;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

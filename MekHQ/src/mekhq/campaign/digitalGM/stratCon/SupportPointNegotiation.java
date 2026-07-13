@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.stratCon;
+package mekhq.campaign.digitalGM.stratCon;
 
 import static mekhq.campaign.enums.DailyReportType.GENERAL;
 import static mekhq.campaign.personnel.skills.SkillType.S_ADMIN;

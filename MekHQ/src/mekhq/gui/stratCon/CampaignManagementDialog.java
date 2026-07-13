@@ -45,9 +45,9 @@ import javax.swing.JLabel;
 import megamek.client.ui.util.UIUtil;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.stratCon.StratConCampaignState;
-import mekhq.campaign.stratCon.StratConRulesManager;
-import mekhq.campaign.stratCon.StratConTrackState;
+import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
+import mekhq.campaign.digitalGM.stratCon.StratConRulesManager;
+import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 import mekhq.gui.StratConTab;
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2019-2025 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -30,13 +30,16 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.stratCon;
 
-import mekhq.campaign.personnel.Person;
-import mekhq.campaign.personnel.skills.SkillCheck;
+package mekhq.campaign.digitalGM.stratCon;
 
-public record ScoutRecord(
-      Person scout,
-      SkillCheck skillCheck,
-      double unitWeight
-) {}
+/**
+ * This interface defines a StratCon element (a facility or a scenario currently) that is able to provide various kinds
+ * of information for display in some UI elements.
+ *
+ * @author NickAragua
+ *
+ */
+public interface IStratConDisplayable {
+    String getInfo();
+}

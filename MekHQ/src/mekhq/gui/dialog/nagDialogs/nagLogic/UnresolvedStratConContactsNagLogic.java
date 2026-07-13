@@ -38,11 +38,11 @@ import static mekhq.utilities.MHQInternationalization.getTextAt;
 import java.time.LocalDate;
 import java.util.List;
 
+import mekhq.campaign.digitalGM.stratCon.StratConScenario;
+import mekhq.campaign.digitalGM.stratCon.StratConScenario.ScenarioState;
+import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.AtBDynamicScenario;
-import mekhq.campaign.stratCon.StratConScenario;
-import mekhq.campaign.stratCon.StratConScenario.ScenarioState;
-import mekhq.campaign.stratCon.StratConTrackState;
 
 public class UnresolvedStratConContactsNagLogic {
     final static String RESOURCE_BUNDLE = "mekhq.resources.NagDialogs";

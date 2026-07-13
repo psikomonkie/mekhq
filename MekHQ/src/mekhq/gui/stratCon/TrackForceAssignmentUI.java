@@ -49,11 +49,11 @@ import javax.swing.ListSelectionModel;
 import megamek.common.ui.FastJScrollPane;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
+import mekhq.campaign.digitalGM.stratCon.StratConCoords;
+import mekhq.campaign.digitalGM.stratCon.StratConRulesManager;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.mission.ScenarioForceTemplate;
-import mekhq.campaign.stratCon.StratConCampaignState;
-import mekhq.campaign.stratCon.StratConCoords;
-import mekhq.campaign.stratCon.StratConRulesManager;
 import mekhq.gui.StratConPanel;
 import mekhq.gui.baseComponents.immersiveDialogs.ImmersiveDialogConfirmation;
 
