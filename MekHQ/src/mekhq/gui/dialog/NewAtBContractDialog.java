@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2014 - Carl Spain. All rights reserved.
- * Copyright (C) 2014-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2014-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -445,9 +445,11 @@ public class NewAtBContractDialog extends NewContractDialog {
     }
 
     private String getCurrentEmployerCode() {
-        return campaign.getFaction().isMercenary() ?
-                     cbEmployer.getSelectedItemKey() :
-                     campaign.getFaction().getShortName();
+        if (campaign.getFaction().isMercenary()) {
+            return cbEmployer.getSelectedItemKey();
+        } else {
+            return campaign.getFaction().getShortName();
+        }
     }
 
     private String getCurrentEnemyCode() {
@@ -614,12 +616,12 @@ public class NewAtBContractDialog extends NewContractDialog {
             contract.createClanOpponent(campaign);
         }
 
-        campaign.getFinances()
+        campaign.getPlayerForce().getFinances()
               .credit(TransactionType.CONTRACT_PAYMENT,
                     campaign.getLocalDate(),
                     contract.getTotalAdvanceAmount(),
                     "Advance funds for " + contract.getName());
-        campaign.getFinances()
+        campaign.getPlayerForce().getFinances()
               .credit(TransactionType.CONTRACT_PAYMENT,
                     campaign.getLocalDate(),
                     contract.getTransportAmount(),

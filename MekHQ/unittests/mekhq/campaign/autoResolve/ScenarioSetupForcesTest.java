@@ -167,11 +167,13 @@ class ScenarioSetupForcesTest {
 
     private Campaign createCampaign() {
         var campaign = MHQTestUtilities.getTestCampaign();
-        campaign.setName("Test Player");
+        campaign.getPlayerForce().setName("Test Player");
         var reputationController = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(reputationController.getAverageSkillLevel()).thenReturn(SkillLevel.REGULAR);
-        campaign.setReputation(reputationController);
-        campaign.addFormation(new Formation("Heroes"), campaign.getFormation(0));
+        campaign.getPlayerForce().setReputation(reputationController);
+        Formation formation = new Formation("Heroes");
+        Formation superFormation = campaign.getPlayerForce().getFormation(0);
+        campaign.getPlayerForce().addFormation(formation, superFormation, campaign);
         return campaign;
     }
 
@@ -187,7 +189,7 @@ class ScenarioSetupForcesTest {
         when(scenario.getBotForce(anyInt())).thenReturn(botForce);
         when(scenario.getNumBots()).thenReturn(1);
 
-        for (var force : campaign.getAllFormations()) {
+        for (var force : campaign.getPlayerForce().getAllFormations()) {
             force.setScenarioId(11, campaign);
         }
 

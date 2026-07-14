@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -189,7 +189,7 @@ public class NonCombatPrisoners {
      * @since 0.50.10
      */
     private static Person generateCaptive(Campaign campaign, PersonnelRole role, boolean isUseAdvancedMedical) {
-        Person captive = campaign.newPerson(role);
+        Person captive = campaign.getPlayerForce().getHumanResources().newPerson(campaign, role);
         int injuryDieSize = role.isCombat() ? INJURY_CHANCE / 2 : INJURY_CHANCE;
         if (randomInt(injuryDieSize) == 0) {
             if (isUseAdvancedMedical) {

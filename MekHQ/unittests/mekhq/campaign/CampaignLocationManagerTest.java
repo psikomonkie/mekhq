@@ -42,6 +42,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.List;
 import java.util.Set;
@@ -58,6 +59,7 @@ import mekhq.campaign.personnel.Person;
 import mekhq.campaign.unit.Unit;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 class CampaignLocationManagerTest {
 
@@ -74,7 +76,7 @@ class CampaignLocationManagerTest {
     @Test
     void isQueuedForTravel_trueWhileQueued() {
         CampaignLocationManager manager = new CampaignLocationManager();
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         Unit unit = mock(Unit.class);
         ILocation destination = mock(ILocation.class);
 
@@ -86,7 +88,7 @@ class CampaignLocationManagerTest {
     @Test
     void dispatchPendingTravel_skipsTravelersRemovedFromCampaign() {
         CampaignLocationManager manager = new CampaignLocationManager();
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         Unit soldUnit = mock(Unit.class);
         UUID unitId = UUID.randomUUID();
         when(soldUnit.getId()).thenReturn(unitId);
@@ -105,7 +107,7 @@ class CampaignLocationManagerTest {
     @Test
     void dispatchPendingTravel_dispatchesTravelersStillInCampaign() {
         CampaignLocationManager manager = new CampaignLocationManager();
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         Unit unit = mock(Unit.class);
         UUID unitId = UUID.randomUUID();
         when(unit.getId()).thenReturn(unitId);
@@ -124,7 +126,7 @@ class CampaignLocationManagerTest {
     @Test
     void queueTravel_reQueueRemovesPriorPendingTravel() {
         CampaignLocationManager manager = new CampaignLocationManager();
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         ILocation firstDestination = mock(ILocation.class);
         ILocation secondDestination = mock(ILocation.class);
         Unit unit = mock(Unit.class);
@@ -179,7 +181,7 @@ class CampaignLocationManagerTest {
     @Test
     void gmTeleport_dispatchesThenProcessesArrivals() {
         CampaignLocationManager manager = new CampaignLocationManager();
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         Unit unit = mock(Unit.class);
         ILocation destination = mock(ILocation.class);
 
@@ -187,13 +189,13 @@ class CampaignLocationManagerTest {
             manager.gmTeleport(campaign, List.of(unit), destination);
             dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), destination, campaign));
         }
-        verify(campaign).processArrivals(campaign);
+        Mockito.verify(campaign.getPlayerForce().getDetachmentLocationManager()).processArrivals(campaign);
     }
 
     @Test
     void gmCompleteTravel_startsQueuedItemToItsDestination() {
         CampaignLocationManager manager = new CampaignLocationManager();
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         Unit unit = mock(Unit.class);
 
         // Queue the unit to travel to a destination ILocation (the main force, in production).
@@ -205,26 +207,26 @@ class CampaignLocationManagerTest {
             dispatch.verify(() -> LocationDispatch.dispatchTravelers(List.of(unit), destination, campaign));
         }
         assertFalse(manager.isQueuedForTravel(unit));
-        verify(campaign).processArrivals(campaign);
+        Mockito.verify(campaign.getPlayerForce().getDetachmentLocationManager()).processArrivals(campaign);
     }
 
     @Test
     void gmCompleteTravel_noopWhenNothingTravelingOrQueued() {
         CampaignLocationManager manager = new CampaignLocationManager();
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         Unit unit = mock(Unit.class);
 
         try (MockedStatic<LocationDispatch> dispatch = mockStatic(LocationDispatch.class)) {
             manager.gmCompleteTravel(campaign, List.of(unit));
             dispatch.verifyNoInteractions();
         }
-        verify(campaign).processArrivals(campaign);
+        Mockito.verify(campaign.getPlayerForce().getDetachmentLocationManager()).processArrivals(campaign);
     }
 
     @Test
     void gmCompleteTravel_forcesInTransitNodeToArrive() {
         CampaignLocationManager manager = new CampaignLocationManager();
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         Unit unit = mock(Unit.class);
         CurrentLocation travelNode = mock(CurrentLocation.class);
         when(unit.getCurrentLocation()).thenReturn(travelNode);
@@ -236,13 +238,13 @@ class CampaignLocationManagerTest {
 
         verify(travelNode).setTransitTime(0);
         verify(travelNode).setJumpPath(null);
-        verify(campaign).processArrivals(campaign);
+        Mockito.verify(campaign.getPlayerForce().getDetachmentLocationManager()).processArrivals(campaign);
     }
 
     @Test
     void gmCompleteTravel_refreshesUnselectedCoTravelers() {
         CampaignLocationManager manager = new CampaignLocationManager();
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         Unit selectedUnit = mock(Unit.class);
         Unit coTraveler = mock(Unit.class);
         CurrentLocation travelNode = mock(CurrentLocation.class);

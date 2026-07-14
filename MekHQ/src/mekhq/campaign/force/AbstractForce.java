@@ -771,7 +771,8 @@ public abstract class AbstractForce {
             unit.setFormationId(id);
             unit.setScenarioId(formation.getScenarioId());
             if (null != formation.getTechID()) {
-                Person formationTech = campaign.getPerson(formation.getTechID());
+                final UUID id1 = formation.getTechID();
+                Person formationTech = campaign.getPlayerForce().getHumanResources().getPerson(id1);
                 if (formationTech.canTech(unit.getEntity())) {
                     if (null != unit.getTech()) {
                         unit.removeTech();

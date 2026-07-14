@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.stream.Stream;
 
@@ -72,7 +73,7 @@ public class ArmorTest {
         EquipmentType.initializeTypes();
 
         mockCampaignOptions = mock(CampaignOptions.class);
-        mockCampaign = mock(Campaign.class);
+        mockCampaign = mockCampaign();
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
     }
 
@@ -90,7 +91,7 @@ public class ArmorTest {
     @BeforeEach
     public void beforeEach() {
         warehouse = new mekhq.campaign.LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
     }
 
     @ParameterizedTest

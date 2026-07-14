@@ -98,7 +98,7 @@ public record ForceQuartermaster(Campaign campaign) {
      * Gets the Warehouse from the Campaign.
      */
     private LocalWarehouse getWarehouse() {
-        return campaign().getWarehouse();
+        return campaign().getPlayerForce().getWarehouse();
     }
 
     /**
@@ -676,7 +676,9 @@ public record ForceQuartermaster(Campaign campaign) {
 
         if (getCampaignOptions().isPayForUnits()) {
             Money cost = new Unit(en, campaign()).getBuyCost().multipliedBy(valueMultiplier);
-            if (campaign().getFinances().debit(TransactionType.UNIT_PURCHASE, campaign().getLocalDate(),
+            if (campaign().getPlayerForce()
+                      .getFinances()
+                      .debit(TransactionType.UNIT_PURCHASE, campaign().getLocalDate(),
                   cost, "Purchased " + en.getShortName())) {
 
                 campaign().addNewUnit(en, false, days, quality);
@@ -701,7 +703,7 @@ public record ForceQuartermaster(Campaign campaign) {
 
         Money sellValue = unit.getSellValue();
 
-        campaign().getFinances().credit(TransactionType.UNIT_SALE, campaign().getLocalDate(),
+        campaign().getPlayerForce().getFinances().credit(TransactionType.UNIT_SALE, campaign().getLocalDate(),
               sellValue, "Sale of " + unit.getName());
 
         campaign().removeUnit(unit.getId());
@@ -755,7 +757,7 @@ public record ForceQuartermaster(Campaign campaign) {
             plural = "s";
         }
 
-        campaign().getFinances().credit(TransactionType.EQUIPMENT_SALE, campaign().getLocalDate(),
+        campaign().getPlayerForce().getFinances().credit(TransactionType.EQUIPMENT_SALE, campaign().getLocalDate(),
               cost, "Sale of " + quantity + " " + part.getName() + plural);
 
         warehouseFor(part).removePart(part, quantity);
@@ -796,7 +798,7 @@ public record ForceQuartermaster(Campaign campaign) {
 
         Money cost = ammo.getActualValue().multipliedBy(saleProportion);
 
-        campaign().getFinances().credit(TransactionType.EQUIPMENT_SALE, campaign().getLocalDate(),
+        campaign().getPlayerForce().getFinances().credit(TransactionType.EQUIPMENT_SALE, campaign().getLocalDate(),
               cost, "Sale of " + shots + " " + ammo.getName());
 
         warehouseFor(ammo).removeAmmo(ammo, shots);
@@ -837,7 +839,7 @@ public record ForceQuartermaster(Campaign campaign) {
 
         Money cost = armor.getActualValue().multipliedBy(saleProportion);
 
-        campaign().getFinances().credit(TransactionType.EQUIPMENT_SALE, campaign().getLocalDate(),
+        campaign().getPlayerForce().getFinances().credit(TransactionType.EQUIPMENT_SALE, campaign().getLocalDate(),
               cost, "Sale of " + points + " " + armor.getName());
 
         warehouseFor(armor).removeArmor(armor, points);
@@ -908,7 +910,7 @@ public record ForceQuartermaster(Campaign campaign) {
      */
     public boolean buyRefurbishment(Part part) {
         if (getCampaignOptions().isPayForParts()) {
-            return campaign().getFinances().debit(TransactionType.EQUIPMENT_PURCHASE,
+            return campaign().getPlayerForce().getFinances().debit(TransactionType.EQUIPMENT_PURCHASE,
                   campaign().getLocalDate(), part.getActualValue(),
                   "Purchase of " + part.getName());
         } else {
@@ -957,7 +959,7 @@ public record ForceQuartermaster(Campaign campaign) {
 
         if (getCampaignOptions().isPayForParts()) {
             Money cost = part.getActualValue().multipliedBy(costMultiplier);
-            if (campaign().getFinances().debit(TransactionType.EQUIPMENT_PURCHASE,
+            if (campaign().getPlayerForce().getFinances().debit(TransactionType.EQUIPMENT_PURCHASE,
                   campaign().getLocalDate(), cost, "Purchase of " + part.getName())) {
                 addPart(part, transitDays, true, target);
                 return true;

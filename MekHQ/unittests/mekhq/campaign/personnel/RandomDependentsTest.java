@@ -40,6 +40,7 @@ import static mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -59,12 +60,12 @@ class RandomDependentsTest {
         final int NUMBER_OF_DEPENDENTS = 5;
 
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         mekhq.campaign.LocalHangar mockHangar = mock(mekhq.campaign.LocalHangar.class);
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         Faction campaignFaction = mock(Faction.class);
-        when(mockCampaign.getHangar()).thenReturn(mockHangar);
-        when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
@@ -83,7 +84,7 @@ class RandomDependentsTest {
 
             activeDependents.add(dependent);
         }
-        when(mockCampaign.getActiveDependents()).thenReturn(activeDependents);
+        when(mockCampaign.getPlayerForce().getHumanResources().getActiveDependents()).thenReturn(activeDependents);
 
         List<Person> activeNonDependent = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_NON_DEPENDENTS; i++) {
@@ -93,7 +94,8 @@ class RandomDependentsTest {
             activeNonDependent.add(nonDependent);
         }
         activeNonDependent.addAll(activeDependents);
-        when(mockCampaign.getActivePersonnel(false, true)).thenReturn(activeNonDependent);
+        when(mockCampaign.getPlayerForce().getHumanResources().getActivePersonnel(false, true)).thenReturn(
+              activeNonDependent);
 
         // Act
         RandomDependents randomDependents = new RandomDependents(mockCampaign);
@@ -109,7 +111,7 @@ class RandomDependentsTest {
         final int DEPENDENT_CAPACITY = max(1, (int) round(NUMBER_OF_NON_DEPENDENTS * DEPENDENT_CAPACITY_MULTIPLIER));
 
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
@@ -128,7 +130,8 @@ class RandomDependentsTest {
 
             activeNonDependent.add(nonDependent);
         }
-        when(mockCampaign.getActivePersonnel(true, true)).thenReturn(activeNonDependent);
+        when(mockCampaign.getPlayerForce().getHumanResources().getActivePersonnel(true, true)).thenReturn(
+              activeNonDependent);
 
         // Act
         RandomDependents randomDependents = new RandomDependents(mockCampaign);

@@ -43,6 +43,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.io.ByteArrayInputStream;
 import java.io.PrintWriter;
@@ -1009,7 +1010,7 @@ public class HumanResourcesTest {
         @Test
         void outputWrapsContentInHumanResourcesTag() {
             // Arrange
-            ForceHumanResources hr = campaign.getHumanResources();
+            ForceHumanResources hr = campaign.getPlayerForce().getHumanResources();
             StringWriter stringWriter = new StringWriter();
             PrintWriter writer = new PrintWriter(stringWriter);
 
@@ -1026,7 +1027,7 @@ public class HumanResourcesTest {
         @Test
         void poolValuesAreWritten() {
             // Arrange
-            ForceHumanResources hr = campaign.getHumanResources();
+            ForceHumanResources hr = campaign.getPlayerForce().getHumanResources();
             hr.setAsTechPool(3);
             hr.setMedicPool(2);
 
@@ -1046,7 +1047,7 @@ public class HumanResourcesTest {
         @Test
         void personnelBlockIsNestedInsideHumanResources() {
             // Arrange
-            ForceHumanResources hr = campaign.getHumanResources();
+            ForceHumanResources hr = campaign.getPlayerForce().getHumanResources();
             StringWriter stringWriter = new StringWriter();
             PrintWriter writer = new PrintWriter(stringWriter);
 
@@ -1075,7 +1076,7 @@ public class HumanResourcesTest {
         @Test
         void roundTripPreservesAsTechPoolValue() throws Exception {
             // Arrange
-            ForceHumanResources hr = campaign.getHumanResources();
+            ForceHumanResources hr = campaign.getPlayerForce().getHumanResources();
             hr.setAsTechPool(5);
 
             StringWriter stringWriter = new StringWriter();
@@ -1100,7 +1101,7 @@ public class HumanResourcesTest {
         @Test
         void roundTripPreservesMedicPoolValue() throws Exception {
             // Arrange
-            ForceHumanResources hr = campaign.getHumanResources();
+            ForceHumanResources hr = campaign.getPlayerForce().getHumanResources();
             hr.setMedicPool(4);
 
             StringWriter stringWriter = new StringWriter();
@@ -1125,9 +1126,13 @@ public class HumanResourcesTest {
         @Test
         void roundTripPreservesPersonnelCount() throws Exception {
             // Arrange
-            ForceHumanResources hr = campaign.getHumanResources();
-            Person mekwarrior = campaign.newPerson(PersonnelRole.MEKWARRIOR, PersonnelRole.NONE);
-            Person doctor = campaign.newPerson(PersonnelRole.DOCTOR, PersonnelRole.NONE);
+            ForceHumanResources hr = campaign.getPlayerForce().getHumanResources();
+            Person mekwarrior = campaign.getPlayerForce()
+                                      .getHumanResources()
+                                      .newPerson(campaign, PersonnelRole.MEKWARRIOR, PersonnelRole.NONE);
+            Person doctor = campaign.getPlayerForce()
+                                  .getHumanResources()
+                                  .newPerson(campaign, PersonnelRole.DOCTOR, PersonnelRole.NONE);
             hr.recruitPerson(campaign, mekwarrior);
             hr.recruitPerson(campaign, doctor);
 
@@ -1148,7 +1153,7 @@ public class HumanResourcesTest {
             ForceHumanResources.loadFromXML(hrNode, fresh, new Version());
 
             // Assert
-            assertEquals(originalCount, fresh.getHumanResources().getPersonnel().size(),
+            assertEquals(originalCount, fresh.getPlayerForce().getHumanResources().getPersonnel().size(),
                   "Personnel count must match after XML round-trip");
         }
     }
@@ -1235,15 +1240,15 @@ public class HumanResourcesTest {
             ForceHumanResources.loadFromXML(hrNode, fresh, new Version());
 
             // Assert
-            assertTrue(fresh.getHumanResources().getPersonnel().isEmpty(),
+            assertTrue(fresh.getPlayerForce().getHumanResources().getPersonnel().isEmpty(),
                   "Empty <personnel/> node must produce an empty roster");
         }
 
         @Test
         void usesExistingHRFromCampaign() throws Exception {
-            Campaign mockCampaign = mock(Campaign.class);
+            Campaign mockCampaign = mockCampaign();
             ForceHumanResources existingHr = new ForceHumanResources();
-            when(mockCampaign.getHumanResources()).thenReturn(existingHr);
+            when(mockCampaign.getPlayerForce().getHumanResources()).thenReturn(existingHr);
 
             String xml = "<humanResources></humanResources>";
             DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();

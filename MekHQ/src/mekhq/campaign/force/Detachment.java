@@ -156,7 +156,7 @@ public class Detachment implements IPlace {
 
         // We've just stopped traveling, so we should see if there are any local applicants.
         if (!ForceHumanResources.isUsingLegacyPersonnelMarket(campaign.getCampaignOptions())) {
-            campaign.refreshApplicants(true);
+            campaign.getPlayerForce().getHumanResources().refreshApplicants(campaign, true);
             CampaignNewDayManager.showRarePersonnelDialog(campaign, false);
         }
     }

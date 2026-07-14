@@ -618,7 +618,7 @@ public class StratConScenario implements IStratConDisplayable {
             StratConCampaignState campaignState = contract.getStratConCampaignState();
 
             StratConTrackState track = getTrackForScenario(campaign, campaignState);
-            for (Formation formation : campaign.getAllFormations()) {
+            for (Formation formation : campaign.getPlayerForce().getAllFormations()) {
                 if (formation.getScenarioId() == backingScenarioId) {
                     formation.clearScenarioIds(campaign, true);
                     backingScenario.removeFormation(formation.getId());
