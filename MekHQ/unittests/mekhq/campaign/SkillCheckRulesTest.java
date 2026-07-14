@@ -41,6 +41,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.lang.reflect.Field;
 
@@ -73,14 +74,14 @@ public class SkillCheckRulesTest {
         }
 
         private Campaign createCampaignMock(CampaignOptions options) {
-            Campaign campaign = mock(Campaign.class);
+            Campaign campaign = mockCampaign();
             // force calling the actual implementation
             doCallRealMethod().when(campaign).checkAcquisition(any(), any(), anyBoolean());
             Faction faction = new Faction();
             when(campaign.getCampaignOptions()).thenReturn(options);
             when(campaign.getFaction()).thenReturn(faction);
             mekhq.campaign.market.ForceShoppingList shoppingList = mock(mekhq.campaign.market.ForceShoppingList.class);
-            when(campaign.getShoppingList()).thenReturn(shoppingList);
+            when(campaign.getPlayerForce().getShoppingList()).thenReturn(shoppingList);
             return campaign;
         }
 
@@ -155,7 +156,7 @@ public class SkillCheckRulesTest {
             Campaign campaign = createCampaignMock(options);
             IAcquisitionWork acquisition = mock(IAcquisitionWork.class);
             mekhq.campaign.market.ForceShoppingList shoppingList = mock(mekhq.campaign.market.ForceShoppingList.class);
-            when(campaign.getShoppingList()).thenReturn(shoppingList);
+            when(campaign.getPlayerForce().getShoppingList()).thenReturn(shoppingList);
             when(options.getAcquisitionType()).thenReturn(AcquisitionsType.ADMINISTRATION);
             when(shoppingList.getShoppingItem(any())).thenReturn(mock(IAcquisitionWork.class));
 

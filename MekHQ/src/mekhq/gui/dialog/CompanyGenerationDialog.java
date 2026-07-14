@@ -179,9 +179,14 @@ public class CompanyGenerationDialog extends AbstractMHQValidationButtonDialog {
         }
 
         PersonnelRole role = campaignFaction.isClan() ? PersonnelRole.MEKWARRIOR : PersonnelRole.MILITARY_LIAISON;
-        Person speaker = campaign.newPerson(role, campaignFactionCode, Gender.RANDOMIZE);
+        Person speaker = campaign.getPlayerForce()
+                               .getHumanResources()
+                               .newPerson(campaign, role, campaignFactionCode, Gender.RANDOMIZE);
         AutoAssignRankForCompanyGenerator.assignRankSystemFromFaction(speaker, RO_MIN);
-        new FactionJudgmentDialog(campaign, speaker, campaign.getCommander(), "HELLO", campaignFaction,
+        new FactionJudgmentDialog(campaign, speaker, campaign.getPlayerForce().getHumanResources()
+                                                           .getCommander(campaign.getCampaignOptions(),
+                                                                 campaign.isClanCampaign(),
+                                                                 campaign.getLocalDate()), "HELLO", campaignFaction,
               FactionStandingJudgmentType.WELCOME, ImmersiveDialogWidth.MEDIUM, null, null);
     }
     //endregion Initialization
@@ -205,7 +210,7 @@ public class CompanyGenerationDialog extends AbstractMHQValidationButtonDialog {
         generator.applyPhaseThreeToCampaign(getCampaign(), trackers, units, parts, armour, ammunition, null);
 
         MekHQ.triggerEvent(new OrganizationChangedEvent(getCampaign(),
-              getCompanyGenerationOptionsPanel().getCampaign().getFormations()));
+              getCompanyGenerationOptionsPanel().getCampaign().getPlayerForce().getFormations()));
 
         if (campaign.getCampaignOptions().isEnableAutoAwards()) {
             AutoAwardsController autoAwardsController = new AutoAwardsController();
@@ -214,7 +219,7 @@ public class CompanyGenerationDialog extends AbstractMHQValidationButtonDialog {
 
         mekhq.campaign.camOpsReputation.ForceReputationController reputationController = new mekhq.campaign.camOpsReputation.ForceReputationController();
         reputationController.initializeReputation(campaign);
-        campaign.setReputation(reputationController);
+        campaign.getPlayerForce().setReputation(reputationController);
 
         processBonusUnitsBasedOnCampaignOptions(trackers, options);
     }
@@ -240,9 +245,10 @@ public class CompanyGenerationDialog extends AbstractMHQValidationButtonDialog {
             }
         }
 
-        final Faction faction = options.isUseSpecifiedFactionToAssignRanks()
-                                      ? options.getSpecifiedFaction()
-                                      : campaign.getFaction();
+        final Faction faction;
+        if (options.isUseSpecifiedFactionToAssignRanks()) {faction = options.getSpecifiedFaction();} else {
+            faction = campaign.getFaction();
+        }
         final boolean isAutomaticallyAssignRanks = options.isAutomaticallyAssignRanks();
 
         if (campaignOptions.isUseFatigue()) {
@@ -284,7 +290,7 @@ public class CompanyGenerationDialog extends AbstractMHQValidationButtonDialog {
     }
 
     private void generateSparePersonnel(CompanyGenerationOptions options) {
-        Person person = campaign.newPerson(PersonnelRole.MEKWARRIOR);
+        Person person = campaign.getPlayerForce().getHumanResources().newPerson(campaign, PersonnelRole.MEKWARRIOR);
 
         boolean checkVeterancyEligibility = true;
         overrideSkills(campaign, person, PersonnelRole.MEKWARRIOR, SkillLevel.GREEN, checkVeterancyEligibility);
@@ -294,15 +300,16 @@ public class CompanyGenerationDialog extends AbstractMHQValidationButtonDialog {
         reRollAdvantages(campaign, person, actualSkillLevel);
 
         if (options.isAutomaticallyAssignRanks()) {
-            final Faction faction = options.isUseSpecifiedFactionToAssignRanks()
-                                          ? options.getSpecifiedFaction()
-                                          : campaign.getFaction();
+            final Faction faction;
+            if (options.isUseSpecifiedFactionToAssignRanks()) {faction = options.getSpecifiedFaction();} else {
+                faction = campaign.getFaction();
+            }
             person.setRank((faction.isComStarOrWoB() || faction.isClan())
                                  ? 4
                                  : 12);
         }
 
-        campaign.recruitPerson(person, true, true);
+        campaign.getPlayerForce().getHumanResources().recruitPerson(campaign, person, true, true);
     }
 
     @Override

@@ -259,9 +259,10 @@ public class EquipmentPart extends Part {
             }
 
             // Capture target warehouse before detaching from unit
-            mekhq.campaign.LocalWarehouse targetWarehouse = unit.getWarehouse() != null ?
-                                                                    unit.getWarehouse() :
-                                                                    campaign.getWarehouse();
+            mekhq.campaign.LocalWarehouse targetWarehouse;
+            targetWarehouse = unit.getWarehouse() != null ?
+                                    unit.getWarehouse() :
+                                    campaign.getPlayerForce().getWarehouse();
 
             unit.removePart(this);
             setUnit(null);

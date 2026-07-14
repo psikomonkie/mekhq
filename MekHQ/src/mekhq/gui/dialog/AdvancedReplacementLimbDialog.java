@@ -225,7 +225,7 @@ public class AdvancedReplacementLimbDialog extends JDialog {
         this.campaign = campaign;
         this.campaignOptions = campaign.getCampaignOptions();
         this.isGMMode = isGMMode;
-        surgeon = getSurgeon(campaign.getDoctors()); // can return null
+        surgeon = getSurgeon(campaign.getPlayerForce().getHumanResources().getDoctors()); // can return null
 
         if (patient == null) {
             return;
@@ -413,8 +413,9 @@ public class AdvancedReplacementLimbDialog extends JDialog {
     private JComboBox<ProstheticType> createTreatmentComboBox(List<ProstheticType> options) {
         Faction campaignFaction = campaign.getFaction();
         int currentYear = campaign.getGameYear();
-        boolean isOnPlanet = campaign.getCurrentLocation().isOnPlanet();
+        boolean isOnPlanet = campaign.getPlayerForce().getForceDetachment().getCurrentLocation().isOnPlanet();
         double healingTimeMultiplier = campaignOptions.getAlternativeAdvancedMedicalHealingTimeMultiplier();
+
 
         JComboBox<ProstheticType> comboBox = new JComboBox<>();
 
@@ -509,7 +510,8 @@ public class AdvancedReplacementLimbDialog extends JDialog {
             totalCost = totalCost.multipliedBy(10);
         }
 
-        confirmButton.setEnabled(campaign.getFunds().isGreaterOrEqualThan(totalCost) && selectedCount > 0);
+        confirmButton.setEnabled(campaign.getPlayerForce().getFunds().isGreaterOrEqualThan(totalCost) &&
+                                       selectedCount > 0);
 
         List<String> summary = new ArrayList<>();
         if (selectedCount > 0) {
@@ -522,7 +524,7 @@ public class AdvancedReplacementLimbDialog extends JDialog {
                   surgeryLevelNeeded));
 
             if (isUseLocalSurgeon) {
-                if (campaign.getCurrentLocation().isOnPlanet()) {
+                if (campaign.getPlayerForce().getForceDetachment().getCurrentLocation().isOnPlanet()) {
                     summary.add(getTextAt(RESOURCE_BUNDLE,
                           "AdvancedReplacementLimbDialog.status.localSurgeon"));
                 } else {
@@ -671,7 +673,9 @@ public class AdvancedReplacementLimbDialog extends JDialog {
                 }
             }
 
-            if (!selected.isAvailableInCurrentLocation(campaign.getCurrentLocation(), campaign.getLocalDate())) {
+            if (!selected.isAvailableInCurrentLocation(campaign.getPlayerForce()
+                                                             .getForceDetachment()
+                                                             .getCurrentLocation(), campaign.getLocalDate())) {
                 tooltip += getFormattedTextAt(RESOURCE_BUNDLE,
                       "AdvancedReplacementLimbDialog.exclusions.tech", warningColor, CLOSING_SPAN_TAG);
             }
@@ -791,7 +795,7 @@ public class AdvancedReplacementLimbDialog extends JDialog {
             addImplantsAndAbilities(type);
         }
 
-        campaign.personUpdated(patient);
+        campaign.getPlayerForce().getHumanResources().personUpdated(campaign, patient);
     }
 
     /**
@@ -801,7 +805,7 @@ public class AdvancedReplacementLimbDialog extends JDialog {
      * @since 0.50.10
      */
     private void payForSurgeries() {
-        Finances finances = campaign.getFinances();
+        Finances finances = campaign.getPlayerForce().getFinances();
         LocalDate today = campaign.getLocalDate();
         finances.debit(TransactionType.REPAIRS, today, totalCost,
               getFormattedTextAt(RESOURCE_BUNDLE, "AdvancedReplacementLimbDialog.transaction",
@@ -845,7 +849,7 @@ public class AdvancedReplacementLimbDialog extends JDialog {
             patient.addInjury(recoveryInjury);
         }
 
-        campaign.personUpdated(patient);
+        campaign.getPlayerForce().getHumanResources().personUpdated(campaign, patient);
     }
 
     /**
@@ -1064,8 +1068,10 @@ public class AdvancedReplacementLimbDialog extends JDialog {
                     .thenComparing(
                           // We shouldn't hit `null` at this point, as any null selections should have been filtered
                           // out
-                          s -> Objects.requireNonNull(
-                                s.type().getCost(campaign.getFaction(), campaign.getGameYear())),
+                          s -> {
+                              return Objects.requireNonNull(
+                                    s.type().getCost(campaign.getFaction(), campaign.getGameYear()));
+                          },
                           Comparator.reverseOrder() // highest cost first
                     )
         );
@@ -1217,7 +1223,7 @@ public class AdvancedReplacementLimbDialog extends JDialog {
      */
     public Map<BodyLocation, ProstheticType> getSelectedTreatments() {
         Map<BodyLocation, ProstheticType> selections = new HashMap<>();
-        boolean isPlanetside = campaign.getCurrentLocation().isOnPlanet();
+        boolean isPlanetside = campaign.getPlayerForce().getForceDetachment().getCurrentLocation().isOnPlanet();
         Faction campaignFaction = campaign.getFaction();
         int currentYear = campaign.getGameYear();
         for (Map.Entry<BodyLocation, JComboBox<ProstheticType>> entry :

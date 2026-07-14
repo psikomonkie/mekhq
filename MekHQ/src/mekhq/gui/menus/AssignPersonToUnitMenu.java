@@ -189,9 +189,10 @@ public class AssignPersonToUnitMenu extends JScrollableMenu {
             // campaign hangar when in the main force. All selected persons must be co-located
             // (enforced above via the in-transit check and the unit co-location filter below).
             AbstractBase effectiveBase = LocationUtils.findEffectiveBase(people[0]);
-            mekhq.campaign.LocalHangar sourceHangar = (effectiveBase != null)
-                  ? effectiveBase.getBaseHangar()
-                  : campaign.getHangar();
+            mekhq.campaign.LocalHangar sourceHangar;
+            sourceHangar = effectiveBase != null ?
+                                 effectiveBase.getBaseHangar() :
+                                 campaign.getPlayerForce().getHangar();
             final List<Unit> units = HangarSorter.defaultSorting()
                                            .sort(sourceHangar.getUnitsStream().filter(Unit::isAvailable))
                                            .toList();

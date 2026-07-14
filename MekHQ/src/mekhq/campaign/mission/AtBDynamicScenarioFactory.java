@@ -1665,7 +1665,7 @@ public class AtBDynamicScenarioFactory {
             if (templateObjective.isApplicableToForceTemplate(playerForceTemplate, scenario) ||
                       templateObjective.getAssociatedForceNames()
                             .contains(ScenarioObjective.FORCE_SHORTCUT_ALL_PRIMARY_PLAYER_FORCES)) {
-                objectiveForceNames.add(campaign.getFormation(forceID).getName());
+                objectiveForceNames.add(campaign.getPlayerForce().getFormation(forceID).getName());
                 calculatedDestinationZone = OffBoardDirection.translateStartPosition(getOppositeEdge(playerForceTemplate.getActualDeploymentZone()));
             }
         }
@@ -1783,7 +1783,7 @@ public class AtBDynamicScenarioFactory {
             ScenarioForceTemplate forceTemplate = scenario.getPlayerForceTemplates().get(forceID);
 
             if ((forceTemplate != null) && forceTemplate.getContributesToUnitCount()) {
-                primaryUnitCount += campaign.getFormation(forceID).getAllUnits(false).size();
+                primaryUnitCount += campaign.getPlayerForce().getFormation(forceID).getAllUnits(false).size();
             }
         }
 
@@ -3519,7 +3519,7 @@ public class AtBDynamicScenarioFactory {
             for (int forceID : scenario.getForceIDs()) {
                 ScenarioForceTemplate forceTemplate = scenario.getPlayerForceTemplates().get(forceID);
                 if (forceTemplate != null && forceTemplate.getContributesToBV()) {
-                    Formation formation = campaign.getFormation(forceID);
+                    Formation formation = campaign.getPlayerForce().getFormation(forceID);
                     if (formation != null) {
                         bvBudget += formation.getTotalBV(campaign, forceStandardBattleValue);
                         LOGGER.info("Forced BV contribution for {}: {}", formation.getName(), bvBudget);
@@ -3609,7 +3609,7 @@ public class AtBDynamicScenarioFactory {
         int totalForces = 0;
         int totalBattleValue = 0;
         List<CombatRole> validRoles = List.of(FRONTLINE, MANEUVER, CADRE, PATROL);
-        for (CombatTeam combatTeam : campaign.getCombatTeamsAsList()) {
+        for (CombatTeam combatTeam : campaign.getPlayerForce().getCombatTeamsAsList(campaign)) {
             CombatRole role = combatTeam.getRole();
             if (!validRoles.contains(role)) {
                 continue;
@@ -3676,7 +3676,7 @@ public class AtBDynamicScenarioFactory {
         // averages will be weighted against).
         List<Integer> battleValues = new ArrayList<>();
         List<CombatRole> validRoles = List.of(FRONTLINE, MANEUVER, CADRE, PATROL);
-        for (CombatTeam combatTeam : campaign.getCombatTeamsAsList()) {
+        for (CombatTeam combatTeam : campaign.getPlayerForce().getCombatTeamsAsList(campaign)) {
             CombatRole role = combatTeam.getRole();
             if (!validRoles.contains(role)) {
                 continue;
@@ -3720,7 +3720,7 @@ public class AtBDynamicScenarioFactory {
             // deployed player forces:
             for (int forceID : scenario.getForceIDs()) {
                 ScenarioForceTemplate forceTemplate = scenario.getPlayerForceTemplates().get(forceID);
-                Formation formation = campaign.getFormation(forceID);
+                Formation formation = campaign.getPlayerForce().getFormation(forceID);
 
                 if (forceTemplate != null && forceTemplate.getContributesToUnitCount() && formation != null) {
                     unitCount += formation.getTotalUnitCount(campaign, isClanBidding);
@@ -3777,7 +3777,7 @@ public class AtBDynamicScenarioFactory {
         int forceCount = 0;
         int unitCount = 0;
         List<CombatRole> validRoles = List.of(FRONTLINE, MANEUVER, CADRE, PATROL);
-        for (CombatTeam combatTeam : campaign.getCombatTeamsAsList()) {
+        for (CombatTeam combatTeam : campaign.getPlayerForce().getCombatTeamsAsList(campaign)) {
             CombatRole role = combatTeam.getRole();
             if (!validRoles.contains(role)) {
                 continue;
@@ -3841,7 +3841,7 @@ public class AtBDynamicScenarioFactory {
         // averages will be weighted against).
         List<Integer> unitCounts = new ArrayList<>();
         List<CombatRole> validRoles = List.of(FRONTLINE, MANEUVER, CADRE, PATROL);
-        for (CombatTeam combatTeam : campaign.getCombatTeamsAsList()) {
+        for (CombatTeam combatTeam : campaign.getPlayerForce().getCombatTeamsAsList(campaign)) {
             CombatRole role = combatTeam.getRole();
             if (!validRoles.contains(role)) {
                 continue;
@@ -4435,7 +4435,7 @@ public class AtBDynamicScenarioFactory {
         }
 
         for (int forceID : scenario.getForceIDs()) {
-            Formation playerFormation = campaign.getFormation(forceID);
+            Formation playerFormation = campaign.getPlayerForce().getFormation(forceID);
 
             for (UUID unitID : playerFormation.getAllUnits(true)) {
                 Unit currentUnit = campaign.getUnit(unitID);
@@ -4487,17 +4487,20 @@ public class AtBDynamicScenarioFactory {
             setDeploymentTurnsStaggeredByLance(untransportedEntities);
         } else if (forceTemplate.getArrivalTurn() == ScenarioForceTemplate.ARRIVAL_TURN_AS_REINFORCEMENTS) {
             if (forceTemplate.getForceAlignment() == ForceAlignment.Opposing.ordinal()) {
-                setDeploymentTurnsForReinforcements(campaign.getAllHangar(),
+                setDeploymentTurnsForReinforcements(campaign.getPlayerForce().getHangar(),
                       scenario,
                       untransportedEntities,
                       scenario.getHostileReinforcementDelayReduction());
             } else if (forceTemplate.getForceAlignment() != ForceAlignment.Third.ordinal()) {
-                setDeploymentTurnsForReinforcements(campaign.getAllHangar(),
+                setDeploymentTurnsForReinforcements(campaign.getPlayerForce().getHangar(),
                       scenario,
                       untransportedEntities,
                       scenario.getFriendlyReinforcementDelayReduction());
             } else {
-                setDeploymentTurnsForReinforcements(campaign.getAllHangar(), scenario, untransportedEntities, 0);
+                setDeploymentTurnsForReinforcements(campaign.getPlayerForce().getHangar(),
+                      scenario,
+                      untransportedEntities,
+                      0);
             }
         } else {
             for (Entity entity : untransportedEntities) {
@@ -4540,12 +4543,12 @@ public class AtBDynamicScenarioFactory {
         // deployment turn explicitly or use a stagger algorithm.
         // For player forces where there's not an associated force template, we calculate the
         // deployment turn as if they were reinforcements
-        mekhq.campaign.LocalHangar hangar = campaign.getAllHangar();
+        mekhq.campaign.LocalHangar hangar = campaign.getPlayerForce().getHangar();
         for (int forceID : scenario.getForceIDs()) {
             ScenarioForceTemplate forceTemplate = scenario.getPlayerForceTemplates().get(forceID);
 
             List<Entity> forceEntities = new ArrayList<>();
-            Formation playerFormation = campaign.getFormation(forceID);
+            Formation playerFormation = campaign.getPlayerForce().getFormation(forceID);
 
             for (UUID unitID : playerFormation.getAllUnits(true)) {
                 Unit currentUnit = campaign.getUnit(unitID);
@@ -4609,7 +4612,10 @@ public class AtBDynamicScenarioFactory {
             } else {
                 LOGGER.info("We're using a fallback deployment turn calculation for {}",
                       playerFormation.getName());
-                setDeploymentTurnsForReinforcements(campaign.getAllHangar(), scenario, forceEntities, strategy);
+                setDeploymentTurnsForReinforcements(campaign.getPlayerForce().getHangar(),
+                      scenario,
+                      forceEntities,
+                      strategy);
             }
         }
 
@@ -4631,7 +4637,7 @@ public class AtBDynamicScenarioFactory {
                 if (deployRound == ScenarioForceTemplate.ARRIVAL_TURN_STAGGERED_BY_LANCE) {
                     setDeploymentTurnsStaggeredByLance(Collections.singletonList(entity));
                 } else if (deployRound == ScenarioForceTemplate.ARRIVAL_TURN_AS_REINFORCEMENTS) {
-                    setDeploymentTurnsForReinforcements(campaign.getAllHangar(),
+                    setDeploymentTurnsForReinforcements(campaign.getPlayerForce().getHangar(),
                           scenario,
                           Collections.singletonList(entity),
                           strategy);
@@ -4639,7 +4645,7 @@ public class AtBDynamicScenarioFactory {
                     entity.setDeployRound(deployRound);
                 }
             } else {
-                setDeploymentTurnsForReinforcements(campaign.getAllHangar(),
+                setDeploymentTurnsForReinforcements(campaign.getPlayerForce().getHangar(),
                       scenario,
                       Collections.singletonList(entity),
                       strategy);
@@ -4726,7 +4732,7 @@ public class AtBDynamicScenarioFactory {
         for (int forceID : scenario.getForceIDs()) {
             ScenarioForceTemplate forceTemplate = scenario.getPlayerForceTemplates().get(forceID);
             List<Entity> forceEntities = new ArrayList<>();
-            Formation playerFormation = campaign.getFormation(forceID);
+            Formation playerFormation = campaign.getPlayerForce().getFormation(forceID);
 
             for (UUID unitID : playerFormation.getAllUnits(true)) {
                 Unit currentUnit = campaign.getUnit(unitID);
