@@ -130,7 +130,7 @@ public class TrainingCombatTeams {
      */
     public static void processTrainingCombatTeams(final Campaign campaign) {
         final LocalDate today = campaign.getLocalDate();
-        final List<CombatTeam> combatTeams = campaign.getCombatTeamsAsList();
+        final List<CombatTeam> combatTeams = campaign.getPlayerForce().getCombatTeamsAsList(campaign);
 
         CampaignOptions campaignOptions = campaign.getCampaignOptions();
         boolean isUsingStratCon = campaignOptions.isUseStratCon();
@@ -294,7 +294,7 @@ public class TrainingCombatTeams {
                       xpCostMultiplier, useReasoningXPChanges, campaign.getCampaignOptions().isPersonnelLogSkillGain(),
                       campaign.getLocalDate());
 
-                campaign.personUpdated(trainee);
+                campaign.getPlayerForce().getHumanResources().personUpdated(campaign, trainee);
 
                 if (!StringUtility.isNullOrBlank(report)) {
                     campaign.addReport(PERSONNEL, report);

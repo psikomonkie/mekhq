@@ -203,7 +203,7 @@ public class PartsReportDialog extends JDialog {
                 int row = Integer.parseInt(e.getActionCommand());
                 PartInUse partInUse = overviewPartsModel.getPartInUse(row);
                 IAcquisitionWork partToBuy = partInUse.getPartToBuy();
-                campaign.getShoppingList().addShoppingItem(partToBuy, 1, campaign, getSelectedPlace());
+                campaign.getPlayerForce().getShoppingList().addShoppingItem(partToBuy, 1, campaign, getSelectedPlace());
                 refreshOverviewSpecificPart(row, partInUse, partToBuy);
             }
         };
@@ -223,7 +223,9 @@ public class PartsReportDialog extends JDialog {
                     return;
                 }
                 IAcquisitionWork partToBuy = partInUse.getPartToBuy();
-                campaign.getShoppingList().addShoppingItem(partToBuy, quantity, campaign, getSelectedPlace());
+                campaign.getPlayerForce()
+                      .getShoppingList()
+                      .addShoppingItem(partToBuy, quantity, campaign, getSelectedPlace());
                 refreshOverviewSpecificPart(row, partInUse, partToBuy);
             }
         };
@@ -378,11 +380,11 @@ public class PartsReportDialog extends JDialog {
 
         ignoreMothballedCheck = new JCheckBox(resourceMap.getString("chkIgnoreMothballed.text"));
         ignoreMothballedCheck.addActionListener(evt -> refreshOverviewPartsInUse());
-        ignoreMothballedCheck.setSelected(campaign.getIgnoreMothballed());
+        ignoreMothballedCheck.setSelected(campaign.getPlayerForce().getIgnoreMothballed());
 
         topUpWeeklyCheck = new JCheckBox(resourceMap.getString("chkTopUpWeekly.text"));
         topUpWeeklyCheck.addActionListener(evt -> refreshOverviewPartsInUse());
-        topUpWeeklyCheck.setSelected(campaign.getTopUpWeekly());
+        topUpWeeklyCheck.setSelected(campaign.getPlayerForce().getTopUpWeekly());
 
         RoundedJButton topUpButton = new RoundedJButton();
         topUpButton.setText(resourceMap.getString("topUpBtn.text"));
@@ -416,8 +418,8 @@ public class PartsReportDialog extends JDialog {
         ignoreSparesUnderQualityCB.setMaximumSize(ignoreSparesUnderQualityCB.getPreferredSize());
         ignoreSparesUnderQualityCB.addActionListener(evt -> refreshOverviewPartsInUse());
         JLabel ignorePartsUnderLabel = new JLabel(resourceMap.getString("lblIgnoreSparesUnderQuality.text"));
-        if (campaign.getIgnoreSparesUnderQuality() != null) {
-            ignoreSparesUnderQualityCB.setSelectedItem(campaign.getIgnoreSparesUnderQuality());
+        if (campaign.getPlayerForce().getIgnoreSparesUnderQuality() != null) {
+            ignoreSparesUnderQualityCB.setSelectedItem(campaign.getPlayerForce().getIgnoreSparesUnderQuality());
         } else {
             ignoreSparesUnderQualityCB.setSelectedItem(" ");
         }
@@ -672,14 +674,16 @@ public class PartsReportDialog extends JDialog {
             overviewPartsInUseTable.getCellEditor().stopCellEditing();
         }
 
-        campaign.setIgnoreMothballed(ignoreMothballedCheck.isSelected());
-        campaign.setTopUpWeekly(topUpWeeklyCheck.isSelected());
+        campaign.getPlayerForce().setIgnoreMothballed(ignoreMothballedCheck.isSelected());
+        campaign.getPlayerForce().setTopUpWeekly(topUpWeeklyCheck.isSelected());
         if (ignoreSparesUnderQualityCB == null) {
-            campaign.setIgnoreSparesUnderQuality(getMinimumQuality(" "));
+            PartQuality ignoreSparesUnderQuality = getMinimumQuality(" ");
+            campaign.getPlayerForce().setIgnoreSparesUnderQuality(ignoreSparesUnderQuality);
         } else {
             Object object = ignoreSparesUnderQualityCB.getSelectedItem();
             if (object instanceof String string) {
-                campaign.setIgnoreSparesUnderQuality(getMinimumQuality(string));
+                PartQuality ignoreSparesUnderQuality = getMinimumQuality(string);
+                campaign.getPlayerForce().setIgnoreSparesUnderQuality(ignoreSparesUnderQuality);
             }
         }
 

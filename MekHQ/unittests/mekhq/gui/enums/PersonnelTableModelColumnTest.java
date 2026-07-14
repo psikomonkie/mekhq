@@ -65,6 +65,7 @@ import mekhq.gui.model.PersonnelTableModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import testUtilities.MHQTestUtilities;
 
 public class PersonnelTableModelColumnTest {
     //region Variable Declarations
@@ -177,13 +178,13 @@ public class PersonnelTableModelColumnTest {
         }
 
         private Campaign mockCampaign() {
-            Campaign campaign = mock(Campaign.class);
+            Campaign campaign = MHQTestUtilities.mockCampaign();
             CampaignOptions opts = mock(CampaignOptions.class);
             when(campaign.getLocalDate()).thenReturn(TODAY);
             when(campaign.getName()).thenReturn(CAMPAIGN_NAME);
-            when(campaign.getMainForcePersonnel()).thenReturn(mainForce);
+            when(campaign.getPlayerForce().getPersonnel()).thenReturn(mainForce);
             when(campaign.getCampaignOptions()).thenReturn(opts);
-            when(campaign.isOverridingCommandCircuitRequirements()).thenReturn(false);
+            when(campaign.getPlayerForce().isOverridingCommandCircuitRequirements()).thenReturn(false);
             when(campaign.isGM()).thenReturn(false);
             when(opts.isUseFactionStandingCommandCircuitSafe()).thenReturn(false);
             when(campaign.getFutureAtBContracts()).thenReturn(List.of());

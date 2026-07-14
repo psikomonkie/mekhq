@@ -46,6 +46,7 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -343,7 +344,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testAddSpareRegularPart() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare part to the warehouse
@@ -388,7 +389,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testReturnSpareRegularPart() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare part to the warehouse
@@ -449,7 +450,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testAddSpareArmorPart() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add some spare armor to the warehouse
@@ -495,7 +496,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testAddSpareAmmoStoragePart() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add some spare ammo to the warehouse
@@ -541,7 +542,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testAddSparePartWontMixWithRefitPart() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare part to the warehouse reserved for a refit
@@ -588,7 +589,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testAddSparePartWontMixWithReplacementPart() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare part to the warehouse reserved for
@@ -636,7 +637,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testAddSparePartWontMixWithPartUnderRepair() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare part under repair to the warehouse
@@ -683,7 +684,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testAddSpareArmorWontMixWithRefitArmor() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare armor to the warehouse reserved for a refit
@@ -728,7 +729,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testAddSpareArmorWontMixWithReplacementArmor() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add a spare part to the warehouse reserved for
@@ -774,7 +775,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testAddSpareAmmoStorageWonMixWithRefitAmmoStorage() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // Add some spare ammo to the warehouse reserved for a refit
@@ -818,7 +819,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testGetSpareParts() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // Spare
@@ -886,7 +887,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testForEachSpareParts() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // The warehouse is empty!
@@ -946,7 +947,7 @@ public class LocalWarehouseTest {
 
     @Test
     public void testFindSparePart() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
 
         // The warehouse is empty!

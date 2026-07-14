@@ -128,9 +128,9 @@ public class SendToLocationMenu extends JScrollableMenu {
         // Items at main force are parented to mainForcePersonnel, hangar, or warehouse — not to the
         // Detachment itself — so check the Detachment and all three sub-resources.
         boolean alreadyAtMainForce = sharedCurrent == campaign.getPlayerForce().getForceDetachment()
-              || sharedCurrent == campaign.getMainForcePersonnel()
-              || sharedCurrent == campaign.getHangar()
-              || sharedCurrent == campaign.getWarehouse();
+                                           || sharedCurrent == campaign.getPlayerForce().getPersonnel()
+                                           || sharedCurrent == campaign.getPlayerForce().getHangar()
+                                           || sharedCurrent == campaign.getPlayerForce().getWarehouse();
         if (!alreadyAtMainForce) {
             JMenuItem mainForce = new JMenuItem(getTextAt(RESOURCE_BUNDLE, "label.mainForce.text"));
             mainForce.addActionListener(e -> dispatcher.accept(campaign.getPlayerForce().getForceDetachment()));
@@ -158,7 +158,7 @@ public class SendToLocationMenu extends JScrollableMenu {
             Planet contextPlanet = items.get(0).getPlanet();
             if (contextSystem == null) {
                 contextSystem = campaign.getCurrentSystem();
-                contextPlanet = campaign.getPlanet();
+                contextPlanet = campaign.getPlayerForce().getForceDetachment().getPlanet();
             }
             BaseSettingsDialog dialog = new BaseSettingsDialog(frame, campaign,
                   contextSystem, contextPlanet);

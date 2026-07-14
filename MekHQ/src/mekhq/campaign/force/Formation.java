@@ -638,8 +638,85 @@ public class Formation {
         return formationCommanderID;
     }
 
-    public @Nullable Person getFormationCommander(Campaign campaign) {
-        return formationCommanderID == null ? null : campaign.getPerson(formationCommanderID);
+    public static @Nullable Formation generateInstanceFromXML(Node workingNode, Campaign campaign, Version version) {
+        Formation formation = new Formation("");
+        NamedNodeMap attributes = workingNode.getAttributes();
+        Node idNameNode = attributes.getNamedItem("id");
+        String idString = idNameNode.getTextContent();
+
+        try {
+            NodeList childNodes = workingNode.getChildNodes();
+            formation.id = Integer.parseInt(idString);
+
+            for (int x = 0; x < childNodes.getLength(); x++) {
+                Node wn2 = childNodes.item(x);
+                if (wn2.getNodeName().equalsIgnoreCase("name")) {
+                    formation.setName(wn2.getTextContent().trim());
+                } else if (wn2.getNodeName().equalsIgnoreCase(StandardFormationIcon.XML_TAG)) {
+                    formation.setFormationIcon(StandardFormationIcon.parseFromXML(wn2));
+                } else if (wn2.getNodeName().equalsIgnoreCase(LayeredFormationIcon.XML_TAG)) {
+                    formation.setFormationIcon(LayeredFormationIcon.parseFromXML(wn2));
+                } else if (wn2.getNodeName().equalsIgnoreCase(Camouflage.XML_TAG)) {
+                    formation.setCamouflage(Camouflage.parseFromXML(wn2));
+                } else if (wn2.getNodeName().equalsIgnoreCase("desc")) {
+                    formation.setDescription(wn2.getTextContent().trim());
+                } else if (wn2.getNodeName().equalsIgnoreCase("formationType") ||
+                                 wn2.getNodeName().equalsIgnoreCase("forceType")) {
+                    formation.setFormationType(FormationType.fromKey(Integer.parseInt(wn2.getTextContent().trim())),
+                          false);
+                } else if (wn2.getNodeName().equalsIgnoreCase("overrideCombatTeam")) {
+                    formation.setOverrideCombatTeam(Integer.parseInt(wn2.getTextContent().trim()));
+                } else if (wn2.getNodeName().equalsIgnoreCase("formationLevel") || wn2.getNodeName().equalsIgnoreCase(
+                      "forceLevel")) {
+                    formation.setFormationLevel(FormationLevel.parseFromString(wn2.getTextContent().trim()));
+                } else if (wn2.getNodeName().equalsIgnoreCase("overrideForceLevel") ||
+                                 wn2.getNodeName().equalsIgnoreCase(
+                                       "overrideFormationLevel")) {
+                    formation.setOverrideFormationLevel(FormationLevel.parseFromString(wn2.getTextContent().trim()));
+                } else if (wn2.getNodeName().equalsIgnoreCase("preferredRole")) {
+                    formation.setCombatRoleInMemory(CombatRole.parseFromString(wn2.getTextContent().trim()));
+                } else if (wn2.getNodeName().equalsIgnoreCase("scenarioId")) {
+                    formation.scenarioId = Integer.parseInt(wn2.getTextContent());
+                } else if (wn2.getNodeName().equalsIgnoreCase("techId")) {
+                    formation.techId = UUID.fromString(wn2.getTextContent());
+                } else if (wn2.getNodeName().equalsIgnoreCase("overrideFormationCommanderId") ||
+                                 wn2.getNodeName().equalsIgnoreCase(
+                                       "overrideForceCommanderID")) {
+                    formation.overrideFormationCommanderID = UUID.fromString(wn2.getTextContent());
+                } else if (wn2.getNodeName().equalsIgnoreCase("formationCommanderId") ||
+                                 wn2.getNodeName().equalsIgnoreCase("forceCommanderID")) {
+                    formation.formationCommanderID = UUID.fromString(wn2.getTextContent());
+                } else if (wn2.getNodeName().equalsIgnoreCase("units")) {
+                    processUnitNodes(formation, wn2, version);
+                } else if (wn2.getNodeName().equalsIgnoreCase("subFormations") || wn2.getNodeName().equalsIgnoreCase(
+                      "subForces")) {
+                    NodeList nl2 = wn2.getChildNodes();
+                    for (int y = 0; y < nl2.getLength(); y++) {
+                        Node wn3 = nl2.item(y);
+                        // If it's not an element node, we ignore it.
+                        if (wn3.getNodeType() != Node.ELEMENT_NODE) {
+                            continue;
+                        }
+
+                        if (!wn3.getNodeName().equalsIgnoreCase("formation") && !wn3.getNodeName().equalsIgnoreCase(
+                              "force")) {
+                            String message = String.format("Unknown node type not loaded in Formations nodes: %s",
+                                  wn3.getNodeName());
+                            LOGGER.error(message);
+                            continue;
+                        }
+
+                        formation.addSubFormation(generateInstanceFromXML(wn3, campaign, version), true);
+                    }
+                }
+            }
+            campaign.getPlayerForce().importFormation(formation);
+        } catch (Exception ex) {
+            LOGGER.error("", ex);
+            return null;
+        }
+
+        return formation;
     }
 
     /**
@@ -701,69 +778,22 @@ public class Formation {
     }
 
     /**
-     * Updates the commander for a formation based on the ranking of eligible commanders.
+     * Populates the formation levels of a formation hierarchy starting from the origin formation. For all
+     * subformations, it will determine the smallest formations - Teams/Lances - and then parent formations will be one
+     * formation higher.
      *
-     * @param campaign the current campaign
+     * @param campaign campaign that the formation belongs to
      */
-    public void updateCommander(Campaign campaign) {
-        List<UUID> eligibleCommanders = getEligibleCommanders(campaign);
+    public static void populateFormationLevelsFromOrigin(Campaign campaign) {
+        Formation formation = campaign.getPlayerForce().getFormation(0);
 
-        if (eligibleCommanders.isEmpty()) {
-            formationCommanderID = null;
-            overrideFormationCommanderID = null;
-            updateCombatTeamCommanderIfCombatTeam(campaign);
-            return;
-        }
+        recursivelyUpdateFormationLevel(campaign, formation);
 
-        if (overrideFormationCommanderID != null) {
-            if (eligibleCommanders.contains(overrideFormationCommanderID)) {
-                formationCommanderID = overrideFormationCommanderID;
-                updateCombatTeamCommanderIfCombatTeam(campaign);
-
-                if (getParentFormation() != null) {
-                    getParentFormation().updateCommander(campaign);
-                }
-                return;
-            } else {
-                overrideFormationCommanderID = null;
-            }
-        }
-
-        Collections.shuffle(eligibleCommanders);
-        Person highestRankedPerson = campaign.getPerson(eligibleCommanders.getFirst());
-
-        for (UUID eligibleCommanderId : eligibleCommanders) {
-            Person eligibleCommander = campaign.getPerson(eligibleCommanderId);
-            if (eligibleCommander == null) {
-                continue;
-            }
-
-            if (eligibleCommander.outRanksUsingSkillTiebreaker(campaign, highestRankedPerson)) {
-                highestRankedPerson = eligibleCommander;
-            }
-        }
-
-        if (highestRankedPerson == null) {
-            LOGGER.info("Formation {} has no eligible commanders", getName());
-            formationCommanderID = null;
-        } else {
-            formationCommanderID = highestRankedPerson.getId();
-        }
-
-        updateCombatTeamCommanderIfCombatTeam(campaign);
-
-        if (getParentFormation() != null) {
-            getParentFormation().updateCommander(campaign);
-        }
+        MekHQ.triggerEvent(new OrganizationChangedEvent(formation));
     }
 
-    private void updateCombatTeamCommanderIfCombatTeam(Campaign campaign) {
-        if (isCombatTeam()) {
-            CombatTeam combatTeam = campaign.getCombatTeamsAsMap().getOrDefault(getId(), null);
-            if (combatTeam != null) {
-                combatTeam.setCommander(getFormationCommanderID());
-            }
-        }
+    public @Nullable Person getFormationCommander(Campaign campaign) {
+        if (formationCommanderID == null) {return null;} else {return campaign.getPerson(formationCommanderID);}
     }
 
     public void removeSubFormation(int id) {
@@ -872,85 +902,62 @@ public class Formation {
         MHQXMLUtility.writeSimpleXMLCloseTag(pw1, --indent, "formation");
     }
 
-    public static @Nullable Formation generateInstanceFromXML(Node workingNode, Campaign campaign, Version version) {
-        Formation formation = new Formation("");
-        NamedNodeMap attributes = workingNode.getAttributes();
-        Node idNameNode = attributes.getNamedItem("id");
-        String idString = idNameNode.getTextContent();
+    /**
+     * Updates the commander for a formation based on the ranking of eligible commanders.
+     *
+     * @param campaign the current campaign
+     */
+    public void updateCommander(Campaign campaign) {
+        List<UUID> eligibleCommanders = getEligibleCommanders(campaign);
 
-        try {
-            NodeList childNodes = workingNode.getChildNodes();
-            formation.id = Integer.parseInt(idString);
-
-            for (int x = 0; x < childNodes.getLength(); x++) {
-                Node wn2 = childNodes.item(x);
-                if (wn2.getNodeName().equalsIgnoreCase("name")) {
-                    formation.setName(wn2.getTextContent().trim());
-                } else if (wn2.getNodeName().equalsIgnoreCase(StandardFormationIcon.XML_TAG)) {
-                    formation.setFormationIcon(StandardFormationIcon.parseFromXML(wn2));
-                } else if (wn2.getNodeName().equalsIgnoreCase(LayeredFormationIcon.XML_TAG)) {
-                    formation.setFormationIcon(LayeredFormationIcon.parseFromXML(wn2));
-                } else if (wn2.getNodeName().equalsIgnoreCase(Camouflage.XML_TAG)) {
-                    formation.setCamouflage(Camouflage.parseFromXML(wn2));
-                } else if (wn2.getNodeName().equalsIgnoreCase("desc")) {
-                    formation.setDescription(wn2.getTextContent().trim());
-                } else if (wn2.getNodeName().equalsIgnoreCase("formationType") ||
-                                 wn2.getNodeName().equalsIgnoreCase("forceType")) {
-                    formation.setFormationType(FormationType.fromKey(Integer.parseInt(wn2.getTextContent().trim())),
-                          false);
-                } else if (wn2.getNodeName().equalsIgnoreCase("overrideCombatTeam")) {
-                    formation.setOverrideCombatTeam(Integer.parseInt(wn2.getTextContent().trim()));
-                } else if (wn2.getNodeName().equalsIgnoreCase("formationLevel") || wn2.getNodeName().equalsIgnoreCase(
-                      "forceLevel")) {
-                    formation.setFormationLevel(FormationLevel.parseFromString(wn2.getTextContent().trim()));
-                } else if (wn2.getNodeName().equalsIgnoreCase("overrideForceLevel") ||
-                                 wn2.getNodeName().equalsIgnoreCase(
-                                       "overrideFormationLevel")) {
-                    formation.setOverrideFormationLevel(FormationLevel.parseFromString(wn2.getTextContent().trim()));
-                } else if (wn2.getNodeName().equalsIgnoreCase("preferredRole")) {
-                    formation.setCombatRoleInMemory(CombatRole.parseFromString(wn2.getTextContent().trim()));
-                } else if (wn2.getNodeName().equalsIgnoreCase("scenarioId")) {
-                    formation.scenarioId = Integer.parseInt(wn2.getTextContent());
-                } else if (wn2.getNodeName().equalsIgnoreCase("techId")) {
-                    formation.techId = UUID.fromString(wn2.getTextContent());
-                } else if (wn2.getNodeName().equalsIgnoreCase("overrideFormationCommanderId") ||
-                                 wn2.getNodeName().equalsIgnoreCase(
-                                       "overrideForceCommanderID")) {
-                    formation.overrideFormationCommanderID = UUID.fromString(wn2.getTextContent());
-                } else if (wn2.getNodeName().equalsIgnoreCase("formationCommanderId") ||
-                                 wn2.getNodeName().equalsIgnoreCase("forceCommanderID")) {
-                    formation.formationCommanderID = UUID.fromString(wn2.getTextContent());
-                } else if (wn2.getNodeName().equalsIgnoreCase("units")) {
-                    processUnitNodes(formation, wn2, version);
-                } else if (wn2.getNodeName().equalsIgnoreCase("subFormations") || wn2.getNodeName().equalsIgnoreCase(
-                      "subForces")) {
-                    NodeList nl2 = wn2.getChildNodes();
-                    for (int y = 0; y < nl2.getLength(); y++) {
-                        Node wn3 = nl2.item(y);
-                        // If it's not an element node, we ignore it.
-                        if (wn3.getNodeType() != Node.ELEMENT_NODE) {
-                            continue;
-                        }
-
-                        if (!wn3.getNodeName().equalsIgnoreCase("formation") && !wn3.getNodeName().equalsIgnoreCase(
-                              "force")) {
-                            String message = String.format("Unknown node type not loaded in Formations nodes: %s",
-                                  wn3.getNodeName());
-                            LOGGER.error(message);
-                            continue;
-                        }
-
-                        formation.addSubFormation(generateInstanceFromXML(wn3, campaign, version), true);
-                    }
-                }
-            }
-            campaign.importFormation(formation);
-        } catch (Exception ex) {
-            LOGGER.error("", ex);
-            return null;
+        if (eligibleCommanders.isEmpty()) {
+            formationCommanderID = null;
+            overrideFormationCommanderID = null;
+            updateCombatTeamCommanderIfCombatTeam(campaign);
+            return;
         }
 
-        return formation;
+        if (overrideFormationCommanderID != null) {
+            if (eligibleCommanders.contains(overrideFormationCommanderID)) {
+                formationCommanderID = overrideFormationCommanderID;
+                updateCombatTeamCommanderIfCombatTeam(campaign);
+
+                if (getParentFormation() != null) {
+                    getParentFormation().updateCommander(campaign);
+                }
+                return;
+            } else {
+                overrideFormationCommanderID = null;
+            }
+        }
+
+        Collections.shuffle(eligibleCommanders);
+        final UUID id1 = eligibleCommanders.getFirst();
+        Person highestRankedPerson = campaign.getPlayerForce().getHumanResources().getPerson(id1);
+
+        for (UUID eligibleCommanderId : eligibleCommanders) {
+            Person eligibleCommander = campaign.getPlayerForce().getHumanResources().getPerson(eligibleCommanderId);
+            if (eligibleCommander == null) {
+                continue;
+            }
+
+            if (eligibleCommander.outRanksUsingSkillTiebreaker(campaign, highestRankedPerson)) {
+                highestRankedPerson = eligibleCommander;
+            }
+        }
+
+        if (highestRankedPerson == null) {
+            LOGGER.info("Formation {} has no eligible commanders", getName());
+            formationCommanderID = null;
+        } else {
+            formationCommanderID = highestRankedPerson.getId();
+        }
+
+        updateCombatTeamCommanderIfCombatTeam(campaign);
+
+        if (getParentFormation() != null) {
+            getParentFormation().updateCommander(campaign);
+        }
     }
 
     private static void processUnitNodes(Formation retVal, Node wn, Version version) {
@@ -1162,19 +1169,13 @@ public class Formation {
         return maximumDepth;
     }
 
-    /**
-     * Populates the formation levels of a formation hierarchy starting from the origin formation. For all
-     * subformations, it will determine the smallest formations - Teams/Lances - and then parent formations will be one
-     * formation higher.
-     *
-     * @param campaign campaign that the formation belongs to
-     */
-    public static void populateFormationLevelsFromOrigin(Campaign campaign) {
-        Formation formation = campaign.getFormation(0);
-
-        recursivelyUpdateFormationLevel(campaign, formation);
-
-        MekHQ.triggerEvent(new OrganizationChangedEvent(formation));
+    private void updateCombatTeamCommanderIfCombatTeam(Campaign campaign) {
+        if (isCombatTeam()) {
+            CombatTeam combatTeam = campaign.getPlayerForce().getCombatTeamsAsMap(campaign).getOrDefault(getId(), null);
+            if (combatTeam != null) {
+                combatTeam.setCommander(getFormationCommanderID());
+            }
+        }
     }
 
     private static void recursivelyUpdateFormationLevel(Campaign campaign, Formation formation) {

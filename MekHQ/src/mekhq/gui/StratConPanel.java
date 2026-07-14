@@ -296,7 +296,7 @@ public class StratConPanel extends JPanel implements ActionListener {
 
         if ((currentTrack != null) && currentTrack.getAssignedCoordForces().containsKey(coords)) {
             for (int forceID : currentTrack.getAssignedCoordForces().get(coords)) {
-                String forceName = campaign.getFormation(forceID).getName();
+                String forceName = campaign.getPlayerForce().getFormation(forceID).getName();
 
                 JCheckBoxMenuItem stickyForceItem = new JCheckBoxMenuItem();
                 stickyForceItem.setText(String.format("%s - remain deployed", forceName));
@@ -771,7 +771,7 @@ public class StratConPanel extends JPanel implements ActionListener {
                     for (int forceID : currentTrack.getAssignedCoordForces().get(currentCoords)) {
                         String forceName;
                         try {
-                            Formation formation = campaign.getFormation(forceID);
+                            Formation formation = campaign.getPlayerForce().getFormation(forceID);
                             forceName = formation.getName();
                         } catch (Exception e) {
                             // If we can't successfully fetch the Force, there is no point trying
@@ -1092,7 +1092,7 @@ public class StratConPanel extends JPanel implements ActionListener {
 
         if (currentTrack.getAssignedCoordForces().containsKey(boardState.getSelectedCoords())) {
             for (int forceID : currentTrack.getAssignedCoordForces().get(boardState.getSelectedCoords())) {
-                Formation formation = this.campaign.getFormation(forceID);
+                Formation formation = this.campaign.getPlayerForce().getFormation(forceID);
                 infoBuilder.append(formation.getName()).append(" assigned");
 
                 if (currentTrack.getStickyForces().contains(forceID)) {

@@ -63,7 +63,8 @@ public record SalvageFormationData(Formation formation, FormationType formationT
     public static SalvageFormationData buildData(Campaign campaign, Formation formation, boolean isSpaceScenario) {
         FormationType formationType = formation.getFormationType();
         UUID techId = formation.getTechID();
-        Person tech = techId == null || !formationType.isSalvage() ? null : campaign.getPerson(techId);
+        Person tech;
+        if (techId == null || !formationType.isSalvage()) {tech = null;} else {tech = campaign.getPerson(techId);}
         if (tech != null && tech.isEngineer()) { // Engineers cannot salvage
             tech = null;
         }
@@ -73,7 +74,7 @@ public record SalvageFormationData(Formation formation, FormationType formationT
         int salvageCapableUnits = 0;
         boolean hasTug = false;
 
-        mekhq.campaign.LocalHangar hangar = campaign.getAllHangar();
+        mekhq.campaign.LocalHangar hangar = campaign.getPlayerForce().getHangar();
         for (Unit unit : formation.getAllUnitsAsUnits(hangar, false)) {
             if (!unit.isFullyCrewed()) {
                 continue;
@@ -166,7 +167,7 @@ public record SalvageFormationData(Formation formation, FormationType formationT
     }
 
     public String getAllCrewTechTooltip(Campaign campaign, Formation formation) {
-        mekhq.campaign.LocalHangar hangar = campaign.getAllHangar();
+        mekhq.campaign.LocalHangar hangar = campaign.getPlayerForce().getHangar();
 
         StringBuilder tooltip = new StringBuilder();
         for (Unit unit : formation.getAllUnitsAsUnits(hangar, false)) {
