@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 
 import mekhq.campaign.Campaign;
+import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
 import mekhq.campaign.digitalGM.strategy.ScenarioGenerationStrategy;
 import mekhq.campaign.digitalGM.strategy.ScenarioLifecycleStrategy;
@@ -89,7 +90,7 @@ class AbstractStratConGMTest {
         }
 
         @Override
-        public boolean isEnabled(Campaign campaign) {
+        public boolean isEnabled(CampaignOptions campaignOptions) {
             return true;
         }
 

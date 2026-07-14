@@ -32,7 +32,7 @@
  */
 package mekhq.campaign.digitalGM;
 
-import mekhq.campaign.Campaign;
+import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.events.NewDayEvent;
 
 /**
@@ -63,11 +63,11 @@ public interface DigitalGM {
      * Indicates whether this digital GM should act for the supplied campaign, based on its campaign options. The engine
      * consults this before running any per-day work so that a disabled GM is inert.
      *
-     * @param campaign the campaign whose options decide activation
+     * @param campaignOptions the options that decide activation
      *
      * @return {@code true} if this GM governs the given campaign
      */
-    boolean isEnabled(Campaign campaign);
+    boolean isEnabled(CampaignOptions campaignOptions);
 
     /**
      * Registers this GM to begin receiving lifecycle events (typically the MekHQ event bus).

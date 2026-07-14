@@ -32,6 +32,7 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
+import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
 
 /**
@@ -53,7 +54,7 @@ public class MaplessStratConGM extends StratConDigitalGM {
 
     @Override
     public boolean isEnabled(CampaignOptions campaignOptions) {
-        return campaign.getCampaignOptions().getStratConPlayType() == StratConPlayType.MAPLESS;
+        return campaignOptions.getStratConPlayType() == StratConPlayType.MAPLESS;
     }
 
     @Override

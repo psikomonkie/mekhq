@@ -32,7 +32,7 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.Campaign;
+import mekhq.campaign.campaignOptions.CampaignOptions;
 
 /**
  * Digital GM for StratCon <b>Singles</b> play ({@link StratConPlayType#SINGLES}). Singles is a stricter form of Mapless
@@ -51,8 +51,8 @@ public class SinglesStratConGM extends MaplessStratConGM {
     }
 
     @Override
-    public boolean isEnabled(Campaign campaign) {
-        return campaign.getCampaignOptions().getStratConPlayType() == StratConPlayType.SINGLES;
+    public boolean isEnabled(CampaignOptions campaignOptions) {
+        return campaignOptions.getStratConPlayType() == StratConPlayType.SINGLES;
     }
 
     @Override
