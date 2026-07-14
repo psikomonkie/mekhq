@@ -32,28 +32,35 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.campaignOptions.CampaignOptions;
+import mekhq.campaign.digitalGM.strategy.IFacilityStrategy;
+import mekhq.campaign.mission.AtBContract;
+import mekhq.campaign.mission.AtBScenario;
 
 /**
- * The default digital GM: classic map-based StratCon ("Normal" play, {@link StratConPlayType#NORMAL}). It inherits the
- * full StratCon daily lifecycle from {@link AbstractStratConGM} and keeps every strategy at its StratCon default
- * &mdash; facility effects are applied and scenarios are generated at the normal weekly cadence.
- *
- * <p>It is also the base the reduced play types specialise: {@link MaplessStratConGM} switches off facility effects,
- * and {@link SinglesStratConGM} additionally caps generation to one scenario per week.</p>
+ * {@link IFacilityStrategy} for play types with no facility map (Mapless and Singles). Every facility operation is a
+ * deliberate no-op: Mapless/Singles skip facility placement entirely (see {@link StratConContractInitializer}), so
+ * there are never any facilities to affect. The periodic no-op also mirrors the legacy engine's
+ * {@code if (!isUseStratConMapless)} guard.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class StratConDigitalGM extends AbstractStratConGM {
+public class NoOpIFacilityStrategy implements IFacilityStrategy {
 
     @Override
-    public String getName() {
-        return StratConPlayType.NORMAL.getLabel();
+    public void applyPeriodicEffects(StratConTrackState track, StratConCampaignState campaignState,
+          boolean isStartOfMonth) {
+        // Intentionally empty: Mapless and Singles play have no facility map.
     }
 
     @Override
-    public boolean isEnabled(CampaignOptions campaignOptions) {
-        return campaignOptions.getStratConPlayType() == StratConPlayType.NORMAL;
+    public void updateFacilityForScenario(AtBScenario scenario, AtBContract contract, boolean destroy,
+          boolean capture) {
+        // Intentionally empty: Mapless and Singles play have no facilities to update.
+    }
+
+    @Override
+    public void switchFacilityOwner(StratConFacility facility) {
+        // Intentionally empty: Mapless and Singles play have no facilities to transfer.
     }
 }

@@ -32,23 +32,33 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import megamek.common.annotations.Nullable;
-import mekhq.campaign.digitalGM.strategy.OpForDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.IFacilityStrategy;
+import mekhq.campaign.mission.AtBContract;
+import mekhq.campaign.mission.AtBScenario;
 
 /**
- * Default StratCon implementation of {@link OpForDeploymentStrategy}: the standard weighted-random placement of a
- * hostile scenario on an unoccupied hex. Delegates to {@link StratConContractInitializer#getUnoccupiedCoords}, so this
- * class introduces the overridable seam without moving any behaviour.
+ * Default (map-based) StratCon implementation of {@link IFacilityStrategy}. Every method delegates to the existing
+ * facility logic on {@link StratConRulesManager}, so behaviour is unchanged from the legacy engine.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class StratConOpForDeploymentStrategy implements OpForDeploymentStrategy {
+public class StratConIFacilityStrategy implements IFacilityStrategy {
 
     @Override
-    public @Nullable StratConCoords getUnoccupiedCoords(StratConTrackState track, boolean allowPlayerFacilities,
-          boolean allowPlayerForces, boolean emphasizeStrategicTargets) {
-        return StratConContractInitializer.getUnoccupiedCoords(track, allowPlayerFacilities, allowPlayerForces,
-              emphasizeStrategicTargets);
+    public void applyPeriodicEffects(StratConTrackState track, StratConCampaignState campaignState,
+          boolean isStartOfMonth) {
+        StratConRulesManager.processFacilityEffects(track, campaignState, isStartOfMonth);
+    }
+
+    @Override
+    public void updateFacilityForScenario(AtBScenario scenario, AtBContract contract, boolean destroy,
+          boolean capture) {
+        StratConRulesManager.updateFacilityForScenario(scenario, contract, destroy, capture);
+    }
+
+    @Override
+    public void switchFacilityOwner(StratConFacility facility) {
+        StratConRulesManager.switchFacilityOwner(facility);
     }
 }

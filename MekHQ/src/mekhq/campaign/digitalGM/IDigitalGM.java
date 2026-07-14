@@ -47,12 +47,12 @@ import mekhq.campaign.events.NewDayEvent;
  *
  * <p>An implementation is expected to be a long-lived singleton registered on the MekHQ event bus (see
  * {@link #startup()} / {@link #shutdown()}). The behaviour that varies between GMs is expressed through the strategy
- * interfaces in {@link mekhq.campaign.digitalGM.strategy}; common wiring lives in {@link AbstractDigitalGM}.</p>
+ * interfaces in {@link mekhq.campaign.digitalGM.strategy}; common wiring lives in {@link AbstractIDigitalGM}.</p>
  *
  * @author Illiani
  * @since 0.50.10
  */
-public interface DigitalGM {
+public interface IDigitalGM {
 
     /**
      * @return a stable, human-readable identifier for this digital GM (used for logging and, eventually, selection).

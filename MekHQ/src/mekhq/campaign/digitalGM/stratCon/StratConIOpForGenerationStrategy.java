@@ -33,38 +33,23 @@
 package mekhq.campaign.digitalGM.stratCon;
 
 import mekhq.campaign.Campaign;
-import mekhq.campaign.digitalGM.strategy.ForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.IOpForGenerationStrategy;
 import mekhq.campaign.mission.AtBContract;
+import mekhq.campaign.mission.AtBDynamicScenario;
+import mekhq.campaign.mission.AtBDynamicScenarioFactory;
 
 /**
- * Default StratCon implementation of {@link ForceDeploymentStrategy}. Every method delegates to the existing static
- * logic on {@link StratConRulesManager}, so this class introduces the overridable seam without moving any behaviour.
+ * Default StratCon implementation of {@link IOpForGenerationStrategy}: the standard dynamic/random AtB generation. It
+ * delegates to {@link AtBDynamicScenarioFactory#finalizeScenario}, so this class introduces the overridable seam
+ * without moving any behaviour.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class StratConForceDeploymentStrategy implements ForceDeploymentStrategy {
+public class StratConIOpForGenerationStrategy implements IOpForGenerationStrategy {
 
     @Override
-    public void deployForceToCoords(StratConCoords coords, int forceID, Campaign campaign, AtBContract contract,
-          StratConTrackState track, boolean sticky) {
-        StratConRulesManager.deployForceToCoords(coords, forceID, campaign, contract, track, sticky);
-    }
-
-    @Override
-    public void assignForceToScenario(StratConCoords coords, int forceID, Campaign campaign, AtBContract contract,
-          StratConTrackState track, boolean sticky) {
-        StratConRulesManager.assignForceToScenario(coords, forceID, campaign, contract, track, sticky);
-    }
-
-    @Override
-    public void processForceDeployment(StratConCoords coords, int forceID, Campaign campaign, StratConTrackState track,
-          boolean sticky) {
-        StratConRulesManager.processForceDeployment(coords, forceID, campaign, track, sticky);
-    }
-
-    @Override
-    public void commitPrimaryForces(Campaign campaign, StratConScenario scenario, StratConTrackState trackState) {
-        StratConRulesManager.commitPrimaryForces(campaign, scenario, trackState);
+    public void generateOpFor(AtBDynamicScenario backingScenario, AtBContract contract, Campaign campaign) {
+        AtBDynamicScenarioFactory.finalizeScenario(backingScenario, contract, campaign);
     }
 }

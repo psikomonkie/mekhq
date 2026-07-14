@@ -32,33 +32,20 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
-import mekhq.campaign.mission.AtBContract;
-import mekhq.campaign.mission.AtBScenario;
+import mekhq.campaign.digitalGM.strategy.IMapGenerationStrategy;
 
 /**
- * Default (map-based) StratCon implementation of {@link FacilityStrategy}. Every method delegates to the existing
- * facility logic on {@link StratConRulesManager}, so behaviour is unchanged from the legacy engine.
+ * Default StratCon implementation of {@link IMapGenerationStrategy}: the standard biome-driven terrain selection.
+ * Delegates to {@link StratConRulesManager#setScenarioParametersFromBiome}, so this class introduces the overridable
+ * seam without moving any behaviour.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class StratConFacilityStrategy implements FacilityStrategy {
+public class StratConIMapGenerationStrategy implements IMapGenerationStrategy {
 
     @Override
-    public void applyPeriodicEffects(StratConTrackState track, StratConCampaignState campaignState,
-          boolean isStartOfMonth) {
-        StratConRulesManager.processFacilityEffects(track, campaignState, isStartOfMonth);
-    }
-
-    @Override
-    public void updateFacilityForScenario(AtBScenario scenario, AtBContract contract, boolean destroy,
-          boolean capture) {
-        StratConRulesManager.updateFacilityForScenario(scenario, contract, destroy, capture);
-    }
-
-    @Override
-    public void switchFacilityOwner(StratConFacility facility) {
-        StratConRulesManager.switchFacilityOwner(facility);
+    public void setScenarioTerrain(StratConTrackState track, StratConScenario scenario, boolean isNoTornadoes) {
+        StratConRulesManager.setScenarioParametersFromBiome(track, scenario, isNoTornadoes);
     }
 }

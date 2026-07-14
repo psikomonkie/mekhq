@@ -33,6 +33,7 @@
 package mekhq.campaign.digitalGM.strategy;
 
 import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.stratCon.AbstractStratConGMI;
 import mekhq.campaign.digitalGM.stratCon.StratConCoords;
 import mekhq.campaign.digitalGM.stratCon.StratConScenario;
 import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
@@ -46,12 +47,12 @@ import mekhq.campaign.mission.AtBContract;
  * <p>The method signatures mirror the corresponding static entry points on
  * {@link mekhq.campaign.digitalGM.stratCon.StratConRulesManager StratConRulesManager}; the default StratCon
  * implementation delegates to them, so the rules themselves are unchanged. The accessor lives on
- * {@link mekhq.campaign.digitalGM.stratCon.AbstractStratConGM AbstractStratConGM}.</p>
+ * {@link AbstractStratConGMI AbstractStratConGM}.</p>
  *
  * @author Illiani
  * @since 0.50.10
  */
-public interface ForceDeploymentStrategy {
+public interface IForceDeploymentStrategy {
 
     /**
      * Deploys a force to a set of coordinates, potentially revealing terrain and spawning a scenario.

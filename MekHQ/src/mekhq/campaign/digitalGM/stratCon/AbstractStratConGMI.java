@@ -37,15 +37,15 @@ import java.time.LocalDate;
 import java.util.List;
 
 import mekhq.campaign.Campaign;
-import mekhq.campaign.digitalGM.AbstractDigitalGM;
-import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
-import mekhq.campaign.digitalGM.strategy.ForceDeploymentStrategy;
-import mekhq.campaign.digitalGM.strategy.MapGenerationStrategy;
-import mekhq.campaign.digitalGM.strategy.OpForDeploymentStrategy;
-import mekhq.campaign.digitalGM.strategy.OpForGenerationStrategy;
-import mekhq.campaign.digitalGM.strategy.ReinforcementStrategy;
-import mekhq.campaign.digitalGM.strategy.ScenarioGenerationStrategy;
-import mekhq.campaign.digitalGM.strategy.ScenarioLifecycleStrategy;
+import mekhq.campaign.digitalGM.AbstractIDigitalGM;
+import mekhq.campaign.digitalGM.strategy.IFacilityStrategy;
+import mekhq.campaign.digitalGM.strategy.IForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.IMapGenerationStrategy;
+import mekhq.campaign.digitalGM.strategy.IOpForDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.IOpForGenerationStrategy;
+import mekhq.campaign.digitalGM.strategy.IReinforcementStrategy;
+import mekhq.campaign.digitalGM.strategy.IScenarioGenerationStrategy;
+import mekhq.campaign.digitalGM.strategy.IScenarioLifecycleStrategy;
 import mekhq.campaign.events.NewDayEvent;
 import mekhq.campaign.mission.AtBContract;
 
@@ -71,71 +71,71 @@ import mekhq.campaign.mission.AtBContract;
  * @author Illiani
  * @since 0.50.10
  */
-public abstract class AbstractStratConGM extends AbstractDigitalGM {
+public abstract class AbstractStratConGMI extends AbstractIDigitalGM {
 
-    private final ScenarioGenerationStrategy scenarioGeneration = new StratConScenarioGenerationStrategy();
-    private final ScenarioLifecycleStrategy scenarioLifecycle = new StratConScenarioLifecycleStrategy();
-    private final FacilityStrategy facility = new StratConFacilityStrategy();
-    private final ForceDeploymentStrategy forceDeployment = new StratConForceDeploymentStrategy();
-    private final ReinforcementStrategy reinforcement = new StratConReinforcementStrategy();
-    private final OpForGenerationStrategy opForGeneration = new StratConOpForGenerationStrategy();
-    private final OpForDeploymentStrategy opForDeployment = new StratConOpForDeploymentStrategy();
-    private final MapGenerationStrategy mapGeneration = new StratConMapGenerationStrategy();
+    private final IScenarioGenerationStrategy scenarioGeneration = new StratConIScenarioGenerationStrategy();
+    private final IScenarioLifecycleStrategy scenarioLifecycle = new StratConIScenarioLifecycleStrategy();
+    private final IFacilityStrategy facility = new StratConIFacilityStrategy();
+    private final IForceDeploymentStrategy forceDeployment = new StratConIForceDeploymentStrategy();
+    private final IReinforcementStrategy reinforcement = new StratConIReinforcementStrategy();
+    private final IOpForGenerationStrategy opForGeneration = new StratConIOpForGenerationStrategy();
+    private final IOpForDeploymentStrategy opForDeployment = new StratConIOpForDeploymentStrategy();
+    private final IMapGenerationStrategy mapGeneration = new StratConIMapGenerationStrategy();
 
     /**
      * @return the strategy that decides when and how scenarios are generated for this GM
      */
-    protected ScenarioGenerationStrategy getScenarioGenerationStrategy() {
+    protected IScenarioGenerationStrategy getScenarioGenerationStrategy() {
         return scenarioGeneration;
     }
 
     /**
      * @return the strategy that builds a scenario's terrain (map) from the biome at its coordinates
      */
-    protected MapGenerationStrategy getMapGenerationStrategy() {
+    protected IMapGenerationStrategy getMapGenerationStrategy() {
         return mapGeneration;
     }
 
     /**
      * @return the strategy that generates the opposing force (enemy composition) for this GM's scenarios
      */
-    protected OpForGenerationStrategy getOpForGenerationStrategy() {
+    protected IOpForGenerationStrategy getOpForGenerationStrategy() {
         return opForGeneration;
     }
 
     /**
      * @return the strategy that decides where on the track a hostile scenario deploys (its coordinates)
      */
-    protected OpForDeploymentStrategy getOpForDeploymentStrategy() {
+    protected IOpForDeploymentStrategy getOpForDeploymentStrategy() {
         return opForDeployment;
     }
 
     /**
      * @return the strategy that expires, resolves and returns forces from scenarios for this GM
      */
-    protected ScenarioLifecycleStrategy getScenarioLifecycleStrategy() {
+    protected IScenarioLifecycleStrategy getScenarioLifecycleStrategy() {
         return scenarioLifecycle;
     }
 
     /**
      * @return the strategy governing periodic facility effects; map-based play returns the real StratCon strategy,
-     *       Mapless/Singles override this to a {@link NoOpFacilityStrategy}
+     *       Mapless/Singles override this to a {@link NoOpIFacilityStrategy}
      */
-    protected FacilityStrategy getFacilityStrategy() {
+    protected IFacilityStrategy getFacilityStrategy() {
         return facility;
     }
 
     /**
      * @return the strategy governing how player forces are deployed to and committed to scenarios
      */
-    protected ForceDeploymentStrategy getForceDeploymentStrategy() {
+    protected IForceDeploymentStrategy getForceDeploymentStrategy() {
         return forceDeployment;
     }
 
     /**
      * @return the strategy governing reinforcement eligibility, target numbers and deployment
      */
-    protected ReinforcementStrategy getReinforcementStrategy() {
+    protected IReinforcementStrategy getReinforcementStrategy() {
         return reinforcement;
     }
 
@@ -152,7 +152,7 @@ public abstract class AbstractStratConGM extends AbstractDigitalGM {
      * contract: cleaning up phantom scenarios, returning forces whose deployment has ended, applying facility effects,
      * expiring ignored scenarios, scheduling the coming week's scenarios, and generating those due today.
      *
-     * @param event the new-day event (already enable-gated by {@link AbstractDigitalGM#onNewDay})
+     * @param event the new-day event (already enable-gated by {@link AbstractIDigitalGM#onNewDay})
      */
     @Override
     public void handleNewDay(NewDayEvent event) {

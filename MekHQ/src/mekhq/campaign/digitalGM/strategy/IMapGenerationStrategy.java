@@ -32,6 +32,7 @@
  */
 package mekhq.campaign.digitalGM.strategy;
 
+import mekhq.campaign.digitalGM.stratCon.AbstractStratConGMI;
 import mekhq.campaign.digitalGM.stratCon.StratConScenario;
 import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 
@@ -43,12 +44,12 @@ import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
  * <p>The default StratCon implementation delegates to
  * {@link mekhq.campaign.digitalGM.stratCon.StratConRulesManager#setScenarioParametersFromBiome
  * StratConRulesManager.setScenarioParametersFromBiome}, so the rules themselves are unchanged. The accessor lives on
- * {@link mekhq.campaign.digitalGM.stratCon.AbstractStratConGM AbstractStratConGM}.</p>
+ * {@link AbstractStratConGMI AbstractStratConGM}.</p>
  *
  * @author Illiani
  * @since 0.50.10
  */
-public interface MapGenerationStrategy {
+public interface IMapGenerationStrategy {
 
     /**
      * Sets the terrain and temperature of a scenario from the biome at its coordinates.

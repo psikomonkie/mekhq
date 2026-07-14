@@ -32,39 +32,28 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.campaignOptions.CampaignOptions;
-import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
+import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.strategy.IScenarioGenerationStrategy;
+import mekhq.campaign.mission.AtBContract;
 
 /**
- * Digital GM for StratCon <b>Singles</b> play ({@link StratConPlayType#SINGLES}). Singles uses the same no-op facility
- * handling as Mapless and additionally caps the campaign to a single scenario per week by enabling
- * {@linkplain #isSingleDropMode() single-drop mode}. This mirrors the legacy engine, where
- * {@code isUseStratConMaplessMode()} was already {@code true} for Singles.
+ * Default StratCon implementation of {@link IScenarioGenerationStrategy}. Every method delegates to the existing static
+ * logic on {@link StratConRulesManager}, so this class introduces the overridable seam without moving any behaviour.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class SinglesStratConGM extends AbstractStratConGM {
-
-    private final FacilityStrategy noOpFacility = new NoOpFacilityStrategy();
+public class StratConIScenarioGenerationStrategy implements IScenarioGenerationStrategy {
 
     @Override
-    public String getName() {
-        return StratConPlayType.SINGLES.getLabel();
+    public void generateWeeklyScenarioDates(Campaign campaign, StratConCampaignState campaignState,
+          AtBContract contract, StratConTrackState track, boolean singleDropMode) {
+        StratConRulesManager.generateScenariosDatesForWeek(campaign, campaignState, contract, track, singleDropMode);
     }
 
     @Override
-    public boolean isEnabled(CampaignOptions campaignOptions) {
-        return campaignOptions.getStratConPlayType() == StratConPlayType.SINGLES;
-    }
-
-    @Override
-    protected boolean isSingleDropMode() {
-        return true;
-    }
-
-    @Override
-    protected FacilityStrategy getFacilityStrategy() {
-        return noOpFacility;
+    public void generateDailyScenarios(Campaign campaign, StratConCampaignState campaignState, AtBContract contract,
+          int scenarioCount) {
+        StratConRulesManager.generateDailyScenariosForTrack(campaign, campaignState, contract, scenarioCount);
     }
 }

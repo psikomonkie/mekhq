@@ -42,12 +42,12 @@ import java.util.List;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.campaignOptions.CampaignOptions;
-import mekhq.campaign.digitalGM.DigitalGM;
 import mekhq.campaign.digitalGM.DigitalGMRegistry;
-import mekhq.campaign.digitalGM.strategy.ForceDeploymentStrategy;
-import mekhq.campaign.digitalGM.strategy.MapGenerationStrategy;
-import mekhq.campaign.digitalGM.strategy.OpForDeploymentStrategy;
-import mekhq.campaign.digitalGM.strategy.OpForGenerationStrategy;
+import mekhq.campaign.digitalGM.IDigitalGM;
+import mekhq.campaign.digitalGM.strategy.IForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.IMapGenerationStrategy;
+import mekhq.campaign.digitalGM.strategy.IOpForDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.IOpForGenerationStrategy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -60,11 +60,11 @@ import org.junit.jupiter.api.Test;
  */
 class StratConGMsTest {
 
-    private final List<DigitalGM> registered = new ArrayList<>();
+    private final List<IDigitalGM> registered = new ArrayList<>();
 
-    private void register(DigitalGM digitalGM) {
-        DigitalGMRegistry.register(digitalGM);
-        registered.add(digitalGM);
+    private void register(IDigitalGM IDigitalGM) {
+        DigitalGMRegistry.register(IDigitalGM);
+        registered.add(IDigitalGM);
     }
 
     @AfterEach
@@ -83,36 +83,36 @@ class StratConGMsTest {
     }
 
     /** A Normal-play GM that supplies sentinel strategies so routing can be observed. */
-    private static class SentinelGM extends StratConDigitalGM {
-        final ForceDeploymentStrategy forceDeploymentSentinel = mock(ForceDeploymentStrategy.class);
-        final OpForGenerationStrategy opForGenerationSentinel = mock(OpForGenerationStrategy.class);
-        final OpForDeploymentStrategy opForDeploymentSentinel = mock(OpForDeploymentStrategy.class);
-        final MapGenerationStrategy mapGenerationSentinel = mock(MapGenerationStrategy.class);
+    private static class SentinelGMI extends StratConIDigitalGM {
+        final IForceDeploymentStrategy forceDeploymentSentinel = mock(IForceDeploymentStrategy.class);
+        final IOpForGenerationStrategy opForGenerationSentinel = mock(IOpForGenerationStrategy.class);
+        final IOpForDeploymentStrategy opForDeploymentSentinel = mock(IOpForDeploymentStrategy.class);
+        final IMapGenerationStrategy mapGenerationSentinel = mock(IMapGenerationStrategy.class);
 
         @Override
-        protected ForceDeploymentStrategy getForceDeploymentStrategy() {
+        protected IForceDeploymentStrategy getForceDeploymentStrategy() {
             return forceDeploymentSentinel;
         }
 
         @Override
-        protected OpForGenerationStrategy getOpForGenerationStrategy() {
+        protected IOpForGenerationStrategy getOpForGenerationStrategy() {
             return opForGenerationSentinel;
         }
 
         @Override
-        protected OpForDeploymentStrategy getOpForDeploymentStrategy() {
+        protected IOpForDeploymentStrategy getOpForDeploymentStrategy() {
             return opForDeploymentSentinel;
         }
 
         @Override
-        protected MapGenerationStrategy getMapGenerationStrategy() {
+        protected IMapGenerationStrategy getMapGenerationStrategy() {
             return mapGenerationSentinel;
         }
     }
 
     @Test
     void routesToActiveGmForceDeploymentStrategy() {
-        SentinelGM gm = new SentinelGM();
+        SentinelGMI gm = new SentinelGMI();
         register(gm);
 
         assertSame(gm.forceDeploymentSentinel,
@@ -121,7 +121,7 @@ class StratConGMsTest {
 
     @Test
     void routesToActiveGmOpForGenerationStrategy() {
-        SentinelGM gm = new SentinelGM();
+        SentinelGMI gm = new SentinelGMI();
         register(gm);
 
         assertSame(gm.opForGenerationSentinel,
@@ -130,7 +130,7 @@ class StratConGMsTest {
 
     @Test
     void routesToActiveGmOpForDeploymentStrategy() {
-        SentinelGM gm = new SentinelGM();
+        SentinelGMI gm = new SentinelGMI();
         register(gm);
 
         assertSame(gm.opForDeploymentSentinel,
@@ -139,7 +139,7 @@ class StratConGMsTest {
 
     @Test
     void routesToActiveGmMapGenerationStrategy() {
-        SentinelGM gm = new SentinelGM();
+        SentinelGMI gm = new SentinelGMI();
         register(gm);
 
         assertSame(gm.mapGenerationSentinel,
@@ -149,13 +149,13 @@ class StratConGMsTest {
     @Test
     void fallsBackToDefaultStrategyWhenNoGmIsActive() {
         // Nothing enabled for a disabled campaign -> default StratCon strategies (delegate to the static rules)
-        assertInstanceOf(StratConForceDeploymentStrategy.class,
+        assertInstanceOf(StratConIForceDeploymentStrategy.class,
               StratConGMs.forceDeployment(campaignWith(StratConPlayType.DISABLED).getCampaignOptions()));
-        assertInstanceOf(StratConOpForGenerationStrategy.class,
+        assertInstanceOf(StratConIOpForGenerationStrategy.class,
               StratConGMs.opForGeneration(campaignWith(StratConPlayType.DISABLED).getCampaignOptions()));
-        assertInstanceOf(StratConOpForDeploymentStrategy.class,
+        assertInstanceOf(StratConIOpForDeploymentStrategy.class,
               StratConGMs.opForDeployment(campaignWith(StratConPlayType.DISABLED).getCampaignOptions()));
-        assertInstanceOf(StratConMapGenerationStrategy.class,
+        assertInstanceOf(StratConIMapGenerationStrategy.class,
               StratConGMs.mapGeneration(campaignWith(StratConPlayType.DISABLED).getCampaignOptions()));
     }
 }

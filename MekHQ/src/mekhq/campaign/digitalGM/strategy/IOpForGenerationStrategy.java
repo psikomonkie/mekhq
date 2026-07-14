@@ -33,24 +33,25 @@
 package mekhq.campaign.digitalGM.strategy;
 
 import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.stratCon.AbstractStratConGMI;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.AtBDynamicScenario;
 
 /**
  * Strategy for generating the opposing force (OpFor) of a scenario &mdash; <i>what you fight</i>, as opposed to
- * {@link ScenarioGenerationStrategy}, which decides <i>when and which</i> scenarios appear. Splitting this out is what
+ * {@link IScenarioGenerationStrategy}, which decides <i>when and which</i> scenarios appear. Splitting this out is what
  * lets a GM keep the standard mission cadence while changing enemy composition (scripted, fixed, differently scaled,
  * and so on).
  *
  * <p>The default StratCon implementation delegates to
  * {@link mekhq.campaign.mission.AtBDynamicScenarioFactory#finalizeScenario AtBDynamicScenarioFactory.finalizeScenario}
  * &mdash; the existing dynamic/random AtB generation &mdash; so the rules themselves are unchanged. The accessor lives
- * on {@link mekhq.campaign.digitalGM.stratCon.AbstractStratConGM AbstractStratConGM}.</p>
+ * on {@link AbstractStratConGMI AbstractStratConGM}.</p>
  *
  * @author Illiani
  * @since 0.50.10
  */
-public interface OpForGenerationStrategy {
+public interface IOpForGenerationStrategy {
 
     /**
      * Generates and finalises the OpFor for a scenario's backing dynamic scenario.

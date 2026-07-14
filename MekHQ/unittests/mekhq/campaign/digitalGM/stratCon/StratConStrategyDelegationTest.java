@@ -41,8 +41,8 @@ import static org.mockito.Mockito.mockStatic;
 
 import megamek.common.rolls.TargetRoll;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.digitalGM.strategy.ForceDeploymentStrategy;
-import mekhq.campaign.digitalGM.strategy.ReinforcementStrategy;
+import mekhq.campaign.digitalGM.strategy.IForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.IReinforcementStrategy;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.AtBDynamicScenario;
@@ -53,11 +53,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
 /**
- * Verifies that the newly extracted StratCon strategies ({@link StratConForceDeploymentStrategy},
- * {@link StratConReinforcementStrategy}, and the facility ops on {@link StratConFacilityStrategy}) delegate to the
+ * Verifies that the newly extracted StratCon strategies ({@link StratConIForceDeploymentStrategy},
+ * {@link StratConIReinforcementStrategy}, and the facility ops on {@link StratConIFacilityStrategy}) delegate to the
  * matching static entry points on {@link StratConRulesManager} with the same arguments &mdash; i.e. the extraction is a
  * pure seam and moved no behaviour. Also confirms the no-op facility strategy touches nothing and that
- * {@link AbstractStratConGM} exposes the StratCon implementations by default.
+ * {@link AbstractStratConGMI} exposes the StratCon implementations by default.
  *
  * @author Illiani
  */
@@ -70,7 +70,7 @@ class StratConStrategyDelegationTest {
         AtBContract contract = mock(AtBContract.class);
         StratConTrackState track = mock(StratConTrackState.class);
         StratConScenario scenario = mock(StratConScenario.class);
-        ForceDeploymentStrategy strategy = new StratConForceDeploymentStrategy();
+        IForceDeploymentStrategy strategy = new StratConIForceDeploymentStrategy();
 
         try (MockedStatic<StratConRulesManager> rules = mockStatic(StratConRulesManager.class)) {
             strategy.deployForceToCoords(coords, 5, campaign, contract, track, true);
@@ -95,7 +95,7 @@ class StratConStrategyDelegationTest {
         Formation formation = mock(Formation.class);
         Person liaison = mock(Person.class);
         TargetRoll targetRoll = mock(TargetRoll.class);
-        ReinforcementStrategy strategy = new StratConReinforcementStrategy();
+        IReinforcementStrategy strategy = new StratConIReinforcementStrategy();
 
         try (MockedStatic<StratConRulesManager> rules = mockStatic(StratConRulesManager.class)) {
             rules.when(() -> StratConRulesManager.getReinforcementType(5, track, campaign, campaignState))
@@ -125,7 +125,7 @@ class StratConStrategyDelegationTest {
         AtBScenario scenario = mock(AtBScenario.class);
         AtBContract contract = mock(AtBContract.class);
         StratConFacility facility = mock(StratConFacility.class);
-        StratConFacilityStrategy strategy = new StratConFacilityStrategy();
+        StratConIFacilityStrategy strategy = new StratConIFacilityStrategy();
 
         try (MockedStatic<StratConRulesManager> rules = mockStatic(StratConRulesManager.class)) {
             strategy.applyPeriodicEffects(track, campaignState, true);
@@ -145,7 +145,7 @@ class StratConStrategyDelegationTest {
         AtBScenario scenario = mock(AtBScenario.class);
         AtBContract contract = mock(AtBContract.class);
         StratConFacility facility = mock(StratConFacility.class);
-        NoOpFacilityStrategy strategy = new NoOpFacilityStrategy();
+        NoOpIFacilityStrategy strategy = new NoOpIFacilityStrategy();
 
         try (MockedStatic<StratConRulesManager> rules = mockStatic(StratConRulesManager.class)) {
             strategy.applyPeriodicEffects(track, campaignState, true);
@@ -161,7 +161,7 @@ class StratConStrategyDelegationTest {
         AtBDynamicScenario backingScenario = mock(AtBDynamicScenario.class);
         AtBContract contract = mock(AtBContract.class);
         Campaign campaign = mock(Campaign.class);
-        StratConOpForGenerationStrategy strategy = new StratConOpForGenerationStrategy();
+        StratConIOpForGenerationStrategy strategy = new StratConIOpForGenerationStrategy();
 
         try (MockedStatic<AtBDynamicScenarioFactory> factory = mockStatic(AtBDynamicScenarioFactory.class)) {
             strategy.generateOpFor(backingScenario, contract, campaign);
@@ -174,7 +174,7 @@ class StratConStrategyDelegationTest {
     void opForDeploymentStrategyDelegatesToContractInitializer() {
         StratConTrackState track = mock(StratConTrackState.class);
         StratConCoords coords = mock(StratConCoords.class);
-        StratConOpForDeploymentStrategy strategy = new StratConOpForDeploymentStrategy();
+        StratConIOpForDeploymentStrategy strategy = new StratConIOpForDeploymentStrategy();
 
         try (MockedStatic<StratConContractInitializer> initializer =
                    mockStatic(StratConContractInitializer.class)) {
@@ -197,7 +197,7 @@ class StratConStrategyDelegationTest {
     void mapGenerationStrategyDelegatesToRulesManager() {
         StratConTrackState track = mock(StratConTrackState.class);
         StratConScenario scenario = mock(StratConScenario.class);
-        StratConMapGenerationStrategy strategy = new StratConMapGenerationStrategy();
+        StratConIMapGenerationStrategy strategy = new StratConIMapGenerationStrategy();
 
         try (MockedStatic<StratConRulesManager> rules = mockStatic(StratConRulesManager.class)) {
             strategy.setScenarioTerrain(track, scenario, true);
@@ -208,12 +208,12 @@ class StratConStrategyDelegationTest {
 
     @Test
     void abstractStratConGmExposesStratConStrategiesByDefault() {
-        StratConDigitalGM gm = new StratConDigitalGM();
+        StratConIDigitalGM gm = new StratConIDigitalGM();
 
-        assertInstanceOf(StratConForceDeploymentStrategy.class, gm.getForceDeploymentStrategy());
-        assertInstanceOf(StratConReinforcementStrategy.class, gm.getReinforcementStrategy());
-        assertInstanceOf(StratConOpForGenerationStrategy.class, gm.getOpForGenerationStrategy());
-        assertInstanceOf(StratConOpForDeploymentStrategy.class, gm.getOpForDeploymentStrategy());
-        assertInstanceOf(StratConMapGenerationStrategy.class, gm.getMapGenerationStrategy());
+        assertInstanceOf(StratConIForceDeploymentStrategy.class, gm.getForceDeploymentStrategy());
+        assertInstanceOf(StratConIReinforcementStrategy.class, gm.getReinforcementStrategy());
+        assertInstanceOf(StratConIOpForGenerationStrategy.class, gm.getOpForGenerationStrategy());
+        assertInstanceOf(StratConIOpForDeploymentStrategy.class, gm.getOpForDeploymentStrategy());
+        assertInstanceOf(StratConIMapGenerationStrategy.class, gm.getMapGenerationStrategy());
     }
 }

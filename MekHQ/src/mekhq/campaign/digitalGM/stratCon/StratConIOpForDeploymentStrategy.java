@@ -32,20 +32,23 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.digitalGM.strategy.MapGenerationStrategy;
+import megamek.common.annotations.Nullable;
+import mekhq.campaign.digitalGM.strategy.IOpForDeploymentStrategy;
 
 /**
- * Default StratCon implementation of {@link MapGenerationStrategy}: the standard biome-driven terrain selection.
- * Delegates to {@link StratConRulesManager#setScenarioParametersFromBiome}, so this class introduces the overridable
- * seam without moving any behaviour.
+ * Default StratCon implementation of {@link IOpForDeploymentStrategy}: the standard weighted-random placement of a
+ * hostile scenario on an unoccupied hex. Delegates to {@link StratConContractInitializer#getUnoccupiedCoords}, so this
+ * class introduces the overridable seam without moving any behaviour.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class StratConMapGenerationStrategy implements MapGenerationStrategy {
+public class StratConIOpForDeploymentStrategy implements IOpForDeploymentStrategy {
 
     @Override
-    public void setScenarioTerrain(StratConTrackState track, StratConScenario scenario, boolean isNoTornadoes) {
-        StratConRulesManager.setScenarioParametersFromBiome(track, scenario, isNoTornadoes);
+    public @Nullable StratConCoords getUnoccupiedCoords(StratConTrackState track, boolean allowPlayerFacilities,
+          boolean allowPlayerForces, boolean emphasizeStrategicTargets) {
+        return StratConContractInitializer.getUnoccupiedCoords(track, allowPlayerFacilities, allowPlayerForces,
+              emphasizeStrategicTargets);
     }
 }

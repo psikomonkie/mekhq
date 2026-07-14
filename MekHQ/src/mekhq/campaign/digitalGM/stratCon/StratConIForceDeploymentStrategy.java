@@ -32,35 +32,39 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
+import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.strategy.IForceDeploymentStrategy;
 import mekhq.campaign.mission.AtBContract;
-import mekhq.campaign.mission.AtBScenario;
 
 /**
- * {@link FacilityStrategy} for play types with no facility map (Mapless and Singles). Every facility operation is a
- * deliberate no-op: Mapless/Singles skip facility placement entirely (see {@link StratConContractInitializer}), so
- * there are never any facilities to affect. The periodic no-op also mirrors the legacy engine's
- * {@code if (!isUseStratConMapless)} guard.
+ * Default StratCon implementation of {@link IForceDeploymentStrategy}. Every method delegates to the existing static
+ * logic on {@link StratConRulesManager}, so this class introduces the overridable seam without moving any behaviour.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class NoOpFacilityStrategy implements FacilityStrategy {
+public class StratConIForceDeploymentStrategy implements IForceDeploymentStrategy {
 
     @Override
-    public void applyPeriodicEffects(StratConTrackState track, StratConCampaignState campaignState,
-          boolean isStartOfMonth) {
-        // Intentionally empty: Mapless and Singles play have no facility map.
+    public void deployForceToCoords(StratConCoords coords, int forceID, Campaign campaign, AtBContract contract,
+          StratConTrackState track, boolean sticky) {
+        StratConRulesManager.deployForceToCoords(coords, forceID, campaign, contract, track, sticky);
     }
 
     @Override
-    public void updateFacilityForScenario(AtBScenario scenario, AtBContract contract, boolean destroy,
-          boolean capture) {
-        // Intentionally empty: Mapless and Singles play have no facilities to update.
+    public void assignForceToScenario(StratConCoords coords, int forceID, Campaign campaign, AtBContract contract,
+          StratConTrackState track, boolean sticky) {
+        StratConRulesManager.assignForceToScenario(coords, forceID, campaign, contract, track, sticky);
     }
 
     @Override
-    public void switchFacilityOwner(StratConFacility facility) {
-        // Intentionally empty: Mapless and Singles play have no facilities to transfer.
+    public void processForceDeployment(StratConCoords coords, int forceID, Campaign campaign, StratConTrackState track,
+          boolean sticky) {
+        StratConRulesManager.processForceDeployment(coords, forceID, campaign, track, sticky);
+    }
+
+    @Override
+    public void commitPrimaryForces(Campaign campaign, StratConScenario scenario, StratConTrackState trackState) {
+        StratConRulesManager.commitPrimaryForces(campaign, scenario, trackState);
     }
 }

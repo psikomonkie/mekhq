@@ -42,9 +42,9 @@ import java.util.List;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.campaignOptions.CampaignOptions;
-import mekhq.campaign.digitalGM.stratCon.MaplessStratConGM;
-import mekhq.campaign.digitalGM.stratCon.SinglesStratConGM;
-import mekhq.campaign.digitalGM.stratCon.StratConDigitalGM;
+import mekhq.campaign.digitalGM.stratCon.MaplessStratConGMI;
+import mekhq.campaign.digitalGM.stratCon.SinglesStratConGMI;
+import mekhq.campaign.digitalGM.stratCon.StratConIDigitalGM;
 import mekhq.campaign.digitalGM.stratCon.StratConPlayType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -55,13 +55,13 @@ import org.junit.jupiter.api.Test;
  *
  * @author Illiani
  */
-class DigitalGMRegistryTest {
+class IDigitalGMRegistryTest {
 
-    private final List<DigitalGM> registered = new ArrayList<>();
+    private final List<IDigitalGM> registered = new ArrayList<>();
 
-    private void register(DigitalGM digitalGM) {
-        DigitalGMRegistry.register(digitalGM);
-        registered.add(digitalGM);
+    private void register(IDigitalGM IDigitalGM) {
+        DigitalGMRegistry.register(IDigitalGM);
+        registered.add(IDigitalGM);
     }
 
     @AfterEach
@@ -81,9 +81,9 @@ class DigitalGMRegistryTest {
 
     @Test
     void getActiveGmReturnsTheGmMatchingThePlayType() {
-        StratConDigitalGM normal = new StratConDigitalGM();
-        MaplessStratConGM mapless = new MaplessStratConGM();
-        SinglesStratConGM singles = new SinglesStratConGM();
+        StratConIDigitalGM normal = new StratConIDigitalGM();
+        MaplessStratConGMI mapless = new MaplessStratConGMI();
+        SinglesStratConGMI singles = new SinglesStratConGMI();
         register(normal);
         register(mapless);
         register(singles);
@@ -98,9 +98,9 @@ class DigitalGMRegistryTest {
 
     @Test
     void getActiveGmIsEmptyWhenPlayIsDisabled() {
-        register(new StratConDigitalGM());
-        register(new MaplessStratConGM());
-        register(new SinglesStratConGM());
+        register(new StratConIDigitalGM());
+        register(new MaplessStratConGMI());
+        register(new SinglesStratConGMI());
 
         assertTrue(DigitalGMRegistry.getActiveGM(campaignWith(StratConPlayType.DISABLED).getCampaignOptions())
                          .isEmpty());
@@ -108,7 +108,7 @@ class DigitalGMRegistryTest {
 
     @Test
     void unregisterRemovesTheGm() {
-        StratConDigitalGM gm = new StratConDigitalGM();
+        StratConIDigitalGM gm = new StratConIDigitalGM();
         DigitalGMRegistry.register(gm);
         DigitalGMRegistry.unregister(gm);
 

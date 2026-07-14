@@ -34,6 +34,7 @@ package mekhq.campaign.digitalGM.strategy;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.ResolveScenarioTracker;
+import mekhq.campaign.digitalGM.stratCon.AbstractStratConGMI;
 import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
 import mekhq.campaign.digitalGM.stratCon.StratConScenario;
 import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
@@ -45,12 +46,12 @@ import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
  * <p>The method signatures mirror the corresponding static entry points on
  * {@link mekhq.campaign.digitalGM.stratCon.StratConRulesManager StratConRulesManager}; the default StratCon
  * implementation delegates to them, so the rules themselves are unchanged &mdash; only the daily loop that invokes them
- * now lives in {@link mekhq.campaign.digitalGM.stratCon.AbstractStratConGM AbstractStratConGM}.</p>
+ * now lives in {@link AbstractStratConGMI AbstractStratConGM}.</p>
  *
  * @author Illiani
  * @since 0.50.10
  */
-public interface ScenarioLifecycleStrategy {
+public interface IScenarioLifecycleStrategy {
 
     /**
      * Processes the return of forces whose deployment window on a track has elapsed.

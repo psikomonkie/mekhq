@@ -32,32 +32,33 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.Campaign;
-import mekhq.campaign.ResolveScenarioTracker;
-import mekhq.campaign.digitalGM.strategy.ScenarioLifecycleStrategy;
+import mekhq.campaign.campaignOptions.CampaignOptions;
+import mekhq.campaign.digitalGM.strategy.IFacilityStrategy;
 
 /**
- * Default StratCon implementation of {@link ScenarioLifecycleStrategy}. Every method delegates to the existing static
- * logic on {@link StratConRulesManager}, so this class introduces the overridable seam without moving any behaviour.
+ * Digital GM for StratCon <b>Mapless</b> play ({@link StratConPlayType#MAPLESS}). Identical to the map-based
+ * {@link StratConIDigitalGM} except that it has no facility map: it supplies a {@link NoOpIFacilityStrategy}, which
+ * reproduces the legacy engine's {@code if (!isUseStratConMapless)} guard around facility effects.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class StratConScenarioLifecycleStrategy implements ScenarioLifecycleStrategy {
+public class MaplessStratConGMI extends AbstractStratConGMI {
+
+    private final IFacilityStrategy noOpFacility = new NoOpIFacilityStrategy();
 
     @Override
-    public void processForceReturnDates(StratConTrackState track, Campaign campaign) {
-        StratConRulesManager.processTrackForceReturnDates(track, campaign);
+    public String getName() {
+        return StratConPlayType.MAPLESS.getLabel();
     }
 
     @Override
-    public void processExpiredScenario(StratConScenario scenario, StratConTrackState track,
-          StratConCampaignState campaignState) {
-        StratConRulesManager.processIgnoredStratConScenario(scenario, track, campaignState);
+    public boolean isEnabled(CampaignOptions campaignOptions) {
+        return campaignOptions.getStratConPlayType() == StratConPlayType.MAPLESS;
     }
 
     @Override
-    public void processScenarioCompletion(ResolveScenarioTracker tracker) {
-        StratConRulesManager.processScenarioCompletion(tracker);
+    protected IFacilityStrategy getFacilityStrategy() {
+        return noOpFacility;
     }
 }

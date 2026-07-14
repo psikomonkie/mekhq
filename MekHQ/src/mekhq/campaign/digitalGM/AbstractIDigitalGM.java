@@ -35,17 +35,18 @@ package mekhq.campaign.digitalGM;
 import megamek.common.event.Subscribe;
 import megamek.logging.MMLogger;
 import mekhq.MekHQ;
+import mekhq.campaign.digitalGM.stratCon.AbstractStratConGMI;
 import mekhq.campaign.events.NewDayEvent;
 
 /**
- * Common, engine-agnostic base for every {@link DigitalGM}. This class owns only the wiring that is identical across
+ * Common, engine-agnostic base for every {@link IDigitalGM}. This class owns only the wiring that is identical across
  * <i>all</i> digital GMs, regardless of their underlying data model: event-bus registration and the enable-gated
  * dispatch of the daily lifecycle.
  *
  * <p>It deliberately knows nothing about StratCon tracks, scenarios or facilities. GMs built on the StratCon data
- * model extend {@link mekhq.campaign.digitalGM.stratCon.AbstractStratConGM AbstractStratConGM}, which supplies the
- * shared per-track daily loop and the strategy seams the play types vary. A future GM built on a different model would
- * extend this class directly and provide its own {@link #handleNewDay(NewDayEvent)}.</p>
+ * model extend {@link AbstractStratConGMI AbstractStratConGM}, which supplies the shared per-track daily loop and the
+ * strategy seams the play types vary. A future GM built on a different model would extend this class directly and
+ * provide its own {@link #handleNewDay(NewDayEvent)}.</p>
  *
  * <p><b>Dispatch.</b> {@link #onNewDay(NewDayEvent)} is the single {@code @Subscribe} entry point and is {@code final}
  * so the enable-gate is uniform: every registered GM receives the event, but only the one whose {@link #isEnabled}
@@ -55,7 +56,7 @@ import mekhq.campaign.events.NewDayEvent;
  * @author Illiani
  * @since 0.50.10
  */
-public abstract class AbstractDigitalGM implements DigitalGM {
+public abstract class AbstractIDigitalGM implements IDigitalGM {
     protected final MMLogger logger = MMLogger.create(getClass());
 
     /**

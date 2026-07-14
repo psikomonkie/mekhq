@@ -50,16 +50,16 @@ import java.util.Map;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.campaignOptions.CampaignOptions;
-import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
-import mekhq.campaign.digitalGM.strategy.ScenarioGenerationStrategy;
-import mekhq.campaign.digitalGM.strategy.ScenarioLifecycleStrategy;
+import mekhq.campaign.digitalGM.strategy.IFacilityStrategy;
+import mekhq.campaign.digitalGM.strategy.IScenarioGenerationStrategy;
+import mekhq.campaign.digitalGM.strategy.IScenarioLifecycleStrategy;
 import mekhq.campaign.events.NewDayEvent;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.enums.AtBMoraleLevel;
 import org.junit.jupiter.api.Test;
 
 /**
- * Behavioural coverage for the shared StratCon daily loop in {@link AbstractStratConGM} &mdash; the logic migrated out
+ * Behavioural coverage for the shared StratCon daily loop in {@link AbstractStratConGMI} &mdash; the logic migrated out
  * of {@code StratConRulesManager.handleNewDay}. Each play type's rules are exercised by injecting mock strategies and
  * asserting which strategy calls the loop makes for a controlled campaign day. (That each concrete GM wires the correct
  * strategies is covered separately by {@code StratConDigitalGMTest}.)
@@ -74,13 +74,13 @@ class AbstractStratConGMTest {
     private static final LocalDate TUESDAY = LocalDate.of(2024, 1, 2);
 
     /** A GM whose strategies are mocks so the loop's calls can be verified. */
-    private static class TestGM extends AbstractStratConGM {
-        final ScenarioGenerationStrategy generation = mock(ScenarioGenerationStrategy.class);
-        final ScenarioLifecycleStrategy lifecycle = mock(ScenarioLifecycleStrategy.class);
-        final FacilityStrategy facility = mock(FacilityStrategy.class);
+    private static class TestGMI extends AbstractStratConGMI {
+        final IScenarioGenerationStrategy generation = mock(IScenarioGenerationStrategy.class);
+        final IScenarioLifecycleStrategy lifecycle = mock(IScenarioLifecycleStrategy.class);
+        final IFacilityStrategy facility = mock(IFacilityStrategy.class);
         private final boolean singleDrop;
 
-        TestGM(boolean singleDrop) {
+        TestGMI(boolean singleDrop) {
             this.singleDrop = singleDrop;
         }
 
@@ -95,17 +95,17 @@ class AbstractStratConGMTest {
         }
 
         @Override
-        protected ScenarioGenerationStrategy getScenarioGenerationStrategy() {
+        protected IScenarioGenerationStrategy getScenarioGenerationStrategy() {
             return generation;
         }
 
         @Override
-        protected ScenarioLifecycleStrategy getScenarioLifecycleStrategy() {
+        protected IScenarioLifecycleStrategy getScenarioLifecycleStrategy() {
             return lifecycle;
         }
 
         @Override
-        protected FacilityStrategy getFacilityStrategy() {
+        protected IFacilityStrategy getFacilityStrategy() {
             return facility;
         }
 
@@ -164,7 +164,7 @@ class AbstractStratConGMTest {
         StratConTrackState track2 = trackWith();
         StratConCampaignState campaignState = campaignStateWith(List.of(track1, track2), new ArrayList<>());
         AtBContract contract = contractWith(campaignState, AtBMoraleLevel.STALEMATE);
-        TestGM gm = new TestGM(false);
+        TestGMI gm = new TestGMI(false);
 
         gm.handleNewDay(newDay(MONDAY, contract));
 
@@ -186,7 +186,7 @@ class AbstractStratConGMTest {
         StratConTrackState track2 = trackWith();
         StratConCampaignState campaignState = campaignStateWith(List.of(track1, track2), new ArrayList<>());
         AtBContract contract = contractWith(campaignState, AtBMoraleLevel.STALEMATE);
-        TestGM gm = new TestGM(true);
+        TestGMI gm = new TestGMI(true);
 
         gm.handleNewDay(newDay(MONDAY, contract));
 
@@ -200,7 +200,7 @@ class AbstractStratConGMTest {
         StratConTrackState track = trackWith();
         StratConCampaignState campaignState = campaignStateWith(List.of(track), new ArrayList<>());
         AtBContract contract = contractWith(campaignState, AtBMoraleLevel.STALEMATE);
-        TestGM gm = new TestGM(false);
+        TestGMI gm = new TestGMI(false);
 
         gm.handleNewDay(newDay(TUESDAY, contract));
 
@@ -213,7 +213,7 @@ class AbstractStratConGMTest {
         StratConTrackState track2 = trackWith();
         StratConCampaignState campaignState = campaignStateWith(List.of(track1, track2), new ArrayList<>());
         AtBContract contract = contractWith(campaignState, AtBMoraleLevel.STALEMATE);
-        TestGM gm = new TestGM(false);
+        TestGMI gm = new TestGMI(false);
 
         gm.handleNewDay(newDay(TUESDAY, contract));
 
@@ -231,7 +231,7 @@ class AbstractStratConGMTest {
         StratConTrackState track = trackWith(expired, expiredButCommitted, future);
         StratConCampaignState campaignState = campaignStateWith(List.of(track), new ArrayList<>());
         AtBContract contract = contractWith(campaignState, AtBMoraleLevel.STALEMATE);
-        TestGM gm = new TestGM(false);
+        TestGMI gm = new TestGMI(false);
 
         gm.handleNewDay(newDay(TUESDAY, contract));
 
@@ -247,7 +247,7 @@ class AbstractStratConGMTest {
         StratConCampaignState campaignState = campaignStateWith(List.of(track),
               new ArrayList<>(List.of(TUESDAY, TUESDAY)));
         AtBContract contract = contractWith(campaignState, AtBMoraleLevel.STALEMATE);
-        TestGM gm = new TestGM(false);
+        TestGMI gm = new TestGMI(false);
 
         gm.handleNewDay(newDay(TUESDAY, contract));
 
@@ -260,7 +260,7 @@ class AbstractStratConGMTest {
         StratConCampaignState campaignState = campaignStateWith(List.of(track),
               new ArrayList<>(List.of(TUESDAY)));
         AtBContract contract = contractWith(campaignState, AtBMoraleLevel.ROUTED);
-        TestGM gm = new TestGM(false);
+        TestGMI gm = new TestGMI(false);
 
         gm.handleNewDay(newDay(TUESDAY, contract));
 
@@ -273,7 +273,7 @@ class AbstractStratConGMTest {
     @Test
     void contractWithoutCampaignStateIsSkipped() {
         AtBContract contract = contractWith(null, AtBMoraleLevel.STALEMATE);
-        TestGM gm = new TestGM(false);
+        TestGMI gm = new TestGMI(false);
 
         gm.handleNewDay(newDay(MONDAY, contract));
 

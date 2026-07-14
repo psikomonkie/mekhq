@@ -32,24 +32,39 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.Campaign;
-import mekhq.campaign.digitalGM.strategy.OpForGenerationStrategy;
-import mekhq.campaign.mission.AtBContract;
-import mekhq.campaign.mission.AtBDynamicScenario;
-import mekhq.campaign.mission.AtBDynamicScenarioFactory;
+import mekhq.campaign.campaignOptions.CampaignOptions;
+import mekhq.campaign.digitalGM.strategy.IFacilityStrategy;
 
 /**
- * Default StratCon implementation of {@link OpForGenerationStrategy}: the standard dynamic/random AtB generation. It
- * delegates to {@link AtBDynamicScenarioFactory#finalizeScenario}, so this class introduces the overridable seam
- * without moving any behaviour.
+ * Digital GM for StratCon <b>Singles</b> play ({@link StratConPlayType#SINGLES}). Singles uses the same no-op facility
+ * handling as Mapless and additionally caps the campaign to a single scenario per week by enabling
+ * {@linkplain #isSingleDropMode() single-drop mode}. This mirrors the legacy engine, where
+ * {@code isUseStratConMaplessMode()} was already {@code true} for Singles.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class StratConOpForGenerationStrategy implements OpForGenerationStrategy {
+public class SinglesStratConGMI extends AbstractStratConGMI {
+
+    private final IFacilityStrategy noOpFacility = new NoOpIFacilityStrategy();
 
     @Override
-    public void generateOpFor(AtBDynamicScenario backingScenario, AtBContract contract, Campaign campaign) {
-        AtBDynamicScenarioFactory.finalizeScenario(backingScenario, contract, campaign);
+    public String getName() {
+        return StratConPlayType.SINGLES.getLabel();
+    }
+
+    @Override
+    public boolean isEnabled(CampaignOptions campaignOptions) {
+        return campaignOptions.getStratConPlayType() == StratConPlayType.SINGLES;
+    }
+
+    @Override
+    protected boolean isSingleDropMode() {
+        return true;
+    }
+
+    @Override
+    protected IFacilityStrategy getFacilityStrategy() {
+        return noOpFacility;
     }
 }

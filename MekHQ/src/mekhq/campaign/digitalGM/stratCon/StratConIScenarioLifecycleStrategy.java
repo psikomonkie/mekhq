@@ -32,33 +32,32 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.campaignOptions.CampaignOptions;
-import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
+import mekhq.campaign.Campaign;
+import mekhq.campaign.ResolveScenarioTracker;
+import mekhq.campaign.digitalGM.strategy.IScenarioLifecycleStrategy;
 
 /**
- * Digital GM for StratCon <b>Mapless</b> play ({@link StratConPlayType#MAPLESS}). Identical to the map-based
- * {@link StratConDigitalGM} except that it has no facility map: it supplies a {@link NoOpFacilityStrategy}, which
- * reproduces the legacy engine's {@code if (!isUseStratConMapless)} guard around facility effects.
+ * Default StratCon implementation of {@link IScenarioLifecycleStrategy}. Every method delegates to the existing static
+ * logic on {@link StratConRulesManager}, so this class introduces the overridable seam without moving any behaviour.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class MaplessStratConGM extends AbstractStratConGM {
-
-    private final FacilityStrategy noOpFacility = new NoOpFacilityStrategy();
+public class StratConIScenarioLifecycleStrategy implements IScenarioLifecycleStrategy {
 
     @Override
-    public String getName() {
-        return StratConPlayType.MAPLESS.getLabel();
+    public void processForceReturnDates(StratConTrackState track, Campaign campaign) {
+        StratConRulesManager.processTrackForceReturnDates(track, campaign);
     }
 
     @Override
-    public boolean isEnabled(CampaignOptions campaignOptions) {
-        return campaignOptions.getStratConPlayType() == StratConPlayType.MAPLESS;
+    public void processExpiredScenario(StratConScenario scenario, StratConTrackState track,
+          StratConCampaignState campaignState) {
+        StratConRulesManager.processIgnoredStratConScenario(scenario, track, campaignState);
     }
 
     @Override
-    protected FacilityStrategy getFacilityStrategy() {
-        return noOpFacility;
+    public void processScenarioCompletion(ResolveScenarioTracker tracker) {
+        StratConRulesManager.processScenarioCompletion(tracker);
     }
 }

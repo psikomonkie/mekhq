@@ -39,20 +39,20 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 
 /**
- * Process-wide registry of the {@link DigitalGM}s wired up at startup. It exists so code that is not itself a GM
+ * Process-wide registry of the {@link IDigitalGM}s wired up at startup. It exists so code that is not itself a GM
  * &mdash; UI actions, resolution logic &mdash; can reach the GM that governs a given campaign and route work through
  * that GM's strategies instead of calling the static rules directly.
  *
  * <p>Every registered GM is offered each lookup; {@link #getActiveGM(CampaignOptions)} returns the one whose
- * {@link DigitalGM#isEnabled(CampaignOptions)} accepts the campaign. Because the StratCon play types are mutually
+ * {@link IDigitalGM#isEnabled(CampaignOptions)} accepts the campaign. Because the StratCon play types are mutually
  * exclusive, at most one GM matches (none when play is disabled). Registration is handled by
- * {@link AbstractDigitalGM#startup()} / {@link AbstractDigitalGM#shutdown()}.</p>
+ * {@link AbstractIDigitalGM#startup()} / {@link AbstractIDigitalGM#shutdown()}.</p>
  *
  * @author Illiani
  * @since 0.50.10
  */
 public final class DigitalGMRegistry {
-    private static final List<DigitalGM> REGISTERED = new CopyOnWriteArrayList<>();
+    private static final List<IDigitalGM> REGISTERED = new CopyOnWriteArrayList<>();
 
     private DigitalGMRegistry() {
     }
@@ -61,21 +61,21 @@ public final class DigitalGMRegistry {
      * Registers a GM so it participates in {@link #getActiveGM(CampaignOptions)} lookups. Idempotent: registering the
      * same instance twice has no effect.
      *
-     * @param digitalGM the GM to register
+     * @param IDigitalGM the GM to register
      */
-    public static void register(DigitalGM digitalGM) {
-        if (!REGISTERED.contains(digitalGM)) {
-            REGISTERED.add(digitalGM);
+    public static void register(IDigitalGM IDigitalGM) {
+        if (!REGISTERED.contains(IDigitalGM)) {
+            REGISTERED.add(IDigitalGM);
         }
     }
 
     /**
      * Removes a GM from the registry.
      *
-     * @param digitalGM the GM to remove
+     * @param IDigitalGM the GM to remove
      */
-    public static void unregister(DigitalGM digitalGM) {
-        REGISTERED.remove(digitalGM);
+    public static void unregister(IDigitalGM IDigitalGM) {
+        REGISTERED.remove(IDigitalGM);
     }
 
     /**
@@ -85,7 +85,7 @@ public final class DigitalGMRegistry {
      *
      * @return the enabled GM, or empty if none is active (for example, when digital-GM play is disabled)
      */
-    public static Optional<DigitalGM> getActiveGM(CampaignOptions campaignOptions) {
+    public static Optional<IDigitalGM> getActiveGM(CampaignOptions campaignOptions) {
         return REGISTERED.stream().filter(digitalGM -> digitalGM.isEnabled(campaignOptions)).findFirst();
     }
 }

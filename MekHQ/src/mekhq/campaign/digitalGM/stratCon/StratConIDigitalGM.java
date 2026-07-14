@@ -32,28 +32,28 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.Campaign;
-import mekhq.campaign.digitalGM.strategy.ScenarioGenerationStrategy;
-import mekhq.campaign.mission.AtBContract;
+import mekhq.campaign.campaignOptions.CampaignOptions;
 
 /**
- * Default StratCon implementation of {@link ScenarioGenerationStrategy}. Every method delegates to the existing static
- * logic on {@link StratConRulesManager}, so this class introduces the overridable seam without moving any behaviour.
+ * The default digital GM: classic map-based StratCon ("Normal" play, {@link StratConPlayType#NORMAL}). It inherits the
+ * full StratCon daily lifecycle from {@link AbstractStratConGMI} and keeps every strategy at its StratCon default
+ * &mdash; facility effects are applied and scenarios are generated at the normal weekly cadence.
+ *
+ * <p>It is also the base the reduced play types specialise: {@link MaplessStratConGMI} switches off facility effects,
+ * and {@link SinglesStratConGMI} additionally caps generation to one scenario per week.</p>
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class StratConScenarioGenerationStrategy implements ScenarioGenerationStrategy {
+public class StratConIDigitalGM extends AbstractStratConGMI {
 
     @Override
-    public void generateWeeklyScenarioDates(Campaign campaign, StratConCampaignState campaignState,
-          AtBContract contract, StratConTrackState track, boolean singleDropMode) {
-        StratConRulesManager.generateScenariosDatesForWeek(campaign, campaignState, contract, track, singleDropMode);
+    public String getName() {
+        return StratConPlayType.NORMAL.getLabel();
     }
 
     @Override
-    public void generateDailyScenarios(Campaign campaign, StratConCampaignState campaignState, AtBContract contract,
-          int scenarioCount) {
-        StratConRulesManager.generateDailyScenariosForTrack(campaign, campaignState, contract, scenarioCount);
+    public boolean isEnabled(CampaignOptions campaignOptions) {
+        return campaignOptions.getStratConPlayType() == StratConPlayType.NORMAL;
     }
 }

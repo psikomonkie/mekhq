@@ -37,19 +37,19 @@ import megamek.common.rolls.TargetRoll;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementEligibilityType;
 import mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementResultsType;
-import mekhq.campaign.digitalGM.strategy.ReinforcementStrategy;
+import mekhq.campaign.digitalGM.strategy.IReinforcementStrategy;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.personnel.Person;
 
 /**
- * Default StratCon implementation of {@link ReinforcementStrategy}. Every method delegates to the existing static logic
- * on {@link StratConRulesManager}, so this class introduces the overridable seam without moving any behaviour.
+ * Default StratCon implementation of {@link IReinforcementStrategy}. Every method delegates to the existing static
+ * logic on {@link StratConRulesManager}, so this class introduces the overridable seam without moving any behaviour.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class StratConReinforcementStrategy implements ReinforcementStrategy {
+public class StratConIReinforcementStrategy implements IReinforcementStrategy {
 
     @Override
     public ReinforcementEligibilityType getReinforcementType(int forceID, StratConTrackState trackState,

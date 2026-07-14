@@ -33,25 +33,25 @@
 package mekhq.campaign.digitalGM.strategy;
 
 import megamek.common.annotations.Nullable;
+import mekhq.campaign.digitalGM.stratCon.AbstractStratConGMI;
 import mekhq.campaign.digitalGM.stratCon.StratConCoords;
 import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 
 /**
  * Strategy for deciding <i>where on the track</i> the OpFor deploys &mdash; which coordinates a generated scenario is
- * placed at. This is distinct from {@link OpForGenerationStrategy} (what the OpFor fields) and from
- * {@link MapGenerationStrategy} (the terrain of the resulting battle): a GM can keep the standard enemy composition but
- * change where hostile scenarios appear on the strategic map.
+ * placed at. This is distinct from {@link IOpForGenerationStrategy} (what the OpFor fields) and from
+ * {@link IMapGenerationStrategy} (the terrain of the resulting battle): a GM can keep the standard enemy composition
+ * but change where hostile scenarios appear on the strategic map.
  *
  * <p>The default StratCon implementation delegates to
  * {@link mekhq.campaign.digitalGM.stratCon.StratConContractInitializer#getUnoccupiedCoords
  * StratConContractInitializer.getUnoccupiedCoords} &mdash; the existing weighted-random selection of an unoccupied,
- * non-ocean hex. The accessor lives on
- * {@link mekhq.campaign.digitalGM.stratCon.AbstractStratConGM AbstractStratConGM}.</p>
+ * non-ocean hex. The accessor lives on {@link AbstractStratConGMI AbstractStratConGM}.</p>
  *
  * @author Illiani
  * @since 0.50.10
  */
-public interface OpForDeploymentStrategy {
+public interface IOpForDeploymentStrategy {
 
     /**
      * Selects the coordinates a hostile scenario deploys to on the track.

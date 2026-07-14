@@ -51,7 +51,7 @@ import mekhq.campaign.mission.AtBScenario;
  * @author Illiani
  * @since 0.50.10
  */
-public interface FacilityStrategy {
+public interface IFacilityStrategy {
 
     /**
      * Applies the periodic (daily, and where relevant monthly) effects of the facilities on a track.

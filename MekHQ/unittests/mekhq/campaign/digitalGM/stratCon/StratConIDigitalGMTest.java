@@ -46,8 +46,8 @@ import static org.mockito.Mockito.when;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.campaignOptions.CampaignOptions;
-import mekhq.campaign.digitalGM.DigitalGM;
-import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
+import mekhq.campaign.digitalGM.IDigitalGM;
+import mekhq.campaign.digitalGM.strategy.IFacilityStrategy;
 import mekhq.campaign.events.NewDayEvent;
 import org.junit.jupiter.api.Test;
 
@@ -58,7 +58,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author Illiani
  */
-class StratConDigitalGMTest {
+class StratConIDigitalGMTest {
 
     private static Campaign campaignWithPlayType(StratConPlayType playType) {
         CampaignOptions options = mock(CampaignOptions.class);
@@ -76,9 +76,9 @@ class StratConDigitalGMTest {
         Campaign campaign = campaignWithPlayType(StratConPlayType.NORMAL);
         CampaignOptions campaignOptions = campaign.getCampaignOptions();
 
-        assertTrue(new StratConDigitalGM().isEnabled(campaignOptions));
-        assertFalse(new MaplessStratConGM().isEnabled(campaignOptions));
-        assertFalse(new SinglesStratConGM().isEnabled(campaignOptions));
+        assertTrue(new StratConIDigitalGM().isEnabled(campaignOptions));
+        assertFalse(new MaplessStratConGMI().isEnabled(campaignOptions));
+        assertFalse(new SinglesStratConGMI().isEnabled(campaignOptions));
     }
 
     @Test
@@ -86,9 +86,9 @@ class StratConDigitalGMTest {
         Campaign campaign = campaignWithPlayType(StratConPlayType.MAPLESS);
         CampaignOptions campaignOptions = campaign.getCampaignOptions();
 
-        assertFalse(new StratConDigitalGM().isEnabled(campaignOptions));
-        assertTrue(new MaplessStratConGM().isEnabled(campaignOptions));
-        assertFalse(new SinglesStratConGM().isEnabled(campaignOptions));
+        assertFalse(new StratConIDigitalGM().isEnabled(campaignOptions));
+        assertTrue(new MaplessStratConGMI().isEnabled(campaignOptions));
+        assertFalse(new SinglesStratConGMI().isEnabled(campaignOptions));
     }
 
     @Test
@@ -96,9 +96,9 @@ class StratConDigitalGMTest {
         Campaign campaign = campaignWithPlayType(StratConPlayType.SINGLES);
         CampaignOptions campaignOptions = campaign.getCampaignOptions();
 
-        assertFalse(new StratConDigitalGM().isEnabled(campaignOptions));
-        assertFalse(new MaplessStratConGM().isEnabled(campaignOptions));
-        assertTrue(new SinglesStratConGM().isEnabled(campaignOptions));
+        assertFalse(new StratConIDigitalGM().isEnabled(campaignOptions));
+        assertFalse(new MaplessStratConGMI().isEnabled(campaignOptions));
+        assertTrue(new SinglesStratConGMI().isEnabled(campaignOptions));
     }
 
     @Test
@@ -106,9 +106,9 @@ class StratConDigitalGMTest {
         Campaign campaign = campaignWithPlayType(StratConPlayType.DISABLED);
         CampaignOptions campaignOptions = campaign.getCampaignOptions();
 
-        assertFalse(new StratConDigitalGM().isEnabled(campaignOptions));
-        assertFalse(new MaplessStratConGM().isEnabled(campaignOptions));
-        assertFalse(new SinglesStratConGM().isEnabled(campaignOptions));
+        assertFalse(new StratConIDigitalGM().isEnabled(campaignOptions));
+        assertFalse(new MaplessStratConGMI().isEnabled(campaignOptions));
+        assertFalse(new SinglesStratConGMI().isEnabled(campaignOptions));
     }
 
     // endregion
@@ -117,27 +117,27 @@ class StratConDigitalGMTest {
 
     @Test
     void normalAppliesFacilityEffectsAndFullCadence() {
-        StratConDigitalGM gm = new StratConDigitalGM();
+        StratConIDigitalGM gm = new StratConIDigitalGM();
 
-        assertInstanceOf(StratConFacilityStrategy.class, gm.getFacilityStrategy());
+        assertInstanceOf(StratConIFacilityStrategy.class, gm.getFacilityStrategy());
         assertFalse(gm.isSingleDropMode());
     }
 
     @Test
     void maplessSkipsFacilityEffectsButKeepsFullCadence() {
-        MaplessStratConGM gm = new MaplessStratConGM();
+        MaplessStratConGMI gm = new MaplessStratConGMI();
 
         // Legacy: isUseStratConMapless -> facility effects skipped, but not single-drop
-        assertInstanceOf(NoOpFacilityStrategy.class, gm.getFacilityStrategy());
+        assertInstanceOf(NoOpIFacilityStrategy.class, gm.getFacilityStrategy());
         assertFalse(gm.isSingleDropMode());
     }
 
     @Test
     void singlesSkipsFacilityEffectsAndCapsToOneDrop() {
-        SinglesStratConGM gm = new SinglesStratConGM();
+        SinglesStratConGMI gm = new SinglesStratConGMI();
 
         // Legacy: Singles implies Mapless (facility effects skipped) and single-drop pacing
-        assertInstanceOf(NoOpFacilityStrategy.class, gm.getFacilityStrategy());
+        assertInstanceOf(NoOpIFacilityStrategy.class, gm.getFacilityStrategy());
         assertTrue(gm.isSingleDropMode());
     }
 
@@ -147,7 +147,7 @@ class StratConDigitalGMTest {
 
     @Test
     void onNewDayRunsHandleNewDayWhenEnabled() {
-        StratConDigitalGM gm = spy(new StratConDigitalGM());
+        StratConIDigitalGM gm = spy(new StratConIDigitalGM());
         doNothing().when(gm).handleNewDay(any());
 
         Campaign campaign = campaignWithPlayType(StratConPlayType.NORMAL);
@@ -162,7 +162,7 @@ class StratConDigitalGMTest {
     @Test
     void onNewDaySkipsHandleNewDayWhenDisabled() {
         // A mapless GM must stay inert on a Normal-play campaign
-        MaplessStratConGM gm = spy(new MaplessStratConGM());
+        MaplessStratConGMI gm = spy(new MaplessStratConGMI());
         doNothing().when(gm).handleNewDay(any());
 
         Campaign campaign = campaignWithPlayType(StratConPlayType.NORMAL);
@@ -176,11 +176,11 @@ class StratConDigitalGMTest {
 
     @Test
     void gmsExposeThemselvesAsDigitalGMs() {
-        DigitalGM normal = new StratConDigitalGM();
-        FacilityStrategy facility = new StratConDigitalGM().getFacilityStrategy();
+        IDigitalGM normal = new StratConIDigitalGM();
+        IFacilityStrategy facility = new StratConIDigitalGM().getFacilityStrategy();
 
-        assertInstanceOf(DigitalGM.class, normal);
-        assertInstanceOf(FacilityStrategy.class, facility);
+        assertInstanceOf(IDigitalGM.class, normal);
+        assertInstanceOf(IFacilityStrategy.class, facility);
     }
 
     // endregion

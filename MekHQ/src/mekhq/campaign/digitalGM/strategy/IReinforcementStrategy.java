@@ -35,6 +35,7 @@ package mekhq.campaign.digitalGM.strategy;
 import megamek.common.annotations.Nullable;
 import megamek.common.rolls.TargetRoll;
 import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.stratCon.AbstractStratConGMI;
 import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
 import mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementEligibilityType;
 import mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementResultsType;
@@ -51,12 +52,12 @@ import mekhq.campaign.personnel.Person;
  * <p>The method signatures mirror the corresponding static entry points on
  * {@link mekhq.campaign.digitalGM.stratCon.StratConRulesManager StratConRulesManager}; the default StratCon
  * implementation delegates to them, so the rules themselves are unchanged. The accessor lives on
- * {@link mekhq.campaign.digitalGM.stratCon.AbstractStratConGM AbstractStratConGM}.</p>
+ * {@link AbstractStratConGMI AbstractStratConGM}.</p>
  *
  * @author Illiani
  * @since 0.50.10
  */
-public interface ReinforcementStrategy {
+public interface IReinforcementStrategy {
 
     /**
      * Determines a force's eligibility to reinforce, given its current commitments.
