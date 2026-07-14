@@ -32,6 +32,8 @@
  */
 package mekhq.campaign.mission.newContract;
 
+import mekhq.campaign.mission.newContract.targetFinder.MissionTargetFinder;
+
 /**
  * Describes how a contract's mission location should be selected, based on what kind of operation the contract
  * represents. The default border-based search in {@link MissionTargetFinder} fits a conventional front-line campaign,

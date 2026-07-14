@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.mission.newContract;
+package mekhq.campaign.mission.newContract.targetFinder;
 
 import static mekhq.campaign.universe.Faction.BANDIT_CASTE_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.MERCENARY_FACTION_CODE;
@@ -46,6 +46,7 @@ import java.util.Set;
 
 import megamek.common.annotations.Nullable;
 import mekhq.campaign.location.ILocation;
+import mekhq.campaign.mission.newContract.MissionLocationProfile;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.FactionBorderTracker;
 import mekhq.campaign.universe.FactionBorders;
@@ -167,7 +168,7 @@ public class MissionTargetFinder {
         if (!profileTargets.isEmpty()) {
             return profileTargets;
         }
-        
+
         List<PlanetarySystem> borderTargets = findSharedBorderTargets(attacker, defender, location, radius,
               currentDate);
         if (!borderTargets.isEmpty()) {

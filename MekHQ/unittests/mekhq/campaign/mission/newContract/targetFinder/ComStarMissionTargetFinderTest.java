@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.mission.newContract;
+package mekhq.campaign.mission.newContract.targetFinder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -127,8 +127,8 @@ public class ComStarMissionTargetFinderTest {
     }
 
     /**
-     * Regression test: with no ComStar-owned or A/B-rated HPG system in range, there is no valid target &mdash;
-     * unlike the pirate cases, this is a hard restriction with no fallback to a broader search.
+     * Regression test: with no ComStar-owned or A/B-rated HPG system in range, there is no valid target &mdash; unlike
+     * the pirate cases, this is a hard restriction with no fallback to a broader search.
      */
     @Test
     public void testFindValidSystemsReturnsEmptyWhenNoQualifyingSystemsInRange() {
@@ -151,8 +151,8 @@ public class ComStarMissionTargetFinderTest {
     }
 
     /**
-     * Regression test: a location with no current system (e.g. a force in deep transit) yields an empty result
-     * rather than throwing.
+     * Regression test: a location with no current system (e.g. a force in deep transit) yields an empty result rather
+     * than throwing.
      */
     @Test
     public void testFindValidSystemsReturnsEmptyWhenLocationHasNoCurrentSystem() {

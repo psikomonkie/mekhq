@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.mission.newContract;
+package mekhq.campaign.mission.newContract.targetFinder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -90,8 +90,8 @@ public class PirateMissionTargetFinderTest {
     }
 
     /**
-     * Builds a connector system (see {@link PlanetarySystem#isConnector()}) with no faction data, whose primary
-     * planet is of the given type.
+     * Builds a connector system (see {@link PlanetarySystem#isConnector()}) with no faction data, whose primary planet
+     * is of the given type.
      */
     private static PlanetarySystem createConnectorTestSystem(final double x, final double y,
           final PlanetaryType planetType) {
@@ -159,8 +159,8 @@ public class PirateMissionTargetFinderTest {
 
     /**
      * Regression test: a system with no faction data at all (an empty {@link java.util.Set}, as real, populated but
-     * never-owned systems actually report) must still count as an empty/lawless system, not just one whose sole
-     * faction is a recognized placeholder code like "UND".
+     * never-owned systems actually report) must still count as an empty/lawless system, not just one whose sole faction
+     * is a recognized placeholder code like "UND".
      */
     @Test
     public void testFindDefenderTargetsTreatsSystemWithNoFactionDataAsEmpty() {
@@ -209,8 +209,8 @@ public class PirateMissionTargetFinderTest {
     }
 
     /**
-     * Regression test: a connector system whose primary planet is not terrestrial (e.g. a gas giant or asteroid
-     * belt) is not a plausible pirate hideout, so it must not be picked even though it has no faction data.
+     * Regression test: a connector system whose primary planet is not terrestrial (e.g. a gas giant or asteroid belt)
+     * is not a plausible pirate hideout, so it must not be picked even though it has no faction data.
      */
     @Test
     public void testFindDefenderTargetsExcludesNonTerrestrialConnectorSystem() {
@@ -319,8 +319,8 @@ public class PirateMissionTargetFinderTest {
     }
 
     /**
-     * Regression test: with no Periphery neighbor, a pirate attacker should fall back to the defender's border with
-     * any neighbor rather than returning nothing.
+     * Regression test: with no Periphery neighbor, a pirate attacker should fall back to the defender's border with any
+     * neighbor rather than returning nothing.
      */
     @Test
     public void testFindAttackerTargetsFallsBackToAnyBorder() {
@@ -345,9 +345,8 @@ public class PirateMissionTargetFinderTest {
     }
 
     /**
-     * Regression test: when the defender has no identifiable border at all (no neighboring factions), the attacker
-     * tier finds nothing, leaving the broader "strike anywhere the defender holds" fallback to
-     * {@link MissionTargetFinder}.
+     * Regression test: when the defender has no identifiable border at all (no neighboring factions), the attacker tier
+     * finds nothing, leaving the broader "strike anywhere the defender holds" fallback to {@link MissionTargetFinder}.
      */
     @Test
     public void testFindAttackerTargetsReturnsEmptyWhenNoBorder() {

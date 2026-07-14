@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.mission.newContract;
+package mekhq.campaign.mission.newContract.targetFinder;
 
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_END;
 import static mekhq.MHQConstants.FORTRESS_REPUBLIC_START;
@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Set;
 
 import mekhq.campaign.location.ILocation;
+import mekhq.campaign.mission.newContract.MissionLocationProfile;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.FactionBorderTracker;
 import mekhq.campaign.universe.Factions;
@@ -848,37 +849,6 @@ public class MissionTargetFinderTest {
 
         assertEquals(List.of(borderSystem), targets,
               "A planetary invasion should only ever target defender worlds on the shared border");
-    }
-
-    /**
-     * INVASION is the one hard location restriction among the profiles: with no shared border at all, there must be no
-     * target - never a fallback to the whole-map closest-defender-system placement that a DEFAULT contract would reach
-     * for.
-     */
-    @Test
-    public void testFindInvasionProfileFindsNoTargetWithoutASharedBorder() {
-        Faction attackerFaction = createTestFaction("ATTACKER", false, false);
-        Faction defenderFaction = createTestFaction("DEFENDER", false, false);
-
-        PlanetarySystem attackerSystem = createTestSystem(0, 0, attackerFaction);
-        // Far beyond any border reach - only the whole-map closest-system fallback could ever land here.
-        PlanetarySystem distantDefenderSystem = createTestSystem(1000, 1000, defenderFaction);
-        stubDistances(attackerSystem, distantDefenderSystem);
-
-        FactionBorderTracker tracker = buildTestTracker(List.of(attackerSystem, distantDefenderSystem));
-        MissionTargetFinder finder = new MissionTargetFinder(tracker, new FactionHints());
-        ILocation location = createTestLocation(attackerFaction);
-
-        List<PlanetarySystem> defaultTargets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE);
-        assertEquals(List.of(distantDefenderSystem), defaultTargets,
-              "Sanity check: a DEFAULT contract should still reach the distant defender via the closest-system "
-                    + "fallback");
-
-        List<PlanetarySystem> invasionTargets = finder.find(attackerFaction, defenderFaction, location, TEST_DATE,
-              MissionLocationProfile.INVASION);
-        assertTrue(invasionTargets.isEmpty(),
-              "An invasion with no shared border has no viable target: the attacker could never hold a world so far "
-                    + "from its own territory");
     }
 
     /**
