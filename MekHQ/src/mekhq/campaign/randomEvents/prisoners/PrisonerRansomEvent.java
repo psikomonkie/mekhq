@@ -218,7 +218,7 @@ public class PrisonerRansomEvent {
      *
      * @return The number of prisoners to be involved in the ransom event.
      */
-    private int calculateRansomCount(int prisonerCount) {
+    static int calculateRansomCount(int prisonerCount) {
         return max(1, (int) Math.ceil(prisonerCount * RANSOM_PERCENTAGE));
     }
 
@@ -238,7 +238,7 @@ public class PrisonerRansomEvent {
      *
      * @return The total ransom amount as {@link Money}.
      */
-    private Money calculateTotalRansom(List<Person> ransomList, Campaign campaign, boolean isFriendlyPOWs) {
+    static Money calculateTotalRansom(List<Person> ransomList, Campaign campaign, boolean isFriendlyPOWs) {
         Money ransom = Money.zero();
         for (Person person : ransomList) {
             Money ransomValue = person.getRansomValue(campaign);
@@ -258,7 +258,7 @@ public class PrisonerRansomEvent {
      *
      * @return {@code true} if the player has sufficient funds to cover the ransom, {@code false} otherwise.
      */
-    private boolean canAffordRansom(Campaign campaign, Money ransom) {
+    static boolean canAffordRansom(Campaign campaign, Money ransom) {
         Money currentFunds = campaign.getPlayerForce().getFinances().getBalance();
         return !currentFunds.isLessThan(ransom);
     }
@@ -279,7 +279,7 @@ public class PrisonerRansomEvent {
      * @param ransom         The total ransom amount.
      * @param isFriendlyPOWs {@code true} if the event is for friendly POWs, {@code false} for enemy prisoners.
      */
-    private void handleRansomOutcome(Campaign campaign, List<Person> ransomList, Money ransom,
+    static void handleRansomOutcome(Campaign campaign, List<Person> ransomList, Money ransom,
           boolean isFriendlyPOWs) {
         if (isFriendlyPOWs) {
             // Debit funds and return POWs to active duty

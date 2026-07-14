@@ -285,6 +285,7 @@ class CapturePrisonersTest {
         when(mockCampaign.getLocalDate()).thenReturn(today);
 
         Faction mockFaction = mock(Faction.class);
+        when(mockCampaign.getPlayerForce().getFaction()).thenReturn(mockFaction);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
 
         Scenario scenario = new Scenario();
@@ -320,6 +321,7 @@ class CapturePrisonersTest {
         when(mockCampaign.getLocalDate()).thenReturn(today);
 
         Faction campaignFaction = factions.getFaction("CJF");
+        when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
 
         Scenario scenario = new Scenario();
@@ -355,6 +357,7 @@ class CapturePrisonersTest {
         when(mockCampaign.getLocalDate()).thenReturn(today);
 
         Faction campaignFaction = factions.getFaction("CJF");
+        when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
 
         Scenario scenario = new Scenario();
@@ -392,6 +395,7 @@ class CapturePrisonersTest {
         when(mockCampaign.getLocalDate()).thenReturn(today);
 
         Faction mockFaction = mock(Faction.class);
+        when(mockCampaign.getPlayerForce().getFaction()).thenReturn(mockFaction);
         when(mockCampaign.getFaction()).thenReturn(mockFaction);
 
         Scenario scenario = new Scenario();
@@ -427,6 +431,7 @@ class CapturePrisonersTest {
         when(mockCampaign.getLocalDate()).thenReturn(today);
 
         Faction campaignFaction = factions.getFaction("CJF");
+        when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
 
         Scenario scenario = new Scenario();
@@ -462,6 +467,7 @@ class CapturePrisonersTest {
         when(mockCampaign.getLocalDate()).thenReturn(today);
 
         Faction campaignFaction = factions.getFaction("CJF");
+        when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
 
         Scenario scenario = new Scenario();
@@ -499,6 +505,7 @@ class CapturePrisonersTest {
         when(mockCampaign.getLocalDate()).thenReturn(today);
 
         Faction campaignFaction = new Faction();
+        when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
 
         Scenario scenario = new Scenario();
@@ -527,6 +534,7 @@ class CapturePrisonersTest {
         when(mockCampaign.getLocalDate()).thenReturn(today);
 
         Faction campaignFaction = new Faction();
+        when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
 
         Scenario scenario = new Scenario();
@@ -560,6 +568,10 @@ class CapturePrisonersTest {
 
         Faction campaignFaction = new Faction();
         campaignFaction.setTags(Set.of(FactionTag.CLAN));
+        // A non-pirate, non-mercenary captor faction must not trigger the Dezgra multiplier.
+        // determineDefectionChance reads the captor faction via getPlayerForce().getFaction(); Person construction
+        // reads it via the Campaign.getFaction() passthrough.
+        when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
 
         Scenario scenario = new Scenario();
@@ -590,6 +602,9 @@ class CapturePrisonersTest {
 
         Faction campaignFaction = new Faction();
         campaignFaction.setTags(Set.of(FactionTag.MERC));
+        // The Dezgra (Clan NPC) multiplier keys off the captor faction, which determineDefectionChance reads via
+        // getPlayerForce().getFaction(); Person construction reads it via the Campaign.getFaction() passthrough.
+        when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
 
         Scenario scenario = new Scenario();

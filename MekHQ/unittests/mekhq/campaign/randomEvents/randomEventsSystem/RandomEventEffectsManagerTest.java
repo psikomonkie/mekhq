@@ -55,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -84,13 +85,13 @@ class RandomEventEffectsManagerTest {
 
     @BeforeEach
     void setUpCampaign() {
-        mockCampaign = mock(Campaign.class);
+        mockCampaign = mockCampaign();
         mockCampaignOptions = mock(CampaignOptions.class);
         Faction campaignFaction = mock(Faction.class);
 
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(campaignFaction.getShortName()).thenReturn("MERC");
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
+        when(mockCampaign.get.getFaction()).thenReturn(campaignFaction);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         when(mockCampaign.getLocalDate()).thenReturn(LocalDate.of(3151, 1, 1));
     }
@@ -128,9 +129,10 @@ class RandomEventEffectsManagerTest {
         return runEffect(buildEventData(type, result));
     }
 
-    /** Stubs {@code getAllPersonnel()} to return the given persons. */
+    /** Stubs the campaign personnel roster to return the given persons. */
     private void stubAllPersonnel(Person... persons) {
-        when(mockCampaign.getAllPersonnel()).thenReturn(new ArrayList<>(List.of(persons)));
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel())
+              .thenReturn(new ArrayList<>(List.of(persons)));
     }
 
     /** Creates a prisoner (marked with PRISONER status) backed by {@code mockCampaign}. */
