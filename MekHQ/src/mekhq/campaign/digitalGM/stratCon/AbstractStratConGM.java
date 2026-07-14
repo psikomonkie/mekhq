@@ -40,6 +40,9 @@ import mekhq.campaign.Campaign;
 import mekhq.campaign.digitalGM.AbstractDigitalGM;
 import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
 import mekhq.campaign.digitalGM.strategy.ForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.MapGenerationStrategy;
+import mekhq.campaign.digitalGM.strategy.OpForDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.OpForGenerationStrategy;
 import mekhq.campaign.digitalGM.strategy.ReinforcementStrategy;
 import mekhq.campaign.digitalGM.strategy.ScenarioGenerationStrategy;
 import mekhq.campaign.digitalGM.strategy.ScenarioLifecycleStrategy;
@@ -75,12 +78,36 @@ public abstract class AbstractStratConGM extends AbstractDigitalGM {
     private final FacilityStrategy facility = new StratConFacilityStrategy();
     private final ForceDeploymentStrategy forceDeployment = new StratConForceDeploymentStrategy();
     private final ReinforcementStrategy reinforcement = new StratConReinforcementStrategy();
+    private final OpForGenerationStrategy opForGeneration = new StratConOpForGenerationStrategy();
+    private final OpForDeploymentStrategy opForDeployment = new StratConOpForDeploymentStrategy();
+    private final MapGenerationStrategy mapGeneration = new StratConMapGenerationStrategy();
 
     /**
      * @return the strategy that decides when and how scenarios are generated for this GM
      */
     protected ScenarioGenerationStrategy scenarioGeneration() {
         return scenarioGeneration;
+    }
+
+    /**
+     * @return the strategy that builds a scenario's terrain (map) from the biome at its coordinates
+     */
+    protected MapGenerationStrategy mapGeneration() {
+        return mapGeneration;
+    }
+
+    /**
+     * @return the strategy that generates the opposing force (enemy composition) for this GM's scenarios
+     */
+    protected OpForGenerationStrategy opForGeneration() {
+        return opForGeneration;
+    }
+
+    /**
+     * @return the strategy that decides where on the track a hostile scenario deploys (its coordinates)
+     */
+    protected OpForDeploymentStrategy opForDeployment() {
+        return opForDeployment;
     }
 
     /**

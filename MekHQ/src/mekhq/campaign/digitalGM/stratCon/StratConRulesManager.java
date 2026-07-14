@@ -44,7 +44,6 @@ import static megamek.common.units.UnitType.CONV_FIGHTER;
 import static megamek.common.units.UnitType.DROPSHIP;
 import static megamek.common.units.UnitType.JUMPSHIP;
 import static megamek.common.units.UnitType.MEK;
-import static mekhq.campaign.digitalGM.stratCon.StratConContractInitializer.getUnoccupiedCoords;
 import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementEligibilityType.AUXILIARY;
 import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementResultsType.DELAYED;
 import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.ReinforcementResultsType.FAILED;
@@ -55,7 +54,6 @@ import static mekhq.campaign.digitalGM.stratCon.StratConScenarioFactory.convertS
 import static mekhq.campaign.enums.DailyReportType.BATTLE;
 import static mekhq.campaign.enums.DailyReportType.SKILL_CHECKS;
 import static mekhq.campaign.force.Formation.FORMATION_NONE;
-import static mekhq.campaign.mission.AtBDynamicScenarioFactory.finalizeScenario;
 import static mekhq.campaign.mission.ScenarioForceTemplate.ForceAlignment.Allied;
 import static mekhq.campaign.mission.ScenarioForceTemplate.ForceAlignment.Opposing;
 import static mekhq.campaign.mission.ScenarioMapParameters.MapLocation.AllGroundTerrain;
@@ -291,7 +289,8 @@ public class StratConRulesManager {
                 return;
             }
 
-            StratConCoords scenarioCoords = getUnoccupiedCoords(track, true, true, true);
+            StratConCoords scenarioCoords = StratConGMs.opForDeployment(campaign)
+                                                  .getUnoccupiedCoords(track, true, true, true);
 
             if (scenarioCoords == null) {
                 LOGGER.warn("Target track is full, skipping scenario generation");
@@ -426,10 +425,11 @@ public class StratConRulesManager {
 
         // Select the target coords.
         if (scenarioCoords == null) {
-            scenarioCoords = getUnoccupiedCoords(track,
-                  allowPlayerFacilities,
-                  allowPlayerForces,
-                  emphasizeStrategicTargets);
+            scenarioCoords = StratConGMs.opForDeployment(campaign)
+                                   .getUnoccupiedCoords(track,
+                                         allowPlayerFacilities,
+                                         allowPlayerForces,
+                                         emphasizeStrategicTargets);
         }
 
         if (scenarioCoords == null) {
@@ -519,7 +519,7 @@ public class StratConRulesManager {
     public static @Nullable void generateReinforcementInterceptionScenario(Campaign campaign,
           StratConScenario linkedScenario, AtBContract contract, StratConTrackState track, ScenarioTemplate template,
           Formation interceptedFormation) {
-        StratConCoords scenarioCoords = getUnoccupiedCoords(track);
+        StratConCoords scenarioCoords = StratConGMs.opForDeployment(campaign).getUnoccupiedCoords(track);
 
         StratConScenario scenario = setupScenario(scenarioCoords,
               interceptedFormation.getId(),
@@ -585,10 +585,11 @@ public class StratConRulesManager {
             }
         }
 
-        StratConCoords coords = getUnoccupiedCoords(trackState,
-              allowPlayerFacilities,
-              allowPlayerForces,
-              emphasizeStrategicTargets);
+        StratConCoords coords = StratConGMs.opForDeployment(campaign)
+                                      .getUnoccupiedCoords(trackState,
+                                            allowPlayerFacilities,
+                                            allowPlayerForces,
+                                            emphasizeStrategicTargets);
 
         if (coords == null) {
             LOGGER.error("Unable to place objective scenario on track {}, as all coords were occupied. Aborting.",
@@ -675,8 +676,9 @@ public class StratConRulesManager {
         }
 
         // Finally, finish scenario set up
-        setScenarioParametersFromBiome(track, scenario, campaign.getCampaignOptions().isUseNoTornadoes());
-        finalizeScenario(backingScenario, contract, campaign);
+        StratConGMs.mapGeneration(campaign)
+              .setScenarioTerrain(track, scenario, campaign.getCampaignOptions().isUseNoTornadoes());
+        StratConGMs.opForGeneration(campaign).generateOpFor(backingScenario, contract, campaign);
         swapInPlayerUnits(scenario, campaign, FORMATION_NONE);
 
         if (!autoAssignLances && !scenario.overrideForceAutoAssignment()) {
@@ -1217,10 +1219,12 @@ public class StratConRulesManager {
                 revealedScenario.addPrimaryForce(forceID);
                 commitPrimaryForces(campaign, revealedScenario, track);
                 if (!revealedScenario.getBackingScenario().isFinalized()) {
-                    setScenarioParametersFromBiome(track,
-                          revealedScenario,
-                          campaign.getCampaignOptions().isUseNoTornadoes());
-                    finalizeScenario(revealedScenario.getBackingScenario(), contract, campaign);
+                    StratConGMs.mapGeneration(campaign)
+                          .setScenarioTerrain(track,
+                                revealedScenario,
+                                campaign.getCampaignOptions().isUseNoTornadoes());
+                    StratConGMs.opForGeneration(campaign)
+                          .generateOpFor(revealedScenario.getBackingScenario(), contract, campaign);
                 }
             }
             return;
@@ -1353,8 +1357,9 @@ public class StratConRulesManager {
 
         commitPrimaryForces(campaign, scenario, track);
         if (!backingScenario.isFinalized()) {
-            setScenarioParametersFromBiome(track, scenario, campaign.getCampaignOptions().isUseNoTornadoes());
-            finalizeScenario(backingScenario, contract, campaign);
+            StratConGMs.mapGeneration(campaign)
+                  .setScenarioTerrain(track, scenario, campaign.getCampaignOptions().isUseNoTornadoes());
+            StratConGMs.opForGeneration(campaign).generateOpFor(backingScenario, contract, campaign);
         }
     }
 

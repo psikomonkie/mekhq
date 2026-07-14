@@ -32,32 +32,24 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
+import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.strategy.OpForGenerationStrategy;
+import mekhq.campaign.mission.AtBContract;
+import mekhq.campaign.mission.AtBDynamicScenario;
+import mekhq.campaign.mission.AtBDynamicScenarioFactory;
 
 /**
- * Digital GM for StratCon <b>Mapless</b> play ({@link StratConPlayType#MAPLESS}). Identical to the map-based
- * {@link StratConDigitalGM} except that it has no facility map: it supplies a {@link NoOpFacilityStrategy}, which
- * reproduces the legacy engine's {@code if (!isUseStratConMapless)} guard around facility effects.
+ * Default StratCon implementation of {@link OpForGenerationStrategy}: the standard dynamic/random AtB generation. It
+ * delegates to {@link AtBDynamicScenarioFactory#finalizeScenario}, so this class introduces the overridable seam
+ * without moving any behaviour.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class MaplessStratConGM extends StratConDigitalGM {
-
-    private final FacilityStrategy noOpFacility = new NoOpFacilityStrategy();
+public class StratConOpForGenerationStrategy implements OpForGenerationStrategy {
 
     @Override
-    public String getName() {
-        return StratConPlayType.MAPLESS.getLabel();
-    }
-
-    @Override
-    public boolean isEnabled(CampaignOptions campaignOptions) {
-        return campaign.getCampaignOptions().getStratConPlayType() == StratConPlayType.MAPLESS;
-    }
-
-    @Override
-    protected FacilityStrategy facility() {
-        return noOpFacility;
+    public void generateOpFor(AtBDynamicScenario backingScenario, AtBContract contract, Campaign campaign) {
+        AtBDynamicScenarioFactory.finalizeScenario(backingScenario, contract, campaign);
     }
 }

@@ -32,32 +32,23 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
+import megamek.common.annotations.Nullable;
+import mekhq.campaign.digitalGM.strategy.OpForDeploymentStrategy;
 
 /**
- * Digital GM for StratCon <b>Mapless</b> play ({@link StratConPlayType#MAPLESS}). Identical to the map-based
- * {@link StratConDigitalGM} except that it has no facility map: it supplies a {@link NoOpFacilityStrategy}, which
- * reproduces the legacy engine's {@code if (!isUseStratConMapless)} guard around facility effects.
+ * Default StratCon implementation of {@link OpForDeploymentStrategy}: the standard weighted-random placement of a
+ * hostile scenario on an unoccupied hex. Delegates to {@link StratConContractInitializer#getUnoccupiedCoords}, so this
+ * class introduces the overridable seam without moving any behaviour.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class MaplessStratConGM extends StratConDigitalGM {
-
-    private final FacilityStrategy noOpFacility = new NoOpFacilityStrategy();
+public class StratConOpForDeploymentStrategy implements OpForDeploymentStrategy {
 
     @Override
-    public String getName() {
-        return StratConPlayType.MAPLESS.getLabel();
-    }
-
-    @Override
-    public boolean isEnabled(CampaignOptions campaignOptions) {
-        return campaign.getCampaignOptions().getStratConPlayType() == StratConPlayType.MAPLESS;
-    }
-
-    @Override
-    protected FacilityStrategy facility() {
-        return noOpFacility;
+    public @Nullable StratConCoords getUnoccupiedCoords(StratConTrackState track, boolean allowPlayerFacilities,
+          boolean allowPlayerForces, boolean emphasizeStrategicTargets) {
+        return StratConContractInitializer.getUnoccupiedCoords(track, allowPlayerFacilities, allowPlayerForces,
+              emphasizeStrategicTargets);
     }
 }

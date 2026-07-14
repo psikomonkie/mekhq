@@ -36,6 +36,9 @@ import mekhq.campaign.Campaign;
 import mekhq.campaign.digitalGM.DigitalGM;
 import mekhq.campaign.digitalGM.DigitalGMRegistry;
 import mekhq.campaign.digitalGM.strategy.ForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.MapGenerationStrategy;
+import mekhq.campaign.digitalGM.strategy.OpForDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.OpForGenerationStrategy;
 
 /**
  * Entry point for non-GM StratCon code (mainly the deployment UI) to reach the active digital GM's strategies for a
@@ -51,6 +54,9 @@ import mekhq.campaign.digitalGM.strategy.ForceDeploymentStrategy;
  */
 public final class StratConGMs {
     private static final ForceDeploymentStrategy DEFAULT_FORCE_DEPLOYMENT = new StratConForceDeploymentStrategy();
+    private static final OpForGenerationStrategy DEFAULT_OPFOR_GENERATION = new StratConOpForGenerationStrategy();
+    private static final OpForDeploymentStrategy DEFAULT_OPFOR_DEPLOYMENT = new StratConOpForDeploymentStrategy();
+    private static final MapGenerationStrategy DEFAULT_MAP_GENERATION = new StratConMapGenerationStrategy();
 
     private StratConGMs() {
     }
@@ -71,5 +77,59 @@ public final class StratConGMs {
         }
 
         return DEFAULT_FORCE_DEPLOYMENT;
+    }
+
+    /**
+     * Resolves the OpFor-generation strategy of the digital GM governing the given campaign.
+     *
+     * @param campaign the campaign whose active GM is consulted
+     *
+     * @return the active StratCon GM's {@link OpForGenerationStrategy}, or the default StratCon strategy when no
+     *       StratCon GM is active
+     */
+    public static OpForGenerationStrategy opForGeneration(Campaign campaign) {
+        DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaign).orElse(null);
+
+        if (activeGM instanceof AbstractStratConGM stratConGM) {
+            return stratConGM.opForGeneration();
+        }
+
+        return DEFAULT_OPFOR_GENERATION;
+    }
+
+    /**
+     * Resolves the OpFor-deployment strategy of the digital GM governing the given campaign.
+     *
+     * @param campaign the campaign whose active GM is consulted
+     *
+     * @return the active StratCon GM's {@link OpForDeploymentStrategy}, or the default StratCon strategy when no
+     *       StratCon GM is active
+     */
+    public static OpForDeploymentStrategy opForDeployment(Campaign campaign) {
+        DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaign).orElse(null);
+
+        if (activeGM instanceof AbstractStratConGM stratConGM) {
+            return stratConGM.opForDeployment();
+        }
+
+        return DEFAULT_OPFOR_DEPLOYMENT;
+    }
+
+    /**
+     * Resolves the map-generation (terrain) strategy of the digital GM governing the given campaign.
+     *
+     * @param campaign the campaign whose active GM is consulted
+     *
+     * @return the active StratCon GM's {@link MapGenerationStrategy}, or the default StratCon strategy when no StratCon
+     *       GM is active
+     */
+    public static MapGenerationStrategy mapGeneration(Campaign campaign) {
+        DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaign).orElse(null);
+
+        if (activeGM instanceof AbstractStratConGM stratConGM) {
+            return stratConGM.mapGeneration();
+        }
+
+        return DEFAULT_MAP_GENERATION;
     }
 }

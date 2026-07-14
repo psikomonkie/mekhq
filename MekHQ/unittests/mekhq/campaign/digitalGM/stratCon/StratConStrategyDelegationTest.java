@@ -45,6 +45,8 @@ import mekhq.campaign.digitalGM.strategy.ForceDeploymentStrategy;
 import mekhq.campaign.digitalGM.strategy.ReinforcementStrategy;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.mission.AtBContract;
+import mekhq.campaign.mission.AtBDynamicScenario;
+import mekhq.campaign.mission.AtBDynamicScenarioFactory;
 import mekhq.campaign.mission.AtBScenario;
 import mekhq.campaign.personnel.Person;
 import org.junit.jupiter.api.Test;
@@ -155,10 +157,63 @@ class StratConStrategyDelegationTest {
     }
 
     @Test
+    void opForGenerationStrategyDelegatesToDynamicScenarioFactory() {
+        AtBDynamicScenario backingScenario = mock(AtBDynamicScenario.class);
+        AtBContract contract = mock(AtBContract.class);
+        Campaign campaign = mock(Campaign.class);
+        StratConOpForGenerationStrategy strategy = new StratConOpForGenerationStrategy();
+
+        try (MockedStatic<AtBDynamicScenarioFactory> factory = mockStatic(AtBDynamicScenarioFactory.class)) {
+            strategy.generateOpFor(backingScenario, contract, campaign);
+
+            factory.verify(() -> AtBDynamicScenarioFactory.finalizeScenario(backingScenario, contract, campaign));
+        }
+    }
+
+    @Test
+    void opForDeploymentStrategyDelegatesToContractInitializer() {
+        StratConTrackState track = mock(StratConTrackState.class);
+        StratConCoords coords = mock(StratConCoords.class);
+        StratConOpForDeploymentStrategy strategy = new StratConOpForDeploymentStrategy();
+
+        try (MockedStatic<StratConContractInitializer> initializer =
+                   mockStatic(StratConContractInitializer.class)) {
+            initializer.when(() -> StratConContractInitializer.getUnoccupiedCoords(track, true, false, true))
+                  .thenReturn(coords);
+            initializer.when(() -> StratConContractInitializer.getUnoccupiedCoords(track, false, false, false))
+                  .thenReturn(coords);
+
+            // explicit constraints pass through
+            assertSame(coords, strategy.getUnoccupiedCoords(track, true, false, true));
+            initializer.verify(() -> StratConContractInitializer.getUnoccupiedCoords(track, true, false, true));
+
+            // convenience overload defaults to (false, false, false)
+            assertSame(coords, strategy.getUnoccupiedCoords(track));
+            initializer.verify(() -> StratConContractInitializer.getUnoccupiedCoords(track, false, false, false));
+        }
+    }
+
+    @Test
+    void mapGenerationStrategyDelegatesToRulesManager() {
+        StratConTrackState track = mock(StratConTrackState.class);
+        StratConScenario scenario = mock(StratConScenario.class);
+        StratConMapGenerationStrategy strategy = new StratConMapGenerationStrategy();
+
+        try (MockedStatic<StratConRulesManager> rules = mockStatic(StratConRulesManager.class)) {
+            strategy.setScenarioTerrain(track, scenario, true);
+
+            rules.verify(() -> StratConRulesManager.setScenarioParametersFromBiome(track, scenario, true));
+        }
+    }
+
+    @Test
     void abstractStratConGmExposesStratConStrategiesByDefault() {
         StratConDigitalGM gm = new StratConDigitalGM();
 
         assertInstanceOf(StratConForceDeploymentStrategy.class, gm.forceDeployment());
         assertInstanceOf(StratConReinforcementStrategy.class, gm.reinforcement());
+        assertInstanceOf(StratConOpForGenerationStrategy.class, gm.opForGeneration());
+        assertInstanceOf(StratConOpForDeploymentStrategy.class, gm.opForDeployment());
+        assertInstanceOf(StratConMapGenerationStrategy.class, gm.mapGeneration());
     }
 }

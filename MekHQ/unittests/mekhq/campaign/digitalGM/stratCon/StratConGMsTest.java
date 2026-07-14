@@ -45,6 +45,9 @@ import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.digitalGM.DigitalGM;
 import mekhq.campaign.digitalGM.DigitalGMRegistry;
 import mekhq.campaign.digitalGM.strategy.ForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.MapGenerationStrategy;
+import mekhq.campaign.digitalGM.strategy.OpForDeploymentStrategy;
+import mekhq.campaign.digitalGM.strategy.OpForGenerationStrategy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -79,13 +82,31 @@ class StratConGMsTest {
         return campaign;
     }
 
-    /** A Normal-play GM that supplies a sentinel force-deployment strategy so routing can be observed. */
+    /** A Normal-play GM that supplies sentinel strategies so routing can be observed. */
     private static class SentinelGM extends StratConDigitalGM {
-        final ForceDeploymentStrategy sentinel = mock(ForceDeploymentStrategy.class);
+        final ForceDeploymentStrategy forceDeploymentSentinel = mock(ForceDeploymentStrategy.class);
+        final OpForGenerationStrategy opForGenerationSentinel = mock(OpForGenerationStrategy.class);
+        final OpForDeploymentStrategy opForDeploymentSentinel = mock(OpForDeploymentStrategy.class);
+        final MapGenerationStrategy mapGenerationSentinel = mock(MapGenerationStrategy.class);
 
         @Override
         protected ForceDeploymentStrategy forceDeployment() {
-            return sentinel;
+            return forceDeploymentSentinel;
+        }
+
+        @Override
+        protected OpForGenerationStrategy opForGeneration() {
+            return opForGenerationSentinel;
+        }
+
+        @Override
+        protected OpForDeploymentStrategy opForDeployment() {
+            return opForDeploymentSentinel;
+        }
+
+        @Override
+        protected MapGenerationStrategy mapGeneration() {
+            return mapGenerationSentinel;
         }
     }
 
@@ -94,13 +115,43 @@ class StratConGMsTest {
         SentinelGM gm = new SentinelGM();
         register(gm);
 
-        assertSame(gm.sentinel, StratConGMs.forceDeployment(campaignWith(StratConPlayType.NORMAL)));
+        assertSame(gm.forceDeploymentSentinel, StratConGMs.forceDeployment(campaignWith(StratConPlayType.NORMAL)));
+    }
+
+    @Test
+    void routesToActiveGmOpForGenerationStrategy() {
+        SentinelGM gm = new SentinelGM();
+        register(gm);
+
+        assertSame(gm.opForGenerationSentinel, StratConGMs.opForGeneration(campaignWith(StratConPlayType.NORMAL)));
+    }
+
+    @Test
+    void routesToActiveGmOpForDeploymentStrategy() {
+        SentinelGM gm = new SentinelGM();
+        register(gm);
+
+        assertSame(gm.opForDeploymentSentinel, StratConGMs.opForDeployment(campaignWith(StratConPlayType.NORMAL)));
+    }
+
+    @Test
+    void routesToActiveGmMapGenerationStrategy() {
+        SentinelGM gm = new SentinelGM();
+        register(gm);
+
+        assertSame(gm.mapGenerationSentinel, StratConGMs.mapGeneration(campaignWith(StratConPlayType.NORMAL)));
     }
 
     @Test
     void fallsBackToDefaultStrategyWhenNoGmIsActive() {
-        // Nothing enabled for a disabled campaign -> default StratCon strategy (delegates to the static rules)
+        // Nothing enabled for a disabled campaign -> default StratCon strategies (delegate to the static rules)
         assertInstanceOf(StratConForceDeploymentStrategy.class,
               StratConGMs.forceDeployment(campaignWith(StratConPlayType.DISABLED)));
+        assertInstanceOf(StratConOpForGenerationStrategy.class,
+              StratConGMs.opForGeneration(campaignWith(StratConPlayType.DISABLED)));
+        assertInstanceOf(StratConOpForDeploymentStrategy.class,
+              StratConGMs.opForDeployment(campaignWith(StratConPlayType.DISABLED)));
+        assertInstanceOf(StratConMapGenerationStrategy.class,
+              StratConGMs.mapGeneration(campaignWith(StratConPlayType.DISABLED)));
     }
 }

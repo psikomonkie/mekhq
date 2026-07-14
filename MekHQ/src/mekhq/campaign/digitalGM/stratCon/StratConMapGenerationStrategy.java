@@ -32,32 +32,20 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
+import mekhq.campaign.digitalGM.strategy.MapGenerationStrategy;
 
 /**
- * Digital GM for StratCon <b>Mapless</b> play ({@link StratConPlayType#MAPLESS}). Identical to the map-based
- * {@link StratConDigitalGM} except that it has no facility map: it supplies a {@link NoOpFacilityStrategy}, which
- * reproduces the legacy engine's {@code if (!isUseStratConMapless)} guard around facility effects.
+ * Default StratCon implementation of {@link MapGenerationStrategy}: the standard biome-driven terrain selection.
+ * Delegates to {@link StratConRulesManager#setScenarioParametersFromBiome}, so this class introduces the overridable
+ * seam without moving any behaviour.
  *
  * @author Illiani
  * @since 0.50.10
  */
-public class MaplessStratConGM extends StratConDigitalGM {
-
-    private final FacilityStrategy noOpFacility = new NoOpFacilityStrategy();
+public class StratConMapGenerationStrategy implements MapGenerationStrategy {
 
     @Override
-    public String getName() {
-        return StratConPlayType.MAPLESS.getLabel();
-    }
-
-    @Override
-    public boolean isEnabled(CampaignOptions campaignOptions) {
-        return campaign.getCampaignOptions().getStratConPlayType() == StratConPlayType.MAPLESS;
-    }
-
-    @Override
-    protected FacilityStrategy facility() {
-        return noOpFacility;
+    public void setScenarioTerrain(StratConTrackState track, StratConScenario scenario, boolean isNoTornadoes) {
+        StratConRulesManager.setScenarioParametersFromBiome(track, scenario, isNoTornadoes);
     }
 }
