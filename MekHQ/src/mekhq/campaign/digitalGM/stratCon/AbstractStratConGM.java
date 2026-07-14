@@ -34,7 +34,6 @@ package mekhq.campaign.digitalGM.stratCon;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import mekhq.campaign.Campaign;
@@ -187,7 +186,7 @@ public abstract class AbstractStratConGM extends AbstractDigitalGM {
 
                 // loop through scenarios - if we haven't deployed in time,
                 // fail it and apply consequences
-                for (StratConScenario scenario : track.getScenarios().values()) {
+                for (StratConScenario scenario : List.copyOf(track.getScenarios().values())) {
                     if ((scenario.getDeploymentDate() != null) &&
                               scenario.getDeploymentDate().isBefore(today) &&
                               scenario.getPrimaryForceIDs().isEmpty()) {
@@ -233,7 +232,7 @@ public abstract class AbstractStratConGM extends AbstractDigitalGM {
      * @param track the track to clean up
      */
     private void cleanupPhantomScenarios(StratConTrackState track) {
-        for (StratConScenario scenario : new ArrayList<>(track.getScenarios().values())) {
+        for (StratConScenario scenario : List.copyOf(track.getScenarios().values())) {
             if (scenario.getDeploymentDate() == null && !scenario.isStrategicObjective()) {
                 track.removeScenario(scenario);
             }

@@ -80,7 +80,7 @@ class StratConPlayTypePersistenceTest {
     private static String marshal(CampaignOptions options) {
         StringWriter stringWriter = new StringWriter();
         try (PrintWriter printWriter = new PrintWriter(stringWriter)) {
-            options.writeToXml(printWriter, 0);
+            CampaignOptionsMarshaller.writeCampaignOptionsToXML(options, printWriter, 0);
         }
         return stringWriter.toString();
     }
@@ -133,10 +133,11 @@ class StratConPlayTypePersistenceTest {
         original.setStratConPlayType(playType);
 
         Campaign campaign = campaignWith(unmarshal(marshal(original)));
+        CampaignOptions options = campaign.getCampaignOptions();
 
-        assertEquals(playType == StratConPlayType.NORMAL, new StratConDigitalGM().isEnabled(campaign));
-        assertEquals(playType == StratConPlayType.MAPLESS, new MaplessStratConGM().isEnabled(campaign));
-        assertEquals(playType == StratConPlayType.SINGLES, new SinglesStratConGM().isEnabled(campaign));
+        assertEquals(playType == StratConPlayType.NORMAL, new StratConDigitalGM().isEnabled(options));
+        assertEquals(playType == StratConPlayType.MAPLESS, new MaplessStratConGM().isEnabled(options));
+        assertEquals(playType == StratConPlayType.SINGLES, new SinglesStratConGM().isEnabled(options));
     }
 
     // endregion
