@@ -44,7 +44,6 @@ import static mekhq.campaign.enums.DailyReportType.POLITICS;
 import static mekhq.campaign.force.FormationType.SECURITY;
 import static mekhq.utilities.MHQInternationalization.getFormattedTextAt;
 import static mekhq.utilities.ReportingUtilities.CLOSING_SPAN_TAG;
-import static mekhq.utilities.ReportingUtilities.getNegativeColor;
 import static mekhq.utilities.ReportingUtilities.spanOpeningWithCustomColor;
 
 import java.time.DayOfWeek;
@@ -73,8 +72,8 @@ import mekhq.campaign.randomEvents.randomEventsSystem.RandomEventData;
 import mekhq.campaign.randomEvents.randomEventsSystem.RandomEventEffectsManager;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.factionStanding.FactionStandings;
-import mekhq.gui.baseComponents.immersiveDialogs.ImmersiveDialogNotification;
-import mekhq.gui.baseComponents.immersiveDialogs.ImmersiveDialogSimple;
+import mekhq.gui.dialog.PrisonerIntelBreachDialog;
+import mekhq.gui.dialog.PrisonerWarningDialog;
 import mekhq.gui.dialog.RandomEventDialog;
 import mekhq.utilities.ReportingUtilities;
 
@@ -442,14 +441,14 @@ public class PrisonerEventManager {
                             prisonerCapacity += isMekHQCaptureStyle ?
                                                       PRISONER_CAPACITY_BATTLE_ARMOR :
                                                       PRISONER_CAPACITY_BATTLE_ARMOR *
-                                                            PRISONER_CAPACITY_CAM_OPS_MULTIPLIER;
+                                                      PRISONER_CAPACITY_CAM_OPS_MULTIPLIER;
                         }
                     }
 
                     prisonerCapacity += unit.getTotalTempCrew() * (isMekHQCaptureStyle ?
                                                                          PRISONER_CAPACITY_BATTLE_ARMOR :
                                                                          PRISONER_CAPACITY_BATTLE_ARMOR *
-                                                                               PRISONER_CAPACITY_CAM_OPS_MULTIPLIER);
+                                                                         PRISONER_CAPACITY_CAM_OPS_MULTIPLIER);
 
                     continue;
                 }
@@ -460,14 +459,14 @@ public class PrisonerEventManager {
                             prisonerCapacity += isMekHQCaptureStyle ?
                                                       PRISONER_CAPACITY_CONVENTIONAL_INFANTRY :
                                                       PRISONER_CAPACITY_CONVENTIONAL_INFANTRY *
-                                                            PRISONER_CAPACITY_CAM_OPS_MULTIPLIER;
+                                                      PRISONER_CAPACITY_CAM_OPS_MULTIPLIER;
                         }
                     }
 
                     prisonerCapacity += unit.getTotalTempCrew() * (isMekHQCaptureStyle ?
                                                                          PRISONER_CAPACITY_CONVENTIONAL_INFANTRY :
                                                                          PRISONER_CAPACITY_CONVENTIONAL_INFANTRY *
-                                                                               PRISONER_CAPACITY_CAM_OPS_MULTIPLIER);
+                                                                         PRISONER_CAPACITY_CAM_OPS_MULTIPLIER);
 
                     continue;
                 }
@@ -502,7 +501,7 @@ public class PrisonerEventManager {
      * the current group; higher freed prisoner counts result in higher breach probability.</p>
      *
      * <p>If at least one breach occurs, the selected contract’s morale level is improved by the number of breaches,
-     * and a corresponding {@link ImmersiveDialogNotification} is displayed to the user. Contracts at
+     * and a corresponding {@link PrisonerIntelBreachDialog} is displayed to the user. Contracts at
      * {@link AtBMoraleLevel#OVERWHELMING} or {@link AtBMoraleLevel#ROUTED} morale are excluded from selection.</p>
      *
      * @param campaign           the {@link Campaign} context in which the event occurs
@@ -532,54 +531,8 @@ public class PrisonerEventManager {
             AtBMoraleLevel oldMorale = relevantContract.getMoraleLevel();
             AtBMoraleLevel newMorale = relevantContract.changeMoraleLevel(1);
 
-            String centerMessage = getFormattedTextAt(RESOURCE_BUNDLE, "intelBreach.ic",
-                  spanOpeningWithCustomColor(getNegativeColor()), CLOSING_SPAN_TAG);
-            String bottomMessage = getFormattedTextAt(RESOURCE_BUNDLE,
-                  "intelBreach.occ",
-                  relevantContract.getName(),
-                  oldMorale.toString(),
-                  spanOpeningWithCustomColor(getNegativeColor()),
-                  newMorale.toString(),
-                  CLOSING_SPAN_TAG);
-
-            new ImmersiveDialogNotification(campaign, centerMessage, bottomMessage, true);
+            new PrisonerIntelBreachDialog(campaign, relevantContract, oldMorale, newMorale);
         }
-    }
-
-    /**
-     * Displays a warning dialog to the player for resolving prisoner overflow by freeing or executing a specified
-     * number of prisoners.
-     *
-     * <p>
-     * Presents an in-character message with options to do nothing, release, or execute prisoners. The number of
-     * prisoners to release or execute is included in the respective button labels. Returns the index of the option
-     * chosen by the player.
-     * </p>
-     *
-     * @param setFree            the number of prisoners to release if that option is selected
-     * @param executions         the number of prisoners to execute if that option is selected
-     * @param inCharacterMessage the message to display in the dialog
-     *
-     * @return the index of the selected option (e.g., 0 for do nothing, 1 for release, 2 for execute)
-     *
-     * @author Illiani
-     * @since 0.50.06
-     */
-    private int triggerRandomEventDialog(int setFree, int executions, String inCharacterMessage) {
-        List<String> options = List.of(getFormattedTextAt(RESOURCE_BUNDLE, "btnDoNothing.button"),
-              getFormattedTextAt(RESOURCE_BUNDLE, "free.button", setFree),
-              getFormattedTextAt(RESOURCE_BUNDLE, "execute.button", executions));
-
-        ImmersiveDialogSimple warningDialog = new ImmersiveDialogSimple(campaign,
-              speaker,
-              null,
-              inCharacterMessage,
-              options,
-              getFormattedTextAt(RESOURCE_BUNDLE, "warning.ooc"),
-              null,
-              true);
-
-        return warningDialog.getDialogChoice();
     }
 
     /**
@@ -592,44 +545,6 @@ public class PrisonerEventManager {
     private RandomEventData pickEvent(boolean isMajor) {
         List<RandomEventData> allMajorEvents = campaign.getRandomEventLibraries().getPrisonerEvents(isMajor);
         return ObjectUtility.getRandomItem(allMajorEvents);
-    }
-
-    /**
-     * Performs a check to determine if the player's response to an event is successful.
-     *
-     * <p>The success of the check depends on the attributes of the event, the chosen response
-     * option, and modifiers such as the speaker's personality.</p>
-     *
-     * @param eventData   The data for the prisoner event being processed.
-     * @param choiceIndex The index of the choice made by the player in the event dialog.
-     *
-     * @return {@code true} if the player's response is deemed successful, {@code false} otherwise.
-     */
-    private boolean makeEventCheck(PrisonerEventData eventData, int choiceIndex) {
-        int responseModifier = 0;
-        if (speaker != null) {
-            responseModifier = getPersonalityValue(campaign.getCampaignOptions().isUseRandomPersonalities(),
-                  speaker.getAggression(),
-                  speaker.getAmbition(),
-                  speaker.getGreed(),
-                  speaker.getSocial());
-        }
-
-        if (speaker == null) {
-            responseModifier = -12; // this deliberately renders the check impossible
-        }
-
-        ResponseQuality responseQuality = eventData.responseEntries().get(choiceIndex).quality();
-        switch (responseQuality) {
-            case RESPONSE_NEUTRAL -> {
-            } // No modifier
-            case RESPONSE_POSITIVE -> responseModifier += 3;
-            case RESPONSE_NEGATIVE -> responseModifier -= 3;
-        }
-
-        int responseCheck = d6(2) + responseModifier;
-
-        return responseCheck >= RESPONSE_TARGET_NUMBER;
     }
 
     /**
@@ -725,12 +640,9 @@ public class PrisonerEventManager {
         int executions = max(1, (int) round(prisoners.size() * 0.1));
         executions = min(executions, prisoners.size());
 
-        String commanderAddress = campaign.getCommanderAddress();
-        String inCharacterMessage = getFormattedTextAt(RESOURCE_BUNDLE, "warning.message", commanderAddress);
+        PrisonerWarningDialog warningDialog = new PrisonerWarningDialog(campaign, speaker, setFree, executions);
+        int choice = warningDialog.getDialogChoice();
 
-        int choice = getChoiceIndex(setFree, executions, inCharacterMessage);
-
-        String outOfCharacterMessage = getFormattedTextAt(RESOURCE_BUNDLE, "result.ooc");
         if (choice == CHOICE_FREE) {
             for (int i = 0; i < setFree; i++) {
                 Person prisoner = prisoners.get(i);
@@ -739,15 +651,7 @@ public class PrisonerEventManager {
                 campaign.getPlayerForce().getHumanResources().removePerson(campaign, prisoner, false);
             }
 
-            String resourceKey = "freeEvent" + randomInt(50) + ".message";
-            inCharacterMessage = getFormattedTextAt(RESOURCE_BUNDLE, resourceKey, commanderAddress);
-
-            new ImmersiveDialogSimple(campaign,
-                  speaker,
-                  null,
-                  inCharacterMessage,
-                  null,
-                  outOfCharacterMessage, null, false);
+            warningDialog.showResolutionDialog(false);
 
             checkForIntelBreachEvent(campaign, setFree);
 
@@ -757,17 +661,7 @@ public class PrisonerEventManager {
         if (choice == CHOICE_EXECUTE) {
             processExecutions(executions, prisoners);
 
-            String resourceKey = "executeEvent" + randomInt(50) + ".message";
-            inCharacterMessage = getFormattedTextAt(RESOURCE_BUNDLE, resourceKey, commanderAddress);
-
-            new ImmersiveDialogSimple(campaign,
-                  speaker,
-                  null,
-                  inCharacterMessage,
-                  null,
-                  outOfCharacterMessage,
-                  null,
-                  false);
+            warningDialog.showResolutionDialog(true);
         }
     }
 
@@ -785,7 +679,9 @@ public class PrisonerEventManager {
         CampaignOptions campaignOptions = campaign.getCampaignOptions();
         if (campaignOptions.isTrackFactionStanding()) {
             FactionStandings factionStandings = campaign.getPlayerForce().getFactionStandings();
-            List<String> reports = factionStandings.executePrisonersOfWar(campaign.getFaction().getShortName(),
+            List<String> reports = factionStandings.executePrisonersOfWar(campaign.getPlayerForce()
+                                                                                .getFaction()
+                                                                                .getShortName(),
                   prisoners, campaign.getGameYear(), campaignOptions.getRegardMultiplier());
 
             for (String report : reports) {
