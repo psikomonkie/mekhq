@@ -47,6 +47,7 @@ import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.events.ProcurementEvent;
 import mekhq.campaign.finances.Money;
+import mekhq.campaign.force.Detachment;
 import mekhq.campaign.location.IPlace;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.parts.Refit;
@@ -78,19 +79,19 @@ import org.w3c.dom.NodeList;
  * <p>
  * Do we use a separate shopping list for new units?
  */
-public class ShoppingList {
-    private static final MMLogger LOGGER = MMLogger.create(ShoppingList.class);
+public class ForceShoppingList {
+    private static final MMLogger LOGGER = MMLogger.create(ForceShoppingList.class);
 
     // region Variable Declarations
     private List<IAcquisitionWork> shoppingList;
     // endregion Variable Declarations
 
     // region Constructors
-    public ShoppingList() {
+    public ForceShoppingList() {
         setShoppingList(new ArrayList<>());
     }
 
-    public ShoppingList(List<IAcquisitionWork> shoppingList) {
+    public ForceShoppingList(List<IAcquisitionWork> shoppingList) {
         setShoppingList(shoppingList);
     }
     // endregion Constructors
@@ -177,12 +178,12 @@ public class ShoppingList {
      * eventually delivered from it) resolves to that base's warehouse. Orders bound for different places are kept as
      * separate line items even when they are the same equipment.</p>
      *
-     * @param place the destination; {@code null} or the campaign itself means the main force
+     * @param place the destination; {@code null} or the main force's {@link Detachment} means the main force
      */
     public void addShoppingItem(IAcquisitionWork newWork, int quantity, Campaign campaign, @Nullable IPlace place) {
-        // The main force leaves orders unanchored (their part resolves to the campaign warehouse); a base anchors the
+        // The main force leaves orders unanchored (their part resolves to the main force warehouse); a base anchors the
         // order at that base so it resolves to the base warehouse.
-        IPlace destination = (place instanceof Campaign) ? null : place;
+        IPlace destination = (place instanceof Detachment) ? null : place;
         if (destination != null) {
             newWork.setParent(destination);
         }
@@ -253,8 +254,8 @@ public class ShoppingList {
         MHQXMLUtility.writeSimpleXMLCloseTag(pw, --indent, "shoppingList");
     }
 
-    public static ShoppingList generateInstanceFromXML(Node wn, Campaign c, Version version) {
-        ShoppingList retVal = new ShoppingList();
+    public static ForceShoppingList generateInstanceFromXML(Node wn, Campaign c, Version version) {
+        ForceShoppingList retVal = new ForceShoppingList();
 
         NodeList nl = wn.getChildNodes();
 

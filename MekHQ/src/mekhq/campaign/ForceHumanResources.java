@@ -128,11 +128,11 @@ import org.w3c.dom.NodeList;
  *
  * <p>No back-reference to Campaign is stored; dependencies are injected per call.</p>
  */
-public class HumanResources {
-    private static final MMLogger LOGGER = MMLogger.create(HumanResources.class);
+public class ForceHumanResources {
+    private static final MMLogger LOGGER = MMLogger.create(ForceHumanResources.class);
 
 
-    private final Personnel personnel = new Personnel();
+    private final LocalPersonnel personnel = new LocalPersonnel();
 
     /**
      * Transient cache of active personnel lists, keyed by filter options string. Can be null; rebuilt lazily.
@@ -1504,10 +1504,60 @@ public class HumanResources {
               noZeroMinute, eliteFirst, expanded);
     }
 
-    public boolean isWorkingOnRefit(Hangar hangar, Person person) {
-        Objects.requireNonNull(person);
-        Unit unit = hangar.findUnit(u -> u.isRefitting() && person.equals(u.getRefit().getTech()));
-        return unit != null;
+    /**
+     * Parses a {@code <humanResources>} node and returns a populated {@link ForceHumanResources} instance.
+     *
+     * @param wn       the {@code <humanResources>} node
+     * @param campaign the campaign (for context during personnel parsing)
+     * @param version  the save file version
+     *
+     * @return a populated {@link ForceHumanResources} instance
+     */
+    public static ForceHumanResources loadFromXML(Node wn, Campaign campaign, Version version) {
+        LOGGER.info("Loading HumanResources from XML...");
+        ForceHumanResources hr = campaign.getPlayerForce().getHumanResources();
+
+        NodeList wList = wn.getChildNodes();
+        for (int x = 0; x < wList.getLength(); x++) {
+            Node childNode = wList.item(x);
+            if (childNode.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+
+            String nodeName = childNode.getNodeName();
+            try {
+                if (nodeName.equalsIgnoreCase("asTechPool") || nodeName.equalsIgnoreCase("astechPool")) {
+                    hr.asTechPool = MathUtility.parseInt(childNode.getTextContent().trim());
+                } else if (nodeName.equalsIgnoreCase("asTechPoolMinutes") ||
+                                 nodeName.equalsIgnoreCase("astechPoolMinutes")) {
+                    hr.asTechPoolMinutes = MathUtility.parseInt(
+                          childNode.getTextContent().trim());
+                } else if (nodeName.equalsIgnoreCase("asTechPoolOvertime") ||
+                                 nodeName.equalsIgnoreCase("astechPoolOvertime")) {
+                    hr.asTechPoolOvertime = MathUtility.parseInt(
+                          childNode.getTextContent().trim());
+                } else if (nodeName.equalsIgnoreCase("medicPool")) {
+                    hr.medicPool = MathUtility.parseInt(childNode.getTextContent().trim());
+                } else if (nodeName.equalsIgnoreCase("tempCrewPools")) {
+                    parseTempCrewPools(hr, childNode);
+                } else if (nodeName.equalsIgnoreCase("personnelWhoAdvancedInXP")) {
+                    hr.personnelWhoAdvancedInXP = parsePersonnelWhoAdvancedInXP(childNode, campaign);
+                } else if (nodeName.equalsIgnoreCase("personnel")) {
+                    InjuryTypes.registerAll();
+                    LocalPersonnel.loadFromXML(childNode, campaign, version);
+                } else if (nodeName.equalsIgnoreCase("personnelMarket")) {
+                    hr.personnelMarket = PersonnelMarket.generateInstanceFromXML(childNode, campaign, version);
+                } else if (nodeName.equalsIgnoreCase("retirementDefectionTracker")) {
+                    hr.retirementDefectionTracker = RetirementDefectionTracker.generateInstanceFromXML(childNode,
+                          campaign);
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error loading humanResources child node '{}'", nodeName, e);
+            }
+        }
+
+        LOGGER.info("Load HumanResources from XML complete.");
+        return hr;
     }
 
 
@@ -1784,6 +1834,55 @@ public class HumanResources {
         return person;
     }
 
+    private static List<Person> parsePersonnelWhoAdvancedInXP(Node workingNode, Campaign campaign) {
+        LOGGER.info("Loading personnelWhoAdvancedInXP Nodes from XML...");
+        List<Person> result = new ArrayList<>();
+
+        NodeList wList = workingNode.getChildNodes();
+        for (int x = 0; x < wList.getLength(); x++) {
+            Node wn2 = wList.item(x);
+            if (wn2.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+
+            if (!wn2.getNodeName().equalsIgnoreCase("personWhoAdvancedInXP")) {
+                LOGGER.warn("Unknown node type not loaded in personnelWhoAdvancedInXP nodes: {}",
+                      wn2.getNodeName());
+                continue;
+            }
+
+            try {
+                UUID id = UUID.fromString(wn2.getTextContent().trim());
+                Person person = campaign.getPlayerForce().getHumanResources().getPerson(id);
+                if (person != null) {
+                    result.add(person);
+                }
+            } catch (Exception e) {
+                LOGGER.error("Failed to parse personWhoAdvancedInXP UUID", e);
+            }
+        }
+
+        return result;
+    }
+
+
+    public boolean recruitPerson(Campaign campaign, Person person) {
+        return recruitPerson(campaign, person, person.getPrisonerStatus(), false, true, true, false);
+    }
+
+    public boolean recruitPerson(Campaign campaign, Person person, boolean gmAdd, boolean employ) {
+        return recruitPerson(campaign, person, person.getPrisonerStatus(), gmAdd, true, employ, false);
+    }
+
+    public boolean recruitPerson(Campaign campaign, Person person, PrisonerStatus prisonerStatus, boolean employ) {
+        return recruitPerson(campaign, person, prisonerStatus, false, true, employ, false);
+    }
+
+    public boolean recruitPerson(Campaign campaign, Person person, PrisonerStatus prisonerStatus, boolean gmAdd,
+          boolean log, boolean employ) {
+        return recruitPerson(campaign, person, prisonerStatus, gmAdd, log, employ, false);
+    }
+
     /**
      * If the person does not already have a bloodname, assigns a chance of having one based on skill and rank.
      *
@@ -1936,7 +2035,8 @@ public class HumanResources {
                 bloodnameTarget++;
             }
 
-            bloodnameTarget += Math.min(0, campaign.getRankSystem().getOfficerCut() - person.getRankNumeric());
+            bloodnameTarget += Math.min(0,
+                  campaign.getPlayerForce().getRankSystem().getOfficerCut() - person.getRankNumeric());
         }
 
         if (ignoreDice || (d6(2) >= bloodnameTarget)) {
@@ -1952,162 +2052,6 @@ public class HumanResources {
                 personUpdated(campaign, person);
             }
         }
-    }
-
-
-    public boolean recruitPerson(Campaign campaign, Person person) {
-        return recruitPerson(campaign, person, person.getPrisonerStatus(), false, true, true, false);
-    }
-
-    public boolean recruitPerson(Campaign campaign, Person person, boolean gmAdd, boolean employ) {
-        return recruitPerson(campaign, person, person.getPrisonerStatus(), gmAdd, true, employ, false);
-    }
-
-    public boolean recruitPerson(Campaign campaign, Person person, PrisonerStatus prisonerStatus, boolean employ) {
-        return recruitPerson(campaign, person, prisonerStatus, false, true, employ, false);
-    }
-
-    public boolean recruitPerson(Campaign campaign, Person person, PrisonerStatus prisonerStatus, boolean gmAdd,
-          boolean log, boolean employ) {
-        return recruitPerson(campaign, person, prisonerStatus, gmAdd, log, employ, false);
-    }
-
-    /**
-     * Recruits a person into the campaign roster.
-     *
-     * @param campaign                    the campaign
-     * @param person                      the person to recruit; must not be {@code null}
-     * @param prisonerStatus              the prison status to assign to the person
-     * @param gmAdd                       if {@code true}, bypasses funds check
-     * @param log                         if {@code true}, recruitment is logged
-     * @param employ                      if {@code true}, the person is marked as employed
-     * @param bypassSimulateRelationships if {@code true}, relationship simulation does not occur
-     *
-     * @return {@code true} if recruitment was successful; {@code false} otherwise
-     */
-    public boolean recruitPerson(Campaign campaign, Person person, PrisonerStatus prisonerStatus, boolean gmAdd,
-          boolean log, boolean employ, boolean bypassSimulateRelationships) {
-        if (person == null) {
-            LOGGER.warn("A null person was passed into recruitPerson.");
-            return false;
-        }
-
-        ResourceBundle resources = campaign.getResources();
-        LocalDate currentDay = campaign.getLocalDate();
-        Finances finances = campaign.getFinances();
-
-        if (employ && !person.isEmployed()) {
-            if (campaign.getCampaignOptions().isPayForRecruitment() && !gmAdd) {
-                if (!finances.debit(TransactionType.RECRUITMENT,
-                      currentDay,
-                      person.getSalary(campaign).multipliedBy(2),
-                      String.format(resources.getString("personnelRecruitmentFinancesReason.text"),
-                            person.getFullName()))) {
-                    campaign.addReport(DailyReportType.FINANCES,
-                          String.format(resources.getString("personnelRecruitmentInsufficientFunds.text"),
-                                ReportingUtilities.getNegativeColor(),
-                                person.getFullName()));
-                    return false;
-                }
-            }
-        }
-
-        String formerSurname = person.getSurname();
-
-        if (!personnel.containsKey(person.getId())) {
-            person.setJoinedCampaign(currentDay);
-            personnel.put(person.getId(), person);
-            person.setParent(campaign.getMainForcePersonnel());
-
-            if (!bypassSimulateRelationships && campaign.getCampaignOptions().isUseSimulatedRelationships()) {
-                if ((prisonerStatus.isFree()) &&
-                          (!person.getOriginFaction().isClan()) &&
-                          (!person.getPrimaryRole().isCivilian())) {
-                    simulateRelationshipHistory(campaign, person);
-                }
-            }
-        }
-
-        if (employ) {
-            if (person.isAstech()) {
-                asTechPoolMinutes += Person.PRIMARY_ROLE_SUPPORT_TIME;
-                asTechPoolOvertime += Person.PRIMARY_ROLE_OVERTIME_SUPPORT_TIME;
-            }
-        } else {
-            person.setStatus(PersonnelStatus.CAMP_FOLLOWER);
-        }
-
-        person.setPrisonerStatus(campaign, prisonerStatus, log);
-
-        if (log) {
-            formerSurname = person.getSurname().equals(formerSurname) ?
-                                  "" :
-                                  ' ' +
-                                        String.format(resources.getString("personnelRecruitmentFormerSurname.text") +
-                                                      ' ', formerSurname);
-            String add = !prisonerStatus.isFree() ?
-                               (' ' +
-                                      resources.getString(prisonerStatus.isBondsman() ?
-                                                          "personnelRecruitmentBondsman.text" :
-                                                          "personnelRecruitmentPrisoner.text")) :
-                               "";
-            campaign.addReport(DailyReportType.PERSONNEL,
-                  String.format(resources.getString("personnelRecruitmentAddedToRoster.text"),
-                        person.getHyperlinkedFullTitle(),
-                        formerSurname,
-                        add));
-        }
-
-        AbstractLocation location = campaign.getCurrentLocation();
-        if (location.isOnPlanet()) {
-            Planet planet = location.getPlanet();
-            String planetId = planet.getId();
-            String systemId = planet.getParentSystem().getId();
-
-            if (!person.hasPlanetaryInoculation(planetId)) {
-                person.addPlanetaryInoculation(planetId);
-                MedicalLogger.inoculation(person, currentDay, planet.getName(currentDay));
-            }
-
-            Set<InjuryType> activeCures = getAllSystemSpecificDiseasesWithCures(systemId, currentDay, true);
-            for (InjuryType injuryType : activeCures) {
-                if (!person.hasCanonDiseaseInoculation(injuryType.getKey())) {
-                    person.addCanonDiseaseInoculation(injuryType.getKey());
-                    MedicalLogger.specificInoculation(person, currentDay, injuryType.getSimpleName());
-                }
-            }
-        }
-
-        Planet planet = person.getOriginPlanet();
-        if (planet != location.getPlanet()) {
-            String planetName = planet.getName(currentDay);
-            String planetId = planet.getId();
-            String systemId = planet.getParentSystem().getId();
-
-            if (!person.hasPlanetaryInoculation(planetId)) {
-                person.addPlanetaryInoculation(planetId);
-                MedicalLogger.antibodies(person, currentDay, planetName);
-            }
-
-            Set<InjuryType> activeDiseases = getAllActiveDiseases(systemId, currentDay, true);
-            for (InjuryType injuryType : activeDiseases) {
-                if (!person.hasCanonDiseaseInoculation(injuryType.getKey())) {
-                    person.addCanonDiseaseInoculation(injuryType.getKey());
-                    MedicalLogger.specificAntibodies(person, currentDay, injuryType.getSimpleName());
-                }
-            }
-
-            Set<InjuryType> activeCures = getAllSystemSpecificDiseasesWithCures(systemId, currentDay, true);
-            for (InjuryType injuryType : activeCures) {
-                if (!person.hasCanonDiseaseInoculation(injuryType.getKey())) {
-                    person.addCanonDiseaseInoculation(injuryType.getKey());
-                    MedicalLogger.specificAntibodies(person, currentDay, injuryType.getSimpleName());
-                }
-            }
-        }
-
-        MekHQ.triggerEvent(new PersonNewEvent(person));
-        return true;
     }
 
     /**
@@ -2301,6 +2245,144 @@ public class HumanResources {
     }
 
     /**
+     * Recruits a person into the campaign roster.
+     *
+     * @param campaign                    the campaign
+     * @param person                      the person to recruit; must not be {@code null}
+     * @param prisonerStatus              the prison status to assign to the person
+     * @param gmAdd                       if {@code true}, bypasses funds check
+     * @param log                         if {@code true}, recruitment is logged
+     * @param employ                      if {@code true}, the person is marked as employed
+     * @param bypassSimulateRelationships if {@code true}, relationship simulation does not occur
+     *
+     * @return {@code true} if recruitment was successful; {@code false} otherwise
+     */
+    public boolean recruitPerson(Campaign campaign, Person person, PrisonerStatus prisonerStatus, boolean gmAdd,
+          boolean log, boolean employ, boolean bypassSimulateRelationships) {
+        if (person == null) {
+            LOGGER.warn("A null person was passed into recruitPerson.");
+            return false;
+        }
+
+        ResourceBundle resources = campaign.getResources();
+        LocalDate currentDay = campaign.getLocalDate();
+        Finances finances = campaign.getPlayerForce().getFinances();
+
+        if (employ && !person.isEmployed()) {
+            if (campaign.getCampaignOptions().isPayForRecruitment() && !gmAdd) {
+                if (!finances.debit(TransactionType.RECRUITMENT,
+                      currentDay,
+                      person.getSalary(campaign).multipliedBy(2),
+                      String.format(resources.getString("personnelRecruitmentFinancesReason.text"),
+                            person.getFullName()))) {
+                    campaign.addReport(DailyReportType.FINANCES,
+                          String.format(resources.getString("personnelRecruitmentInsufficientFunds.text"),
+                                ReportingUtilities.getNegativeColor(),
+                                person.getFullName()));
+                    return false;
+                }
+            }
+        }
+
+        String formerSurname = person.getSurname();
+
+        if (!personnel.containsKey(person.getId())) {
+            person.setJoinedCampaign(currentDay);
+            personnel.put(person.getId(), person);
+            person.setParent(campaign.getPlayerForce().getPersonnel());
+
+            if (!bypassSimulateRelationships && campaign.getCampaignOptions().isUseSimulatedRelationships()) {
+                if ((prisonerStatus.isFree()) &&
+                          (!person.getOriginFaction().isClan()) &&
+                          (!person.getPrimaryRole().isCivilian())) {
+                    simulateRelationshipHistory(campaign, person);
+                }
+            }
+        }
+
+        if (employ) {
+            if (person.isAstech()) {
+                asTechPoolMinutes += Person.PRIMARY_ROLE_SUPPORT_TIME;
+                asTechPoolOvertime += Person.PRIMARY_ROLE_OVERTIME_SUPPORT_TIME;
+            }
+        } else {
+            person.setStatus(PersonnelStatus.CAMP_FOLLOWER);
+        }
+
+        person.setPrisonerStatus(campaign, prisonerStatus, log);
+
+        if (log) {
+            formerSurname = person.getSurname().equals(formerSurname) ?
+                                  "" :
+                                  ' ' +
+                                        String.format(resources.getString("personnelRecruitmentFormerSurname.text") +
+                                                            ' ', formerSurname);
+            String add = !prisonerStatus.isFree() ?
+                               (' ' +
+                                      resources.getString(prisonerStatus.isBondsman() ?
+                                                                "personnelRecruitmentBondsman.text" :
+                                                                "personnelRecruitmentPrisoner.text")) :
+                               "";
+            campaign.addReport(DailyReportType.PERSONNEL,
+                  String.format(resources.getString("personnelRecruitmentAddedToRoster.text"),
+                        person.getHyperlinkedFullTitle(),
+                        formerSurname,
+                        add));
+        }
+
+        AbstractLocation location = campaign.getPlayerForce().getForceDetachment().getCurrentLocation();
+        if (location.isOnPlanet()) {
+            Planet planet = location.getPlanet();
+            String planetId = planet.getId();
+            String systemId = planet.getParentSystem().getId();
+
+            if (!person.hasPlanetaryInoculation(planetId)) {
+                person.addPlanetaryInoculation(planetId);
+                MedicalLogger.inoculation(person, currentDay, planet.getName(currentDay));
+            }
+
+            Set<InjuryType> activeCures = getAllSystemSpecificDiseasesWithCures(systemId, currentDay, true);
+            for (InjuryType injuryType : activeCures) {
+                if (!person.hasCanonDiseaseInoculation(injuryType.getKey())) {
+                    person.addCanonDiseaseInoculation(injuryType.getKey());
+                    MedicalLogger.specificInoculation(person, currentDay, injuryType.getSimpleName());
+                }
+            }
+        }
+
+        Planet planet = person.getOriginPlanet();
+        if (planet != location.getPlanet()) {
+            String planetName = planet.getName(currentDay);
+            String planetId = planet.getId();
+            String systemId = planet.getParentSystem().getId();
+
+            if (!person.hasPlanetaryInoculation(planetId)) {
+                person.addPlanetaryInoculation(planetId);
+                MedicalLogger.antibodies(person, currentDay, planetName);
+            }
+
+            Set<InjuryType> activeDiseases = getAllActiveDiseases(systemId, currentDay, true);
+            for (InjuryType injuryType : activeDiseases) {
+                if (!person.hasCanonDiseaseInoculation(injuryType.getKey())) {
+                    person.addCanonDiseaseInoculation(injuryType.getKey());
+                    MedicalLogger.specificAntibodies(person, currentDay, injuryType.getSimpleName());
+                }
+            }
+
+            Set<InjuryType> activeCures = getAllSystemSpecificDiseasesWithCures(systemId, currentDay, true);
+            for (InjuryType injuryType : activeCures) {
+                if (!person.hasCanonDiseaseInoculation(injuryType.getKey())) {
+                    person.addCanonDiseaseInoculation(injuryType.getKey());
+                    MedicalLogger.specificAntibodies(person, currentDay, injuryType.getSimpleName());
+                }
+            }
+        }
+
+        MekHQ.triggerEvent(new PersonNewEvent(person));
+        return true;
+    }
+
+    /**
      * Removes a person from the campaign roster and cleans up all references.
      *
      * @param campaign the campaign
@@ -2312,7 +2394,7 @@ public class HumanResources {
             return;
         }
 
-        Formation formation = campaign.getFormationFor(person);
+        Formation formation = campaign.getPlayerForce().getFormationFor(person);
         if (formation != null) {
             formation.updateCommander(campaign);
         }
@@ -2341,27 +2423,6 @@ public class HumanResources {
             asTechPoolOvertime = max(0, asTechPoolOvertime - Person.PRIMARY_ROLE_OVERTIME_SUPPORT_TIME);
         }
         MekHQ.triggerEvent(new PersonRemovedEvent(person));
-    }
-
-
-    /**
-     * Fires events and updates state when a person's data has changed.
-     *
-     * @param campaign the campaign
-     * @param person   the person who was updated
-     */
-    public void personUpdated(Campaign campaign, Person person) {
-        Unit u = person.getUnit();
-        if (null != u) {
-            u.resetPilotAndEntity();
-        }
-
-        Formation formation = campaign.getFormationFor(person);
-        if (formation != null) {
-            formation.updateCommander(campaign);
-        }
-
-        MekHQ.triggerEvent(new PersonChangedEvent(person));
     }
 
 
@@ -2537,63 +2598,7 @@ public class HumanResources {
         MHQXMLUtility.writeSimpleXMLCloseTag(writer, --indent, "humanResources");
     }
 
-    /**
-     * Parses a {@code <humanResources>} node and returns a populated {@link HumanResources} instance.
-     *
-     * @param wn       the {@code <humanResources>} node
-     * @param campaign the campaign (for context during personnel parsing)
-     * @param version  the save file version
-     *
-     * @return a populated {@link HumanResources} instance
-     */
-    public static HumanResources loadFromXML(Node wn, Campaign campaign, Version version) {
-        LOGGER.info("Loading HumanResources from XML...");
-        HumanResources hr = campaign.getHumanResources();
-
-        NodeList wList = wn.getChildNodes();
-        for (int x = 0; x < wList.getLength(); x++) {
-            Node childNode = wList.item(x);
-            if (childNode.getNodeType() != Node.ELEMENT_NODE) {
-                continue;
-            }
-
-            String nodeName = childNode.getNodeName();
-            try {
-                if (nodeName.equalsIgnoreCase("asTechPool") || nodeName.equalsIgnoreCase("astechPool")) {
-                    hr.asTechPool = MathUtility.parseInt(childNode.getTextContent().trim());
-                } else if (nodeName.equalsIgnoreCase("asTechPoolMinutes") ||
-                                 nodeName.equalsIgnoreCase("astechPoolMinutes")) {
-                    hr.asTechPoolMinutes = MathUtility.parseInt(
-                          childNode.getTextContent().trim());
-                } else if (nodeName.equalsIgnoreCase("asTechPoolOvertime") ||
-                                 nodeName.equalsIgnoreCase("astechPoolOvertime")) {
-                    hr.asTechPoolOvertime = MathUtility.parseInt(
-                          childNode.getTextContent().trim());
-                } else if (nodeName.equalsIgnoreCase("medicPool")) {
-                    hr.medicPool = MathUtility.parseInt(childNode.getTextContent().trim());
-                } else if (nodeName.equalsIgnoreCase("tempCrewPools")) {
-                    parseTempCrewPools(hr, childNode);
-                } else if (nodeName.equalsIgnoreCase("personnelWhoAdvancedInXP")) {
-                    hr.personnelWhoAdvancedInXP = parsePersonnelWhoAdvancedInXP(childNode, campaign);
-                } else if (nodeName.equalsIgnoreCase("personnel")) {
-                    InjuryTypes.registerAll();
-                    Personnel.loadFromXML(childNode, campaign, version);
-                } else if (nodeName.equalsIgnoreCase("personnelMarket")) {
-                    hr.personnelMarket = PersonnelMarket.generateInstanceFromXML(childNode, campaign, version);
-                } else if (nodeName.equalsIgnoreCase("retirementDefectionTracker")) {
-                    hr.retirementDefectionTracker = RetirementDefectionTracker.generateInstanceFromXML(childNode,
-                          campaign);
-                }
-            } catch (Exception e) {
-                LOGGER.error("Error loading humanResources child node '{}'", nodeName, e);
-            }
-        }
-
-        LOGGER.info("Load HumanResources from XML complete.");
-        return hr;
-    }
-
-    private static void parseTempCrewPools(HumanResources hr, Node tempCrewPoolsNode) {
+    private static void parseTempCrewPools(ForceHumanResources hr, Node tempCrewPoolsNode) {
         NodeList tempCrewNodes = tempCrewPoolsNode.getChildNodes();
         for (int i = 0; i < tempCrewNodes.getLength(); i++) {
             Node tempCrewNode = tempCrewNodes.item(i);
@@ -2629,34 +2634,29 @@ public class HumanResources {
         }
     }
 
-    private static List<Person> parsePersonnelWhoAdvancedInXP(Node workingNode, Campaign campaign) {
-        LOGGER.info("Loading personnelWhoAdvancedInXP Nodes from XML...");
-        List<Person> result = new ArrayList<>();
+    public boolean isWorkingOnRefit(LocalHangar hangar, Person person) {
+        Objects.requireNonNull(person);
+        Unit unit = hangar.findUnit(u -> u.isRefitting() && person.equals(u.getRefit().getTech()));
+        return unit != null;
+    }
 
-        NodeList wList = workingNode.getChildNodes();
-        for (int x = 0; x < wList.getLength(); x++) {
-            Node wn2 = wList.item(x);
-            if (wn2.getNodeType() != Node.ELEMENT_NODE) {
-                continue;
-            }
-
-            if (!wn2.getNodeName().equalsIgnoreCase("personWhoAdvancedInXP")) {
-                LOGGER.warn("Unknown node type not loaded in personnelWhoAdvancedInXP nodes: {}",
-                      wn2.getNodeName());
-                continue;
-            }
-
-            try {
-                UUID id = UUID.fromString(wn2.getTextContent().trim());
-                Person person = campaign.getPerson(id);
-                if (person != null) {
-                    result.add(person);
-                }
-            } catch (Exception e) {
-                LOGGER.error("Failed to parse personWhoAdvancedInXP UUID", e);
-            }
+    /**
+     * Fires events and updates state when a person's data has changed.
+     *
+     * @param campaign the campaign
+     * @param person   the person who was updated
+     */
+    public void personUpdated(Campaign campaign, Person person) {
+        Unit u = person.getUnit();
+        if (null != u) {
+            u.resetPilotAndEntity();
         }
 
-        return result;
+        Formation formation = campaign.getPlayerForce().getFormationFor(person);
+        if (formation != null) {
+            formation.updateCommander(campaign);
+        }
+
+        MekHQ.triggerEvent(new PersonChangedEvent(person));
     }
 }

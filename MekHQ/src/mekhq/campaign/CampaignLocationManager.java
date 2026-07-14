@@ -394,7 +394,7 @@ public class CampaignLocationManager {
 
     private boolean isStillInCampaign(ILocation traveler, Campaign campaign) {
         return switch (traveler) {
-            case Person person -> campaign.getPerson(person.getId()) != null;
+            case Person person -> {yield campaign.getPerson(person.getId()) != null;}
             case Unit unit -> campaign.getUnit(unit.getId()) != null;
             case Part part -> findPartAnywhere(campaign, part.getId()) != null;
             default -> true;
@@ -417,12 +417,12 @@ public class CampaignLocationManager {
         for (PlayerBase base : playerBases) {
             base.processArrivals(campaign);
         }
-        campaign.processArrivals(campaign);
+        campaign.getPlayerForce().getDetachmentLocationManager().processArrivals(campaign);
     }
 
     /** Searches the campaign warehouse then all base warehouses for a part by ID. */
     public @Nullable Part findPartAnywhere(Campaign campaign, int partId) {
-        Part part = campaign.getWarehouse().getPart(partId);
+        Part part = campaign.getPlayerForce().getWarehouse().getPart(partId);
         if (part != null) {
             return part;
         }
@@ -585,7 +585,7 @@ public class CampaignLocationManager {
     @Nonnull
     public AcademyCampusLocation getOrCreateLocalCampusLocation(Campaign campaign, String academySet,
           String academyName) {
-        for (ILocation child : campaign.getChildLocations()) {
+        for (ILocation child : campaign.getPlayerForce().getForceDetachment().getChildLocations()) {
             if (child instanceof AcademyCampusLocation campus
                       && academySet.equals(campus.getAcademySet())
                       && academyName.equals(campus.getAcademyName())) {
@@ -593,7 +593,7 @@ public class CampaignLocationManager {
             }
         }
         AcademyCampusLocation campus = new AcademyCampusLocation(academySet, academyName);
-        LocationNode.LocationManager.setLocation(campus, campaign);
+        LocationNode.LocationManager.setLocation(campus, campaign.getPlayerForce().getForceDetachment());
         return campus;
     }
 
@@ -623,11 +623,11 @@ public class CampaignLocationManager {
      * Writes the {@code <locations>} and {@code <playerBases>} XML blocks.
      */
     public void writeToXML(Campaign campaign, PrintWriter pw, int indent) {
-        AbstractLocation mainForceLocation = campaign.getCurrentLocation();
+        AbstractLocation mainForceLocation = campaign.getPlayerForce().getForceDetachment().getCurrentLocation();
         MHQXMLUtility.writeSimpleXMLOpenTag(pw, indent++, "locations");
         for (AbstractLocation location : locations) {
             // Skip locations parented to another node — they are serialized inside their parent's XML.
-            // Skip the main force's current location — written separately by ForceLocationManager as <location>.
+            // Skip the main force's current location — written separately by DetachmentLocationManager as <location>.
             if (location.isParented() || location == mainForceLocation) {
                 continue;
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2024-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -63,9 +63,9 @@ import mekhq.utilities.MHQXMLUtility;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class ReputationController {
+public class ForceReputationController {
     // utilities
-    private static final MMLogger LOGGER = MMLogger.create(ReputationController.class);
+    private static final MMLogger LOGGER = MMLogger.create(ForceReputationController.class);
 
     private final ResourceBundle resources = ResourceBundle.getBundle("mekhq.resources.CamOpsReputation",
           MekHQ.getMHQOptions().getLocale());
@@ -132,7 +132,7 @@ public class ReputationController {
     /**
      * Initializes the ReputationController class with default values.
      */
-    public ReputationController() {
+    public ForceReputationController() {
     }
 
     /**
@@ -148,7 +148,10 @@ public class ReputationController {
         atbModifier = averageSkillLevel.ordinal();
 
         // step two: calculate command rating
-        commanderMap = calculateCommanderRating(campaign, campaign.getCommander());
+        commanderMap = calculateCommanderRating(campaign, campaign.getPlayerForce().getHumanResources()
+                                                                .getCommander(campaign.getCampaignOptions(),
+                                                                      campaign.isClanCampaign(),
+                                                                      campaign.getLocalDate()));
         commanderRating = commanderMap.get("total");
 
         // step three: calculate combat record rating
@@ -174,13 +177,13 @@ public class ReputationController {
         supportRating = (int) rawSupportData.get("total").get("total");
 
         // step six: calculate financial rating
-        financialRatingMap = calculateFinancialRating(campaign.getFinances());
+        financialRatingMap = calculateFinancialRating(campaign.getPlayerForce().getFinances());
         financialRating = financialRatingMap.get("total");
 
         // step seven: calculate crime rating
         crimeRatingMap = calculateCrimeRating(campaign);
         crimeRating = crimeRatingMap.get("total");
-        dateOfLastCrime = campaign.getDateOfLastCrime();
+        dateOfLastCrime = campaign.getPlayerForce().getDateOfLastCrime();
 
         // step eight: calculate other modifiers
         otherModifiersMap = calculateOtherModifiers(campaign);
@@ -258,7 +261,10 @@ public class ReputationController {
               commanderRating));
 
         description.append("<table>");
-        Person commander = campaign.getCommander();
+        Person commander = campaign.getPlayerForce().getHumanResources()
+                                 .getCommander(campaign.getCampaignOptions(),
+                                       campaign.isClanCampaign(),
+                                       campaign.getLocalDate());
 
         String commanderName = resources.getString("commanderNone.text");
         if (commander != null) {
@@ -345,7 +351,7 @@ public class ReputationController {
               combatRecordMap.get("contractsBreached"),
               combatRecordMap.get("contractsBreached") * 25));
 
-        if (campaign.getRetainerStartDate() != null) {
+        if (campaign.getPlayerForce().getRetainerStartDate() != null) {
             description.append(String.format("<tr><td><b>%s%s:</b></td> <td style=\"text-align:center;\">" +
                                                    "%d</td> <td style=\"text-align:center;\">+%d</td></tr>",
                   indent,
@@ -696,7 +702,7 @@ public class ReputationController {
         }
     }
 
-    public ReputationController generateInstanceFromXML(final Node workingNode) {
+    public ForceReputationController generateInstanceFromXML(final Node workingNode) {
         NodeList newLine = workingNode.getChildNodes();
 
         try {

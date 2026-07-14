@@ -48,9 +48,9 @@ import mekhq.campaign.Campaign;
 import mekhq.campaign.CampaignLocationManager;
 import mekhq.campaign.CurrentLocation;
 import mekhq.campaign.GroundTransitLocation;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.JumpPath;
-import mekhq.campaign.Warehouse;
+import mekhq.campaign.LocalHangar;
+import mekhq.campaign.LocalWarehouse;
 import mekhq.campaign.base.AbstractBase;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.personnel.Person;
@@ -267,25 +267,27 @@ public final class LocationDispatch {
           ILocation destination,
           Campaign campaign) {
 
-        Hangar arrivalHangar = (destination instanceof AbstractBase base)
-              ? base.getBaseHangar()
-              : campaign.getHangar();
-        Warehouse arrivalWarehouse = (destination instanceof AbstractBase base)
-              ? base.getBaseWarehouse()
-              : campaign.getWarehouse();
+        LocalHangar arrivalHangar;
+        arrivalHangar = destination instanceof AbstractBase base ?
+                              base.getBaseHangar() :
+                              campaign.getPlayerForce().getHangar();
+        LocalWarehouse arrivalWarehouse;
+        arrivalWarehouse = destination instanceof AbstractBase base ?
+                                 base.getBaseWarehouse() :
+                                 campaign.getPlayerForce().getWarehouse();
 
         // Move data structures immediately so hangar and warehouse filters stay correct.
         dispatch(units, destination, campaign, LOG_DISPATCH_UNITS, arrivalHangar, group -> {
             for (Unit unit : group) {
-                Hangar sourceHangar = unit.getHangar();
+                LocalHangar sourceHangar = unit.getHangar();
                 // Capture the unit's current warehouse BEFORE moving it: Hangar.addUnit reparents the unit's node, after
                 // which each installed part's getWarehouse() (resolved through the unit) would already read the arrival
                 // warehouse and the move below would be skipped.
-                Warehouse sourceWarehouse = unit.getWarehouse();
+                LocalWarehouse sourceWarehouse = unit.getWarehouse();
                 if (sourceWarehouse == null) {
-                    sourceWarehouse = campaign.getWarehouse();
+                    sourceWarehouse = campaign.getPlayerForce().getWarehouse();
                 }
-                (sourceHangar != null ? sourceHangar : campaign.getHangar()).removeUnit(unit.getId());
+                (sourceHangar != null ? sourceHangar : campaign.getPlayerForce().getHangar()).removeUnit(unit.getId());
                 arrivalHangar.addUnit(unit);
                 // Installed parts live in the warehouse local to their unit; move them along.
                 if (sourceWarehouse != arrivalWarehouse) {
@@ -314,15 +316,16 @@ public final class LocationDispatch {
      */
     private static void dispatchPartsToLocation(Collection<Part> parts, ILocation destination, Campaign campaign) {
 
-        Warehouse arrivalWarehouse = (destination instanceof AbstractBase base)
-              ? base.getBaseWarehouse()
-              : campaign.getWarehouse();
+        LocalWarehouse arrivalWarehouse;
+        arrivalWarehouse = destination instanceof AbstractBase base ?
+                                 base.getBaseWarehouse() :
+                                 campaign.getPlayerForce().getWarehouse();
 
         // Move the data structure immediately so warehouse filters stay correct.
         dispatch(parts, destination, campaign, LOG_DISPATCH_PARTS, arrivalWarehouse, group -> {
             for (Part part : group) {
-                Warehouse sourceWarehouse = part.getWarehouse();
-                (sourceWarehouse != null ? sourceWarehouse : campaign.getWarehouse()).removePart(part);
+                LocalWarehouse sourceWarehouse = part.getWarehouse();
+                (sourceWarehouse != null ? sourceWarehouse : campaign.getPlayerForce().getWarehouse()).removePart(part);
                 arrivalWarehouse.addPart(part);
             }
         });

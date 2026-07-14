@@ -63,7 +63,7 @@ import mekhq.campaign.unit.Unit;
 /**
  * Manages machines and material for a campaign.
  */
-public record Quartermaster(Campaign campaign) {
+public record ForceQuartermaster(Campaign campaign) {
     public enum PartAcquisitionResult {
         PartInherentFailure,
         PlanetSpecificFailure,
@@ -75,7 +75,7 @@ public record Quartermaster(Campaign campaign) {
      *
      * @param campaign The campaign being managed by the Quartermaster.
      */
-    public Quartermaster(Campaign campaign) {
+    public ForceQuartermaster(Campaign campaign) {
         this.campaign = Objects.requireNonNull(campaign);
     }
 
@@ -97,8 +97,8 @@ public record Quartermaster(Campaign campaign) {
     /**
      * Gets the Warehouse from the Campaign.
      */
-    private Warehouse getWarehouse() {
-        return campaign().getWarehouse();
+    private LocalWarehouse getWarehouse() {
+        return campaign().getPlayerForce().getWarehouse();
     }
 
     /**
@@ -124,8 +124,8 @@ public record Quartermaster(Campaign campaign) {
      * Returns the warehouse a part physically lives in — its own (a base warehouse for a base spare, resolved through
      * the location tree), falling back to the campaign warehouse.
      */
-    private Warehouse warehouseFor(Part part) {
-        Warehouse partWarehouse = part.getWarehouse();
+    private LocalWarehouse warehouseFor(Part part) {
+        LocalWarehouse partWarehouse = part.getWarehouse();
         return (partWarehouse != null) ? partWarehouse : getWarehouse();
     }
 
@@ -161,7 +161,7 @@ public record Quartermaster(Campaign campaign) {
      *                    through its own location (a base warehouse for a base spare), falling back to the campaign
      *                    warehouse.
      */
-    public void addPart(Part part, int transitDays, boolean isBrandNew, @Nullable Warehouse target) {
+    public void addPart(Part part, int transitDays, boolean isBrandNew, @Nullable LocalWarehouse target) {
         Objects.requireNonNull(part);
 
         // Refit kits are special, if this is for a refit kit use that method
@@ -194,7 +194,7 @@ public record Quartermaster(Campaign campaign) {
 
         // Add the part to the requested target warehouse, or the warehouse local to the part (e.g. a base warehouse for
         // a unit or spare at a base), and merge it with any existing part if possible
-        Warehouse warehouse = (target != null) ? target : warehouseFor(part);
+        LocalWarehouse warehouse = (target != null) ? target : warehouseFor(part);
         warehouse.addPart(part, true);
     }
 
@@ -205,7 +205,7 @@ public record Quartermaster(Campaign campaign) {
      * @param ammoType  The type of ammo to add.
      * @param shots     The number of rounds of ammo to add.
      */
-    public void addAmmo(Warehouse warehouse, AmmoType ammoType, int shots) {
+    public void addAmmo(LocalWarehouse warehouse, AmmoType ammoType, int shots) {
         Objects.requireNonNull(ammoType);
         if (shots > 0) {
             AmmoStorage storage = new AmmoStorage(0, ammoType, shots, campaign());
@@ -234,7 +234,7 @@ public record Quartermaster(Campaign campaign) {
      * @param infantryWeapon The type of infantry weapon using the ammo.
      * @param shots          The number of rounds of ammo to add.
      */
-    public void addAmmo(Warehouse warehouse, AmmoType ammoType, InfantryWeapon infantryWeapon, int shots) {
+    public void addAmmo(LocalWarehouse warehouse, AmmoType ammoType, InfantryWeapon infantryWeapon, int shots) {
         Objects.requireNonNull(ammoType);
         Objects.requireNonNull(infantryWeapon);
         if (shots > 0) {
@@ -266,7 +266,7 @@ public record Quartermaster(Campaign campaign) {
      *
      * @return The number of rounds of ammo removed. This value may be less than or equal to {@code shotsNeeded}.
      */
-    public int removeAmmo(Warehouse warehouse, AmmoType ammoType, int shotsNeeded) {
+    public int removeAmmo(LocalWarehouse warehouse, AmmoType ammoType, int shotsNeeded) {
         Objects.requireNonNull(ammoType);
 
         if (shotsNeeded <= 0) {
@@ -300,7 +300,7 @@ public record Quartermaster(Campaign campaign) {
     /**
      * Remove ammo directly from an AmmoStorage part, using the given warehouse for cleanup.
      */
-    private int removeAmmo(Warehouse warehouse, @Nullable AmmoStorage ammoStorage, int shotsNeeded) {
+    private int removeAmmo(LocalWarehouse warehouse, @Nullable AmmoStorage ammoStorage, int shotsNeeded) {
         if (ammoStorage == null) {
             return 0;
         }
@@ -337,7 +337,7 @@ public record Quartermaster(Campaign campaign) {
      *
      * @return The number of rounds of ammo removed. This value may be less than or equal to {@code shotsNeeded}.
      */
-    public int removeCompatibleAmmo(Warehouse warehouse, AmmoType ammoType, int shotsNeeded) {
+    public int removeCompatibleAmmo(LocalWarehouse warehouse, AmmoType ammoType, int shotsNeeded) {
         Objects.requireNonNull(ammoType);
 
         if (shotsNeeded <= 0) {
@@ -388,7 +388,7 @@ public record Quartermaster(Campaign campaign) {
     /**
      * Finds spare ammo of a given type in a specific warehouse, if any.
      */
-    private @Nullable AmmoStorage findSpareAmmo(Warehouse warehouse, AmmoType ammoType) {
+    private @Nullable AmmoStorage findSpareAmmo(LocalWarehouse warehouse, AmmoType ammoType) {
         return (AmmoStorage) warehouse.findSparePart(part -> isAvailableAsSpareAmmo(part)
                                                                   &&
                                                                   ((AmmoStorage) part).isSameAmmoType(ammoType));
@@ -408,7 +408,7 @@ public record Quartermaster(Campaign campaign) {
     /**
      * Find compatible ammo in a specific warehouse.
      */
-    private List<AmmoStorage> findCompatibleSpareAmmo(Warehouse warehouse, AmmoType ammoType) {
+    private List<AmmoStorage> findCompatibleSpareAmmo(LocalWarehouse warehouse, AmmoType ammoType) {
         List<AmmoStorage> compatibleAmmo = new ArrayList<>();
         warehouse.forEachSparePart(part -> {
             if (!isAvailableAsSpareAmmo(part)) {
@@ -509,7 +509,7 @@ public record Quartermaster(Campaign campaign) {
             // all of those counts as viable and not just the first we find.
             return getWarehouse()
                          .streamSpareParts()
-                         .filter(Quartermaster::isAvailableAsSpareAmmo)
+                         .filter(ForceQuartermaster::isAvailableAsSpareAmmo)
                          .mapToInt(part -> {
                              AmmoStorage spare = (AmmoStorage) part;
                              if (spare.isSameAmmoType(ammoType)) {
@@ -524,7 +524,7 @@ public record Quartermaster(Campaign campaign) {
             // the ammo that matches strictly or is compatible.
             return getWarehouse()
                          .streamSpareParts()
-                         .filter(Quartermaster::isAvailableAsSpareAmmo)
+                         .filter(ForceQuartermaster::isAvailableAsSpareAmmo)
                          .mapToInt(part -> {
                              AmmoStorage spare = (AmmoStorage) part;
                              if (spare.isSameAmmoType(ammoType)) {
@@ -566,7 +566,8 @@ public record Quartermaster(Campaign campaign) {
     /**
      * Finds spare infantry ammo of a given type in a specific warehouse, if any.
      */
-    private @Nullable InfantryAmmoStorage findSpareAmmo(Warehouse warehouse, AmmoType ammoType, InfantryWeapon weaponType) {
+    private @Nullable InfantryAmmoStorage findSpareAmmo(LocalWarehouse warehouse, AmmoType ammoType,
+          InfantryWeapon weaponType) {
         return (InfantryAmmoStorage) warehouse.findSparePart(part -> {
             if (!(part instanceof InfantryAmmoStorage) || !isAvailableAsSpareAmmo(part)) {
                 return false;
@@ -597,7 +598,7 @@ public record Quartermaster(Campaign campaign) {
      *
      * @return The number of rounds of ammo removed. This value may be less than or equal to {@code shotsNeeded}.
      */
-    public int removeAmmo(Warehouse warehouse, AmmoType ammoType, InfantryWeapon infantryWeapon, int shotsNeeded) {
+    public int removeAmmo(LocalWarehouse warehouse, AmmoType ammoType, InfantryWeapon infantryWeapon, int shotsNeeded) {
         Objects.requireNonNull(ammoType);
 
         if (shotsNeeded <= 0) {
@@ -646,7 +647,7 @@ public record Quartermaster(Campaign campaign) {
         // Add the part back to the Warehouse it belongs to, asking that it be merged with
         // any existing spare part. Use the part's own warehouse (e.g., a base warehouse)
         // rather than always defaulting to the campaign's main warehouse.
-        Warehouse target = (part.getWarehouse() != null) ? part.getWarehouse() : getWarehouse();
+        LocalWarehouse target = (part.getWarehouse() != null) ? part.getWarehouse() : getWarehouse();
         part = target.addPart(part, true);
         MekHQ.triggerEvent(new PartArrivedEvent(part));
     }
@@ -675,7 +676,9 @@ public record Quartermaster(Campaign campaign) {
 
         if (getCampaignOptions().isPayForUnits()) {
             Money cost = new Unit(en, campaign()).getBuyCost().multipliedBy(valueMultiplier);
-            if (campaign().getFinances().debit(TransactionType.UNIT_PURCHASE, campaign().getLocalDate(),
+            if (campaign().getPlayerForce()
+                      .getFinances()
+                      .debit(TransactionType.UNIT_PURCHASE, campaign().getLocalDate(),
                   cost, "Purchased " + en.getShortName())) {
 
                 campaign().addNewUnit(en, false, days, quality);
@@ -700,7 +703,7 @@ public record Quartermaster(Campaign campaign) {
 
         Money sellValue = unit.getSellValue();
 
-        campaign().getFinances().credit(TransactionType.UNIT_SALE, campaign().getLocalDate(),
+        campaign().getPlayerForce().getFinances().credit(TransactionType.UNIT_SALE, campaign().getLocalDate(),
               sellValue, "Sale of " + unit.getName());
 
         campaign().removeUnit(unit.getId());
@@ -754,7 +757,7 @@ public record Quartermaster(Campaign campaign) {
             plural = "s";
         }
 
-        campaign().getFinances().credit(TransactionType.EQUIPMENT_SALE, campaign().getLocalDate(),
+        campaign().getPlayerForce().getFinances().credit(TransactionType.EQUIPMENT_SALE, campaign().getLocalDate(),
               cost, "Sale of " + quantity + " " + part.getName() + plural);
 
         warehouseFor(part).removePart(part, quantity);
@@ -795,7 +798,7 @@ public record Quartermaster(Campaign campaign) {
 
         Money cost = ammo.getActualValue().multipliedBy(saleProportion);
 
-        campaign().getFinances().credit(TransactionType.EQUIPMENT_SALE, campaign().getLocalDate(),
+        campaign().getPlayerForce().getFinances().credit(TransactionType.EQUIPMENT_SALE, campaign().getLocalDate(),
               cost, "Sale of " + shots + " " + ammo.getName());
 
         warehouseFor(ammo).removeAmmo(ammo, shots);
@@ -836,7 +839,7 @@ public record Quartermaster(Campaign campaign) {
 
         Money cost = armor.getActualValue().multipliedBy(saleProportion);
 
-        campaign().getFinances().credit(TransactionType.EQUIPMENT_SALE, campaign().getLocalDate(),
+        campaign().getPlayerForce().getFinances().credit(TransactionType.EQUIPMENT_SALE, campaign().getLocalDate(),
               cost, "Sale of " + points + " " + armor.getName());
 
         warehouseFor(armor).removeArmor(armor, points);
@@ -907,7 +910,7 @@ public record Quartermaster(Campaign campaign) {
      */
     public boolean buyRefurbishment(Part part) {
         if (getCampaignOptions().isPayForParts()) {
-            return campaign().getFinances().debit(TransactionType.EQUIPMENT_PURCHASE,
+            return campaign().getPlayerForce().getFinances().debit(TransactionType.EQUIPMENT_PURCHASE,
                   campaign().getLocalDate(), part.getActualValue(),
                   "Purchase of " + part.getName());
         } else {
@@ -951,12 +954,12 @@ public record Quartermaster(Campaign campaign) {
      *
      * @return True if the part was purchased, otherwise false.
      */
-    public boolean buyPart(Part part, double costMultiplier, int transitDays, @Nullable Warehouse target) {
+    public boolean buyPart(Part part, double costMultiplier, int transitDays, @Nullable LocalWarehouse target) {
         Objects.requireNonNull(part);
 
         if (getCampaignOptions().isPayForParts()) {
             Money cost = part.getActualValue().multipliedBy(costMultiplier);
-            if (campaign().getFinances().debit(TransactionType.EQUIPMENT_PURCHASE,
+            if (campaign().getPlayerForce().getFinances().debit(TransactionType.EQUIPMENT_PURCHASE,
                   campaign().getLocalDate(), cost, "Purchase of " + part.getName())) {
                 addPart(part, transitDays, true, target);
                 return true;

@@ -75,7 +75,6 @@ import mekhq.MHQConstants;
 import mekhq.MekHQ;
 import mekhq.Utilities;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.Hangar;
 import mekhq.campaign.againstTheBot.AtBConfiguration;
 import mekhq.campaign.againstTheBot.AtBStaticWeightGenerator;
 import mekhq.campaign.campaignOptions.CampaignOptions;
@@ -275,7 +274,8 @@ public abstract class AtBScenario extends Scenario implements IAtBScenario {
             combatRole = combatTeam.getRole();
             setMissionId(combatTeam.getMissionId());
 
-            for (UUID id : campaign.getFormation(combatTeam.getFormationId()).getAllUnits(true)) {
+            int id1 = combatTeam.getFormationId();
+            for (UUID id : campaign.getPlayerForce().getFormation(id1).getAllUnits(true)) {
                 entityIds.put(id, campaign.getUnit(id).getEntity());
             }
         }
@@ -754,27 +754,29 @@ public abstract class AtBScenario extends Scenario implements IAtBScenario {
         int numAttachedBot = 0;
         if (getContract(campaign).getContractType().isCadreDuty()) {
             numAttachedPlayer = 3;
-        } else if (campaign.getFaction().isMercenary()) {
-            switch (getContract(campaign).getCommandRights()) {
-                case INTEGRATED:
-                    if (campaign.getCampaignOptions().isPlayerControlsAttachedUnits()) {
-                        numAttachedPlayer = 2;
-                    } else {
-                        numAttachedBot = 2;
-                    }
-                    break;
-                case HOUSE:
-                    if (campaign.getCampaignOptions().isPlayerControlsAttachedUnits()) {
+        } else {
+            if (campaign.getFaction().isMercenary()) {
+                switch (getContract(campaign).getCommandRights()) {
+                    case INTEGRATED:
+                        if (campaign.getCampaignOptions().isPlayerControlsAttachedUnits()) {
+                            numAttachedPlayer = 2;
+                        } else {
+                            numAttachedBot = 2;
+                        }
+                        break;
+                    case HOUSE:
+                        if (campaign.getCampaignOptions().isPlayerControlsAttachedUnits()) {
+                            numAttachedPlayer = 1;
+                        } else {
+                            numAttachedBot = 1;
+                        }
+                        break;
+                    case LIAISON:
                         numAttachedPlayer = 1;
-                    } else {
-                        numAttachedBot = 1;
-                    }
-                    break;
-                case LIAISON:
-                    numAttachedPlayer = 1;
-                    break;
-                default:
-                    break;
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
@@ -875,8 +877,8 @@ public abstract class AtBScenario extends Scenario implements IAtBScenario {
         if (campaign.getCampaignOptions().isUseDropShips()) {
             if (canAddDropShips()) {
                 boolean dropshipFound = false;
-                Hangar hangar = campaign.getAllHangar();
-                List<UUID> allCombatUnits = campaign.getAllUnitsInTheTOE(true);
+                mekhq.campaign.LocalHangar hangar = campaign.getPlayerForce().getHangar();
+                List<UUID> allCombatUnits = campaign.getPlayerForce().getAllUnitsInTheTOE(true);
                 Collections.shuffle(allCombatUnits); // Remove bias
                 for (UUID unitId : allCombatUnits) {
                     Entity entity = EntityUtilities.getEntityFromUnitId(hangar, unitId);
@@ -2201,7 +2203,7 @@ public abstract class AtBScenario extends Scenario implements IAtBScenario {
             return null;
         }
 
-        return campaign.getCombatTeamsAsMap().get(combatTeamId);
+        return campaign.getPlayerForce().getCombatTeamsAsMap(campaign).get(combatTeamId);
     }
 
     public void setCombatTeam(CombatTeam combatTeam) {

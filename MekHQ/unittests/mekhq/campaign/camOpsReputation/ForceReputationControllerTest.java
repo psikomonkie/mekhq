@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2024-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -33,9 +33,9 @@
 package mekhq.campaign.camOpsReputation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,8 +50,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
-class ReputationControllerTest {
-    private ReputationController reputation;
+class ForceReputationControllerTest {
+    private ForceReputationController reputation;
     private Campaign campaign;
     private MockedStatic<AverageExperienceRating> averageExperienceRating;
     private MockedStatic<CommandRating> commandRating;
@@ -64,11 +64,14 @@ class ReputationControllerTest {
 
     @BeforeEach
     void setUp() {
-        reputation = new ReputationController();
-        campaign = mock(Campaign.class);
-        when(campaign.getCommander()).thenReturn(null);
-        when(campaign.getFinances()).thenReturn(null);
-        when(campaign.getDateOfLastCrime()).thenReturn(null);
+        reputation = new ForceReputationController();
+        campaign = mockCampaign();
+        when(campaign.getPlayerForce().getHumanResources()
+                   .getCommander(campaign.getCampaignOptions(),
+                         campaign.isClanCampaign(),
+                         campaign.getLocalDate())).thenReturn(null);
+        when(campaign.getPlayerForce().getFinances()).thenReturn(null);
+        when(campaign.getPlayerForce().getDateOfLastCrime()).thenReturn(null);
         averageExperienceRating = mockStatic(AverageExperienceRating.class);
         commandRating = mockStatic(CommandRating.class);
         combatRecordRating = mockStatic(CombatRecordRating.class);
@@ -127,7 +130,7 @@ class ReputationControllerTest {
               .thenReturn(supportData);
 
         financialRating.when(() ->
-                                   FinancialRating.calculateFinancialRating(campaign.getFinances()))
+                                   FinancialRating.calculateFinancialRating(campaign.getPlayerForce().getFinances()))
               .thenReturn(Collections.singletonMap("total", 3));
 
         crimeRating.when(() ->
@@ -179,7 +182,7 @@ class ReputationControllerTest {
               .thenReturn(supportData);
 
         financialRating.when(() ->
-                                   FinancialRating.calculateFinancialRating(campaign.getFinances()))
+                                   FinancialRating.calculateFinancialRating(campaign.getPlayerForce().getFinances()))
               .thenReturn(Collections.singletonMap("total", 0));
 
         crimeRating.when(() ->
