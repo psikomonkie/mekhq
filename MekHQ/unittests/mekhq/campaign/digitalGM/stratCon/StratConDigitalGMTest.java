@@ -74,37 +74,41 @@ class StratConDigitalGMTest {
     @Test
     void normalPlayTypeEnablesOnlyStratConDigitalGM() {
         Campaign campaign = campaignWithPlayType(StratConPlayType.NORMAL);
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
 
-        assertTrue(new StratConDigitalGM().isEnabled(campaign));
-        assertFalse(new MaplessStratConGM().isEnabled(campaign));
-        assertFalse(new SinglesStratConGM().isEnabled(campaign));
+        assertTrue(new StratConDigitalGM().isEnabled(campaignOptions));
+        assertFalse(new MaplessStratConGM().isEnabled(campaignOptions));
+        assertFalse(new SinglesStratConGM().isEnabled(campaignOptions));
     }
 
     @Test
     void maplessPlayTypeEnablesOnlyMaplessStratConGM() {
         Campaign campaign = campaignWithPlayType(StratConPlayType.MAPLESS);
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
 
-        assertFalse(new StratConDigitalGM().isEnabled(campaign));
-        assertTrue(new MaplessStratConGM().isEnabled(campaign));
-        assertFalse(new SinglesStratConGM().isEnabled(campaign));
+        assertFalse(new StratConDigitalGM().isEnabled(campaignOptions));
+        assertTrue(new MaplessStratConGM().isEnabled(campaignOptions));
+        assertFalse(new SinglesStratConGM().isEnabled(campaignOptions));
     }
 
     @Test
     void singlesPlayTypeEnablesOnlySinglesStratConGM() {
         Campaign campaign = campaignWithPlayType(StratConPlayType.SINGLES);
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
 
-        assertFalse(new StratConDigitalGM().isEnabled(campaign));
-        assertFalse(new MaplessStratConGM().isEnabled(campaign));
-        assertTrue(new SinglesStratConGM().isEnabled(campaign));
+        assertFalse(new StratConDigitalGM().isEnabled(campaignOptions));
+        assertFalse(new MaplessStratConGM().isEnabled(campaignOptions));
+        assertTrue(new SinglesStratConGM().isEnabled(campaignOptions));
     }
 
     @Test
     void disabledPlayTypeEnablesNoGM() {
         Campaign campaign = campaignWithPlayType(StratConPlayType.DISABLED);
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
 
-        assertFalse(new StratConDigitalGM().isEnabled(campaign));
-        assertFalse(new MaplessStratConGM().isEnabled(campaign));
-        assertFalse(new SinglesStratConGM().isEnabled(campaign));
+        assertFalse(new StratConDigitalGM().isEnabled(campaignOptions));
+        assertFalse(new MaplessStratConGM().isEnabled(campaignOptions));
+        assertFalse(new SinglesStratConGM().isEnabled(campaignOptions));
     }
 
     // endregion

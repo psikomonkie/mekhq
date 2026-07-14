@@ -115,7 +115,8 @@ class StratConGMsTest {
         SentinelGM gm = new SentinelGM();
         register(gm);
 
-        assertSame(gm.forceDeploymentSentinel, StratConGMs.forceDeployment(campaignWith(StratConPlayType.NORMAL)));
+        assertSame(gm.forceDeploymentSentinel,
+              StratConGMs.forceDeployment(campaignWith(StratConPlayType.NORMAL).getCampaignOptions()));
     }
 
     @Test
@@ -123,7 +124,8 @@ class StratConGMsTest {
         SentinelGM gm = new SentinelGM();
         register(gm);
 
-        assertSame(gm.opForGenerationSentinel, StratConGMs.opForGeneration(campaignWith(StratConPlayType.NORMAL)));
+        assertSame(gm.opForGenerationSentinel,
+              StratConGMs.opForGeneration(campaignWith(StratConPlayType.NORMAL).getCampaignOptions()));
     }
 
     @Test
@@ -131,7 +133,8 @@ class StratConGMsTest {
         SentinelGM gm = new SentinelGM();
         register(gm);
 
-        assertSame(gm.opForDeploymentSentinel, StratConGMs.opForDeployment(campaignWith(StratConPlayType.NORMAL)));
+        assertSame(gm.opForDeploymentSentinel,
+              StratConGMs.opForDeployment(campaignWith(StratConPlayType.NORMAL).getCampaignOptions()));
     }
 
     @Test
@@ -139,19 +142,20 @@ class StratConGMsTest {
         SentinelGM gm = new SentinelGM();
         register(gm);
 
-        assertSame(gm.mapGenerationSentinel, StratConGMs.mapGeneration(campaignWith(StratConPlayType.NORMAL)));
+        assertSame(gm.mapGenerationSentinel,
+              StratConGMs.mapGeneration(campaignWith(StratConPlayType.NORMAL).getCampaignOptions()));
     }
 
     @Test
     void fallsBackToDefaultStrategyWhenNoGmIsActive() {
         // Nothing enabled for a disabled campaign -> default StratCon strategies (delegate to the static rules)
         assertInstanceOf(StratConForceDeploymentStrategy.class,
-              StratConGMs.forceDeployment(campaignWith(StratConPlayType.DISABLED)));
+              StratConGMs.forceDeployment(campaignWith(StratConPlayType.DISABLED).getCampaignOptions()));
         assertInstanceOf(StratConOpForGenerationStrategy.class,
-              StratConGMs.opForGeneration(campaignWith(StratConPlayType.DISABLED)));
+              StratConGMs.opForGeneration(campaignWith(StratConPlayType.DISABLED).getCampaignOptions()));
         assertInstanceOf(StratConOpForDeploymentStrategy.class,
-              StratConGMs.opForDeployment(campaignWith(StratConPlayType.DISABLED)));
+              StratConGMs.opForDeployment(campaignWith(StratConPlayType.DISABLED).getCampaignOptions()));
         assertInstanceOf(StratConMapGenerationStrategy.class,
-              StratConGMs.mapGeneration(campaignWith(StratConPlayType.DISABLED)));
+              StratConGMs.mapGeneration(campaignWith(StratConPlayType.DISABLED).getCampaignOptions()));
     }
 }
