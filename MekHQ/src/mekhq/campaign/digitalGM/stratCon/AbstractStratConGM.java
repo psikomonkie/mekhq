@@ -34,6 +34,7 @@ package mekhq.campaign.digitalGM.stratCon;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import mekhq.campaign.Campaign;
@@ -232,15 +233,10 @@ public abstract class AbstractStratConGM extends AbstractDigitalGM {
      * @param track the track to clean up
      */
     private void cleanupPhantomScenarios(StratConTrackState track) {
-        List<StratConScenario> cleanupList = track.getScenarios()
-                                                   .values()
-                                                   .stream()
-                                                   .filter(scenario -> (scenario.getDeploymentDate() == null) &&
-                                                                             !scenario.isStrategicObjective())
-                                                   .toList();
-
-        for (StratConScenario scenario : cleanupList) {
-            track.removeScenario(scenario);
+        for (StratConScenario scenario : new ArrayList<>(track.getScenarios().values())) {
+            if (scenario.getDeploymentDate() == null && !scenario.isStrategicObjective()) {
+                track.removeScenario(scenario);
+            }
         }
     }
 }
