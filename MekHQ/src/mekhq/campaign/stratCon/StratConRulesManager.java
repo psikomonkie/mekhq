@@ -365,7 +365,8 @@ public class StratConRulesManager {
         boolean isBungledPatrol = false;
         CombatTeam combatTeam = campaign.getCombatTeamsAsMap().get(forceID);
         if (combatTeam != null) {
-            isBungledPatrol = combatTeam.getRole().isPatrol();
+            CombatRole role = combatTeam.getRole();
+            isBungledPatrol = (role != null) && role.isPatrol();
         }
 
         return StratConScenarioFactory.getRandomScenario(unitType, true, isBungledPatrol);
