@@ -91,7 +91,7 @@ class RandomEventEffectsManagerTest {
 
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(campaignFaction.getShortName()).thenReturn("MERC");
-        when(mockCampaign.get.getFaction()).thenReturn(campaignFaction);
+        when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         when(mockCampaign.getLocalDate()).thenReturn(LocalDate.of(3151, 1, 1));
     }
@@ -146,8 +146,8 @@ class RandomEventEffectsManagerTest {
     private void enableFatigue() {
         when(mockCampaignOptions.isUseFatigue()).thenReturn(true);
         when(mockCampaignOptions.getFatigueRate()).thenReturn(1);
-        when(mockCampaign.getHangar()).thenReturn(mock(LocalHangar.class));
-        when(mockCampaign.getWarehouse()).thenReturn(mock(LocalWarehouse.class));
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mock(LocalHangar.class));
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mock(LocalWarehouse.class));
     }
 
     // -----------------------------------------------------------------------

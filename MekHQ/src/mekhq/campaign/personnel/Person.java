@@ -503,7 +503,7 @@ public class Person implements ILocatable {
     }
 
     public Person(final String givenName, final String surname, final Campaign campaign) {
-        this(givenName, surname, campaign, campaign.getFaction().getShortName());
+        this(givenName, surname, campaign, campaign.getPlayerForce().getFaction().getShortName());
     }
 
     public Person(final String givenName, final String surname, final @Nullable Campaign campaign,

@@ -90,7 +90,6 @@ public class PrisonerEventManagerTest {
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
@@ -122,7 +121,6 @@ public class PrisonerEventManagerTest {
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
@@ -152,7 +150,6 @@ public class PrisonerEventManagerTest {
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
@@ -185,7 +182,6 @@ public class PrisonerEventManagerTest {
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
@@ -212,7 +208,6 @@ public class PrisonerEventManagerTest {
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
@@ -253,7 +248,6 @@ public class PrisonerEventManagerTest {
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
@@ -305,7 +299,6 @@ public class PrisonerEventManagerTest {
         Campaign mockCampaign = mockCampaign();
         Faction campaignFaction = mock(Faction.class);
         when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
         when(mockCampaign.hasActiveContract()).thenReturn(true);
 

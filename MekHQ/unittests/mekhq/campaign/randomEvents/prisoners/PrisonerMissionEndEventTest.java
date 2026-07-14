@@ -84,7 +84,6 @@ class PrisonerMissionEndEventTest {
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         LocalDate today = LocalDate.of(3151, 1, 1);
@@ -112,7 +111,6 @@ class PrisonerMissionEndEventTest {
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         LocalDate today = LocalDate.of(3151, 1, 1);
@@ -141,7 +139,6 @@ class PrisonerMissionEndEventTest {
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         LocalDate today = LocalDate.of(3151, 1, 1);
@@ -168,7 +165,6 @@ class PrisonerMissionEndEventTest {
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
@@ -202,7 +198,6 @@ class PrisonerMissionEndEventTest {
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getPlayerForce().getFaction()).thenReturn(campaignFaction);
-        when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
