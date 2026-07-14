@@ -44,6 +44,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,7 +64,7 @@ import org.mockito.ArgumentCaptor;
 public class AdjustLargeCraftAmmoActionTest {
     @Test
     public void onlyAcceptsEntitiesUsingBayWeapons() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         mekhq.campaign.ForceQuartermaster quartermaster = mock(mekhq.campaign.ForceQuartermaster.class);
         when(campaign.getQuartermaster()).thenReturn(quartermaster);
         Unit unit = mock(Unit.class);
@@ -82,7 +83,7 @@ public class AdjustLargeCraftAmmoActionTest {
 
     @Test
     public void doesNothingWithNoAmmoBays() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         mekhq.campaign.ForceQuartermaster quartermaster = mock(mekhq.campaign.ForceQuartermaster.class);
         when(campaign.getQuartermaster()).thenReturn(quartermaster);
         Unit unit = mock(Unit.class);
@@ -102,7 +103,7 @@ public class AdjustLargeCraftAmmoActionTest {
 
     @Test
     public void addsMissingBins() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         mekhq.campaign.ForceQuartermaster quartermaster = mock(mekhq.campaign.ForceQuartermaster.class);
         when(campaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -160,7 +161,7 @@ public class AdjustLargeCraftAmmoActionTest {
 
     @Test
     public void updatesExistingBayToMatchType() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         mekhq.campaign.ForceQuartermaster quartermaster = mock(mekhq.campaign.ForceQuartermaster.class);
         when(campaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -197,7 +198,7 @@ public class AdjustLargeCraftAmmoActionTest {
 
     @Test
     public void addsMissingBinsSkipsNonLargeCraftBins() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         mekhq.campaign.ForceQuartermaster quartermaster = mock(mekhq.campaign.ForceQuartermaster.class);
         when(campaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -257,7 +258,7 @@ public class AdjustLargeCraftAmmoActionTest {
 
     @Test
     public void updatesExistingBayToMatchTypeSkipsNonLargeCraftBins() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         mekhq.campaign.ForceQuartermaster quartermaster = mock(mekhq.campaign.ForceQuartermaster.class);
         when(campaign.getQuartermaster()).thenReturn(quartermaster);
 

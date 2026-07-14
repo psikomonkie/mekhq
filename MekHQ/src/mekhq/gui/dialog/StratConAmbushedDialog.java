@@ -56,7 +56,7 @@ public class StratConAmbushedDialog {
     }
 
     private static Person getFormationCommander(Campaign campaign, int formationId) {
-        Formation formation = campaign.getFormation(formationId);
+        Formation formation = campaign.getPlayerForce().getFormation(formationId);
 
         return formation == null ? null : formation.getFormationCommander(campaign);
     }

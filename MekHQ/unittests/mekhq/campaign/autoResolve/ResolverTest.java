@@ -221,7 +221,7 @@ public class ResolverTest {
         when(scenario.getBotForce(anyInt())).thenReturn(botForce);
         when(scenario.getNumBots()).thenReturn(1);
 
-        for (var force : campaign.getAllFormations()) {
+        for (var force : campaign.getPlayerForce().getAllFormations()) {
             force.setScenarioId(11, campaign);
         }
 
@@ -230,14 +230,15 @@ public class ResolverTest {
 
     Campaign createCampaign() {
         var campaign = MHQTestUtilities.getTestCampaign();
-        campaign.setName("Test Player");
+        campaign.getPlayerForce().setName("Test Player");
         var reputationController = mock(mekhq.campaign.camOpsReputation.ForceReputationController.class);
         when(reputationController.getAverageSkillLevel()).thenReturn(SkillLevel.REGULAR);
 
-        campaign.setReputation(reputationController);
+        campaign.getPlayerForce().setReputation(reputationController);
         var force = new Formation("Heroes");
 
-        campaign.addFormation(force, campaign.getFormation(0));
+        Formation superFormation = campaign.getPlayerForce().getFormation(0);
+        campaign.getPlayerForce().addFormation(force, superFormation, campaign);
         return campaign;
     }
 

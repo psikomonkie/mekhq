@@ -415,7 +415,7 @@ public abstract class Part implements IPartWork, ITechnology, ILocatable {
     @Override
     public @Nullable LocalWarehouse getWarehouse() {
         IPlace place = getPlace();
-        return place != null ? place.getWarehouse() : campaign.getWarehouse();
+        return place != null ? place.getWarehouse() : campaign.getPlayerForce().getWarehouse();
     }
 
     @Override
@@ -2083,14 +2083,14 @@ public abstract class Part implements IPartWork, ITechnology, ILocatable {
 
         if (tech instanceof PartPersonRef) {
             UUID id = tech.getId();
-            tech = campaign.getPerson(id);
+            tech = campaign.getPlayerForce().getHumanResources().getPerson(id);
             if (tech == null) {
                 LOGGER.error("Part {} ('{}') references missing tech {}", getId(), getName(), id);
             }
         }
         if (reservedBy instanceof PartPersonRef) {
             UUID id = reservedBy.getId();
-            reservedBy = campaign.getPerson(id);
+            reservedBy = campaign.getPlayerForce().getHumanResources().getPerson(id);
             if (reservedBy == null) {
                 LOGGER.error("Part {} ('{}') references missing tech (reservation) {}", getId(), getName(), id);
             }

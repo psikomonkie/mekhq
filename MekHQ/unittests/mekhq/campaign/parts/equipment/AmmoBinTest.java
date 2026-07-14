@@ -47,6 +47,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -88,7 +89,7 @@ public class AmmoBinTest {
 
     @Test
     public void ammoBinCtorTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
 
         int equipmentNum = 18;
@@ -104,7 +105,7 @@ public class AmmoBinTest {
 
     @Test
     public void cloneTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
 
         int equipmentNum = 18;
@@ -123,7 +124,7 @@ public class AmmoBinTest {
 
     @Test
     public void needsMaintenanceTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
         AmmoBin ammoBin = new AmmoBin(0, ammoType, -1, ammoType.getShots(), false, false, mockCampaign);
 
@@ -133,7 +134,7 @@ public class AmmoBinTest {
 
     @Test
     public void isPriceAdjustedForAmountTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
         AmmoBin ammoBin = new AmmoBin(0, ammoType, -1, ammoType.getShots(), false, false, mockCampaign);
 
@@ -142,7 +143,7 @@ public class AmmoBinTest {
 
     @Test
     public void mrmsOptionTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
         AmmoBin ammoBin = new AmmoBin(0, ammoType, -1, ammoType.getShots(), false, false, mockCampaign);
 
@@ -151,7 +152,7 @@ public class AmmoBinTest {
 
     @Test
     public void isOmniPoddableTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
         AmmoBin ammoBin = new AmmoBin(0, ammoType, -1, ammoType.getShots(), false, false, mockCampaign);
 
@@ -160,7 +161,7 @@ public class AmmoBinTest {
 
     @Test
     public void getTechAdvancementTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
         AmmoBin ammoBin = new AmmoBin(0, ammoType, -1, ammoType.getShots(), false, false, mockCampaign);
 
@@ -169,7 +170,7 @@ public class AmmoBinTest {
 
     @Test
     public void getNewPartTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
 
         AmmoBin ammoBin = new AmmoBin(0, ammoType, -1, 0, false, false, mockCampaign);
@@ -183,7 +184,7 @@ public class AmmoBinTest {
 
     @Test
     public void getNewEquipmentTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
 
         AmmoBin ammoBin = new AmmoBin(0, ammoType, -1, 0, false, false, mockCampaign);
@@ -197,7 +198,7 @@ public class AmmoBinTest {
 
     @Test
     public void getAcquisitionWorkTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
 
         boolean isOneShot = false;
@@ -227,7 +228,7 @@ public class AmmoBinTest {
 
     @Test
     public void getMissingPartTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
 
         int equipmentNum = 18;
@@ -258,7 +259,7 @@ public class AmmoBinTest {
 
     @Test
     public void setShotsNeeded() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         AmmoType ammoType = getAmmoType("ISAC10 Ammo");
 
@@ -306,7 +307,7 @@ public class AmmoBinTest {
 
     @Test
     public void getFullShotsUsesAmmoTypeShotsIfNoEntityOrMounted() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         AmmoType ammoType = getAmmoType("ISAC10 Ammo");
 
@@ -319,7 +320,7 @@ public class AmmoBinTest {
 
     @Test
     public void getFullShotsOneShotAmmoReturnsOneShot() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         AmmoType ammoType = getAmmoType("ISAC10 Ammo");
 
@@ -333,7 +334,7 @@ public class AmmoBinTest {
 
     @Test
     public void getFullShotsUsesOriginalShotsFromMounted() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         AmmoType ammoType = getAmmoType("ISAC10 Ammo");
 
@@ -359,7 +360,7 @@ public class AmmoBinTest {
 
     @Test
     public void getFullShotsForProtoMeksReducedInHalfForNonStandardMunitions() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
 
@@ -385,7 +386,7 @@ public class AmmoBinTest {
 
     @Test
     public void getBaseTimeSalvagingTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
 
@@ -418,7 +419,7 @@ public class AmmoBinTest {
 
     @Test
     public void getBaseTimeRepairTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         AmmoType ammoType = getAmmoType("ISSRM6 Inferno Ammo");
 
@@ -450,7 +451,7 @@ public class AmmoBinTest {
     @Test
     public void ammoBinWriteToXmlTest() throws ParserConfigurationException, SAXException, IOException {
         AmmoType isSRM2InfernoAmmo = getAmmoType("ISSRM2 Inferno Ammo");
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoBin ammoBin = new AmmoBin(0, isSRM2InfernoAmmo, 42,
               isSRM2InfernoAmmo.getShots() - 1, false, false, mockCampaign);
         ammoBin.setId(25);
@@ -491,7 +492,7 @@ public class AmmoBinTest {
     @Test
     public void oneShotAmmoBinWriteToXmlTest() throws ParserConfigurationException, SAXException, IOException {
         AmmoType isSRM2InfernoAmmo = getAmmoType("ISSRM2 Ammo");
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoBin ammoBin = new AmmoBin(0, isSRM2InfernoAmmo, 42, 0, true, false, mockCampaign);
         ammoBin.setId(25);
 
@@ -532,7 +533,7 @@ public class AmmoBinTest {
     @Test
     public void fullAmmoBinWriteToXmlTest() throws ParserConfigurationException, SAXException, IOException {
         AmmoType isSRM2InfernoAmmo = getAmmoType("ISSRM2 Inferno Ammo");
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoBin ammoBin = new AmmoBin(0, isSRM2InfernoAmmo, 42, 0, false, false, mockCampaign);
         ammoBin.setId(25);
 
@@ -572,7 +573,7 @@ public class AmmoBinTest {
     @Test
     public void emptyAmmoBinWriteToXmlTest() throws ParserConfigurationException, SAXException, IOException {
         AmmoType isSRM2InfernoAmmo = getAmmoType("ISSRM2 Inferno Ammo");
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoBin ammoBin = new AmmoBin(0,
               isSRM2InfernoAmmo,
               42,
@@ -618,7 +619,7 @@ public class AmmoBinTest {
     @Test
     public void changeMunitionTest() {
         AmmoType isSRM2Ammo = getAmmoType("ISSRM2 Ammo");
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int equipmentNum = 19;
         AmmoBin ammoBin = new AmmoBin(0, isSRM2Ammo, equipmentNum, 0, false, false, mockCampaign);
@@ -660,7 +661,7 @@ public class AmmoBinTest {
     @Test
     public void changeMunitionSerializationTest() throws ParserConfigurationException, SAXException, IOException {
         AmmoType isSRM2InfernoAmmo = getAmmoType("ISSRM2 Inferno Ammo");
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         AmmoBin ammoBin = new AmmoBin(0, isSRM2InfernoAmmo, -1, 0, false, false, mockCampaign);
 
@@ -703,9 +704,9 @@ public class AmmoBinTest {
 
     @Test
     public void unloadEmptyBinTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -724,9 +725,9 @@ public class AmmoBinTest {
 
     @Test
     public void unloadFullBinTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -754,9 +755,9 @@ public class AmmoBinTest {
 
     @Test
     public void unloadPartialBinTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -784,11 +785,11 @@ public class AmmoBinTest {
 
     @Test
     public void salvageEmptyBinTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -808,11 +809,11 @@ public class AmmoBinTest {
 
     @Test
     public void salvageFullBinTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -841,11 +842,11 @@ public class AmmoBinTest {
 
     @Test
     public void salvagePartialBinTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -874,9 +875,9 @@ public class AmmoBinTest {
 
     @Test
     public void loadBinWithoutUnitDoesNothing() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -895,11 +896,11 @@ public class AmmoBinTest {
 
     @Test
     public void loadBinWithoutSpareAmmo() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -930,11 +931,11 @@ public class AmmoBinTest {
 
     @Test
     public void loadBinWithOnlySpareAmmoOfWrongType() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -972,11 +973,11 @@ public class AmmoBinTest {
 
     @Test
     public void loadBinWithJustEnoughSpareAmmo() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1013,11 +1014,11 @@ public class AmmoBinTest {
 
     @Test
     public void loadBinWithMoreThanEnoughSpareAmmo() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1055,11 +1056,11 @@ public class AmmoBinTest {
 
     @Test
     public void loadEmptyBinAfterChangingAmmoType() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1118,11 +1119,11 @@ public class AmmoBinTest {
 
     @Test
     public void loadFullBinAfterChangingAmmoType() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1180,11 +1181,11 @@ public class AmmoBinTest {
 
     @Test
     public void loadBinForOneShotResetsFiredState() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1234,9 +1235,9 @@ public class AmmoBinTest {
 
     @Test
     public void fixBinWithoutUnitDoesNothing() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1255,11 +1256,11 @@ public class AmmoBinTest {
 
     @Test
     public void fixBinWithoutSpareAmmo() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1290,11 +1291,11 @@ public class AmmoBinTest {
 
     @Test
     public void fixBinWithOnlySpareAmmoOfWrongType() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1332,11 +1333,11 @@ public class AmmoBinTest {
 
     @Test
     public void fixBinWithJustEnoughSpareAmmo() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1373,11 +1374,11 @@ public class AmmoBinTest {
 
     @Test
     public void fixBinWithMoreThanEnoughSpareAmmo() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1415,11 +1416,11 @@ public class AmmoBinTest {
 
     @Test
     public void fixEmptyBinAfterChangingAmmoType() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1478,11 +1479,11 @@ public class AmmoBinTest {
 
     @Test
     public void fixFullBinAfterChangingAmmoType() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         LocalWarehouse warehouse = new LocalWarehouse();
-        when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+        when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
         when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 
@@ -1548,7 +1549,7 @@ public class AmmoBinTest {
 
         @BeforeEach
         void beforeEach() {
-            mockCampaign = mock(Campaign.class);
+            mockCampaign = mockCampaign();
 
             AmmoMounted mockAmmoRack1 = mock(AmmoMounted.class);
             AmmoMounted mockAmmoRack2 = mock(AmmoMounted.class);

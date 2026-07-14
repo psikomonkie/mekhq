@@ -145,16 +145,45 @@ public record Accountant(Campaign campaign) {
         return campaign().getLocalDate();
     }
 
+    /**
+     * Static version of {@link #getMonthlyFoodAndHousingExpenses()}, additionally resolving the faction-standing
+     * barrack cost multiplier (if enabled) from the given campaign rather than {@code this.campaign()}.
+     *
+     * @param campaign  the campaign, used to resolve the barrack cost multiplier (faction standings, active AtB
+     *                  contracts, and the current date)
+     * @param personnel the personnel to evaluate
+     * @param location  the location to evaluate; determines whether housing is charged at all and, together with the
+     *                  campaign, whether a faction-standing barrack cost multiplier applies
+     *
+     * @return a {@link Money} object representing the total monthly food and housing expenses
+     */
+    public static Money getMonthlyFoodAndHousingExpenses(Campaign campaign, List<Person> personnel,
+          AbstractLocation location) {
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
+        boolean payForFood = campaignOptions.isPayForFood();
+        boolean isOnPlanet = location.isOnPlanet();
+        boolean payForHousing = campaignOptions.isPayForHousing() && isOnPlanet;
+
+        if (!payForFood && !payForHousing) {
+            return Money.zero();
+        }
+
+        double barrackCostMultiplier = 1.0;
+        if (isOnPlanet && campaignOptions.isUseFactionStandingBarracksCostsSafe()) {
+            barrackCostMultiplier = setFactionStandingBarrackCostMultiplier(campaign.getPlayerForce()
+                                                                                  .getFactionStandings(),
+                  location.getCurrentSystem(), campaign.getActiveAtBContracts(), campaign.getLocalDate());
+        }
+
+        return getFoodAndHousingTotal(personnel, payForFood, payForHousing, barrackCostMultiplier);
+    }
+
     private int getTemporaryAsTechPool() {
-        return campaign().getTemporaryAsTechPool();
+        return this.campaign().getPlayerForce().getHumanResources().getTemporaryAsTechPool();
     }
 
     private int getTemporaryMedicPool() {
-        return campaign().getTemporaryMedicPool();
-    }
-
-    private Map<PersonnelRole, Integer> getTempCrewMap() {
-        return campaign().getHumanResources().getTempPersonnelRoleMap();
+        return this.campaign().getPlayerForce().getHumanResources().getTemporaryMedicPool();
     }
 
 
@@ -162,16 +191,8 @@ public record Accountant(Campaign campaign) {
         return getPayRoll(false);
     }
 
-    public Money getPayRoll(boolean noInfantry) {
-        return getPayRollTotal(campaign().getSalaryEligiblePersonnel(),
-              getCampaignOptions(),
-              isClanCampaign(),
-              getLocalDate(),
-              getTemporaryAsTechPool(),
-              getTemporaryMedicPool(),
-              getTempCrewMap(),
-              noInfantry,
-              getCampaignOptions().isPayForSalaries());
+    private Map<PersonnelRole, Integer> getTempCrewMap() {
+        return this.campaign().getPlayerForce().getHumanResources().getTempPersonnelRoleMap();
     }
 
     /**
@@ -307,15 +328,16 @@ public record Accountant(Campaign campaign) {
         return total;
     }
 
-    public Money getOverheadExpenses() {
-        return getOverheadTotal(campaign().getSalaryEligiblePersonnel(),
+    public Money getPayRoll(boolean noInfantry) {
+        return getPayRollTotal(this.campaign().getPlayerForce().getHumanResources().getSalaryEligiblePersonnel(),
               getCampaignOptions(),
               isClanCampaign(),
               getLocalDate(),
               getTemporaryAsTechPool(),
               getTemporaryMedicPool(),
               getTempCrewMap(),
-              getCampaignOptions().isPayForOverhead());
+              noInfantry,
+              getCampaignOptions().isPayForSalaries());
     }
 
     /**
@@ -349,6 +371,17 @@ public record Accountant(Campaign campaign) {
               false).multipliedBy(0.05);
     }
 
+    public Money getOverheadExpenses() {
+        return getOverheadTotal(this.campaign().getPlayerForce().getHumanResources().getSalaryEligiblePersonnel(),
+              getCampaignOptions(),
+              isClanCampaign(),
+              getLocalDate(),
+              getTemporaryAsTechPool(),
+              getTemporaryMedicPool(),
+              getTempCrewMap(),
+              getCampaignOptions().isPayForOverhead());
+    }
+
     /**
      * Calculates the total monthly expenses for food and housing for all active personnel in the campaign.
      *
@@ -371,41 +404,9 @@ public record Accountant(Campaign campaign) {
      * @since 0.50.06
      */
     public Money getMonthlyFoodAndHousingExpenses() {
-        AbstractLocation location = campaign.getCurrentLocation();
-        List<Person> allPersonnel = new ArrayList<>(campaign.getAllPersonnel());
+        AbstractLocation location = campaign.getPlayerForce().getForceDetachment().getCurrentLocation();
+        List<Person> allPersonnel = new ArrayList<>(campaign.getPlayerForce().getHumanResources().getPersonnel());
         return getMonthlyFoodAndHousingExpenses(campaign, allPersonnel, location);
-    }
-
-    /**
-     * Static version of {@link #getMonthlyFoodAndHousingExpenses()}, additionally resolving the faction-standing
-     * barrack cost multiplier (if enabled) from the given campaign rather than {@code this.campaign()}.
-     *
-     * @param campaign  the campaign, used to resolve the barrack cost multiplier (faction standings, active AtB
-     *                  contracts, and the current date)
-     * @param personnel the personnel to evaluate
-     * @param location  the location to evaluate; determines whether housing is charged at all and, together with the
-     *                  campaign, whether a faction-standing barrack cost multiplier applies
-     *
-     * @return a {@link Money} object representing the total monthly food and housing expenses
-     */
-    public static Money getMonthlyFoodAndHousingExpenses(Campaign campaign, List<Person> personnel,
-          AbstractLocation location) {
-        CampaignOptions campaignOptions = campaign.getCampaignOptions();
-        boolean payForFood = campaignOptions.isPayForFood();
-        boolean isOnPlanet = location.isOnPlanet();
-        boolean payForHousing = campaignOptions.isPayForHousing() && isOnPlanet;
-
-        if (!payForFood && !payForHousing) {
-            return Money.zero();
-        }
-
-        double barrackCostMultiplier = 1.0;
-        if (isOnPlanet && campaignOptions.isUseFactionStandingBarracksCostsSafe()) {
-            barrackCostMultiplier = setFactionStandingBarrackCostMultiplier(campaign.getFactionStandings(),
-                  location.getCurrentSystem(), campaign.getActiveAtBContracts(), campaign.getLocalDate());
-        }
-
-        return getFoodAndHousingTotal(personnel, payForFood, payForHousing, barrackCostMultiplier);
     }
 
     /**
@@ -588,7 +589,7 @@ public record Accountant(Campaign campaign) {
      * @return The peacetime costs of the campaign, optionally including salaries.
      */
     public Money getPeacetimeCost(boolean includeSalaries) {
-        return getPeacetimeOperatingCosts(campaign().getFormations().getSubFormations(),
+        return getPeacetimeOperatingCosts(this.campaign().getPlayerForce().getFormations().getSubFormations(),
               getHangar(),
               getCampaignOptions(),
               isClanCampaign(),
@@ -893,7 +894,7 @@ public record Accountant(Campaign campaign) {
     public Money getForceValue(boolean useDiminishingContractPay, boolean excludeInfantry,
           double dropShipContractPercent, double warShipContractPercent, double jumpShipContractPercent,
           boolean useEquipmentSaleValue) {
-        return getForceValue(campaign().getAllFormations(), getHangar(), campaign().getFaction(),
+        return getForceValue(this.campaign().getPlayerForce().getAllFormations(), getHangar(), campaign().getFaction(),
               getCampaignOptions(), useDiminishingContractPay, excludeInfantry, dropShipContractPercent,
               warShipContractPercent, jumpShipContractPercent, useEquipmentSaleValue);
     }
@@ -1073,15 +1074,15 @@ public record Accountant(Campaign campaign) {
               campaign().getFaction(),
               getLocalDate(),
               getHangar(),
-              campaign().getSalaryEligiblePersonnel(),
+              this.campaign().getPlayerForce().getHumanResources().getSalaryEligiblePersonnel(),
               getTemporaryAsTechPool(),
               getTemporaryMedicPool(),
               getTempCrewMap(),
-              campaign().getAllFormations());
+              this.campaign().getPlayerForce().getAllFormations());
     }
 
     private mekhq.campaign.LocalHangar getHangar() {
-        return campaign().getAllHangar();
+        return this.campaign().getPlayerForce().getHangar();
     }
 
     /**
@@ -1092,7 +1093,7 @@ public record Accountant(Campaign campaign) {
      * @see Finances#debit(TransactionType, LocalDate, Money, String, Map, boolean)
      */
     public Map<Person, Money> getPayRollSummary() {
-        return getPayRollSummary(campaign().getSalaryEligiblePersonnel(),
+        return getPayRollSummary(this.campaign().getPlayerForce().getHumanResources().getSalaryEligiblePersonnel(),
               getCampaignOptions(),
               isClanCampaign(),
               getLocalDate(),

@@ -189,7 +189,7 @@ public class MothballInfo {
         for (Map.Entry<PersonnelRole, Integer> entry : tempCrewMap.entrySet()) {
             PersonnelRole role = entry.getKey();
             int saved = entry.getValue();
-            int available = campaign.getAvailableTempCrewPool(role);
+            int available = campaign.getPlayerForce().getHumanResources().getAvailableTempCrewPool(campaign, role);
             int toRestore = Math.min(saved, available);
             if (toRestore > 0) {
                 unit.setTempCrew(role, toRestore);
@@ -197,7 +197,7 @@ public class MothballInfo {
         }
 
         // Attempt to return the unit to its last force assignment.
-        Formation formation = campaign.getFormation(forceId);
+        Formation formation = campaign.getPlayerForce().getFormation(forceId);
         if (formation != null) {
             // If the force is deployed to a scenario, back out. We don't want to restore the unit to the original
             // force as that would cause them to teleport into the scenario. This will likely cause issues, so it's
@@ -222,7 +222,7 @@ public class MothballInfo {
             }
 
             // If all the checks have passed, restore the unit to its last force
-            campaign.addUnitToFormation(unit, forceId);
+            campaign.getPlayerForce().addUnitToFormation(unit, forceId, campaign);
         }
 
         unit.resetEngineer();
