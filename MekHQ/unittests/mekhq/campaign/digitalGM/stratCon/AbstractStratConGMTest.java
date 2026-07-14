@@ -95,17 +95,17 @@ class AbstractStratConGMTest {
         }
 
         @Override
-        protected ScenarioGenerationStrategy scenarioGeneration() {
+        protected ScenarioGenerationStrategy getScenarioGenerationStrategy() {
             return generation;
         }
 
         @Override
-        protected ScenarioLifecycleStrategy scenarioLifecycle() {
+        protected ScenarioLifecycleStrategy getScenarioLifecycleStrategy() {
             return lifecycle;
         }
 
         @Override
-        protected FacilityStrategy facility() {
+        protected FacilityStrategy getFacilityStrategy() {
             return facility;
         }
 
@@ -208,7 +208,7 @@ class AbstractStratConGMTest {
     }
 
     @Test
-    void facilityEffectsAndForceReturnsRunForEveryTrack() {
+    void getFacilityStrategyEffectsAndForceReturnsRunForEveryTrack() {
         StratConTrackState track1 = trackWith();
         StratConTrackState track2 = trackWith();
         StratConCampaignState campaignState = campaignStateWith(List.of(track1, track2), new ArrayList<>());

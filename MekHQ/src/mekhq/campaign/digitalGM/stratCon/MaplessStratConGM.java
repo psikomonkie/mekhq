@@ -58,7 +58,7 @@ public class MaplessStratConGM extends AbstractStratConGM {
     }
 
     @Override
-    protected FacilityStrategy facility() {
+    protected FacilityStrategy getFacilityStrategy() {
         return noOpFacility;
     }
 }

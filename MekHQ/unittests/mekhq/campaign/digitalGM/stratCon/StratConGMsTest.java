@@ -90,22 +90,22 @@ class StratConGMsTest {
         final MapGenerationStrategy mapGenerationSentinel = mock(MapGenerationStrategy.class);
 
         @Override
-        protected ForceDeploymentStrategy forceDeployment() {
+        protected ForceDeploymentStrategy getForceDeploymentStrategy() {
             return forceDeploymentSentinel;
         }
 
         @Override
-        protected OpForGenerationStrategy opForGeneration() {
+        protected OpForGenerationStrategy getOpForGenerationStrategy() {
             return opForGenerationSentinel;
         }
 
         @Override
-        protected OpForDeploymentStrategy opForDeployment() {
+        protected OpForDeploymentStrategy getOpForDeploymentStrategy() {
             return opForDeploymentSentinel;
         }
 
         @Override
-        protected MapGenerationStrategy mapGeneration() {
+        protected MapGenerationStrategy getMapGenerationStrategy() {
             return mapGenerationSentinel;
         }
     }

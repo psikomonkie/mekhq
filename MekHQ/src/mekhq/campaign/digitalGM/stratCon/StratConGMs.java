@@ -73,7 +73,7 @@ public final class StratConGMs {
         DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
 
         if (activeGM instanceof AbstractStratConGM stratConGM) {
-            return stratConGM.forceDeployment();
+            return stratConGM.getForceDeploymentStrategy();
         }
 
         return DEFAULT_FORCE_DEPLOYMENT;
@@ -91,7 +91,7 @@ public final class StratConGMs {
         DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
 
         if (activeGM instanceof AbstractStratConGM stratConGM) {
-            return stratConGM.opForGeneration();
+            return stratConGM.getOpForGenerationStrategy();
         }
 
         return DEFAULT_OPFOR_GENERATION;
@@ -109,7 +109,7 @@ public final class StratConGMs {
         DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
 
         if (activeGM instanceof AbstractStratConGM stratConGM) {
-            return stratConGM.opForDeployment();
+            return stratConGM.getOpForDeploymentStrategy();
         }
 
         return DEFAULT_OPFOR_DEPLOYMENT;
@@ -127,7 +127,7 @@ public final class StratConGMs {
         DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
 
         if (activeGM instanceof AbstractStratConGM stratConGM) {
-            return stratConGM.mapGeneration();
+            return stratConGM.getMapGenerationStrategy();
         }
 
         return DEFAULT_MAP_GENERATION;

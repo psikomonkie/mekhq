@@ -58,11 +58,11 @@ import mekhq.campaign.mission.AtBContract;
  * <p>The template is intentionally identical in <i>structure</i> to the legacy engine; each step now runs through a
  * strategy so a subclass changes behaviour by supplying a different strategy rather than by copying the loop:</p>
  * <ul>
- *     <li>{@link #facility()} &mdash; map-based StratCon applies facility effects; Mapless and Singles use a no-op
+ *     <li>{@link #getFacilityStrategy()} &mdash; map-based StratCon applies facility effects; Mapless and Singles use a no-op
  *     (the old {@code if (!isUseStratConMapless)} guard).</li>
  *     <li>{@link #isSingleDropMode()} &mdash; Singles schedules at most one scenario per week (the old
  *     {@code isUseStratConSingles} flag).</li>
- *     <li>{@link #scenarioGeneration()} / {@link #scenarioLifecycle()} &mdash; generation and expiry/return/resolution,
+ *     <li>{@link #getScenarioGenerationStrategy()} / {@link #getScenarioLifecycleStrategy()} &mdash; generation and expiry/return/resolution,
  *     shared across the play types today but overridable per GM.</li>
  * </ul>
  *
@@ -85,35 +85,35 @@ public abstract class AbstractStratConGM extends AbstractDigitalGM {
     /**
      * @return the strategy that decides when and how scenarios are generated for this GM
      */
-    protected ScenarioGenerationStrategy scenarioGeneration() {
+    protected ScenarioGenerationStrategy getScenarioGenerationStrategy() {
         return scenarioGeneration;
     }
 
     /**
      * @return the strategy that builds a scenario's terrain (map) from the biome at its coordinates
      */
-    protected MapGenerationStrategy mapGeneration() {
+    protected MapGenerationStrategy getMapGenerationStrategy() {
         return mapGeneration;
     }
 
     /**
      * @return the strategy that generates the opposing force (enemy composition) for this GM's scenarios
      */
-    protected OpForGenerationStrategy opForGeneration() {
+    protected OpForGenerationStrategy getOpForGenerationStrategy() {
         return opForGeneration;
     }
 
     /**
      * @return the strategy that decides where on the track a hostile scenario deploys (its coordinates)
      */
-    protected OpForDeploymentStrategy opForDeployment() {
+    protected OpForDeploymentStrategy getOpForDeploymentStrategy() {
         return opForDeployment;
     }
 
     /**
      * @return the strategy that expires, resolves and returns forces from scenarios for this GM
      */
-    protected ScenarioLifecycleStrategy scenarioLifecycle() {
+    protected ScenarioLifecycleStrategy getScenarioLifecycleStrategy() {
         return scenarioLifecycle;
     }
 
@@ -121,21 +121,21 @@ public abstract class AbstractStratConGM extends AbstractDigitalGM {
      * @return the strategy governing periodic facility effects; map-based play returns the real StratCon strategy,
      *       Mapless/Singles override this to a {@link NoOpFacilityStrategy}
      */
-    protected FacilityStrategy facility() {
+    protected FacilityStrategy getFacilityStrategy() {
         return facility;
     }
 
     /**
      * @return the strategy governing how player forces are deployed to and committed to scenarios
      */
-    protected ForceDeploymentStrategy forceDeployment() {
+    protected ForceDeploymentStrategy getForceDeploymentStrategy() {
         return forceDeployment;
     }
 
     /**
      * @return the strategy governing reinforcement eligibility, target numbers and deployment
      */
-    protected ReinforcementStrategy reinforcement() {
+    protected ReinforcementStrategy getReinforcementStrategy() {
         return reinforcement;
     }
 
@@ -179,10 +179,10 @@ public abstract class AbstractStratConGM extends AbstractDigitalGM {
                 // please do this before generating scenarios for track
                 // to avoid unintentionally cleaning out integrated force deployments on
                 // 0-deployment-length tracks
-                scenarioLifecycle().processForceReturnDates(track, campaign);
+                getScenarioLifecycleStrategy().processForceReturnDates(track, campaign);
 
                 // map-based play applies facility effects here; Mapless/Singles supply a no-op strategy
-                facility().applyPeriodicEffects(track, campaignState, isStartOfMonth);
+                getFacilityStrategy().applyPeriodicEffects(track, campaignState, isStartOfMonth);
 
                 // loop through scenarios - if we haven't deployed in time,
                 // fail it and apply consequences
@@ -190,13 +190,16 @@ public abstract class AbstractStratConGM extends AbstractDigitalGM {
                     if ((scenario.getDeploymentDate() != null) &&
                               scenario.getDeploymentDate().isBefore(today) &&
                               scenario.getPrimaryForceIDs().isEmpty()) {
-                        scenarioLifecycle().processExpiredScenario(scenario, track, campaignState);
+                        getScenarioLifecycleStrategy().processExpiredScenario(scenario, track, campaignState);
                     }
                 }
 
                 // on monday, generate new scenario dates
                 if (isMonday && !hasAssignedSingleDropScenario) {
-                    scenarioGeneration().generateWeeklyScenarioDates(campaign, campaignState, contract, track,
+                    getScenarioGenerationStrategy().generateWeeklyScenarioDates(campaign,
+                          campaignState,
+                          contract,
+                          track,
                           singleDrop);
                 }
 
@@ -220,7 +223,10 @@ public abstract class AbstractStratConGM extends AbstractDigitalGM {
                 // If the OpFor is routed, we want to just discard any scheduled scenarios, clearly they've been
                 // canceled due to impending defeat
                 if (!contract.getMoraleLevel().isRouted()) {
-                    scenarioGeneration().generateDailyScenarios(campaign, campaignState, contract, scenarioCount);
+                    getScenarioGenerationStrategy().generateDailyScenarios(campaign,
+                          campaignState,
+                          contract,
+                          scenarioCount);
                 }
             }
         }

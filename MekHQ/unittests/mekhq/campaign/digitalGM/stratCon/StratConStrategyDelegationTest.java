@@ -210,10 +210,10 @@ class StratConStrategyDelegationTest {
     void abstractStratConGmExposesStratConStrategiesByDefault() {
         StratConDigitalGM gm = new StratConDigitalGM();
 
-        assertInstanceOf(StratConForceDeploymentStrategy.class, gm.forceDeployment());
-        assertInstanceOf(StratConReinforcementStrategy.class, gm.reinforcement());
-        assertInstanceOf(StratConOpForGenerationStrategy.class, gm.opForGeneration());
-        assertInstanceOf(StratConOpForDeploymentStrategy.class, gm.opForDeployment());
-        assertInstanceOf(StratConMapGenerationStrategy.class, gm.mapGeneration());
+        assertInstanceOf(StratConForceDeploymentStrategy.class, gm.getForceDeploymentStrategy());
+        assertInstanceOf(StratConReinforcementStrategy.class, gm.getReinforcementStrategy());
+        assertInstanceOf(StratConOpForGenerationStrategy.class, gm.getOpForGenerationStrategy());
+        assertInstanceOf(StratConOpForDeploymentStrategy.class, gm.getOpForDeploymentStrategy());
+        assertInstanceOf(StratConMapGenerationStrategy.class, gm.getMapGenerationStrategy());
     }
 }

@@ -115,7 +115,7 @@ class StratConDigitalGMTest {
     void normalAppliesFacilityEffectsAndFullCadence() {
         StratConDigitalGM gm = new StratConDigitalGM();
 
-        assertInstanceOf(StratConFacilityStrategy.class, gm.facility());
+        assertInstanceOf(StratConFacilityStrategy.class, gm.getFacilityStrategy());
         assertFalse(gm.isSingleDropMode());
     }
 
@@ -124,7 +124,7 @@ class StratConDigitalGMTest {
         MaplessStratConGM gm = new MaplessStratConGM();
 
         // Legacy: isUseStratConMapless -> facility effects skipped, but not single-drop
-        assertInstanceOf(NoOpFacilityStrategy.class, gm.facility());
+        assertInstanceOf(NoOpFacilityStrategy.class, gm.getFacilityStrategy());
         assertFalse(gm.isSingleDropMode());
     }
 
@@ -133,7 +133,7 @@ class StratConDigitalGMTest {
         SinglesStratConGM gm = new SinglesStratConGM();
 
         // Legacy: Singles implies Mapless (facility effects skipped) and single-drop pacing
-        assertInstanceOf(NoOpFacilityStrategy.class, gm.facility());
+        assertInstanceOf(NoOpFacilityStrategy.class, gm.getFacilityStrategy());
         assertTrue(gm.isSingleDropMode());
     }
 
@@ -173,7 +173,7 @@ class StratConDigitalGMTest {
     @Test
     void gmsExposeThemselvesAsDigitalGMs() {
         DigitalGM normal = new StratConDigitalGM();
-        FacilityStrategy facility = new StratConDigitalGM().facility();
+        FacilityStrategy facility = new StratConDigitalGM().getFacilityStrategy();
 
         assertInstanceOf(DigitalGM.class, normal);
         assertInstanceOf(FacilityStrategy.class, facility);
