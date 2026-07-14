@@ -946,6 +946,8 @@ public class StratConScenarioWizard extends JDialog {
      */
     private void btnCommitClicked(@Nullable Integer reinforcementTargetNumber, boolean isGMReinforcement,
           boolean isInstantlyDeployed) {
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
+
         if (parent != null) {
             parent.setCommitForces(true);
         }
@@ -1013,7 +1015,7 @@ public class StratConScenarioWizard extends JDialog {
 
         // every force that's been deployed to this scenario gets assigned to the track
         for (int forceID : currentScenario.getAssignedForces()) {
-            StratConGMs.forceDeployment(campaign).processForceDeployment(currentScenario.getCoords(),
+            StratConGMs.forceDeployment(campaignOptions).processForceDeployment(currentScenario.getCoords(),
                   forceID,
                   campaign,
                   currentTrackState,

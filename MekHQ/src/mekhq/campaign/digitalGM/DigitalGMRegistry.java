@@ -36,17 +36,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import mekhq.campaign.Campaign;
+import mekhq.campaign.campaignOptions.CampaignOptions;
 
 /**
  * Process-wide registry of the {@link DigitalGM}s wired up at startup. It exists so code that is not itself a GM
  * &mdash; UI actions, resolution logic &mdash; can reach the GM that governs a given campaign and route work through
  * that GM's strategies instead of calling the static rules directly.
  *
- * <p>Every registered GM is offered each lookup; {@link #getActiveGM(Campaign)} returns the one whose
- * {@link DigitalGM#isEnabled(Campaign)} accepts the campaign. Because the StratCon play types are mutually exclusive,
- * at most one GM matches (none when play is disabled). Registration is handled by {@link AbstractDigitalGM#startup()} /
- * {@link AbstractDigitalGM#shutdown()}.</p>
+ * <p>Every registered GM is offered each lookup; {@link #getActiveGM(CampaignOptions)} returns the one whose
+ * {@link DigitalGM#isEnabled(CampaignOptions)} accepts the campaign. Because the StratCon play types are mutually
+ * exclusive, at most one GM matches (none when play is disabled). Registration is handled by
+ * {@link AbstractDigitalGM#startup()} / {@link AbstractDigitalGM#shutdown()}.</p>
  *
  * @author Illiani
  * @since 0.50.10
@@ -58,8 +58,8 @@ public final class DigitalGMRegistry {
     }
 
     /**
-     * Registers a GM so it participates in {@link #getActiveGM(Campaign)} lookups. Idempotent: registering the same
-     * instance twice has no effect.
+     * Registers a GM so it participates in {@link #getActiveGM(CampaignOptions)} lookups. Idempotent: registering the
+     * same instance twice has no effect.
      *
      * @param digitalGM the GM to register
      */
@@ -81,11 +81,11 @@ public final class DigitalGMRegistry {
     /**
      * Finds the GM that governs the supplied campaign.
      *
-     * @param campaign the campaign to resolve a GM for
+     * @param campaignOptions the options used to pick the right GM
      *
-     * @return the enabled GM, or empty if none is active (for example when digital-GM play is disabled)
+     * @return the enabled GM, or empty if none is active (for example, when digital-GM play is disabled)
      */
-    public static Optional<DigitalGM> getActiveGM(Campaign campaign) {
-        return REGISTERED.stream().filter(digitalGM -> digitalGM.isEnabled(campaign)).findFirst();
+    public static Optional<DigitalGM> getActiveGM(CampaignOptions campaignOptions) {
+        return REGISTERED.stream().filter(digitalGM -> digitalGM.isEnabled(campaignOptions)).findFirst();
     }
 }

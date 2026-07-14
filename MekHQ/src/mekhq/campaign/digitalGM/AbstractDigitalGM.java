@@ -90,7 +90,7 @@ public abstract class AbstractDigitalGM implements DigitalGM {
      */
     @Subscribe
     public final void onNewDay(NewDayEvent event) {
-        if (!isEnabled(event.getCampaign())) {
+        if (!isEnabled(event.getCampaign().getCampaignOptions())) {
             return;
         }
 

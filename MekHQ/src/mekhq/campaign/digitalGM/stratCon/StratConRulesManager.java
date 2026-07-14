@@ -265,6 +265,8 @@ public class StratConRulesManager {
      */
     public static void generateDailyScenariosForTrack(Campaign campaign, StratConCampaignState campaignState,
           AtBContract contract, int scenarioCount) {
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
+
         // get this list just so we have it available
         List<Integer> availableForceIDs = getAvailableForceIDs(campaign, contract, false);
 
@@ -289,7 +291,7 @@ public class StratConRulesManager {
                 return;
             }
 
-            StratConCoords scenarioCoords = StratConGMs.opForDeployment(campaign)
+            StratConCoords scenarioCoords = StratConGMs.opForDeployment(campaignOptions)
                                                   .getUnoccupiedCoords(track, true, true, true);
 
             if (scenarioCoords == null) {
@@ -407,6 +409,8 @@ public class StratConRulesManager {
           @Nullable StratConTrackState track, @Nullable StratConCoords scenarioCoords,
           @Nullable ScenarioTemplate template, boolean allowPlayerFacilities, boolean allowPlayerForces,
           boolean emphasizeStrategicTargets, @Nullable Integer daysTilDeployment) {
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
+
         // If we're not generating for a specific track, randomly pick one.
         if (track == null) {
             track = getRandomTrack(contract);
@@ -425,7 +429,7 @@ public class StratConRulesManager {
 
         // Select the target coords.
         if (scenarioCoords == null) {
-            scenarioCoords = StratConGMs.opForDeployment(campaign)
+            scenarioCoords = StratConGMs.opForDeployment(campaignOptions)
                                    .getUnoccupiedCoords(track,
                                          allowPlayerFacilities,
                                          allowPlayerForces,
@@ -519,7 +523,8 @@ public class StratConRulesManager {
     public static @Nullable void generateReinforcementInterceptionScenario(Campaign campaign,
           StratConScenario linkedScenario, AtBContract contract, StratConTrackState track, ScenarioTemplate template,
           Formation interceptedFormation) {
-        StratConCoords scenarioCoords = StratConGMs.opForDeployment(campaign).getUnoccupiedCoords(track);
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
+        StratConCoords scenarioCoords = StratConGMs.opForDeployment(campaignOptions).getUnoccupiedCoords(track);
 
         StratConScenario scenario = setupScenario(scenarioCoords,
               interceptedFormation.getId(),
@@ -574,6 +579,7 @@ public class StratConRulesManager {
     public static @Nullable StratConScenario addHiddenExternalScenario(Campaign campaign, AtBContract contract,
           @Nullable StratConTrackState trackState, @Nullable ScenarioTemplate template, boolean allowPlayerFacilities,
           boolean allowPlayerForces, boolean emphasizeStrategicTargets, @Nullable Integer daysTilDeployment) {
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
         // If we're not generating for a specific track, randomly pick one.
         if (trackState == null) {
             trackState = getRandomTrack(contract);
@@ -585,7 +591,7 @@ public class StratConRulesManager {
             }
         }
 
-        StratConCoords coords = StratConGMs.opForDeployment(campaign)
+        StratConCoords coords = StratConGMs.opForDeployment(campaignOptions)
                                       .getUnoccupiedCoords(trackState,
                                             allowPlayerFacilities,
                                             allowPlayerForces,
@@ -654,6 +660,7 @@ public class StratConRulesManager {
      */
     public static void finalizeBackingScenario(Campaign campaign, AtBContract contract,
           @Nullable StratConTrackState track, boolean autoAssignLances, StratConScenario scenario) {
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
         final AtBDynamicScenario backingScenario = scenario.getBackingScenario();
 
         // First determine if the scenario is a Turning Point (that win/lose will affect CVP)
@@ -676,9 +683,9 @@ public class StratConRulesManager {
         }
 
         // Finally, finish scenario set up
-        StratConGMs.mapGeneration(campaign)
+        StratConGMs.mapGeneration(campaignOptions)
               .setScenarioTerrain(track, scenario, campaign.getCampaignOptions().isUseNoTornadoes());
-        StratConGMs.opForGeneration(campaign).generateOpFor(backingScenario, contract, campaign);
+        StratConGMs.opForGeneration(campaignOptions).generateOpFor(backingScenario, contract, campaign);
         swapInPlayerUnits(scenario, campaign, FORMATION_NONE);
 
         if (!autoAssignLances && !scenario.overrideForceAutoAssignment()) {
@@ -1186,6 +1193,7 @@ public class StratConRulesManager {
             return;
         }
 
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
         CombatTeam combatTeam = campaign.getCombatTeamsAsMap().get(forceID);
 
         // This shouldn't be possible, but never hurts to have a little insurance
@@ -1219,11 +1227,11 @@ public class StratConRulesManager {
                 revealedScenario.addPrimaryForce(forceID);
                 commitPrimaryForces(campaign, revealedScenario, track);
                 if (!revealedScenario.getBackingScenario().isFinalized()) {
-                    StratConGMs.mapGeneration(campaign)
+                    StratConGMs.mapGeneration(campaignOptions)
                           .setScenarioTerrain(track,
                                 revealedScenario,
                                 campaign.getCampaignOptions().isUseNoTornadoes());
-                    StratConGMs.opForGeneration(campaign)
+                    StratConGMs.opForGeneration(campaignOptions)
                           .generateOpFor(revealedScenario.getBackingScenario(), contract, campaign);
                 }
             }
@@ -1337,6 +1345,7 @@ public class StratConRulesManager {
      */
     public static void assignForceToScenario(StratConCoords coords, int forceID, Campaign campaign,
           AtBContract contract, StratConTrackState track, boolean sticky) {
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
         CombatTeam combatTeam = campaign.getCombatTeamsAsMap().get(forceID);
 
         if (combatTeam == null) {
@@ -1357,9 +1366,9 @@ public class StratConRulesManager {
 
         commitPrimaryForces(campaign, scenario, track);
         if (!backingScenario.isFinalized()) {
-            StratConGMs.mapGeneration(campaign)
+            StratConGMs.mapGeneration(campaignOptions)
                   .setScenarioTerrain(track, scenario, campaign.getCampaignOptions().isUseNoTornadoes());
-            StratConGMs.opForGeneration(campaign).generateOpFor(backingScenario, contract, campaign);
+            StratConGMs.opForGeneration(campaignOptions).generateOpFor(backingScenario, contract, campaign);
         }
     }
 

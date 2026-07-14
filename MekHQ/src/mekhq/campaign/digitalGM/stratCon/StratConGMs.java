@@ -32,7 +32,7 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.Campaign;
+import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.digitalGM.DigitalGM;
 import mekhq.campaign.digitalGM.DigitalGMRegistry;
 import mekhq.campaign.digitalGM.strategy.ForceDeploymentStrategy;
@@ -64,13 +64,13 @@ public final class StratConGMs {
     /**
      * Resolves the force-deployment strategy of the digital GM governing the given campaign.
      *
-     * @param campaign the campaign whose active GM is consulted
+     * @param campaignOptions the campaign options used to consult the right GM
      *
      * @return the active StratCon GM's {@link ForceDeploymentStrategy}, or the default StratCon strategy when no
      *       StratCon GM is active
      */
-    public static ForceDeploymentStrategy forceDeployment(Campaign campaign) {
-        DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaign).orElse(null);
+    public static ForceDeploymentStrategy forceDeployment(CampaignOptions campaignOptions) {
+        DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
 
         if (activeGM instanceof AbstractStratConGM stratConGM) {
             return stratConGM.forceDeployment();
@@ -82,13 +82,13 @@ public final class StratConGMs {
     /**
      * Resolves the OpFor-generation strategy of the digital GM governing the given campaign.
      *
-     * @param campaign the campaign whose active GM is consulted
+     * @param campaignOptions the campaign options used to consult the right GM
      *
      * @return the active StratCon GM's {@link OpForGenerationStrategy}, or the default StratCon strategy when no
      *       StratCon GM is active
      */
-    public static OpForGenerationStrategy opForGeneration(Campaign campaign) {
-        DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaign).orElse(null);
+    public static OpForGenerationStrategy opForGeneration(CampaignOptions campaignOptions) {
+        DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
 
         if (activeGM instanceof AbstractStratConGM stratConGM) {
             return stratConGM.opForGeneration();
@@ -100,13 +100,13 @@ public final class StratConGMs {
     /**
      * Resolves the OpFor-deployment strategy of the digital GM governing the given campaign.
      *
-     * @param campaign the campaign whose active GM is consulted
+     * @param campaignOptions the campaign options used to consult the right GM
      *
      * @return the active StratCon GM's {@link OpForDeploymentStrategy}, or the default StratCon strategy when no
      *       StratCon GM is active
      */
-    public static OpForDeploymentStrategy opForDeployment(Campaign campaign) {
-        DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaign).orElse(null);
+    public static OpForDeploymentStrategy opForDeployment(CampaignOptions campaignOptions) {
+        DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
 
         if (activeGM instanceof AbstractStratConGM stratConGM) {
             return stratConGM.opForDeployment();
@@ -118,13 +118,13 @@ public final class StratConGMs {
     /**
      * Resolves the map-generation (terrain) strategy of the digital GM governing the given campaign.
      *
-     * @param campaign the campaign whose active GM is consulted
+     * @param campaignOptions the campaign options used to consult the right GM
      *
      * @return the active StratCon GM's {@link MapGenerationStrategy}, or the default StratCon strategy when no StratCon
      *       GM is active
      */
-    public static MapGenerationStrategy mapGeneration(Campaign campaign) {
-        DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaign).orElse(null);
+    public static MapGenerationStrategy mapGeneration(CampaignOptions campaignOptions) {
+        DigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
 
         if (activeGM instanceof AbstractStratConGM stratConGM) {
             return stratConGM.mapGeneration();

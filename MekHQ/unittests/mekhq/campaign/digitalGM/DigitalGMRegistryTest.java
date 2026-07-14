@@ -88,9 +88,12 @@ class DigitalGMRegistryTest {
         register(mapless);
         register(singles);
 
-        assertSame(normal, DigitalGMRegistry.getActiveGM(campaignWith(StratConPlayType.NORMAL)).orElseThrow());
-        assertSame(mapless, DigitalGMRegistry.getActiveGM(campaignWith(StratConPlayType.MAPLESS)).orElseThrow());
-        assertSame(singles, DigitalGMRegistry.getActiveGM(campaignWith(StratConPlayType.SINGLES)).orElseThrow());
+        assertSame(normal,
+              DigitalGMRegistry.getActiveGM(campaignWith(StratConPlayType.NORMAL).getCampaignOptions()).orElseThrow());
+        assertSame(mapless,
+              DigitalGMRegistry.getActiveGM(campaignWith(StratConPlayType.MAPLESS).getCampaignOptions()).orElseThrow());
+        assertSame(singles,
+              DigitalGMRegistry.getActiveGM(campaignWith(StratConPlayType.SINGLES).getCampaignOptions()).orElseThrow());
     }
 
     @Test
@@ -99,7 +102,8 @@ class DigitalGMRegistryTest {
         register(new MaplessStratConGM());
         register(new SinglesStratConGM());
 
-        assertTrue(DigitalGMRegistry.getActiveGM(campaignWith(StratConPlayType.DISABLED)).isEmpty());
+        assertTrue(DigitalGMRegistry.getActiveGM(campaignWith(StratConPlayType.DISABLED).getCampaignOptions())
+                         .isEmpty());
     }
 
     @Test
@@ -108,6 +112,6 @@ class DigitalGMRegistryTest {
         DigitalGMRegistry.register(gm);
         DigitalGMRegistry.unregister(gm);
 
-        assertTrue(DigitalGMRegistry.getActiveGM(campaignWith(StratConPlayType.NORMAL)).isEmpty());
+        assertTrue(DigitalGMRegistry.getActiveGM(campaignWith(StratConPlayType.NORMAL).getCampaignOptions()).isEmpty());
     }
 }
