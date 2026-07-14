@@ -387,7 +387,8 @@ public class TaskTableMouseAdapter extends JPopupMenuAdapter {
 
         // Strip part: one-click salvage removal using the currently selected tech, even though the unit is set to
         // repair. Only offered for a single installed, damaged component so the target number and time can be shown.
-        if ((rows.length == 1) && (partWork instanceof Part stripCandidate) && isStripCandidate(stripCandidate)) {
+        if (!isBeingWorked && (rows.length == 1) && (partWork instanceof Part stripCandidate)
+              && isStripCandidate(stripCandidate)) {
             if (stripCandidate instanceof MekLocation) {
                 // Locations can't be stripped from here (armor and equipment must come off first, in order); show a
                 // disabled entry that explains why and points the player at Scrap.
