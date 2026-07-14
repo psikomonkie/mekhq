@@ -54,7 +54,7 @@ import mekhq.campaign.events.NewDayEvent;
  * runs per day.</p>
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public abstract class AbstractIDigitalGM implements IDigitalGM {
     protected final MMLogger logger = MMLogger.create(getClass());

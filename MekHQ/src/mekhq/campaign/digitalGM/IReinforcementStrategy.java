@@ -55,7 +55,7 @@ import mekhq.campaign.personnel.Person;
  * {@link AbstractStratConGMI AbstractStratConGM}.</p>
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public interface IReinforcementStrategy {
 

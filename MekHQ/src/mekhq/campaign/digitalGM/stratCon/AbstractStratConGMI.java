@@ -69,7 +69,7 @@ import mekhq.campaign.mission.AtBContract;
  * <p>Leaf rules helpers remain static utilities on {@link StratConRulesManager}; the strategies delegate to them.</p>
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public abstract class AbstractStratConGMI extends AbstractIDigitalGM {
 

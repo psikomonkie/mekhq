@@ -49,7 +49,7 @@ import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
  * non-ocean hex. The accessor lives on {@link AbstractStratConGMI AbstractStratConGM}.</p>
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public interface IOpForDeploymentStrategy {
 

@@ -47,7 +47,7 @@ import mekhq.campaign.personnel.Person;
  * logic on {@link StratConRulesManager}, so this class introduces the overridable seam without moving any behaviour.
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public class StratConIReinforcementStrategy implements IReinforcementStrategy {
 

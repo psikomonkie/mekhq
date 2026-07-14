@@ -40,7 +40,7 @@ import mekhq.campaign.digitalGM.IMapGenerationStrategy;
  * seam without moving any behaviour.
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public class StratConIMapGenerationStrategy implements IMapGenerationStrategy {
 

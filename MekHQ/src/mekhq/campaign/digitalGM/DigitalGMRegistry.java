@@ -49,7 +49,7 @@ import mekhq.campaign.campaignOptions.CampaignOptions;
  * {@link AbstractIDigitalGM#startup()} / {@link AbstractIDigitalGM#shutdown()}.</p>
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public final class DigitalGMRegistry {
     private static final List<IDigitalGM> REGISTERED = new CopyOnWriteArrayList<>();

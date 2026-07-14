@@ -41,7 +41,7 @@ import mekhq.campaign.digitalGM.IOpForDeploymentStrategy;
  * class introduces the overridable seam without moving any behaviour.
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public class StratConIOpForDeploymentStrategy implements IOpForDeploymentStrategy {
 

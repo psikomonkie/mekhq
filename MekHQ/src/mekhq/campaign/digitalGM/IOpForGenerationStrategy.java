@@ -49,7 +49,7 @@ import mekhq.campaign.mission.AtBDynamicScenario;
  * on {@link AbstractStratConGMI AbstractStratConGM}.</p>
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public interface IOpForGenerationStrategy {
 

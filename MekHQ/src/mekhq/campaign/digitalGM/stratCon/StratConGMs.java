@@ -50,7 +50,7 @@ import mekhq.campaign.digitalGM.IOpForGenerationStrategy;
  * identical to the pre-registry code path.</p>
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public final class StratConGMs {
     /**

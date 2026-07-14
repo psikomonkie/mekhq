@@ -43,7 +43,7 @@ import mekhq.campaign.campaignOptions.CampaignOptions;
  * and {@link SinglesStratConGMI} additionally caps generation to one scenario per week.</p>
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public class StratConIDigitalGM extends AbstractStratConGMI {
 

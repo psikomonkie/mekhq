@@ -41,7 +41,7 @@ import mekhq.campaign.digitalGM.IFacilityStrategy;
  * reproduces the legacy engine's {@code if (!isUseStratConMapless)} guard around facility effects.
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public class MaplessStratConGMI extends AbstractStratConGMI {
 

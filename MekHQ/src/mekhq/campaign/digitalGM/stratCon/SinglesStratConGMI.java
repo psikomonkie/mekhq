@@ -42,7 +42,7 @@ import mekhq.campaign.digitalGM.IFacilityStrategy;
  * {@code isUseStratConMaplessMode()} was already {@code true} for Singles.
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public class SinglesStratConGMI extends AbstractStratConGMI {
 

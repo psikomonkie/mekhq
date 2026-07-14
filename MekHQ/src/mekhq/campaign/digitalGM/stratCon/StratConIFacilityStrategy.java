@@ -41,7 +41,7 @@ import mekhq.campaign.mission.AtBScenario;
  * facility logic on {@link StratConRulesManager}, so behaviour is unchanged from the legacy engine.
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public class StratConIFacilityStrategy implements IFacilityStrategy {
 

@@ -51,7 +51,7 @@ import mekhq.campaign.events.NewDayEvent;
  * {@link AbstractIDigitalGM}.</p>
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public interface IDigitalGM {
 

@@ -44,7 +44,7 @@ import mekhq.campaign.mission.AtBDynamicScenarioFactory;
  * without moving any behaviour.
  *
  * @author Illiani
- * @since 0.50.10
+ * @since 0.51.01
  */
 public class StratConIOpForGenerationStrategy implements IOpForGenerationStrategy {
 
