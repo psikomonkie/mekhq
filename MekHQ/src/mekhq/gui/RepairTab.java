@@ -425,7 +425,7 @@ public final class RepairTab extends CampaignGuiTab implements ITechWorkPanel {
         sortKeys = new ArrayList<>();
         sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
         taskSorter.setSortKeys(sortKeys);
-        TaskTableMouseAdapter.connect(getCampaignGui(), taskTable, taskModel);
+        TaskTableMouseAdapter.connect(getCampaignGui(), taskTable, taskModel, this);
         JScrollPane scrollTaskTable = new FastJScrollPane(taskTable);
         scrollTaskTable.setMinimumSize(new Dimension(200, 200));
         scrollTaskTable.setPreferredSize(new Dimension(300, 300));
