@@ -34,7 +34,6 @@ package mekhq.campaign.randomEvents.prisoners.prisonerEvents;
 
 import static java.io.File.separator;
 import static megamek.common.board.Board.START_SW;
-import static mekhq.campaign.Campaign.AdministratorSpecialization.COMMAND;
 import static mekhq.campaign.personnel.enums.PersonnelRole.SOLDIER;
 import static mekhq.campaign.personnel.skills.SkillType.S_SMALL_ARMS;
 import static mekhq.campaign.randomEvents.prisoners.prisonerEvents.MobType.HUGE;
@@ -304,7 +303,11 @@ public class PrisonEscapeScenario {
               track.getDisplayableName(),
               coords.toBTString());
         new ImmersiveDialogSimple(campaign,
-              campaign.getSeniorAdminPerson(COMMAND),
+              campaign.getPlayerForce().getHumanResources()
+                    .getSeniorAdminPerson(mekhq.campaign.Campaign.AdministratorSpecialization.COMMAND,
+                          campaign.getCampaignOptions(),
+                          campaign.isClanCampaign(),
+                          campaign.getLocalDate()),
               null,
               inCharacterMessage,
               null,

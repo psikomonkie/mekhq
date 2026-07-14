@@ -266,12 +266,14 @@ public class RiotScenario {
         String key;
         if (campaign.isClanCampaign()) {
             key = "RiotScenario.report.clan";
-        } else if (campaign.getFaction().isComStarOrWoB()) {
-            key = "RiotScenario.report.cs";
-        } else if (campaign.isMercenaryCampaign()) {
-            key = "RiotScenario.report.merc";
         } else {
-            key = "RiotScenario.report.is";
+            if (campaign.getFaction().isComStarOrWoB()) {
+                key = "RiotScenario.report.cs";
+            } else if (campaign.isMercenaryCampaign()) {
+                key = "RiotScenario.report.merc";
+            } else {
+                key = "RiotScenario.report.is";
+            }
         }
         String inCharacterMessage = getFormattedTextAt(RESOURCE_BUNDLE,
               key,

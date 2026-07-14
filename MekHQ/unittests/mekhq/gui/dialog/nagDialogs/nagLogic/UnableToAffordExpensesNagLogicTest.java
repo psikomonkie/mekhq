@@ -36,6 +36,7 @@ import static mekhq.gui.dialog.nagDialogs.nagLogic.UnableToAffordExpensesNagLogi
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.LocalWarehouse;
@@ -66,7 +67,7 @@ class UnableToAffordExpensesNagLogicTest {
     @BeforeEach
     void init() {
         // Initialize the mock objects
-        campaign = mock(Campaign.class);
+        campaign = mockCampaign();
         CampaignOptions campaignOptions = mock(CampaignOptions.class);
 
         Finances finances = mock(Finances.class);
@@ -80,15 +81,16 @@ class UnableToAffordExpensesNagLogicTest {
         report = mock(FinancialReport.class);
 
         // Stubs
-        when(campaign.getFinances()).thenReturn(finances);
-        when(campaign.getAllHangar()).thenReturn(hangar);
-        when(campaign.getAllWarehouse()).thenReturn(warehouse);
+        when(campaign.getPlayerForce().getFinances()).thenReturn(finances);
+        when(campaign.getPlayerForce().getHangar()).thenReturn(hangar);
+        //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+        when(campaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         when(campaign.getCampaignOptions()).thenReturn(campaignOptions);
     }
 
     @Test
     void canAffordExpenses() {
-        when(campaign.getFunds()).thenReturn(Money.of(2));
+        when(campaign.getPlayerForce().getFunds()).thenReturn(Money.of(2));
         when(report.getMonthlyExpenses()).thenReturn(Money.of(1));
 
         assertFalse(unableToAffordExpenses(campaign));
@@ -96,7 +98,7 @@ class UnableToAffordExpensesNagLogicTest {
 
     @Test
     void cannotAffordExpenses() {
-        when(campaign.getFunds()).thenReturn(Money.of(1));
+        when(campaign.getPlayerForce().getFunds()).thenReturn(Money.of(1));
         when(report.getMonthlyExpenses()).thenReturn(Money.of(2));
 
         assertFalse(unableToAffordExpenses(campaign));

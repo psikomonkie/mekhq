@@ -81,7 +81,9 @@ import mekhq.campaign.randomEvents.prisoners.PrisonerStatus;
 import mekhq.campaign.stratCon.StratConCampaignState;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.Faction;
+import mekhq.campaign.universe.selectors.factionSelectors.AbstractFactionSelector;
 import mekhq.campaign.universe.selectors.factionSelectors.DefaultFactionSelector;
+import mekhq.campaign.universe.selectors.planetSelectors.AbstractPlanetSelector;
 import mekhq.campaign.universe.selectors.planetSelectors.DefaultPlanetSelector;
 import mekhq.utilities.ReportingUtilities;
 import org.jspecify.annotations.NonNull;
@@ -286,7 +288,7 @@ public class RandomEventEffectsManager {
      */
     String eventEffectPrisonerCapacity(RandomEventResult result) {
         final int magnitude = result.magnitude();
-        campaign.changeTemporaryPrisonerCapacity(magnitude);
+        campaign.getPlayerForce().changeTemporaryPrisonerCapacity(magnitude);
 
         String colorOpen = magnitude > 0 ?
                                  spanOpeningWithCustomColor(ReportingUtilities.getPositiveColor()) :
@@ -780,7 +782,7 @@ public class RandomEventEffectsManager {
 
             personHashSet.add(target);
 
-            campaign.removePerson(target, false);
+            campaign.getPlayerForce().getHumanResources().removePerson(campaign, target, false);
 
             allPotentialTargets.remove(target);
         }
@@ -829,7 +831,7 @@ public class RandomEventEffectsManager {
 
             personHashSet.add(target);
 
-            campaign.removePerson(target, false);
+            campaign.getPlayerForce().getHumanResources().removePerson(campaign, target, false);
 
             potentialTargets.remove(target);
         }
@@ -1222,8 +1224,9 @@ public class RandomEventEffectsManager {
         }
 
         if (crimeChange > 0) {
-            campaign.setDateOfLastCrime(campaign.getLocalDate());
-            campaign.changeCrimeRating(crimeChange);
+            LocalDate dateOfLastCrime = campaign.getLocalDate();
+            campaign.getPlayerForce().setDateOfLastCrime(dateOfLastCrime);
+            campaign.getPlayerForce().changeCrimeRating(crimeChange);
         }
 
         int prisonerCount = d6();
@@ -1239,11 +1242,16 @@ public class RandomEventEffectsManager {
         }
 
         for (int i = 0; i < prisonerCount; i++) {
-            Person newPerson = campaign.newPerson(PersonnelRole.MEKWARRIOR,
-                  NONE,
-                  new DefaultFactionSelector(originOptions, targetFaction),
-                  new DefaultPlanetSelector(originOptions, targetContract.getSystem().getPrimaryPlanet()),
-                  Gender.RANDOMIZE);
+            final AbstractFactionSelector factionSelector = new DefaultFactionSelector(originOptions, targetFaction);
+            final AbstractPlanetSelector planetSelector = new DefaultPlanetSelector(originOptions,
+                  targetContract.getSystem().getPrimaryPlanet());
+            Person newPerson = campaign.getPlayerForce().getHumanResources()
+                                     .newPerson(campaign,
+                                           PersonnelRole.MEKWARRIOR,
+                                           PersonnelRole.NONE,
+                                           factionSelector,
+                                           planetSelector,
+                                           Gender.RANDOMIZE);
             campaign.recruitPerson(newPerson, PrisonerStatus.PRISONER, true, false, false);
         }
 

@@ -116,18 +116,22 @@ public class PersonnelTest {
         @Test
         void roundTripPreservesPersonnelCount() {
             // Arrange — recruit two persons via campaign so they get proper IDs and campaign context
-            Person first = campaign.newPerson(PersonnelRole.MEKWARRIOR, PersonnelRole.NONE);
-            Person second = campaign.newPerson(PersonnelRole.DOCTOR, PersonnelRole.NONE);
-            campaign.getHumanResources().recruitPerson(campaign, first);
-            campaign.getHumanResources().recruitPerson(campaign, second);
+            Person first = campaign.getPlayerForce()
+                                 .getHumanResources()
+                                 .newPerson(campaign, PersonnelRole.MEKWARRIOR, PersonnelRole.NONE);
+            Person second = campaign.getPlayerForce()
+                                  .getHumanResources()
+                                  .newPerson(campaign, PersonnelRole.DOCTOR, PersonnelRole.NONE);
+            campaign.getPlayerForce().getHumanResources().recruitPerson(campaign, first);
+            campaign.getPlayerForce().getHumanResources().recruitPerson(campaign, second);
 
-            int countBefore = campaign.getHumanResources().getPersonnel().size();
+            int countBefore = campaign.getPlayerForce().getHumanResources().getPersonnel().size();
 
             StringWriter stringWriter = new StringWriter();
             PrintWriter writer = new PrintWriter(stringWriter);
 
             // Act — write then parse back
-            campaign.getHumanResources().writeToXML(writer, 0, campaign);
+            campaign.getPlayerForce().getHumanResources().writeToXML(writer, 0, campaign);
             writer.flush();
             String xml = stringWriter.toString();
 
@@ -249,8 +253,10 @@ public class PersonnelTest {
         @Test
         void loadFromXmlImportsPersonIntoCampaign() throws Exception {
             // Arrange — write a person to XML then parse it back
-            Person original = campaign.newPerson(PersonnelRole.MEKWARRIOR, PersonnelRole.NONE);
-            campaign.getHumanResources().recruitPerson(campaign, original);
+            Person original = campaign.getPlayerForce()
+                                    .getHumanResources()
+                                    .newPerson(campaign, PersonnelRole.MEKWARRIOR, PersonnelRole.NONE);
+            campaign.getPlayerForce().getHumanResources().recruitPerson(campaign, original);
 
             StringWriter stringWriter = new StringWriter();
             PrintWriter writer = new PrintWriter(stringWriter);
@@ -272,7 +278,7 @@ public class PersonnelTest {
             LocalPersonnel.loadFromXML(personnelNode, fresh, version);
 
             // Assert
-            assertFalse(fresh.getHumanResources().getPersonnel().isEmpty(),
+            assertFalse(fresh.getPlayerForce().getHumanResources().getPersonnel().isEmpty(),
                   "Fresh campaign must contain the imported person");
         }
     }

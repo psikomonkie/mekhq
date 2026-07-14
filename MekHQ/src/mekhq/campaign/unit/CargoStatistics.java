@@ -46,7 +46,7 @@ import mekhq.campaign.parts.Part;
 public record CargoStatistics(Campaign campaign) {
 
     public mekhq.campaign.LocalHangar getHangar() {
-        return campaign().getHangar();
+        return this.campaign().getPlayerForce().getHangar();
     }
 
     public double getTotalInsulatedCargoCapacity() {
