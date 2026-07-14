@@ -152,12 +152,17 @@ public class TaskTableMouseAdapter extends JPopupMenuAdapter {
             }
         } else if (command.equalsIgnoreCase("CANCEL")) {
             for (IPartWork work : parts) {
+                if (!work.isBeingWorkedOn()) {
+                    continue;
+                }
+
                 // Cancel the assignment without refunding the minutes already spent.
                 work.cancelAssignment(false);
                 if (work instanceof Part part) {
                     MekHQ.triggerEvent(new PartChangedEvent(part));
                 }
             }
+            taskTable.repaint();
         }
     }
 
