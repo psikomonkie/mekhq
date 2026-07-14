@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -69,7 +70,7 @@ public class UnresolvedStratConContactsNagLogicTest {
      */
     @BeforeEach
     void init() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         CampaignOptions campaignOptions = mock(CampaignOptions.class);
         today = LocalDate.of(3025, 1, 1);
         contract = mock(AtBContract.class);

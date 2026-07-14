@@ -43,6 +43,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -78,7 +79,7 @@ public class BattleArmorAmmoBinTest {
 
     @Test
     public void canNeverScrapTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Ammo");
 
         int equipmentNum = 18;
@@ -91,7 +92,7 @@ public class BattleArmorAmmoBinTest {
 
     @Test
     public void needsMaintenanceTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Ammo");
 
         int equipmentNum = 18;
@@ -104,7 +105,7 @@ public class BattleArmorAmmoBinTest {
 
     @Test
     public void battleArmorAmmoBinCtorTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Ammo");
 
         int equipmentNum = 18;
@@ -121,7 +122,7 @@ public class BattleArmorAmmoBinTest {
 
     @Test
     public void cloneTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         AmmoType ammoType = getAmmoType("ISSRM6 Ammo");
 
         int equipmentNum = 18;
@@ -142,7 +143,7 @@ public class BattleArmorAmmoBinTest {
     @Test
     public void battleArmorAmmoBinWriteToXmlTest() throws ParserConfigurationException, SAXException, IOException {
         AmmoType isSRM2InfernoAmmo = getAmmoType("ISSRM2 Inferno Ammo");
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         BattleArmorAmmoBin ammoBin = new BattleArmorAmmoBin(0, isSRM2InfernoAmmo, 42, isSRM2InfernoAmmo.getShots() - 1,
               false, mockCampaign);
         ammoBin.setId(25);
@@ -184,7 +185,7 @@ public class BattleArmorAmmoBinTest {
     public void oneShotBattleArmorAmmoBinWriteToXmlTest()
           throws ParserConfigurationException, SAXException, IOException {
         AmmoType isSRM2InfernoAmmo = getAmmoType("ISSRM2 Ammo");
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         BattleArmorAmmoBin ammoBin = new BattleArmorAmmoBin(0, isSRM2InfernoAmmo, 42, 0, true, mockCampaign);
         ammoBin.setId(25);
 
@@ -225,7 +226,7 @@ public class BattleArmorAmmoBinTest {
     @Test
     public void fullBattleArmorAmmoBinWriteToXmlTest() throws ParserConfigurationException, SAXException, IOException {
         AmmoType isSRM2InfernoAmmo = getAmmoType("ISSRM2 Inferno Ammo");
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         BattleArmorAmmoBin ammoBin = new BattleArmorAmmoBin(0, isSRM2InfernoAmmo, 42, 0, false, mockCampaign);
         ammoBin.setId(25);
 
@@ -265,7 +266,7 @@ public class BattleArmorAmmoBinTest {
     @Test
     public void emptyBattleArmorAmmoBinWriteToXmlTest() throws ParserConfigurationException, SAXException, IOException {
         AmmoType isSRM2InfernoAmmo = getAmmoType("ISSRM2 Inferno Ammo");
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         BattleArmorAmmoBin ammoBin = new BattleArmorAmmoBin(0, isSRM2InfernoAmmo, 42, isSRM2InfernoAmmo.getShots(),
               false, mockCampaign);
         ammoBin.setId(25);
@@ -319,11 +320,11 @@ public class BattleArmorAmmoBinTest {
 
         @BeforeEach
         public void beforeEach() {
-            mockCampaign = mock(Campaign.class);
+            mockCampaign = mockCampaign();
             mockCampaignOptions = mock(CampaignOptions.class);
             when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
             warehouse = new LocalWarehouse();
-            when(mockCampaign.getWarehouse()).thenReturn(warehouse);
+            when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
             quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
             when(mockCampaign.getQuartermaster()).thenReturn(quartermaster);
 

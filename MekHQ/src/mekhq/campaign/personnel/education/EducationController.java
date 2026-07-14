@@ -259,7 +259,7 @@ public class EducationController {
         double tuition = academy.getTuitionAdjusted(person) * academy.getFactionDiscountAdjusted(campaign, person);
 
         if (tuition > 0) {
-            if (campaign.getFinances().getBalance().isLessThan(Money.of(tuition))) {
+            if (campaign.getPlayerForce().getFinances().getBalance().isLessThan(Money.of(tuition))) {
                 String insufficientFundsMessage = String.format(resources.getString("insufficientFunds.text"),
                       person.getFullTitle());
                 String reportMessage = ReportingUtilities.messageSurroundedBySpanWithColor(MekHQ.getMHQOptions()
@@ -268,7 +268,7 @@ public class EducationController {
                 campaign.addReport(FINANCES, reportMessage);
                 return;
             } else {
-                campaign.getFinances()
+                campaign.getPlayerForce().getFinances()
                       .debit(TransactionType.EDUCATION,
                             campaign.getLocalDate(),
                             Money.of(tuition),
@@ -291,7 +291,7 @@ public class EducationController {
                   person.getFullTitle(),
                   spanOpeningWithCustomColor(ReportingUtilities.getNegativeColor()),
                   CLOSING_SPAN_TAG));
-            campaign.removePerson(person);
+            campaign.getPlayerForce().getHumanResources().removePerson(campaign, person);
         } else if (academy.isHomeSchool()) {
             campaign.addReport(PERSONNEL,
                   String.format(resources.getString("homeSchool.text"), person.getHyperlinkedFullTitle()));
@@ -940,15 +940,14 @@ public class EducationController {
           @Nullable AbstractMobileLocation returnLocation) {
         Academy returningFromAcademy = getAcademy(person.getEduAcademySet(), person.getEduAcademyNameInSet());
         boolean isLocal = returningFromAcademy != null && returningFromAcademy.isLocal();
-        LocalPersonnel arrivingAtPersonnel = isLocal ?
-                                              findPersonnelWhenReturningFromLocal(campaign,
-                                                    person.getEduAcademySystem()) :
-                                              campaign.getMainForcePersonnel();
+        LocalPersonnel arrivingAtPersonnel;
+        arrivingAtPersonnel = isLocal ? findPersonnelWhenReturningFromLocal(campaign,
+              person.getEduAcademySystem()) : campaign.getPlayerForce().getPersonnel();
         person.setParent(arrivingAtPersonnel);
         person.changeStatus(campaign, campaign.getLocalDate(), PersonnelStatus.ACTIVE);
 
         for (UUID tagAlong : person.getEduTagAlongs()) {
-            Person companion = campaign.getPerson(tagAlong);
+            Person companion = campaign.getPlayerForce().getHumanResources().getPerson(tagAlong);
             if (companion != null) {
                 companion.setParent(arrivingAtPersonnel);
                 companion.changeStatus(campaign, campaign.getLocalDate(), PersonnelStatus.ACTIVE);
@@ -967,7 +966,7 @@ public class EducationController {
                 }
             }
         }
-        return campaign.getMainForcePersonnel();
+        return campaign.getPlayerForce().getPersonnel();
     }
 
     /**

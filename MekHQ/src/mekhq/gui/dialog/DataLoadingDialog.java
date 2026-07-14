@@ -88,8 +88,11 @@ import mekhq.campaign.mission.atb.AtBScenarioModifier;
 import mekhq.campaign.personnel.Bloodname;
 import mekhq.campaign.personnel.SpecialAbility;
 import mekhq.campaign.personnel.backgrounds.RandomCompanyNameGenerator;
+import mekhq.campaign.personnel.divorce.AbstractDivorce;
 import mekhq.campaign.personnel.enums.PersonnelRole;
+import mekhq.campaign.personnel.marriage.AbstractMarriage;
 import mekhq.campaign.personnel.medical.advancedMedical.InjuryTypes;
+import mekhq.campaign.personnel.procreation.AbstractProcreation;
 import mekhq.campaign.personnel.ranks.Ranks;
 import mekhq.campaign.personnel.skills.SkillType;
 import mekhq.campaign.unit.Unit;
@@ -399,12 +402,12 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
                 // initialize reputation
                 ForceReputationController reputationController = new ForceReputationController();
                 reputationController.initializeReputation(campaign);
-                campaign.setReputation(reputationController);
+                campaign.getPlayerForce().setReputation(reputationController);
 
                 // initialize starting faction standings
                 CampaignOptions campaignOptions = campaign.getCampaignOptions();
                 if (campaignOptions.isTrackFactionStanding()) {
-                    FactionStandings factionStandings = campaign.getFactionStandings();
+                    FactionStandings factionStandings = campaign.getPlayerForce().getFactionStandings();
                     String report = factionStandings.updateClimateRegard(campaign.getFaction(),
                           campaign.getLocalDate(), campaignOptions.getRegardMultiplier(),
                           true);
@@ -419,18 +422,21 @@ public class DataLoadingDialog extends AbstractMHQDialogBasic implements Propert
                                            "</b>");
 
                 // Setup Personnel Modules
-                campaign.setMarriage(campaignOptions
+                final AbstractMarriage marriage = campaignOptions
                                            .getRandomMarriageMethod()
-                                           .getMethod(campaignOptions));
-                campaign.setDivorce(campaignOptions
+                                                        .getMethod(campaignOptions);
+                campaign.getPlayerForce().getHumanResources().setMarriage(marriage);
+                final AbstractDivorce divorce = campaignOptions
                                           .getRandomDivorceMethod()
-                                          .getMethod(campaignOptions));
-                campaign.setProcreation(campaignOptions
+                                                      .getMethod(campaignOptions);
+                campaign.getPlayerForce().getHumanResources().setDivorce(divorce);
+                final AbstractProcreation procreation = campaignOptions
                                               .getRandomProcreationMethod()
-                                              .getMethod(campaignOptions));
+                                                              .getMethod(campaignOptions);
+                campaign.getPlayerForce().getHumanResources().setProcreation(procreation);
 
                 // Setup Markets
-                campaign.refreshApplicants(true);
+                campaign.getPlayerForce().getHumanResources().refreshApplicants(campaign, true);
                 showRarePersonnelDialog(campaign, true);
                 ContractMarketMethod contractMarketMethod = campaignOptions.getContractMarketMethod();
                 campaign.setContractMarket(contractMarketMethod.getContractMarket());

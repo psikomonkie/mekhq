@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -33,7 +33,6 @@
 package mekhq.campaign.randomEvents.prisoners;
 
 import static java.lang.Math.max;
-import static mekhq.campaign.Campaign.AdministratorSpecialization.COMMAND;
 import static mekhq.campaign.personnel.enums.PersonnelStatus.ACTIVE;
 import static mekhq.utilities.MHQInternationalization.getFormattedTextAt;
 
@@ -80,9 +79,10 @@ public class PrisonerRansomEvent {
      *                       if it's for enemy prisoners.
      */
     public PrisonerRansomEvent(Campaign campaign, boolean isFriendlyPOWs) {
-        List<Person> prisoners = isFriendlyPOWs
-                                       ? campaign.getFriendlyPrisoners()
-                                       : campaign.getCurrentPrisoners();
+        List<Person> prisoners;
+        prisoners = isFriendlyPOWs ?
+                          campaign.getPlayerForce().getHumanResources().getFriendlyPrisoners() :
+                          campaign.getPlayerForce().getHumanResources().getCurrentPrisoners();
 
         // Exit early if there are no prisoners
         if (prisoners.isEmpty()) {
@@ -151,7 +151,11 @@ public class PrisonerRansomEvent {
         String outOfCharacterMessage = getFormattedTextAt(RESOURCE_BUNDLE, key + ".ooc");
 
         ImmersiveDialogSimple eventDialog = new ImmersiveDialogSimple(campaign,
-              campaign.getSeniorAdminPerson(COMMAND),
+              campaign.getPlayerForce().getHumanResources()
+                    .getSeniorAdminPerson(Campaign.AdministratorSpecialization.COMMAND,
+                          campaign.getCampaignOptions(),
+                          campaign.isClanCampaign(),
+                          campaign.getLocalDate()),
               null,
               inCharacterMessage,
               options,
@@ -255,7 +259,7 @@ public class PrisonerRansomEvent {
      * @return {@code true} if the player has sufficient funds to cover the ransom, {@code false} otherwise.
      */
     private boolean canAffordRansom(Campaign campaign, Money ransom) {
-        Money currentFunds = campaign.getFinances().getBalance();
+        Money currentFunds = campaign.getPlayerForce().getFinances().getBalance();
         return !currentFunds.isLessThan(ransom);
     }
 
@@ -279,14 +283,14 @@ public class PrisonerRansomEvent {
           boolean isFriendlyPOWs) {
         if (isFriendlyPOWs) {
             // Debit funds and return POWs to active duty
-            campaign.getFinances().debit(TransactionType.RANSOM, campaign.getLocalDate(), ransom,
+            campaign.getPlayerForce().getFinances().debit(TransactionType.RANSOM, campaign.getLocalDate(), ransom,
                   getFormattedTextAt(RESOURCE_BUNDLE, "ransom.entry"));
             ransomList.forEach(pow -> pow.changeStatus(campaign, campaign.getLocalDate(), ACTIVE));
         } else {
             // Credit funds and remove enemy prisoners from campaign
-            campaign.getFinances().credit(TransactionType.RANSOM, campaign.getLocalDate(), ransom,
+            campaign.getPlayerForce().getFinances().credit(TransactionType.RANSOM, campaign.getLocalDate(), ransom,
                   getFormattedTextAt(RESOURCE_BUNDLE, "ransom.entry"));
-            ransomList.forEach(campaign::removePerson);
+            ransomList.forEach(person -> campaign.getPlayerForce().getHumanResources().removePerson(campaign, person));
         }
     }
 }

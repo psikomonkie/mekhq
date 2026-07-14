@@ -192,8 +192,10 @@ public interface IPlace extends ILocation {
         if (personnel == null || !hasLocationNode()) {
             return;
         }
-        LocalHangar hangar = getHangar() != null ? getHangar() : campaign.getHangar();
-        LocalWarehouse warehouse = getWarehouse() != null ? getWarehouse() : campaign.getWarehouse();
+        LocalHangar hangar;
+        hangar = getHangar() != null ? getHangar() : campaign.getPlayerForce().getHangar();
+        LocalWarehouse warehouse;
+        warehouse = getWarehouse() != null ? getWarehouse() : campaign.getPlayerForce().getWarehouse();
         for (LocationNode child : new ArrayList<>(getLocationNode().getChildren())) {
             if (!(child.getLocatable() instanceof AbstractMobileLocation travelNode)) {
                 continue;

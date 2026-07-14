@@ -1608,8 +1608,7 @@ public class ResolveScenarioWizardDialog extends JDialog {
 
         // now DropShip bonuses (if any)
         if (tracker.getDropShipBonus().isPositive()) {
-            tracker.getCampaign()
-                  .getFinances()
+            tracker.getCampaign().getPlayerForce().getFinances()
                   .credit(TransactionType.MISCELLANEOUS,
                         tracker.getCampaign().getLocalDate(),
                         tracker.getDropShipBonus(),
@@ -1952,9 +1951,12 @@ public class ResolveScenarioWizardDialog extends JDialog {
             return;
         }
 
-        Person person = isPrisoner ?
-                              ((OppositionPersonnelStatus) status).getPerson() :
-                              tracker.getCampaign().getPerson(status.getId());
+        Person person;
+        if (isPrisoner) {person = ((OppositionPersonnelStatus) status).getPerson();} else {
+            Campaign campaign1 = tracker.getCampaign();
+            final UUID id = status.getId();
+            person = campaign1.getPlayerForce().getHumanResources().getPerson(id);
+        }
         if (person == null) {
             logger.error("Failed to show person after selecting view personnel for a {} because the person could not " +
                                "be found.", (isPrisoner ? "Prisoner" : "member of the force"));

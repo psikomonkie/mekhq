@@ -267,12 +267,14 @@ public final class LocationDispatch {
           ILocation destination,
           Campaign campaign) {
 
-        LocalHangar arrivalHangar = (destination instanceof AbstractBase base)
-              ? base.getBaseHangar()
-              : campaign.getHangar();
-        LocalWarehouse arrivalWarehouse = (destination instanceof AbstractBase base)
-              ? base.getBaseWarehouse()
-              : campaign.getWarehouse();
+        LocalHangar arrivalHangar;
+        arrivalHangar = destination instanceof AbstractBase base ?
+                              base.getBaseHangar() :
+                              campaign.getPlayerForce().getHangar();
+        LocalWarehouse arrivalWarehouse;
+        arrivalWarehouse = destination instanceof AbstractBase base ?
+                                 base.getBaseWarehouse() :
+                                 campaign.getPlayerForce().getWarehouse();
 
         // Move data structures immediately so hangar and warehouse filters stay correct.
         dispatch(units, destination, campaign, LOG_DISPATCH_UNITS, arrivalHangar, group -> {
@@ -283,9 +285,9 @@ public final class LocationDispatch {
                 // warehouse and the move below would be skipped.
                 LocalWarehouse sourceWarehouse = unit.getWarehouse();
                 if (sourceWarehouse == null) {
-                    sourceWarehouse = campaign.getWarehouse();
+                    sourceWarehouse = campaign.getPlayerForce().getWarehouse();
                 }
-                (sourceHangar != null ? sourceHangar : campaign.getHangar()).removeUnit(unit.getId());
+                (sourceHangar != null ? sourceHangar : campaign.getPlayerForce().getHangar()).removeUnit(unit.getId());
                 arrivalHangar.addUnit(unit);
                 // Installed parts live in the warehouse local to their unit; move them along.
                 if (sourceWarehouse != arrivalWarehouse) {
@@ -314,15 +316,16 @@ public final class LocationDispatch {
      */
     private static void dispatchPartsToLocation(Collection<Part> parts, ILocation destination, Campaign campaign) {
 
-        LocalWarehouse arrivalWarehouse = (destination instanceof AbstractBase base)
-              ? base.getBaseWarehouse()
-              : campaign.getWarehouse();
+        LocalWarehouse arrivalWarehouse;
+        arrivalWarehouse = destination instanceof AbstractBase base ?
+                                 base.getBaseWarehouse() :
+                                 campaign.getPlayerForce().getWarehouse();
 
         // Move the data structure immediately so warehouse filters stay correct.
         dispatch(parts, destination, campaign, LOG_DISPATCH_PARTS, arrivalWarehouse, group -> {
             for (Part part : group) {
                 LocalWarehouse sourceWarehouse = part.getWarehouse();
-                (sourceWarehouse != null ? sourceWarehouse : campaign.getWarehouse()).removePart(part);
+                (sourceWarehouse != null ? sourceWarehouse : campaign.getPlayerForce().getWarehouse()).removePart(part);
                 arrivalWarehouse.addPart(part);
             }
         });

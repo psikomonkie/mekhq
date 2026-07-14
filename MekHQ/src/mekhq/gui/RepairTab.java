@@ -425,7 +425,7 @@ public final class RepairTab extends CampaignGuiTab implements ITechWorkPanel {
         sortKeys = new ArrayList<>();
         sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
         taskSorter.setSortKeys(sortKeys);
-        TaskTableMouseAdapter.connect(getCampaignGui(), taskTable, taskModel);
+        TaskTableMouseAdapter.connect(getCampaignGui(), taskTable, taskModel, this);
         JScrollPane scrollTaskTable = new FastJScrollPane(taskTable);
         scrollTaskTable.setMinimumSize(new Dimension(200, 200));
         scrollTaskTable.setPreferredSize(new Dimension(300, 300));
@@ -971,7 +971,14 @@ public final class RepairTab extends CampaignGuiTab implements ITechWorkPanel {
     private void refreshTechsList() {
         int selected = techTable.getSelectedRow();
         // Get all techs who have more than 0 minutes free, and sort by skill descending (elites at bottom)
-        List<Person> techs = getCampaign().getTechs(true);
+        mekhq.campaign.Campaign campaign = getCampaign();
+        List<Person> techs = campaign.getPlayerForce()
+                                   .getHumanResources()
+                                   .getTechs(campaign.getPlayerForce().getHangar().getUnits(),
+                                         campaign.getCampaignOptions(),
+                                         campaign.isClanCampaign(),
+                                         campaign.getLocalDate(),
+                                         true);
         techsModel.setData(techs);
         filterTechs();
 
@@ -1007,9 +1014,12 @@ public final class RepairTab extends CampaignGuiTab implements ITechWorkPanel {
      * Updates the AsTech pool statistics (minutes, overtime availability, and AsTech count) in the UI label.
      */
     public void refreshAsTechPool() {
-        String astechString = "<html><b>AsTech Pool Minutes:</b> " + getCampaign().getAsTechPoolMinutes();
+        String astechString = "<html><b>AsTech Pool Minutes:</b> " +
+                                    getCampaign().getPlayerForce().getHumanResources().getAsTechPoolMinutes();
         if (getCampaign().isOvertimeAllowed()) {
-            astechString += " [" + getCampaign().getAsTechPoolOvertime() + " overtime]";
+            astechString += " [" +
+                                  getCampaign().getPlayerForce().getHumanResources().getAsTechPoolOvertime() +
+                                  " overtime]";
         }
         astechString += " (" + getCampaign().getNumberAsTechs() + " AsTechs)</html>";
         asTechPoolLabel.setText(astechString);

@@ -148,7 +148,10 @@ public class ForceReputationController {
         atbModifier = averageSkillLevel.ordinal();
 
         // step two: calculate command rating
-        commanderMap = calculateCommanderRating(campaign, campaign.getCommander());
+        commanderMap = calculateCommanderRating(campaign, campaign.getPlayerForce().getHumanResources()
+                                                                .getCommander(campaign.getCampaignOptions(),
+                                                                      campaign.isClanCampaign(),
+                                                                      campaign.getLocalDate()));
         commanderRating = commanderMap.get("total");
 
         // step three: calculate combat record rating
@@ -174,13 +177,13 @@ public class ForceReputationController {
         supportRating = (int) rawSupportData.get("total").get("total");
 
         // step six: calculate financial rating
-        financialRatingMap = calculateFinancialRating(campaign.getFinances());
+        financialRatingMap = calculateFinancialRating(campaign.getPlayerForce().getFinances());
         financialRating = financialRatingMap.get("total");
 
         // step seven: calculate crime rating
         crimeRatingMap = calculateCrimeRating(campaign);
         crimeRating = crimeRatingMap.get("total");
-        dateOfLastCrime = campaign.getDateOfLastCrime();
+        dateOfLastCrime = campaign.getPlayerForce().getDateOfLastCrime();
 
         // step eight: calculate other modifiers
         otherModifiersMap = calculateOtherModifiers(campaign);
@@ -258,7 +261,10 @@ public class ForceReputationController {
               commanderRating));
 
         description.append("<table>");
-        Person commander = campaign.getCommander();
+        Person commander = campaign.getPlayerForce().getHumanResources()
+                                 .getCommander(campaign.getCampaignOptions(),
+                                       campaign.isClanCampaign(),
+                                       campaign.getLocalDate());
 
         String commanderName = resources.getString("commanderNone.text");
         if (commander != null) {
@@ -345,7 +351,7 @@ public class ForceReputationController {
               combatRecordMap.get("contractsBreached"),
               combatRecordMap.get("contractsBreached") * 25));
 
-        if (campaign.getRetainerStartDate() != null) {
+        if (campaign.getPlayerForce().getRetainerStartDate() != null) {
             description.append(String.format("<tr><td><b>%s%s:</b></td> <td style=\"text-align:center;\">" +
                                                    "%d</td> <td style=\"text-align:center;\">+%d</td></tr>",
                   indent,
