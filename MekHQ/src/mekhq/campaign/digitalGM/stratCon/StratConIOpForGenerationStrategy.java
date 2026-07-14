@@ -33,7 +33,7 @@
 package mekhq.campaign.digitalGM.stratCon;
 
 import mekhq.campaign.Campaign;
-import mekhq.campaign.digitalGM.strategy.IOpForGenerationStrategy;
+import mekhq.campaign.digitalGM.IOpForGenerationStrategy;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.AtBDynamicScenario;
 import mekhq.campaign.mission.AtBDynamicScenarioFactory;

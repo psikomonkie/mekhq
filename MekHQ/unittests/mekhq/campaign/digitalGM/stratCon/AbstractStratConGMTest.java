@@ -50,9 +50,9 @@ import java.util.Map;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.campaignOptions.CampaignOptions;
-import mekhq.campaign.digitalGM.strategy.IFacilityStrategy;
-import mekhq.campaign.digitalGM.strategy.IScenarioGenerationStrategy;
-import mekhq.campaign.digitalGM.strategy.IScenarioLifecycleStrategy;
+import mekhq.campaign.digitalGM.IFacilityStrategy;
+import mekhq.campaign.digitalGM.IScenarioGenerationStrategy;
+import mekhq.campaign.digitalGM.IScenarioLifecycleStrategy;
 import mekhq.campaign.events.NewDayEvent;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.enums.AtBMoraleLevel;

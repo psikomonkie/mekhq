@@ -47,7 +47,7 @@ import static org.mockito.Mockito.when;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.digitalGM.IDigitalGM;
-import mekhq.campaign.digitalGM.strategy.IFacilityStrategy;
+import mekhq.campaign.digitalGM.IFacilityStrategy;
 import mekhq.campaign.events.NewDayEvent;
 import org.junit.jupiter.api.Test;
 

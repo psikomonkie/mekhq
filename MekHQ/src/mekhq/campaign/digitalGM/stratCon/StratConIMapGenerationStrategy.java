@@ -32,7 +32,7 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.digitalGM.strategy.IMapGenerationStrategy;
+import mekhq.campaign.digitalGM.IMapGenerationStrategy;
 
 /**
  * Default StratCon implementation of {@link IMapGenerationStrategy}: the standard biome-driven terrain selection.

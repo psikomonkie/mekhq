@@ -34,7 +34,7 @@ package mekhq.campaign.digitalGM.stratCon;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.ResolveScenarioTracker;
-import mekhq.campaign.digitalGM.strategy.IScenarioLifecycleStrategy;
+import mekhq.campaign.digitalGM.IScenarioLifecycleStrategy;
 
 /**
  * Default StratCon implementation of {@link IScenarioLifecycleStrategy}. Every method delegates to the existing static

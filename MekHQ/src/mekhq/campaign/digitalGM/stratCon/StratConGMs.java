@@ -35,10 +35,10 @@ package mekhq.campaign.digitalGM.stratCon;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.digitalGM.DigitalGMRegistry;
 import mekhq.campaign.digitalGM.IDigitalGM;
-import mekhq.campaign.digitalGM.strategy.IForceDeploymentStrategy;
-import mekhq.campaign.digitalGM.strategy.IMapGenerationStrategy;
-import mekhq.campaign.digitalGM.strategy.IOpForDeploymentStrategy;
-import mekhq.campaign.digitalGM.strategy.IOpForGenerationStrategy;
+import mekhq.campaign.digitalGM.IForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.IMapGenerationStrategy;
+import mekhq.campaign.digitalGM.IOpForDeploymentStrategy;
+import mekhq.campaign.digitalGM.IOpForGenerationStrategy;
 
 /**
  * Entry point for non-GM StratCon code (mainly the deployment UI) to reach the active digital GM's strategies for a
@@ -53,10 +53,12 @@ import mekhq.campaign.digitalGM.strategy.IOpForGenerationStrategy;
  * @since 0.50.10
  */
 public final class StratConGMs {
-    private static final IForceDeploymentStrategy DEFAULT_FORCE_DEPLOYMENT = new StratConIForceDeploymentStrategy();
-    private static final IOpForGenerationStrategy DEFAULT_OPFOR_GENERATION = new StratConIOpForGenerationStrategy();
-    private static final IOpForDeploymentStrategy DEFAULT_OPFOR_DEPLOYMENT = new StratConIOpForDeploymentStrategy();
-    private static final IMapGenerationStrategy DEFAULT_MAP_GENERATION = new StratConIMapGenerationStrategy();
+    /**
+     * The GM consulted when no digital GM governs the campaign (or the active one is not StratCon-based): the default,
+     * map-based StratCon system. Its strategies <i>are</i> the StratCon defaults, defined once by the concrete system
+     * ({@link StratConIDigitalGM} / {@link AbstractStratConGMI}) rather than duplicated here.
+     */
+    private static final AbstractStratConGMI DEFAULT_GM = new StratConIDigitalGM();
 
     private StratConGMs() {
     }
@@ -70,13 +72,7 @@ public final class StratConGMs {
      *       StratCon GM is active
      */
     public static IForceDeploymentStrategy forceDeployment(CampaignOptions campaignOptions) {
-        IDigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
-
-        if (activeGM instanceof AbstractStratConGMI stratConGM) {
-            return stratConGM.getForceDeploymentStrategy();
-        }
-
-        return DEFAULT_FORCE_DEPLOYMENT;
+        return resolveGM(campaignOptions).getForceDeploymentStrategy();
     }
 
     /**
@@ -88,13 +84,7 @@ public final class StratConGMs {
      *       StratCon GM is active
      */
     public static IOpForGenerationStrategy opForGeneration(CampaignOptions campaignOptions) {
-        IDigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
-
-        if (activeGM instanceof AbstractStratConGMI stratConGM) {
-            return stratConGM.getOpForGenerationStrategy();
-        }
-
-        return DEFAULT_OPFOR_GENERATION;
+        return resolveGM(campaignOptions).getOpForGenerationStrategy();
     }
 
     /**
@@ -106,13 +96,7 @@ public final class StratConGMs {
      *       StratCon GM is active
      */
     public static IOpForDeploymentStrategy opForDeployment(CampaignOptions campaignOptions) {
-        IDigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
-
-        if (activeGM instanceof AbstractStratConGMI stratConGM) {
-            return stratConGM.getOpForDeploymentStrategy();
-        }
-
-        return DEFAULT_OPFOR_DEPLOYMENT;
+        return resolveGM(campaignOptions).getOpForDeploymentStrategy();
     }
 
     /**
@@ -124,12 +108,26 @@ public final class StratConGMs {
      *       StratCon GM is active
      */
     public static IMapGenerationStrategy mapGeneration(CampaignOptions campaignOptions) {
+        return resolveGM(campaignOptions).getMapGenerationStrategy();
+    }
+
+    /**
+     * Resolves the StratCon GM that governs the given campaign, falling back to the
+     * {@link #DEFAULT_GM default StratCon GM} when no GM is active or the active one is not StratCon-based. Every
+     * strategy lookup routes through here so the fallback strategies come from the concrete system definition instead
+     * of being re-declared in this facade.
+     *
+     * @param campaignOptions the campaign options used to consult the right GM
+     *
+     * @return the governing StratCon GM, or the default StratCon GM
+     */
+    private static AbstractStratConGMI resolveGM(CampaignOptions campaignOptions) {
         IDigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
 
         if (activeGM instanceof AbstractStratConGMI stratConGM) {
-            return stratConGM.getMapGenerationStrategy();
+            return stratConGM;
         }
 
-        return DEFAULT_MAP_GENERATION;
+        return DEFAULT_GM;
     }
 }

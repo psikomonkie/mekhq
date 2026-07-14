@@ -33,7 +33,7 @@
 package mekhq.campaign.digitalGM.stratCon;
 
 import mekhq.campaign.campaignOptions.CampaignOptions;
-import mekhq.campaign.digitalGM.strategy.IFacilityStrategy;
+import mekhq.campaign.digitalGM.IFacilityStrategy;
 
 /**
  * Digital GM for StratCon <b>Singles</b> play ({@link StratConPlayType#SINGLES}). Singles uses the same no-op facility

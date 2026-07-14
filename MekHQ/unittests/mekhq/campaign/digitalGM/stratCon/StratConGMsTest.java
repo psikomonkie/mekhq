@@ -44,10 +44,10 @@ import mekhq.campaign.Campaign;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.digitalGM.DigitalGMRegistry;
 import mekhq.campaign.digitalGM.IDigitalGM;
-import mekhq.campaign.digitalGM.strategy.IForceDeploymentStrategy;
-import mekhq.campaign.digitalGM.strategy.IMapGenerationStrategy;
-import mekhq.campaign.digitalGM.strategy.IOpForDeploymentStrategy;
-import mekhq.campaign.digitalGM.strategy.IOpForGenerationStrategy;
+import mekhq.campaign.digitalGM.IForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.IMapGenerationStrategy;
+import mekhq.campaign.digitalGM.IOpForDeploymentStrategy;
+import mekhq.campaign.digitalGM.IOpForGenerationStrategy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

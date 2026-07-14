@@ -41,8 +41,8 @@ import static org.mockito.Mockito.mockStatic;
 
 import megamek.common.rolls.TargetRoll;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.digitalGM.strategy.IForceDeploymentStrategy;
-import mekhq.campaign.digitalGM.strategy.IReinforcementStrategy;
+import mekhq.campaign.digitalGM.IForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.IReinforcementStrategy;
 import mekhq.campaign.force.Formation;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.AtBDynamicScenario;

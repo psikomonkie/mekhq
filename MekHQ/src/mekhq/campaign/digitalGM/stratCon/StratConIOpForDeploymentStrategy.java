@@ -33,7 +33,7 @@
 package mekhq.campaign.digitalGM.stratCon;
 
 import megamek.common.annotations.Nullable;
-import mekhq.campaign.digitalGM.strategy.IOpForDeploymentStrategy;
+import mekhq.campaign.digitalGM.IOpForDeploymentStrategy;
 
 /**
  * Default StratCon implementation of {@link IOpForDeploymentStrategy}: the standard weighted-random placement of a

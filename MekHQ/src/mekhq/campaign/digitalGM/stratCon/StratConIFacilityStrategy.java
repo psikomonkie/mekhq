@@ -32,7 +32,7 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.digitalGM.strategy.IFacilityStrategy;
+import mekhq.campaign.digitalGM.IFacilityStrategy;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.AtBScenario;
 

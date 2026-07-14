@@ -38,14 +38,14 @@ import java.util.List;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.digitalGM.AbstractIDigitalGM;
-import mekhq.campaign.digitalGM.strategy.IFacilityStrategy;
-import mekhq.campaign.digitalGM.strategy.IForceDeploymentStrategy;
-import mekhq.campaign.digitalGM.strategy.IMapGenerationStrategy;
-import mekhq.campaign.digitalGM.strategy.IOpForDeploymentStrategy;
-import mekhq.campaign.digitalGM.strategy.IOpForGenerationStrategy;
-import mekhq.campaign.digitalGM.strategy.IReinforcementStrategy;
-import mekhq.campaign.digitalGM.strategy.IScenarioGenerationStrategy;
-import mekhq.campaign.digitalGM.strategy.IScenarioLifecycleStrategy;
+import mekhq.campaign.digitalGM.IFacilityStrategy;
+import mekhq.campaign.digitalGM.IForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.IMapGenerationStrategy;
+import mekhq.campaign.digitalGM.IOpForDeploymentStrategy;
+import mekhq.campaign.digitalGM.IOpForGenerationStrategy;
+import mekhq.campaign.digitalGM.IReinforcementStrategy;
+import mekhq.campaign.digitalGM.IScenarioGenerationStrategy;
+import mekhq.campaign.digitalGM.IScenarioLifecycleStrategy;
 import mekhq.campaign.events.NewDayEvent;
 import mekhq.campaign.mission.AtBContract;
 
