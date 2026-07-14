@@ -37,7 +37,6 @@ import static mekhq.campaign.personnel.skills.enums.SkillAttribute.NO_ATTRIBUTE;
 import java.util.ArrayList;
 import java.util.List;
 
-import megamek.logging.MMLogger;
 import mekhq.campaign.personnel.skills.enums.SkillAttribute;
 
 /**
@@ -61,8 +60,6 @@ public record RandomEventResponseEntry(
       List<RandomEventResult> effectsSuccess,
       List<RandomEventResult> effectsFailure
 ) {
-    private static final MMLogger LOGGER = MMLogger.create(RandomEventResponseEntry.class);
-
     // Additional logic to provide defaults for missing properties
     public RandomEventResponseEntry {
         quality = (quality != null) ? quality : RandomEventResponseQuality.RESPONSE_NEUTRAL;

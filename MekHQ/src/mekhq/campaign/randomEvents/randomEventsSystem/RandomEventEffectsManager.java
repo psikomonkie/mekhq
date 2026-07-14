@@ -41,7 +41,6 @@ import static mekhq.campaign.force.FormationType.SECURITY;
 import static mekhq.campaign.personnel.PersonnelOptions.ATOW_POISON_RESISTANCE;
 import static mekhq.campaign.personnel.enums.PersonnelRole.DEPENDENT;
 import static mekhq.campaign.personnel.enums.PersonnelRole.NONE;
-import static mekhq.campaign.personnel.skills.SkillType.SKILL_NONE;
 import static mekhq.campaign.randomEvents.randomEventsSystem.RandomEventEffectedPersonnelType.CAMP_FOLLOWERS;
 import static mekhq.campaign.randomEvents.randomEventsSystem.RandomEventEffectedPersonnelType.COMBAT_PERSONNEL;
 import static mekhq.campaign.randomEvents.randomEventsSystem.RandomEventEffectedPersonnelType.PRISONERS;
@@ -59,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import megamek.codeUtilities.StringUtility;
 import megamek.common.annotations.Nullable;
 import megamek.common.enums.Gender;
 import megamek.logging.MMLogger;
@@ -232,7 +232,7 @@ public class RandomEventEffectsManager {
         boolean includeSecurityGuards = effectedPersonnelTypes.contains(SECURITY_GUARD);
 
         Set<Person> potentialTargets = new HashSet<>();
-        for (Person person : campaign.getAllPersonnel()) {
+        for (Person person : campaign.getPlayerForce().getHumanResources().getPersonnel()) {
             PersonnelStatus personStatus = person.getStatus();
             if (personStatus.isDepartedUnit() || !personStatus.isActiveFlexible()) {
                 continue;
@@ -265,7 +265,7 @@ public class RandomEventEffectsManager {
             if (includeSecurityGuards) {
                 Unit unit = person.getUnit();
                 if (unit != null) {
-                    Formation formation = unit.getCampaign().getFormationFor(unit);
+                    Formation formation = unit.getCampaign().getPlayerForce().getFormationFor(unit);
                     if (formation != null && formation.isFormationType(SECURITY)) {
                         potentialTargets.add(person);
                     }
@@ -462,7 +462,7 @@ public class RandomEventEffectsManager {
             Person target = getRandomItem(potentialTargets);
 
             if (target.getPrisonerStatus().isCurrentPrisoner()) {
-                campaign.removePerson(target, false);
+                campaign.getPlayerForce().getHumanResources().removePerson(campaign, target, false);
             } else {
                 target.changeStatus(campaign, today, PersonnelStatus.KIA);
             }
@@ -532,7 +532,7 @@ public class RandomEventEffectsManager {
             Person target = getRandomItem(potentialTargets);
 
             if (isOnlyPrisonersAffected) {
-                campaign.removePerson(target, false);
+                campaign.getPlayerForce().getHumanResources().removePerson(campaign, target, false);
             } else {
                 target.changeStatus(campaign, today, PersonnelStatus.KIA);
             }
@@ -588,10 +588,9 @@ public class RandomEventEffectsManager {
 
         // Get skill
         String affectedSkill = result.affectedSkill();
-        if (affectedSkill.equals(SKILL_NONE)) {
+        if (StringUtility.isNullOrBlank(affectedSkill)) {
             return "";
         }
-
 
         SkillType skillType = SkillType.getType(affectedSkill);
 
@@ -1252,7 +1251,8 @@ public class RandomEventEffectsManager {
                                            factionSelector,
                                            planetSelector,
                                            Gender.RANDOMIZE);
-            campaign.recruitPerson(newPerson, PrisonerStatus.PRISONER, true, false, false);
+            campaign.getPlayerForce().getHumanResources().recruitPerson(campaign, newPerson, PrisonerStatus.PRISONER,
+                  true, false, false);
         }
 
         String colorOpen = spanOpeningWithCustomColor(ReportingUtilities.getNegativeColor());

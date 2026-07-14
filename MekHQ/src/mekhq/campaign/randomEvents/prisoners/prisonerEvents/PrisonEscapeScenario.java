@@ -144,7 +144,7 @@ public class PrisonEscapeScenario {
                     escapee.addSkill(S_SMALL_ARMS, 0, 0);
                 }
 
-                escapee.setPrimaryRole(campaign, SOLDIER);
+                escapee.setPrimaryRole(campaign.getLocalDate(), SOLDIER);
                 assignedEscapees.add(escapee);
 
                 if (assignedEscapees.size() == maximumCrewSize) {
