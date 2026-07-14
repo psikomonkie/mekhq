@@ -125,8 +125,8 @@ public class PartsInUseManager {
         this.place = place;
         this.campaignOptions = campaign.getCampaignOptions();
         LocalWarehouse placeWarehouse = place.getWarehouse();
-        this.warehouse = (placeWarehouse != null) ? placeWarehouse : campaign.getWarehouse();
-        this.shoppingList = campaign.getShoppingList();
+        this.warehouse = placeWarehouse != null ? placeWarehouse : campaign.getPlayerForce().getWarehouse();
+        this.shoppingList = campaign.getPlayerForce().getShoppingList();
         this.quartermaster = campaign.getQuartermaster();
         this.partsInUseRequestedStockMap = place.getRequestedStockLevels().getStockMap();
     }
@@ -143,7 +143,7 @@ public class PartsInUseManager {
      * location regardless of which warehouse map physically holds the part (installed parts follow their unit's base).
      */
     private void forEachPartAtPlace(Consumer<Part> consumer) {
-        campaign.getWarehouse().forEachPart(part -> {
+        campaign.getPlayerForce().getWarehouse().forEachPart(part -> {
             if (placeOf(part) == place) {
                 consumer.accept(part);
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2024-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -488,7 +488,7 @@ public class StarLeagueCache {
         // Defines the action when the dialog is being dismissed
         ActionListener dialogDismissActionListener = e -> {
             dialog.dispose();
-            campaign.getFinances().credit(MISCELLANEOUS, campaign.getLocalDate(), proposal,
+            campaign.getPlayerForce().getFinances().credit(MISCELLANEOUS, campaign.getLocalDate(), proposal,
                   resources.getString("transaction.text"));
         };
 
@@ -556,7 +556,7 @@ public class StarLeagueCache {
         // Defines the action when the dialog is being dismissed
         ActionListener dialogDismissActionListener = e -> {
             dialog.dispose();
-            campaign.getFinances().credit(MISCELLANEOUS, campaign.getLocalDate(), proposal,
+            campaign.getPlayerForce().getFinances().credit(MISCELLANEOUS, campaign.getLocalDate(), proposal,
                   resources.getString("transaction.text"));
         };
 

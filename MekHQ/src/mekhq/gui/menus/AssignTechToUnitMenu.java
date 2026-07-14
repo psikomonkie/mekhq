@@ -91,9 +91,8 @@ public class AssignTechToUnitMenu extends JScrollableMenu {
         // 4) The unit can take a tech and the person can afford the time to maintain the unit
         IPlace personPlace = person.getPlace();
         AbstractBase effectiveBase = LocationUtils.findEffectiveBase(person);
-        mekhq.campaign.LocalHangar sourceHangar = (effectiveBase != null) ?
-                                                          effectiveBase.getBaseHangar() :
-                                                          campaign.getHangar();
+        mekhq.campaign.LocalHangar sourceHangar;
+        sourceHangar = effectiveBase != null ? effectiveBase.getBaseHangar() : campaign.getPlayerForce().getHangar();
         final List<Unit> units = HangarSorter.defaultSorting()
                                        .sort(sourceHangar.getUnitsStream()
                                                    .filter(Unit::isAvailable)

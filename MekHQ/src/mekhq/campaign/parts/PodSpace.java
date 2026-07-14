@@ -190,7 +190,7 @@ public class PodSpace implements IPartWork {
             }
             if (repairInPlace) {
                 for (int id : childPartIds) {
-                    final Part p = unit.getCampaign().getWarehouse().getPart(id);
+                    final Part p = unit.getCampaign().getPlayerForce().getWarehouse().getPart(id);
                     if (p instanceof MissingPart) {
                         return null;
                     }
@@ -198,7 +198,7 @@ public class PodSpace implements IPartWork {
                 return unit.getEntity().getLocationName(location) + " is not missing any pod-mounted equipment.";
             } else {
                 for (int id : childPartIds) {
-                    final Part p = unit.getCampaign().getWarehouse().getPart(id);
+                    final Part p = unit.getCampaign().getPlayerForce().getWarehouse().getPart(id);
                     if (p == null || !p.needsFixing()) {
                         continue;
                     }
@@ -313,7 +313,7 @@ public class PodSpace implements IPartWork {
 
     @Override
     public mekhq.campaign.LocalWarehouse getWarehouse() {
-        return campaign.getWarehouse();
+        return campaign.getPlayerForce().getWarehouse();
     }
 
     @Override

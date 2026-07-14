@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -35,7 +35,6 @@ package mekhq.campaign.randomEvents.prisoners;
 import static megamek.common.equipment.MiscType.createBeagleActiveProbe;
 import static megamek.common.equipment.MiscType.createCLImprovedSensors;
 import static megamek.common.equipment.MiscType.createISImprovedSensors;
-import static mekhq.campaign.Campaign.AdministratorSpecialization.HR;
 import static mekhq.campaign.enums.DailyReportType.PERSONNEL;
 import static mekhq.campaign.personnel.enums.PersonnelStatus.BONDSREF;
 import static mekhq.campaign.personnel.enums.PersonnelStatus.DEFECTED;
@@ -261,7 +260,11 @@ public class CapturePrisoners {
 
                 boolean isBondsman = prisoner.isClanPersonnel();
                 new ImmersiveDialogSimple(campaign,
-                      campaign.getSeniorAdminPerson(HR),
+                      campaign.getPlayerForce().getHumanResources()
+                            .getSeniorAdminPerson(mekhq.campaign.Campaign.AdministratorSpecialization.HR,
+                                  campaign.getCampaignOptions(),
+                                  campaign.isClanCampaign(),
+                                  campaign.getLocalDate()),
                       null,
                       createInCharacterMessage(prisoner, isBondsman),
                       null,

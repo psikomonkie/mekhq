@@ -41,6 +41,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.UUID;
 
@@ -59,7 +60,7 @@ import org.junit.jupiter.api.Test;
 public class RestoreUnitActionTest {
     @Test
     public void restoreUnitSwitchesOutEntityAndParts() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Game mockGame = mock(Game.class);
         when(mockCampaign.getGame()).thenReturn(mockGame);
         Player mockPlayer = new Player(1, "Player");
@@ -111,7 +112,7 @@ public class RestoreUnitActionTest {
     @Test
     public void restoreUnitUsingOldStrategy() {
         IEntityCopyFactory mockEntityCopyFactory = mock(IEntityCopyFactory.class);
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         mekhq.campaign.ForceQuartermaster mockQuartermaster = mock(mekhq.campaign.ForceQuartermaster.class);
         when(mockCampaign.getQuartermaster()).thenReturn(mockQuartermaster);
         Entity mockEntity = mock(Entity.class);
