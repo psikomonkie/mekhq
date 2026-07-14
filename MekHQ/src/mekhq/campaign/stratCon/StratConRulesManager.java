@@ -357,13 +357,13 @@ public class StratConRulesManager {
      */
     private static @Nullable ScenarioTemplate getAmbushTemplateForForce(Campaign campaign, int forceID) {
         int unitType = MEK;
-        Formation formation = campaign.getFormation(forceID);
+        Formation formation = campaign.getPlayerForce().getFormation(forceID);
         if (formation != null) {
             unitType = formation.getPrimaryUnitType(campaign);
         }
 
         boolean isBungledPatrol = false;
-        CombatTeam combatTeam = campaign.getCombatTeamsAsMap().get(forceID);
+        CombatTeam combatTeam = campaign.getPlayerForce().getCombatTeamsAsMap(campaign).get(forceID);
         if (combatTeam != null) {
             CombatRole role = combatTeam.getRole();
             isBungledPatrol = (role != null) && role.isPatrol();

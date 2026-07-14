@@ -558,7 +558,7 @@ class StratConRulesManagerTest {
      * @param isPatrol         whether the force sitting on the hex is on a patrol role (a bungled patrol)
      */
     private DailyAmbushFixture buildDailyAmbushFixture(boolean hasAssignedForce, boolean isPatrol) {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = MHQTestUtilities.mockCampaign();
         CampaignOptions options = mock(CampaignOptions.class);
         when(campaign.getCampaignOptions()).thenReturn(options);
         when(campaign.getLocalDate()).thenReturn(LocalDate.of(3025, 1, 15));
@@ -578,7 +578,7 @@ class StratConRulesManagerTest {
         // The force sitting on the hex determines the ambush template's unit type and bungled-patrol flag.
         Formation formation = mock(Formation.class);
         when(formation.getPrimaryUnitType(campaign)).thenReturn(UnitType.TANK);
-        when(campaign.getFormation(forceID)).thenReturn(formation);
+        when(campaign.getPlayerForce().getFormation(forceID)).thenReturn(formation);
 
         CombatTeam combatTeam = mock(CombatTeam.class);
         CombatRole combatRole = mock(CombatRole.class);
@@ -586,7 +586,7 @@ class StratConRulesManagerTest {
         when(combatTeam.getRole()).thenReturn(combatRole);
         var combatTeamsMap = new Hashtable<Integer, CombatTeam>();
         combatTeamsMap.put(forceID, combatTeam);
-        when(campaign.getCombatTeamsAsMap()).thenReturn(combatTeamsMap);
+        when(campaign.getPlayerForce().getCombatTeamsAsMap(campaign)).thenReturn(combatTeamsMap);
 
         Set<Integer> assignedForceIDs = new LinkedHashSet<>(Set.of(forceID));
         Map<StratConCoords, Set<Integer>> assignedCoordForces = new HashMap<>();
