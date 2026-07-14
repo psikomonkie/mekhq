@@ -122,8 +122,8 @@ public class AverageExperienceRating {
         int unitCount = 0;
         double totalExperience = 0;
 
-        mekhq.campaign.LocalHangar hangar = campaign.getAllHangar();
-        ArrayList<CombatTeam> combatTeams = campaign.getCombatTeamsAsList();
+        mekhq.campaign.LocalHangar hangar = campaign.getPlayerForce().getHangar();
+        ArrayList<CombatTeam> combatTeams = campaign.getPlayerForce().getCombatTeamsAsList(campaign);
 
         if (combatTeams.isEmpty()) {
             return NO_CAMPAIGN_EXPERIENCE;

@@ -246,7 +246,7 @@ public class CamOpsSalvageUtilities {
             }
 
             if (unitRansoms.isPositive()) {
-                campaign.getFinances()
+                campaign.getPlayerForce().getFinances()
                       .credit(TransactionType.SALVAGE,
                             campaign.getLocalDate(),
                             unitRansoms,
@@ -276,7 +276,7 @@ public class CamOpsSalvageUtilities {
                 ((Contract) mission).addSalvageByUnit(playerTakeHome);
 
                 if (playerTakeHome.isPositive()) {
-                    campaign.getFinances()
+                    campaign.getPlayerForce().getFinances()
                           .credit(TransactionType.SALVAGE_EXCHANGE,
                                 campaign.getLocalDate(),
                                 playerTakeHome,
@@ -551,7 +551,7 @@ public class CamOpsSalvageUtilities {
 
         findTrackAndCoords(scenario, state).ifPresent(loc -> {
             for (int forceId : scenario.getSalvageFormations()) {
-                Formation formation = campaign.getFormation(forceId);
+                Formation formation = campaign.getPlayerForce().getFormation(forceId);
                 if (formation != null) {
                     loc.track().assignForce(forceId, loc.coords(), campaign.getLocalDate(), false);
                 }

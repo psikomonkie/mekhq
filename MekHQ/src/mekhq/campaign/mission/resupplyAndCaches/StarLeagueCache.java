@@ -488,7 +488,7 @@ public class StarLeagueCache {
         // Defines the action when the dialog is being dismissed
         ActionListener dialogDismissActionListener = e -> {
             dialog.dispose();
-            campaign.getFinances().credit(MISCELLANEOUS, campaign.getLocalDate(), proposal,
+            campaign.getPlayerForce().getFinances().credit(MISCELLANEOUS, campaign.getLocalDate(), proposal,
                   resources.getString("transaction.text"));
         };
 
@@ -556,7 +556,7 @@ public class StarLeagueCache {
         // Defines the action when the dialog is being dismissed
         ActionListener dialogDismissActionListener = e -> {
             dialog.dispose();
-            campaign.getFinances().credit(MISCELLANEOUS, campaign.getLocalDate(), proposal,
+            campaign.getPlayerForce().getFinances().credit(MISCELLANEOUS, campaign.getLocalDate(), proposal,
                   resources.getString("transaction.text"));
         };
 

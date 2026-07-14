@@ -590,15 +590,15 @@ public class MHQMorale {
                 contract.setRoutEndDate(today.plusMonths(max(1, d6() - 3)).minusDays(1));
 
                 PrisonerMissionEndEvent prisoners = new PrisonerMissionEndEvent(campaign, contract);
-                if (!campaign.getFriendlyPrisoners().isEmpty()) {
+                if (!campaign.getPlayerForce().getHumanResources().getFriendlyPrisoners().isEmpty()) {
                     prisoners.handlePrisoners(true, true);
                 }
 
-                if (!campaign.getCurrentPrisoners().isEmpty()) {
+                if (!campaign.getPlayerForce().getHumanResources().getCurrentPrisoners().isEmpty()) {
                     prisoners.handlePrisoners(true, false);
                 }
 
-                campaign.setTemporaryPrisonerCapacity(DEFAULT_TEMPORARY_CAPACITY);
+                campaign.getPlayerForce().setTemporaryPrisonerCapacity(DEFAULT_TEMPORARY_CAPACITY);
             } else {
                 new ImmersiveDialogNotification(campaign, getFormattedTextAt(RESOURCE_BUNDLE,
                       "stratCon.earlyContractEnd.objectives", contract.getName()), true);

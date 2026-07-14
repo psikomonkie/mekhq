@@ -76,7 +76,9 @@ import mekhq.campaign.personnel.turnoverAndRetention.Fatigue;
 import mekhq.campaign.randomEvents.prisoners.PrisonerStatus;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.Faction;
+import mekhq.campaign.universe.selectors.factionSelectors.AbstractFactionSelector;
 import mekhq.campaign.universe.selectors.factionSelectors.DefaultFactionSelector;
+import mekhq.campaign.universe.selectors.planetSelectors.AbstractPlanetSelector;
 import mekhq.campaign.universe.selectors.planetSelectors.DefaultPlanetSelector;
 import mekhq.utilities.ReportingUtilities;
 
@@ -205,7 +207,7 @@ public class EventEffectsManager {
     private List<Person> getAllPotentialTargets(final boolean isGuard) {
         List<Person> potentialTargets = new ArrayList<>();
         if (isGuard) {
-            for (Formation formation : campaign.getAllFormations()) {
+            for (Formation formation : campaign.getPlayerForce().getAllFormations()) {
                 if (!formation.isFormationType(SECURITY)) {
                     continue;
                 }
@@ -219,7 +221,7 @@ public class EventEffectsManager {
                 }
             }
         } else {
-            for (Person prisoner : campaign.getCurrentPrisoners()) {
+            for (Person prisoner : campaign.getPlayerForce().getHumanResources().getCurrentPrisoners()) {
                 // This allows us to injury multiple people in the same event without risking the
                 // same person being hit twice.
                 if (!prisoner.needsFixing()) {
@@ -242,7 +244,7 @@ public class EventEffectsManager {
      */
     String eventEffectPrisonerCapacity(EventResult result) {
         final int magnitude = result.magnitude();
-        campaign.changeTemporaryPrisonerCapacity(magnitude);
+        campaign.getPlayerForce().changeTemporaryPrisonerCapacity(magnitude);
 
         String colorOpen = magnitude > 0 ?
                                  spanOpeningWithCustomColor(ReportingUtilities.getPositiveColor()) :
@@ -416,7 +418,7 @@ public class EventEffectsManager {
             if (isGuard) {
                 target.changeStatus(campaign, today, PersonnelStatus.KIA);
             } else {
-                campaign.removePerson(target, false);
+                campaign.getPlayerForce().getHumanResources().removePerson(campaign, target, false);
             }
 
             MekHQ.triggerEvent(new PersonChangedEvent(target));
@@ -482,7 +484,7 @@ public class EventEffectsManager {
             if (isGuard) {
                 target.changeStatus(campaign, today, PersonnelStatus.KIA);
             } else {
-                campaign.removePerson(target, false);
+                campaign.getPlayerForce().getHumanResources().removePerson(campaign, target, false);
             }
 
             MekHQ.triggerEvent(new PersonChangedEvent(target));
@@ -718,7 +720,7 @@ public class EventEffectsManager {
 
             escapees.add(target);
 
-            campaign.removePerson(target, false);
+            campaign.getPlayerForce().getHumanResources().removePerson(campaign, target, false);
 
             allPotentialTargets.remove(target);
         }
@@ -767,7 +769,7 @@ public class EventEffectsManager {
 
             escapees.add(target);
 
-            campaign.removePerson(target, false);
+            campaign.getPlayerForce().getHumanResources().removePerson(campaign, target, false);
 
             potentialTargets.remove(target);
         }
@@ -1101,7 +1103,7 @@ public class EventEffectsManager {
 
         final int magnitude = result.magnitude();
 
-        List<Person> potentialTargets = campaign.getActivePersonnel(false, true);
+        List<Person> potentialTargets = campaign.getPlayerForce().getHumanResources().getActivePersonnel(false, true);
 
         if (potentialTargets.isEmpty()) {
             return "";
@@ -1156,8 +1158,9 @@ public class EventEffectsManager {
         }
 
         if (crimeChange > 0) {
-            campaign.setDateOfLastCrime(campaign.getLocalDate());
-            campaign.changeCrimeRating(crimeChange);
+            LocalDate dateOfLastCrime = campaign.getLocalDate();
+            campaign.getPlayerForce().setDateOfLastCrime(dateOfLastCrime);
+            campaign.getPlayerForce().changeCrimeRating(crimeChange);
         }
 
         int prisonerCount = d6();
@@ -1173,11 +1176,16 @@ public class EventEffectsManager {
         }
 
         for (int i = 0; i < prisonerCount; i++) {
-            Person newPerson = campaign.newPerson(PersonnelRole.MEKWARRIOR,
-                  NONE,
-                  new DefaultFactionSelector(originOptions, targetFaction),
-                  new DefaultPlanetSelector(originOptions, targetContract.getSystem().getPrimaryPlanet()),
-                  Gender.RANDOMIZE);
+            final AbstractFactionSelector factionSelector = new DefaultFactionSelector(originOptions, targetFaction);
+            final AbstractPlanetSelector planetSelector = new DefaultPlanetSelector(originOptions,
+                  targetContract.getSystem().getPrimaryPlanet());
+            Person newPerson = campaign.getPlayerForce().getHumanResources()
+                                     .newPerson(campaign,
+                                           PersonnelRole.MEKWARRIOR,
+                                           PersonnelRole.NONE,
+                                           factionSelector,
+                                           planetSelector,
+                                           Gender.RANDOMIZE);
             campaign.recruitPerson(newPerson, PrisonerStatus.PRISONER, true, false, false);
         }
 

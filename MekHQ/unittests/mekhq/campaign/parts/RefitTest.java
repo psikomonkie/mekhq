@@ -81,6 +81,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -92,7 +93,7 @@ import testUtilities.MHQTestUtilities;
 
 @ExtendWith(value = MockitoExtension.class)
 public class RefitTest {
-    @Mock
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private Campaign mockCampaign;
 
     @Mock
@@ -138,7 +139,7 @@ public class RefitTest {
 
         lenient().when(mockCampaign.getQuartermaster()).thenReturn(mockQuartermaster);
 
-        lenient().when(mockCampaign.getWarehouse()).thenReturn(mockWarehouse);
+        lenient().when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
     }
 
     @Test
@@ -788,9 +789,9 @@ public class RefitTest {
     // Allegedly unnecessary stubbing for the mockHanger & mockShoppingList
     public void heavyTrackedApcMgToStandard() throws EntityLoadingException, IOException {
         final LocalHangar mockHangar = mock(LocalHangar.class);
-        when(mockCampaign.getHangar()).thenReturn(mockHangar);
+        when(mockCampaign.getPlayerForce().getHangar()).thenReturn(mockHangar);
         final ForceShoppingList mockShoppingList = mock(ForceShoppingList.class);
-        when(mockCampaign.getShoppingList()).thenReturn(mockShoppingList);
+        when(mockCampaign.getPlayerForce().getShoppingList()).thenReturn(mockShoppingList);
 
         // Create the original entity backing the unit
         Entity oldEntity = UnitTestUtilities.getHeavyTrackedApcMg();

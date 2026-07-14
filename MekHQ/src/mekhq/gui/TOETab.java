@@ -52,7 +52,6 @@ import javax.swing.tree.TreeSelectionModel;
 import megamek.common.event.Subscribe;
 import megamek.common.ui.FastJScrollPane;
 import mekhq.MekHQ;
-import mekhq.campaign.digitalGM.stratCon.MaplessStratCon;
 import mekhq.campaign.events.DeploymentChangedEvent;
 import mekhq.campaign.events.NetworkChangedEvent;
 import mekhq.campaign.events.OrganizationChangedEvent;
@@ -244,8 +243,15 @@ public final class TOETab extends CampaignGuiTab {
      */
     private void deployToRegularScenario(Scenario selectedScenario) {
         // Get available forces
-        List<Formation> formationOptions = getCampaign().getCombatTeamsAsList().stream()
-                                                 .map(combatTeam -> getCampaign().getFormation(combatTeam.getFormationId()))
+        mekhq.campaign.Campaign campaign = getCampaign();
+        List<Formation> formationOptions = campaign.getPlayerForce()
+                                                 .getCombatTeamsAsList(campaign)
+                                                 .stream()
+                                                 .map(combatTeam -> {
+                                                     Campaign campaign1 = getCampaign();
+                                                     int id = combatTeam.getFormationId();
+                                                     return campaign1.getPlayerForce().getFormation(id);
+                                                 })
                                                  .filter(force -> force != null && !force.isDeployed())
                                                  .sorted(Comparator.comparing(Formation::getFullName))
                                                  .toList();
@@ -370,7 +376,9 @@ public final class TOETab extends CampaignGuiTab {
     }
 
     private TreePath getTreePathForUnit(Unit unit) {
-        Formation formation = getCampaign().getFormation(unit.getFormationId());
+        Campaign campaign = getCampaign();
+        int id = unit.getFormationId();
+        Formation formation = campaign.getPlayerForce().getFormation(id);
         TreePath formationPath = formation == null ? null : getTreePathForFormation(formation);
         return formationPath == null ? null : formationPath.pathByAddingChild(unit);
     }

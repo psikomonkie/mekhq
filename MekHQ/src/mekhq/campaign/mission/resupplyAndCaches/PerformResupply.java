@@ -50,6 +50,8 @@ import static mekhq.campaign.mission.resupplyAndCaches.Resupply.RESUPPLY_ARMOR_T
 import static mekhq.campaign.mission.resupplyAndCaches.Resupply.ResupplyType.RESUPPLY_CONTRACT_END;
 import static mekhq.campaign.mission.resupplyAndCaches.Resupply.ResupplyType.RESUPPLY_LOOT;
 import static mekhq.campaign.personnel.enums.PersonnelRole.VEHICLE_CREW_GROUND;
+import static mekhq.campaign.stratCon.StratConContractInitializer.getUnoccupiedCoords;
+import static mekhq.campaign.stratCon.StratConRulesManager.generateExternalScenario;
 import static mekhq.campaign.universe.Faction.PIRATE_FACTION_CODE;
 import static mekhq.gui.dialog.ResupplyConvoyChoice.ConvoyResponseType.CANCEL;
 import static mekhq.gui.dialog.ResupplyConvoyChoice.ConvoyResponseType.PLAYER;
@@ -88,6 +90,10 @@ import mekhq.campaign.parts.Armor;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.parts.equipment.AmmoBin;
 import mekhq.campaign.personnel.Person;
+import mekhq.campaign.stratCon.StratConCampaignState;
+import mekhq.campaign.stratCon.StratConCoords;
+import mekhq.campaign.stratCon.StratConScenario;
+import mekhq.campaign.stratCon.StratConTrackState;
 import mekhq.gui.baseComponents.immersiveDialogs.ImmersiveDialogSimple;
 import mekhq.gui.dialog.ResupplyConvoyChoice;
 import mekhq.gui.dialog.resupplyAndCaches.DialogResupplyFocus;
@@ -254,9 +260,11 @@ public class PerformResupply {
             } else if (part instanceof Armor) {
                 int quantity = (int) Math.ceil(((Armor) part).getArmorPointsPerTon() * RESUPPLY_ARMOR_TONNAGE);
                 ((Armor) part).setAmount(quantity);
-                campaign.getAllWarehouse().addPart(part, true);
+                //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+                campaign.getPlayerForce().getWarehouse().addPart(part, true);
             } else {
-                campaign.getAllWarehouse().addPart(part, true);
+                //TODO: This won't work once we support multiple warehouse. Method separated from getWarehouse() for future
+                campaign.getPlayerForce().getWarehouse().addPart(part, true);
             }
         }
     }
@@ -389,7 +397,7 @@ public class PerformResupply {
             convoyWeight += npcConvoyWeight;
         } else {
             for (UUID unitId : playerConvoy.getAllUnits(false)) {
-                Entity entity = getEntityFromUnitId(campaign.getAllHangar(), unitId);
+                Entity entity = getEntityFromUnitId(campaign.getPlayerForce().getHangar(), unitId);
 
                 if (entity == null) {
                     continue;
@@ -444,8 +452,8 @@ public class PerformResupply {
             }
 
             // Non-ground convoys don't get roleplay events
-            if (convoy.formationContainsOnlyVTOLForces(campaign.getAllHangar(), false) ||
-                      convoy.formationContainsOnlyAerialForces(campaign.getAllHangar(), false, false)) {
+            if (convoy.formationContainsOnlyVTOLForces(campaign.getPlayerForce().getHangar(), false) ||
+                      convoy.formationContainsOnlyAerialForces(campaign.getPlayerForce().getHangar(), false, false)) {
                 completeSuccessfulDelivery(resupply, convoyContents);
                 return;
             }
@@ -534,9 +542,9 @@ public class PerformResupply {
         String templateAddress = GENERIC;
 
         if (targetConvoy != null) {
-            if (targetConvoy.formationContainsOnlyAerialForces(campaign.getAllHangar(), false, false)) {
+            if (targetConvoy.formationContainsOnlyAerialForces(campaign.getPlayerForce().getHangar(), false, false)) {
                 templateAddress = PLAYER_AEROSPACE_CONVOY;
-            } else if (targetConvoy.formationContainsMajorityVTOLForces(campaign.getAllHangar(), false)) {
+            } else if (targetConvoy.formationContainsMajorityVTOLForces(campaign.getPlayerForce().getHangar(), false)) {
                 templateAddress = PLAYER_VTOL_CONVOY;
             } else {
                 templateAddress = PLAYER_CONVOY;
@@ -645,9 +653,10 @@ public class PerformResupply {
         String inCharacterMessage = "";
         String commanderAddress = campaign.getCommanderAddress();
         if (targetConvoy != null) {
-            speaker = campaign.getPerson(targetConvoy.getFormationCommanderID());
+            final UUID id = targetConvoy.getFormationCommanderID();
+            speaker = campaign.getPlayerForce().getHumanResources().getPerson(id);
 
-            mekhq.campaign.LocalHangar hangar = campaign.getAllHangar();
+            mekhq.campaign.LocalHangar hangar = campaign.getPlayerForce().getHangar();
             if (targetConvoy.formationContainsOnlyVTOLForces(hangar, false) ||
                       targetConvoy.formationContainsOnlyAerialForces(hangar, false, false)) {
                 inCharacterMessage = getFormattedTextAt(RESOURCE_BUNDLE,
@@ -656,7 +665,10 @@ public class PerformResupply {
             }
         } else {
             // We invent an NPC driver for NPC convoys
-            speaker = campaign.newPerson(VEHICLE_CREW_GROUND, contract.getEmployerCode(), Gender.RANDOMIZE);
+            final String factionCode = contract.getEmployerCode();
+            speaker = campaign.getPlayerForce()
+                            .getHumanResources()
+                            .newPerson(campaign, PersonnelRole.VEHICLE_CREW_GROUND, factionCode, Gender.RANDOMIZE);
         }
 
         if (inCharacterMessage.isBlank()) {

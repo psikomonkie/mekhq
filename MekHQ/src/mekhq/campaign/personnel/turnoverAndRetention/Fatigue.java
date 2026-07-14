@@ -122,11 +122,11 @@ public class Fatigue {
           boolean isUseFieldKitchenIgnoreNonCombatants, Campaign campaign) {
         int fieldKitchenUsage = 0;
 
-        for (PersonnelRole personnelRole : campaign.getTempCrewRoleKeys()) {
+        for (PersonnelRole personnelRole : campaign.getPlayerForce().getHumanResources().getTempCrewRoleKeys()) {
             if (!personnelRole.isCombat() && isUseFieldKitchenIgnoreNonCombatants) {
                 continue;
             }
-            fieldKitchenUsage += campaign.getTempCrewPool(personnelRole);
+            fieldKitchenUsage += campaign.getPlayerForce().getHumanResources().getTempCrewPool(personnelRole);
         }
 
         for (Person person : activePersonnel) {
@@ -266,7 +266,7 @@ public class Fatigue {
         int leaveThreshold = campaignOptions.getFatigueUndeploymentThreshold();
         List<AtBContract> activeContracts = campaign.getActiveAtBContracts();
 
-        for (CombatTeam combatTeam : campaign.getCombatTeamsAsList()) {
+        for (CombatTeam combatTeam : campaign.getPlayerForce().getCombatTeamsAsList(campaign)) {
             Formation formation = combatTeam.getFormation(campaign);
             if (formation == null || formation.isDeployed()) {
                 // 'isDeployed' will only return true if the force is deployed to a scenario. In which cases we don't

@@ -69,7 +69,6 @@ import java.util.List;
 
 import megamek.Version;
 import megamek.common.annotations.Nullable;
-import megamek.common.enums.Gender;
 import megamek.logging.MMLogger;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
@@ -309,7 +308,7 @@ public class AtBContract extends Contract {
         setBatchallAccepted(true);
         if (campaign.getCampaignOptions().isUseGenericBattleValue() && enemyFaction.performsBatchalls()) {
             boolean tracksStanding = campaign.getCampaignOptions().isTrackFactionStanding();
-            FactionStandings factionStandings = campaign.getFactionStandings();
+            FactionStandings factionStandings = campaign.getPlayerForce().getFactionStandings();
 
             boolean allowBatchalls = true;
             if (campaign.getCampaignOptions().isUseFactionStandingBatchallRestrictionsSafe()) {
@@ -507,7 +506,9 @@ public class AtBContract extends Contract {
                     campaign.addReport(GENERAL, "Bonus: " + number + " dependent" + ((number > 1) ? "s" : ""));
 
                     for (int i = 0; i < number; i++) {
-                        Person person = campaign.newDependent(Gender.RANDOMIZE);
+                        Person person = campaign.getPlayerForce()
+                                              .getHumanResources()
+                                              .newDependent(campaign, megamek.common.enums.Gender.RANDOMIZE);
                         campaign.recruitPerson(person, FREE, true, false, false);
                     }
                 } else {

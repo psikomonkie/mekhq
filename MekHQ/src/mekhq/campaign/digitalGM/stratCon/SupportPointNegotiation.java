@@ -165,7 +165,7 @@ public class SupportPointNegotiation {
                                      contract.getRequiredCombatTeams() * 3 :
                                      contract.getRequiredCombatTeams();
 
-        FactionStandings factionStandings = campaign.getFactionStandings();
+        FactionStandings factionStandings = campaign.getPlayerForce().getFactionStandings();
         double regard = factionStandings.getRegardForFaction(contract.getEmployerCode(), true);
         boolean isUseFactionStandingSupportPoints = campaign.getCampaignOptions()
                                                           .isUseFactionStandingSupportPointsSafe();
@@ -256,7 +256,7 @@ public class SupportPointNegotiation {
      */
     private static List<Person> getSortedAdminTransportPersonnel(Campaign campaign) {
         List<Person> adminTransport = new ArrayList<>();
-        for (Person person : campaign.getAdmins()) {
+        for (Person person : campaign.getPlayerForce().getHumanResources().getAdmins()) {
             if (person.getPrimaryRole().isAdministratorTransport() ||
                       person.getSecondaryRole().isAdministratorTransport()) {
                 // Each character gets to roll three times, so we add them to the list three times.

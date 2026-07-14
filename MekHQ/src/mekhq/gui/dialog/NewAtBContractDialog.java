@@ -445,9 +445,11 @@ public class NewAtBContractDialog extends NewContractDialog {
     }
 
     private String getCurrentEmployerCode() {
-        return campaign.getFaction().isMercenary() ?
-                     cbEmployer.getSelectedItemKey() :
-                     campaign.getFaction().getShortName();
+        if (campaign.getFaction().isMercenary()) {
+            return cbEmployer.getSelectedItemKey();
+        } else {
+            return campaign.getFaction().getShortName();
+        }
     }
 
     private String getCurrentEnemyCode() {
@@ -611,12 +613,12 @@ public class NewAtBContractDialog extends NewContractDialog {
             contract.createClanOpponent(campaign);
         }
 
-        campaign.getFinances()
+        campaign.getPlayerForce().getFinances()
               .credit(TransactionType.CONTRACT_PAYMENT,
                     campaign.getLocalDate(),
                     contract.getTotalAdvanceAmount(),
                     "Advance funds for " + contract.getName());
-        campaign.getFinances()
+        campaign.getPlayerForce().getFinances()
               .credit(TransactionType.CONTRACT_PAYMENT,
                     campaign.getLocalDate(),
                     contract.getTransportAmount(),

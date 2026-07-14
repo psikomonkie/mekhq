@@ -286,7 +286,8 @@ public class StratConScenarioWizard extends JDialog {
     private String getForceNameReversed(Unit unit) {
         List<String> forceNames = new ArrayList<>();
 
-        Formation formation = campaign.getFormation(unit.getFormationId());
+        int id = unit.getFormationId();
+        Formation formation = campaign.getPlayerForce().getFormation(id);
 
         if (formation == null) {
             return "";
@@ -851,7 +852,11 @@ public class StratConScenarioWizard extends JDialog {
             return;
         }
 
-        Person commandLiaison = campaign.getSeniorAdminPerson(AdministratorSpecialization.COMMAND);
+        Person commandLiaison = campaign.getPlayerForce().getHumanResources()
+                                      .getSeniorAdminPerson(AdministratorSpecialization.COMMAND,
+                                            campaign.getCampaignOptions(),
+                                            campaign.isClanCampaign(),
+                                            campaign.getLocalDate());
         int baseTargetNumber = campaign.getCampaignOptions().getReinforcementBaseTargetNumber();
         TargetRoll targetNumber = calculateReinforcementTargetNumber(commandLiaison,
               currentCampaignState.getContract(),
@@ -1050,7 +1055,11 @@ public class StratConScenarioWizard extends JDialog {
         boolean dialogAccepted = false;
         boolean backedOutOfBatchall = false;
 
-        Person speaker = campaign.getSeniorAdminPerson(AdministratorSpecialization.COMMAND);
+        Person speaker = campaign.getPlayerForce().getHumanResources()
+                               .getSeniorAdminPerson(AdministratorSpecialization.COMMAND,
+                                     campaign.getCampaignOptions(),
+                                     campaign.isClanCampaign(),
+                                     campaign.getLocalDate());
         String inCharacterMessage = String.format(resources.getString("batchallBreach.ic"),
               campaign.getCommanderAddress());
         String outOfCharacterMessage = resources.getString("batchallBreach.ooc");
@@ -1092,7 +1101,7 @@ public class StratConScenarioWizard extends JDialog {
 
         CampaignOptions campaignOptions = campaign.getCampaignOptions();
         if (campaignOptions.isTrackFactionStanding()) {
-            FactionStandings factionStandings = campaign.getFactionStandings();
+            FactionStandings factionStandings = campaign.getPlayerForce().getFactionStandings();
             double regardMultiplier = campaignOptions.getRegardMultiplier();
             // We double the regard multiplier for Batchall breaches as agreeing to a Batchall and then breaking it
             // is far worse than if you never agreed to it in the first place.

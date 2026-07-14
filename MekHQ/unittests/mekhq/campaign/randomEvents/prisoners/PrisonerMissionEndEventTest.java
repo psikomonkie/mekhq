@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -43,6 +43,7 @@ import static mekhq.campaign.randomEvents.prisoners.PrisonerMissionEndEvent.GOOD
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -68,14 +69,14 @@ class PrisonerMissionEndEventTest {
     @Test
     void testDetermineGoodEventChance_NoCrime() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         LocalDate today = LocalDate.of(3151, 1, 1);
-        when(mockCampaign.getDateOfLastCrime()).thenReturn(null);
+        when(mockCampaign.getPlayerForce().getDateOfLastCrime()).thenReturn(null);
 
         AtBContract contract = new AtBContract("TEST");
         contract.setStartDate(today.minusYears(1));
@@ -94,15 +95,15 @@ class PrisonerMissionEndEventTest {
         final int CRIME_RATING = 5;
 
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
-        when(mockCampaign.getAdjustedCrimeRating()).thenReturn(CRIME_RATING);
+        Campaign mockCampaign = mockCampaign();
+        when(mockCampaign.getPlayerForce().getAdjustedCrimeRating()).thenReturn(CRIME_RATING);
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         LocalDate today = LocalDate.of(3151, 1, 1);
-        when(mockCampaign.getDateOfLastCrime()).thenReturn(today);
+        when(mockCampaign.getPlayerForce().getDateOfLastCrime()).thenReturn(today);
 
         AtBContract contract = new AtBContract("TEST");
         contract.setStartDate(today.minusYears(1));
@@ -122,15 +123,15 @@ class PrisonerMissionEndEventTest {
         final int CRIME_RATING = GOOD_EVENT_CHANCE * 2;
 
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
-        when(mockCampaign.getAdjustedCrimeRating()).thenReturn(CRIME_RATING);
+        Campaign mockCampaign = mockCampaign();
+        when(mockCampaign.getPlayerForce().getAdjustedCrimeRating()).thenReturn(CRIME_RATING);
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
         when(campaignFaction.getShortName()).thenReturn("MERC");
 
         LocalDate today = LocalDate.of(3151, 1, 1);
-        when(mockCampaign.getDateOfLastCrime()).thenReturn(today);
+        when(mockCampaign.getPlayerForce().getDateOfLastCrime()).thenReturn(today);
 
         AtBContract contract = new AtBContract("TEST");
         contract.setStartDate(today.minusYears(1));
@@ -149,7 +150,7 @@ class PrisonerMissionEndEventTest {
     void testGetRansom_MekWarrior() {
         final int SKILL_LEVEL = 3;
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
@@ -182,7 +183,7 @@ class PrisonerMissionEndEventTest {
     void testGetRansom_Other() {
         final int SKILL_LEVEL = 3;
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);

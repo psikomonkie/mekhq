@@ -926,7 +926,8 @@ public class MekHQ implements GameListener {
         List<Throwable> errors = new ArrayList<>();
         for (var entry : peopleStatus.entrySet()) {
             try {
-                Person person = getCampaign().getPerson(entry.getKey());
+                Campaign campaign = getCampaign();
+                Person person = campaign.getPlayerForce().getHumanResources().getPerson(entry.getKey());
                 Objects.requireNonNull(person, "getPerson() returned null for Person ID=" + entry.getKey() + ".");
                 person.setHits(person.getHitsPrior());
             } catch (Throwable ex) {

@@ -36,7 +36,6 @@ package mekhq.campaign.randomEvents.other;
 import static java.lang.Math.max;
 import static megamek.common.compute.Compute.randomInt;
 import static megamek.common.enums.SkillLevel.VETERAN;
-import static mekhq.campaign.Campaign.AdministratorSpecialization.HR;
 import static mekhq.campaign.finances.enums.TransactionType.RECRUITMENT;
 import static mekhq.campaign.personnel.PersonUtility.overrideSkills;
 import static mekhq.campaign.personnel.PersonUtility.reRollAdvantages;
@@ -102,7 +101,7 @@ public class RoninOffer {
         int roll = randomInt(5);
 
         PersonnelRole role = roll == 0 ? AEROSPACE_PILOT : MEKWARRIOR;
-        Person ronin = campaign.newPerson(role);
+        Person ronin = campaign.getPlayerForce().getHumanResources().newPerson(campaign, role);
 
         boolean checkVeterancyEligibility = true;
         overrideSkills(campaign, ronin, role, VETERAN, checkVeterancyEligibility);
@@ -148,7 +147,7 @@ public class RoninOffer {
         if (campaignState == null) {
             // This and the Support Point cost are designed to scale with campaign size.
             // The larger the campaign, the more resources they have to toss around.
-            campaign.getFinances()
+            campaign.getPlayerForce().getFinances()
                   .debit(RECRUITMENT,
                         campaign.getLocalDate(),
                         FALLBACK_HIRING_FEE.multipliedBy(cost),
@@ -157,7 +156,7 @@ public class RoninOffer {
             campaignState.changeSupportPoints(-cost);
         }
 
-        campaign.recruitPerson(ronin, true, true);
+        campaign.getPlayerForce().getHumanResources().recruitPerson(campaign, ronin, true, true);
     }
 
 
@@ -180,7 +179,11 @@ public class RoninOffer {
         buttonLabels.add(getFormattedTextAt(RESOURCE_BUNDLE, "button.fromHR.decline.rude", roninCallSign));
 
         ImmersiveDialogSimple initialMessage = new ImmersiveDialogSimple(campaign,
-              campaign.getSeniorAdminPerson(HR),
+              campaign.getPlayerForce().getHumanResources()
+                    .getSeniorAdminPerson(Campaign.AdministratorSpecialization.HR,
+                          campaign.getCampaignOptions(),
+                          campaign.isClanCampaign(),
+                          campaign.getLocalDate()),
               null,
               centerMessage,
               buttonLabels,
@@ -334,9 +337,10 @@ public class RoninOffer {
                             FALLBACK_HIRING_FEE.multipliedBy(requiredCombatTeams).toAmountString() :
                             requiredCombatTeams + "";
 
-        String availableResources = useFallbackHiringFee ?
-                                          campaign.getFunds().toAmountString() :
-                                          availableSupportPoints + "";
+        String availableResources;
+        availableResources = useFallbackHiringFee ?
+                                   campaign.getPlayerForce().getFunds().toAmountString() :
+                                   availableSupportPoints + "";
 
         return getFormattedTextAt(RESOURCE_BUNDLE, "message.ooc.cost", cost, addendum, availableResources, addendum);
     }
