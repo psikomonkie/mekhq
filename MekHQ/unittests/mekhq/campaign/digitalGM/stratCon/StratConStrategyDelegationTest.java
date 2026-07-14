@@ -103,6 +103,8 @@ class StratConStrategyDelegationTest {
             rules.when(() -> StratConRulesManager.calculateReinforcementTargetNumber(liaison, contract, 4))
                   .thenReturn(targetRoll);
             rules.when(() -> StratConRulesManager.processReinforcementDeployment(formation, AUXILIARY, campaignState,
+                  scenario, campaign, 8, false)).thenReturn(SUCCESS);
+            rules.when(() -> StratConRulesManager.processReinforcementDeployment(formation, AUXILIARY, campaignState,
                   scenario, campaign, 8, false, false)).thenReturn(SUCCESS);
             rules.when(() -> StratConRulesManager.processReinforcementDeployment(formation, AUXILIARY, campaignState,
                   scenario, campaign, 8, false, true)).thenReturn(SUCCESS);

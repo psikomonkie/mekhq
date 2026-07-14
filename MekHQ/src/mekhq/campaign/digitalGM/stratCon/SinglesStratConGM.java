@@ -33,17 +33,20 @@
 package mekhq.campaign.digitalGM.stratCon;
 
 import mekhq.campaign.campaignOptions.CampaignOptions;
+import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
 
 /**
- * Digital GM for StratCon <b>Singles</b> play ({@link StratConPlayType#SINGLES}). Singles is a stricter form of Mapless
- * &mdash; it extends {@link MaplessStratConGM} and so inherits the no-op facility handling &mdash; and additionally
- * caps the campaign to a single scenario per week by enabling {@linkplain #isSingleDropMode() single-drop mode}. This
- * mirrors the legacy engine, where {@code isUseStratConMaplessMode()} was already {@code true} for Singles.
+ * Digital GM for StratCon <b>Singles</b> play ({@link StratConPlayType#SINGLES}). Singles uses the same no-op facility
+ * handling as Mapless and additionally caps the campaign to a single scenario per week by enabling
+ * {@linkplain #isSingleDropMode() single-drop mode}. This mirrors the legacy engine, where
+ * {@code isUseStratConMaplessMode()} was already {@code true} for Singles.
  *
  * @author Illiani
  * @since 0.50.10
  */
 public class SinglesStratConGM extends AbstractStratConGM {
+
+    private final FacilityStrategy noOpFacility = new NoOpFacilityStrategy();
 
     @Override
     public String getName() {
@@ -58,5 +61,10 @@ public class SinglesStratConGM extends AbstractStratConGM {
     @Override
     protected boolean isSingleDropMode() {
         return true;
+    }
+
+    @Override
+    protected FacilityStrategy getFacilityStrategy() {
+        return noOpFacility;
     }
 }
