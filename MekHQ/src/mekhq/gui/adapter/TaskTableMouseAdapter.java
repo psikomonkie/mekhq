@@ -267,10 +267,14 @@ public class TaskTableMouseAdapter extends JPopupMenuAdapter {
         }
 
         // Cancel task (unassign tech; spent minutes are not refunded)
+        boolean anyBeingWorked = false;
+        for (IPartWork p : parts) {
+            anyBeingWorked |= p.isBeingWorkedOn();
+        }
         menuItem = new JMenuItem(getTextAt(RESOURCE_BUNDLE, "TaskTableMouseAdapter.CANCEL"));
         menuItem.setActionCommand("CANCEL");
         menuItem.addActionListener(this);
-        menuItem.setEnabled(isBeingWorked);
+        menuItem.setEnabled(anyBeingWorked);
         popup.add(menuItem);
 
         if (gui.getCampaign().isGM()) {
