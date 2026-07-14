@@ -43,7 +43,7 @@ import mekhq.campaign.digitalGM.strategy.FacilityStrategy;
  * @author Illiani
  * @since 0.50.10
  */
-public class MaplessStratConGM extends StratConDigitalGM {
+public class MaplessStratConGM extends AbstractStratConGM {
 
     private final FacilityStrategy noOpFacility = new NoOpFacilityStrategy();
 

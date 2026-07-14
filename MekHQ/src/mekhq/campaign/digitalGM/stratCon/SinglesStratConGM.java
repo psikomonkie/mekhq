@@ -43,7 +43,7 @@ import mekhq.campaign.campaignOptions.CampaignOptions;
  * @author Illiani
  * @since 0.50.10
  */
-public class SinglesStratConGM extends MaplessStratConGM {
+public class SinglesStratConGM extends AbstractStratConGM {
 
     @Override
     public String getName() {
