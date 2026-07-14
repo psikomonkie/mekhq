@@ -49,6 +49,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -101,7 +102,7 @@ class MekLocationTest {
 
     @Test
     void ctorTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int location = Mek.LOC_LEFT_LEG;
         int tonnage = 70;
@@ -127,7 +128,7 @@ class MekLocationTest {
 
     @Test
     void cloneTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int location = Mek.LOC_LEFT_LEG;
         int tonnage = 65;
@@ -158,7 +159,7 @@ class MekLocationTest {
 
     @Test
     void getMissingPartTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int location = Mek.LOC_LEFT_TORSO;
         int tonnage = 65;
@@ -184,7 +185,7 @@ class MekLocationTest {
 
     @Test
     void cannotScrapCT() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         MekLocation centerTorso = new MekLocation(Mek.LOC_CENTER_TORSO,
               25,
@@ -201,7 +202,7 @@ class MekLocationTest {
 
     @Test
     void cannotSalvageCT() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         when(unit.isSalvage()).thenReturn(true);
         Mek entity = mock(Mek.class);
@@ -230,7 +231,7 @@ class MekLocationTest {
 
     @Test
     void onBadHipOrShoulderTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(entity.getWeight()).thenReturn(65.0);
@@ -255,7 +256,7 @@ class MekLocationTest {
 
     @Test
     void isSamePartTypeTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int location = Mek.LOC_LEFT_LEG, otherLocation = Mek.LOC_HEAD;
         int tonnage = 70;
@@ -387,7 +388,7 @@ class MekLocationTest {
 
     @Test
     void mekLocationWriteToXmlTest() throws ParserConfigurationException, SAXException, IOException {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         MekLocation mekLocation = new MekLocation(Mek.LOC_CENTER_TORSO, 100, EquipmentType.T_STRUCTURE_INDUSTRIAL,
               true, true, true, true, true, mockCampaign);
         mekLocation.setId(25);
@@ -432,7 +433,7 @@ class MekLocationTest {
 
     @Test
     void updateConditionFromEntityTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Entity entity = mock(Entity.class);
         when(entity.getWeight()).thenReturn(100.0);
@@ -547,7 +548,7 @@ class MekLocationTest {
 
     @Test
     void updateConditionFromPartUpdatesEntityArmorTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Entity entity = mock(Entity.class);
         when(entity.getWeight()).thenReturn(100.0);
@@ -584,7 +585,7 @@ class MekLocationTest {
 
     @Test
     void updateConditionFromPartRestoresNotHittableCriticalSlotsTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Entity entity = mock(Entity.class);
         when(entity.getWeight()).thenReturn(100.0);
@@ -621,7 +622,7 @@ class MekLocationTest {
 
     @Test
     void needsFixingTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Entity entity = mock(Entity.class);
         when(entity.getWeight()).thenReturn(100.0);
@@ -672,7 +673,7 @@ class MekLocationTest {
 
     @Test
     void checkFixableNoUnitTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         MekLocation torso = new MekLocation(Mek.LOC_RIGHT_TORSO,
               30,
               0,
@@ -687,7 +688,7 @@ class MekLocationTest {
 
     @Test
     void checkFixableBlownOffTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Entity entity = mock(Entity.class);
         when(entity.getWeight()).thenReturn(100.0);
@@ -763,7 +764,7 @@ class MekLocationTest {
 
     @Test
     void checkFixableBustedHipOrShoulderTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Entity entity = mock(Entity.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -787,7 +788,7 @@ class MekLocationTest {
 
     @Test
     void checkSalvageableNotSalvagingTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Entity entity = mock(Entity.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -810,7 +811,7 @@ class MekLocationTest {
 
     @Test
     void checkSalvageableBadHipShoulderTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Entity entity = mock(Entity.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -834,7 +835,7 @@ class MekLocationTest {
 
     @Test
     void checkSalvageableTorsoWithArmsIntactTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -871,7 +872,7 @@ class MekLocationTest {
 
     @Test
     void checkSalvageableTorsoWithArmsIntactQuadTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -909,7 +910,7 @@ class MekLocationTest {
 
     @Test
     void checkSalvageableArmorStillPresentTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -947,7 +948,7 @@ class MekLocationTest {
 
     @Test
     void checkSalvageableOnlyIgnorableSystemsTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -981,7 +982,7 @@ class MekLocationTest {
 
     @Test
     void checkSalvageableRepairableSystemsTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1017,7 +1018,7 @@ class MekLocationTest {
 
     @Test
     void checkSalvageableRepairableNamedSystemsTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1065,7 +1066,7 @@ class MekLocationTest {
 
     @Test
     void checkScrappableCannotScrapCenterTorsoTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Entity entity = mock(Entity.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1088,7 +1089,7 @@ class MekLocationTest {
 
     @Test
     void checkScrappableTorsoWithArmsIntactTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1121,7 +1122,7 @@ class MekLocationTest {
 
     @Test
     void checkScrappableTorsoWithArmsIntactQuadTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1155,7 +1156,7 @@ class MekLocationTest {
 
     @Test
     void checkScrappableArmorStillPresentTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1189,7 +1190,7 @@ class MekLocationTest {
 
     @Test
     void checkScrappableOnlyIgnorableSystemsTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1220,7 +1221,7 @@ class MekLocationTest {
 
     @Test
     void checkScrappableRepairableSystemsTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1249,7 +1250,7 @@ class MekLocationTest {
 
     @Test
     void lamTorsoRemovableOnlyWithMissingAvionicsAndLandingGear() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         LandAirMek entity = mock(LandAirMek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1331,7 +1332,7 @@ class MekLocationTest {
 
     @Test
     void lamHeadRemovableOnlyWithMissingAvionics() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         LandAirMek entity = mock(LandAirMek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1381,7 +1382,7 @@ class MekLocationTest {
 
     @Test
     void doMaintenanceDamageTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1430,7 +1431,7 @@ class MekLocationTest {
 
     @Test
     void removeRestoresBlownOffTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int location = Mek.LOC_LEFT_LEG;
         MekLocation mekLocation = new MekLocation(location, 30, 0, false, false, false, false, false, mockCampaign);
@@ -1448,7 +1449,7 @@ class MekLocationTest {
 
     @Test
     void removeRestoresBreachedTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int location = Mek.LOC_LEFT_LEG;
         MekLocation mekLocation = new MekLocation(location, 30, 0, false, false, false, false, false, mockCampaign);
@@ -1466,7 +1467,7 @@ class MekLocationTest {
 
     @Test
     void removeSimpleTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
@@ -1508,7 +1509,7 @@ class MekLocationTest {
 
     @Test
     void removeHeadWithoutComponentsTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
@@ -1539,7 +1540,7 @@ class MekLocationTest {
 
     @Test
     void removeHeadWithSensorComponentTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
@@ -1576,7 +1577,7 @@ class MekLocationTest {
 
     @Test
     void removeHeadWithLifeSupportComponentTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
@@ -1613,7 +1614,7 @@ class MekLocationTest {
 
     @Test
     void removeHeadWithComponentsTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
@@ -1652,7 +1653,7 @@ class MekLocationTest {
 
     @Test
     void removeCenterTorsoDoesntAddMissingPartTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
@@ -1683,7 +1684,7 @@ class MekLocationTest {
 
     @Test
     void updateConditionFromEntityNoInternalsRemovesLocationTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         mekhq.campaign.ForceQuartermaster mockQuartermaster = mock(mekhq.campaign.ForceQuartermaster.class);
@@ -1719,7 +1720,7 @@ class MekLocationTest {
 
     @Test
     void salvageSimpleTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
@@ -1765,7 +1766,7 @@ class MekLocationTest {
 
     @Test
     void salvageCenterTorsoDoesntAddMissingPartTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse warehouse = new LocalWarehouse();
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         mekhq.campaign.ForceQuartermaster quartermaster = new mekhq.campaign.ForceQuartermaster(mockCampaign);
@@ -1802,7 +1803,7 @@ class MekLocationTest {
 
     @Test
     void fixSimpleTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int location = Mek.LOC_CENTER_TORSO;
         MekLocation mekLocation = new MekLocation(location, 30, 0, false, false, false, false, false, mockCampaign);
@@ -1838,7 +1839,7 @@ class MekLocationTest {
 
     @Test
     void fixBlownOffTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1875,7 +1876,7 @@ class MekLocationTest {
 
     @Test
     void fixBreachedTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1912,7 +1913,7 @@ class MekLocationTest {
 
     @Test
     void getDifficultyTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -1973,7 +1974,7 @@ class MekLocationTest {
 
     @Test
     void getBaseTimeTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -2034,7 +2035,7 @@ class MekLocationTest {
 
     @Test
     void isRightTechTypeTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         MekLocation centerTorso = new MekLocation(Mek.LOC_CENTER_TORSO,
               25,
@@ -2052,7 +2053,7 @@ class MekLocationTest {
 
     @Test
     void getTechAdvancementTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int structureType = EquipmentType.T_STRUCTURE_ENDO_STEEL;
         MekLocation centerTorso = new MekLocation(Mek.LOC_CENTER_TORSO,
@@ -2080,7 +2081,7 @@ class MekLocationTest {
 
     @Test
     void getMRMSOptionTypeTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         MekLocation centerTorso = new MekLocation(Mek.LOC_CENTER_TORSO,
               25,
@@ -2096,7 +2097,7 @@ class MekLocationTest {
 
     @Test
     void getRepairPartTypeTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         MekLocation centerTorso = new MekLocation(Mek.LOC_CENTER_TORSO,
               25,
@@ -2112,7 +2113,7 @@ class MekLocationTest {
 
     @Test
     void getDetailsSpareTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
 
@@ -2164,7 +2165,7 @@ class MekLocationTest {
 
     @Test
     void getDetailsOnUnitTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         Unit unit = mock(Unit.class);
@@ -2216,7 +2217,7 @@ class MekLocationTest {
 
     @Test
     void getAllModsBreachedTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -2237,7 +2238,7 @@ class MekLocationTest {
 
     @Test
     void getAllModsBlownOffTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Unit unit = mock(Unit.class);
         Mek entity = mock(Mek.class);
         when(unit.getEntity()).thenReturn(entity);
@@ -2259,7 +2260,7 @@ class MekLocationTest {
 
     @Test
     void getAllModsSimpleTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         Unit unit = mock(Unit.class);
@@ -2290,7 +2291,7 @@ class MekLocationTest {
 
     @Test
     void getDescSimpleTest() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         Unit unit = mock(Unit.class);

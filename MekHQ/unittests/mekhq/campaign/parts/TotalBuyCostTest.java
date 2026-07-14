@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.math.BigDecimal;
 
@@ -52,13 +53,14 @@ import mekhq.campaign.work.IAcquisitionWork;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Answers;
 import org.mockito.Mock;
 
 
 public class TotalBuyCostTest {
 
 
-    @Mock
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private Campaign mockCampaign;
 
     @Mock
@@ -71,7 +73,7 @@ public class TotalBuyCostTest {
 
     @BeforeEach
     public void beforeEach() {
-        mockCampaign = mock(Campaign.class);
+        mockCampaign = mockCampaign();
         mockCampaignOptions = mock(CampaignOptions.class);
         lenient().when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         lenient().when(mockCampaignOptions.getCommonPartPriceMultiplier()).thenReturn(1d);

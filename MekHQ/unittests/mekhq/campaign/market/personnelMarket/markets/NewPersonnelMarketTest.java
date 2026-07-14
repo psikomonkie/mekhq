@@ -46,10 +46,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.HashMap;
 import java.util.List;
@@ -65,6 +65,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentMatchers;
 import org.mockito.MockedStatic;
 
 class NewPersonnelMarketTest {
@@ -492,7 +493,7 @@ class NewPersonnelMarketTest {
     @Test
     void generateSingleApplicant_returnNullIfApplicantIsNull() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         NewPersonnelMarket market = new NewPersonnelMarket();
         market.setCampaign(mockCampaign);
@@ -501,12 +502,11 @@ class NewPersonnelMarketTest {
         Faction faction = new Faction();
         market.setApplicantOriginFactions(List.of(faction));
 
-        final String factionCode = ArgumentMatchers.eq(faction.getShortName());
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .newPerson(mockCampaign,
+                   .newPerson(ArgumentMatchers.eq(mockCampaign),
                          ArgumentMatchers.any(mekhq.campaign.personnel.enums.PersonnelRole.class),
-                         factionCode,
+                         ArgumentMatchers.eq(faction.getShortName()),
                          ArgumentMatchers.eq(megamek.common.enums.Gender.RANDOMIZE))).thenReturn(null);
 
         PersonnelMarketEntry soldier = new PersonnelMarketEntry(1, SOLDIER, 1, 3050, 3100, SOLDIER);
@@ -528,7 +528,7 @@ class NewPersonnelMarketTest {
     @Test
     void generateSingleApplicant_returnApplicantIfApplicantIsNotNull() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         NewPersonnelMarket market = new NewPersonnelMarket();
         market.setCampaign(mockCampaign);
@@ -539,12 +539,11 @@ class NewPersonnelMarketTest {
         when(mockCampaign.getFaction()).thenReturn(faction);
 
         Person person = new Person(mockCampaign);
-        final String factionCode = ArgumentMatchers.eq(faction.getShortName());
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .newPerson(mockCampaign,
+                   .newPerson(ArgumentMatchers.eq(mockCampaign),
                          ArgumentMatchers.any(mekhq.campaign.personnel.enums.PersonnelRole.class),
-                         factionCode,
+                         ArgumentMatchers.eq(faction.getShortName()),
                          ArgumentMatchers.eq(megamek.common.enums.Gender.RANDOMIZE))).thenReturn(person);
 
         PersonnelMarketEntry soldier = new PersonnelMarketEntry(1, SOLDIER, 1, 3050, 3100, SOLDIER);

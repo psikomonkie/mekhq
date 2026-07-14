@@ -43,6 +43,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.io.ByteArrayInputStream;
 import java.io.PrintWriter;
@@ -1245,7 +1246,7 @@ public class HumanResourcesTest {
 
         @Test
         void usesExistingHRFromCampaign() throws Exception {
-            Campaign mockCampaign = mock(Campaign.class);
+            Campaign mockCampaign = mockCampaign();
             ForceHumanResources existingHr = new ForceHumanResources();
             when(mockCampaign.getPlayerForce().getHumanResources()).thenReturn(existingHr);
 

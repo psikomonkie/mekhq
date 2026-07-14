@@ -49,6 +49,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
 import testUtilities.MHQTestUtilities;
 
 /**
@@ -59,6 +60,7 @@ import testUtilities.MHQTestUtilities;
 public class CampaignNewDayManagerTest {
 
     private Campaign testCampaign;
+    private ForceHumanResources humanResources;
     private CampaignOptions campaignOptions;
     private MHQOptions mhqOptions;
 
@@ -70,6 +72,8 @@ public class CampaignNewDayManagerTest {
     @BeforeEach
     public void setup() {
         testCampaign = spy(MHQTestUtilities.getTestCampaign());
+        humanResources = spy(testCampaign.getPlayerForce().getHumanResources());
+        testCampaign.getPlayerForce().setHumanResources(humanResources);
         campaignOptions = testCampaign.getCampaignOptions();
         mhqOptions = MekHQ.getMHQOptions();
     }
@@ -156,13 +160,9 @@ public class CampaignNewDayManagerTest {
             // Assert
             if (shouldDistribute) {
                 // Pool should be reset to 0, then distribution called
-                Campaign campaign = Mockito.verify(testCampaign, Mockito.times(1));
-                campaign.getPlayerForce().getHumanResources().setTempCrewPool(campaign, role, 0);
-                Campaign campaign1 = Mockito.verify(testCampaign, Mockito.times(1));
-                campaign1.getPlayerForce()
-                      .getHumanResources()
-                      .distributeTempCrewPoolToUnits(campaign1, campaign1.getCampaignOptions(),
-                            role);
+                Mockito.verify(humanResources, Mockito.times(1)).setTempCrewPool(testCampaign, role, 0);
+                Mockito.verify(humanResources, Mockito.times(1))
+                      .distributeTempCrewPoolToUnits(testCampaign, testCampaign.getCampaignOptions(), role);
             } else {
                 // Pool should remain unchanged
                 assertEquals(10, testCampaign.getPlayerForce().getHumanResources().getTempCrewPool(role));
@@ -187,8 +187,8 @@ public class CampaignNewDayManagerTest {
             processNewDayForRole(PersonnelRole.SOLDIER);
 
             // Assert
-            Campaign campaign = Mockito.verify(testCampaign, Mockito.times(1));
-            campaign.getPlayerForce().getHumanResources().setTempCrewPool(campaign, PersonnelRole.SOLDIER, 0);
+            Mockito.verify(humanResources, Mockito.times(1))
+                  .setTempCrewPool(testCampaign, PersonnelRole.SOLDIER, 0);
             assertEquals(20,
                   testCampaign.getPlayerForce()
                         .getHumanResources()

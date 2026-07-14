@@ -46,6 +46,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static testUtilities.MHQTestUtilities.getEntityForUnitTesting;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +81,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatcher;
+import org.mockito.ArgumentMatchers;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
@@ -133,7 +135,7 @@ public class MRMSServiceTest {
         mockPartInventory = mock(PartInventory.class);
         when(mockPartInventory.getTransitOrderedDetails()).thenReturn("");
 
-        mockCampaign = mock(Campaign.class);
+        mockCampaign = mockCampaign();
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(warehouse);
         when(mockCampaign.getQuartermaster()).thenReturn(mockQuartermaster);
@@ -184,10 +186,10 @@ public class MRMSServiceTest {
         Person mockTech = mock(Person.class);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
-                         mockCampaign.getCampaignOptions(),
-                         mockCampaign.isClanCampaign(),
-                         mockCampaign.getLocalDate(),
+                   .getTechs(any(),
+                         any(),
+                         anyBoolean(),
+                         any(),
                          ArgumentMatchers.anyBoolean())).thenReturn(List.of(mockTech));
         when(mockTech.canTech(unit.getEntity())).thenReturn(true);
         when(mockTech.getSkillLevel(any(Campaign.class), anyBoolean())).thenReturn(SkillLevel.VETERAN);
@@ -273,11 +275,10 @@ public class MRMSServiceTest {
         MRMSService.mrmsUnits(mockCampaign, List.of(), configuredOptions);
 
         verify(mockCampaign, times(1)).addReport(any(), any(String.class));
-        Campaign campaign = verify(mockCampaign, times(0));
-        campaign.getPlayerForce().getHumanResources().getTechs(campaign.getPlayerForce().getHangar().getUnits(),
-              campaign.getCampaignOptions(),
-              campaign.isClanCampaign(),
-              campaign.getLocalDate(),
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(0)).getTechs(any(),
+              any(),
+              anyBoolean(),
+              any(),
               ArgumentMatchers.anyBoolean());
         verify(mockCampaign, times(0)).fixPart(any(IPartWork.class), any(Person.class));
     }
@@ -298,17 +299,17 @@ public class MRMSServiceTest {
         when(mockCampaignOptions.isMRMSUseRepair()).thenReturn(true);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
-                         mockCampaign.getCampaignOptions(),
-                         mockCampaign.isClanCampaign(),
-                         mockCampaign.getLocalDate(),
+                   .getTechs(any(),
+                         any(),
+                         anyBoolean(),
+                         any(),
                          ArgumentMatchers.anyBoolean())).thenReturn(new ArrayList<>());
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
-                         mockCampaign.getCampaignOptions(),
-                         mockCampaign.isClanCampaign(),
-                         mockCampaign.getLocalDate())).thenReturn(new ArrayList<>());
+                   .getTechs(any(),
+                         any(),
+                         anyBoolean(),
+                         any())).thenReturn(new ArrayList<>());
 
         Entity entity = getUrbanMek();
         Unit unit = new Unit(entity, mockCampaign);
@@ -880,10 +881,10 @@ public class MRMSServiceTest {
         Person mockTech = mock(Person.class);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
-                         mockCampaign.getCampaignOptions(),
-                         mockCampaign.isClanCampaign(),
-                         mockCampaign.getLocalDate(),
+                   .getTechs(any(),
+                         any(),
+                         anyBoolean(),
+                         any(),
                          ArgumentMatchers.anyBoolean())).thenReturn(List.of(mockTech));
         when(mockTech.canTech(any(Entity.class))).thenReturn(true);
         when(mockTech.getSkillLevel(any(Campaign.class), anyBoolean())).thenReturn(SkillLevel.VETERAN);
@@ -1017,10 +1018,10 @@ public class MRMSServiceTest {
 
             when(mockCampaign.getPlayerForce()
                        .getHumanResources()
-                       .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
-                             mockCampaign.getCampaignOptions(),
-                             mockCampaign.isClanCampaign(),
-                             mockCampaign.getLocalDate(),
+                       .getTechs(any(),
+                             any(),
+                             anyBoolean(),
+                             any(),
                              ArgumentMatchers.anyBoolean())).thenReturn(realTechs);
 
             unit.getParts()
@@ -1083,10 +1084,10 @@ public class MRMSServiceTest {
             configuredOptions = new MRMSConfiguredOptions(mockCampaign);
             when(mockCampaign.getPlayerForce()
                        .getHumanResources()
-                       .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
-                             mockCampaign.getCampaignOptions(),
-                             mockCampaign.isClanCampaign(),
-                             mockCampaign.getLocalDate(),
+                       .getTechs(any(),
+                             any(),
+                             anyBoolean(),
+                             any(),
                              ArgumentMatchers.anyBoolean())).thenReturn(realTechs);
 
             // Act
@@ -1111,10 +1112,10 @@ public class MRMSServiceTest {
             realTechs.add(realTech);
             when(mockCampaign.getPlayerForce()
                        .getHumanResources()
-                       .getTechs(mockCampaign.getPlayerForce().getHangar().getUnits(),
-                             mockCampaign.getCampaignOptions(),
-                             mockCampaign.isClanCampaign(),
-                             mockCampaign.getLocalDate(),
+                       .getTechs(any(),
+                             any(),
+                             anyBoolean(),
+                             any(),
                              ArgumentMatchers.anyBoolean())).thenReturn(realTechs);
 
             unit.getParts()

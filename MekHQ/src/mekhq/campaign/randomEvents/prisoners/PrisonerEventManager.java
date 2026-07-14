@@ -733,11 +733,24 @@ public class PrisonerEventManager {
                 }
 
                 eventTriggered = true;
-                new PrisonerRansomEvent(campaign, isFriendlyPOWs);
+                triggerRansomEvent(isFriendlyPOWs);
             }
         }
 
         return List.of(eventTriggered, isFriendlyPOWs);
+    }
+
+    /**
+     * Launches the ransom event, which prompts the player through a modal dialog.
+     *
+     * <p>This method exists to assist testing. As it allows us to suppress the dialog without
+     * launching an actual popup.</p>
+     *
+     * @param isFriendlyPOWs {@code true} if the ransom event is for friendly POWs, {@code false} if it's for enemy
+     *                       prisoners.
+     */
+    protected void triggerRansomEvent(boolean isFriendlyPOWs) {
+        new PrisonerRansomEvent(campaign, isFriendlyPOWs);
     }
 
     /**

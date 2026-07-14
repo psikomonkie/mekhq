@@ -100,11 +100,12 @@ public class UnitIOTest {
             mockCampaign = spy(MHQTestUtilities.getTestCampaign());
 
             // Enable blob crew for all roles
-            mekhq.campaign.Campaign campaign = Mockito.doReturn(true).when(mockCampaign);
-            campaign.getPlayerForce()
-                  .getHumanResources()
-                  .isBlobCrewEnabled(ArgumentMatchers.any(mekhq.campaign.personnel.enums.PersonnelRole.class),
-                        campaign.getCampaignOptions());
+            mekhq.campaign.ForceHumanResources spyHumanResources = spy(mockCampaign.getPlayerForce()
+                                                                             .getHumanResources());
+            mockCampaign.getPlayerForce().setHumanResources(spyHumanResources);
+            doReturn(true).when(spyHumanResources)
+                  .isBlobCrewEnabled(any(mekhq.campaign.personnel.enums.PersonnelRole.class),
+                        any(mekhq.campaign.campaignOptions.CampaignOptions.class));
 
             // Mock getEntities() for XML writing
             doReturn(new Vector<>()).when(mockCampaign).getEntities();
@@ -515,11 +516,12 @@ public class UnitIOTest {
             mockCampaign = spy(MHQTestUtilities.getTestCampaign());
 
             // Enable blob crew for all roles
-            mekhq.campaign.Campaign campaign = Mockito.doReturn(true).when(mockCampaign);
-            campaign.getPlayerForce()
-                  .getHumanResources()
-                  .isBlobCrewEnabled(ArgumentMatchers.any(mekhq.campaign.personnel.enums.PersonnelRole.class),
-                        campaign.getCampaignOptions());
+            mekhq.campaign.ForceHumanResources spyHumanResources = spy(mockCampaign.getPlayerForce()
+                                                                             .getHumanResources());
+            mockCampaign.getPlayerForce().setHumanResources(spyHumanResources);
+            doReturn(true).when(spyHumanResources)
+                  .isBlobCrewEnabled(any(mekhq.campaign.personnel.enums.PersonnelRole.class),
+                        any(mekhq.campaign.campaignOptions.CampaignOptions.class));
 
             // Mock getEntities() for XML operations
             doReturn(new Vector<>()).when(mockCampaign).getEntities();

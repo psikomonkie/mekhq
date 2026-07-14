@@ -44,6 +44,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -100,7 +101,7 @@ public class AtBContractTest {
 
     @BeforeEach
     void setup() {
-        campaign = mock(Campaign.class);
+        campaign = mockCampaign();
         options = mock(CampaignOptions.class);
         when(campaign.getCampaignOptions()).thenReturn(options);
         contract = new AtBContract();
@@ -108,7 +109,7 @@ public class AtBContractTest {
 
     @Test
     public void atbContractRestoreDoesNothingWithoutParent() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int childId = 2;
         AtBContract child = new AtBContract();
@@ -126,7 +127,7 @@ public class AtBContractTest {
 
     @Test
     public void atbContractRestoresRefs() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int parentId = 1;
         AtBContract parent = mock(AtBContract.class);
@@ -153,7 +154,7 @@ public class AtBContractTest {
 
     @Test
     public void atbContractRestoreClearsParentIfMissing() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int parentId = 1;
         doReturn(null).when(mockCampaign).getMission(eq(parentId));
@@ -178,7 +179,7 @@ public class AtBContractTest {
 
     @Test
     public void atbContractRestoreClearsParentIfWrongType() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         int parentId = 1;
         Contract parent = mock(Contract.class);
@@ -287,7 +288,7 @@ public class AtBContractTest {
             hangar = new mekhq.campaign.LocalHangar();
 
             mockFaction = mock(Faction.class);
-            mockCampaign = mock(Campaign.class);
+            mockCampaign = mockCampaign();
 
             when(mockCampaign.getFaction()).thenReturn(mockFaction);
             when(mockCampaign.getPlayerForce().getHangar()).thenReturn(hangar);

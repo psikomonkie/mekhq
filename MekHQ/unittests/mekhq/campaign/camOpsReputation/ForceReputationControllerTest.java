@@ -33,9 +33,9 @@
 package mekhq.campaign.camOpsReputation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,7 +65,7 @@ class ForceReputationControllerTest {
     @BeforeEach
     void setUp() {
         reputation = new ForceReputationController();
-        campaign = mock(Campaign.class);
+        campaign = mockCampaign();
         when(campaign.getPlayerForce().getHumanResources()
                    .getCommander(campaign.getCampaignOptions(),
                          campaign.isClanCampaign(),

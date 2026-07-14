@@ -65,6 +65,7 @@ import mekhq.gui.model.PersonnelTableModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import testUtilities.MHQTestUtilities;
 
 public class PersonnelTableModelColumnTest {
     //region Variable Declarations
@@ -177,7 +178,7 @@ public class PersonnelTableModelColumnTest {
         }
 
         private Campaign mockCampaign() {
-            Campaign campaign = mock(Campaign.class);
+            Campaign campaign = MHQTestUtilities.mockCampaign();
             CampaignOptions opts = mock(CampaignOptions.class);
             when(campaign.getLocalDate()).thenReturn(TODAY);
             when(campaign.getName()).thenReturn(CAMPAIGN_NAME);

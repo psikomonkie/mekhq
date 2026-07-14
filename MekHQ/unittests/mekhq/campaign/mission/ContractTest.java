@@ -41,6 +41,7 @@ import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.time.LocalDate;
 
@@ -274,7 +275,7 @@ public class ContractTest {
     }
 
     private void initCampaign(final JumpPath mockJumpPath) {
-        mockCampaign = mock(Campaign.class);
+        mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaignOptions.isUsePeacetimeCost()).thenReturn(true);

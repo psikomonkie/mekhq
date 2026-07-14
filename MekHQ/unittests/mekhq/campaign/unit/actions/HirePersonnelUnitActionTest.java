@@ -32,6 +32,9 @@
  */
 package mekhq.campaign.unit.actions;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
@@ -58,7 +61,7 @@ import org.junit.jupiter.api.Test;
 public class HirePersonnelUnitActionTest {
     @Test
     public void fullUnitTakesNoAction() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -76,22 +79,17 @@ public class HirePersonnelUnitActionTest {
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(0));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(0));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(0)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(0)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
     }
 
     @Test
     public void actionPassesAlongGMSetting() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -115,31 +113,26 @@ public class HirePersonnelUnitActionTest {
               mockDriver);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockDriver),
-                         ArgumentMatchers.eq(true),
-                         ArgumentMatchers.eq(true))).thenReturn(true);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockDriver),
+                         eq(true),
+                         eq(true))).thenReturn(true);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(true);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(true),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(true),
+              eq(true));
         verify(unit, times(1)).addPilotOrSoldier(eq(mockDriver));
     }
 
     @Test
     public void mekNeedingDriverAddsDriver() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -163,31 +156,26 @@ public class HirePersonnelUnitActionTest {
               mockDriver);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockDriver),
-                         ArgumentMatchers.anyBoolean(),
-                         ArgumentMatchers.eq(true))).thenReturn(true);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockDriver),
+                         anyBoolean(),
+                         eq(true))).thenReturn(true);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
         verify(unit, times(1)).addPilotOrSoldier(eq(mockDriver));
     }
 
     @Test
     public void mekDoesntAddDriverIfRecruitFails() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         Entity mockEntity = mock(Mek.class);
         Unit unit = spy(new Unit(mockEntity, mockCampaign));
 
@@ -208,31 +196,26 @@ public class HirePersonnelUnitActionTest {
               mockDriver);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockDriver),
-                         ArgumentMatchers.anyBoolean(),
-                         ArgumentMatchers.eq(true))).thenReturn(false);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockDriver),
+                         anyBoolean(),
+                         eq(true))).thenReturn(false);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
         verify(unit, times(0)).addPilotOrSoldier(eq(mockDriver));
     }
 
     @Test
     public void lamNeedingDriverAddsDriver() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -256,31 +239,26 @@ public class HirePersonnelUnitActionTest {
               mockDriver);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockDriver),
-                         ArgumentMatchers.anyBoolean(),
-                         ArgumentMatchers.eq(true))).thenReturn(true);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockDriver),
+                         anyBoolean(),
+                         eq(true))).thenReturn(true);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.LAM_PILOT);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.LAM_PILOT);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
         verify(unit, times(1)).addPilotOrSoldier(eq(mockDriver));
     }
 
     @Test
     public void mekNeedingGunnerAddsGunner() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -303,31 +281,26 @@ public class HirePersonnelUnitActionTest {
               mockGunner);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockGunner),
-                         ArgumentMatchers.anyBoolean(),
-                         ArgumentMatchers.eq(true))).thenReturn(true);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockGunner),
+                         anyBoolean(),
+                         eq(true))).thenReturn(true);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
         verify(unit, times(1)).addGunner(eq(mockGunner));
     }
 
     @Test
     public void tankNeedingGunnerAddsGunner() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -351,31 +324,26 @@ public class HirePersonnelUnitActionTest {
                          mekhq.campaign.personnel.enums.PersonnelRole.VEHICLE_CREW_GROUND)).thenReturn(mockGunner);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockGunner),
-                         ArgumentMatchers.anyBoolean(),
-                         ArgumentMatchers.eq(true))).thenReturn(true);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockGunner),
+                         anyBoolean(),
+                         eq(true))).thenReturn(true);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.VEHICLE_CREW_GROUND);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.VEHICLE_CREW_GROUND);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
         verify(unit, times(1)).addGunner(eq(mockGunner));
     }
 
     @Test
     public void spaceShipNeedingGunnerAddsGunner() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -398,31 +366,26 @@ public class HirePersonnelUnitActionTest {
               mockGunner);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockGunner),
-                         ArgumentMatchers.anyBoolean(),
-                         ArgumentMatchers.eq(true))).thenReturn(true);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockGunner),
+                         anyBoolean(),
+                         eq(true))).thenReturn(true);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.VESSEL_GUNNER);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.VESSEL_GUNNER);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
         verify(unit, times(1)).addGunner(eq(mockGunner));
     }
 
     @Test
     public void smallCraftNeedingGunnerAddsGunner() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -445,31 +408,26 @@ public class HirePersonnelUnitActionTest {
               mockGunner);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockGunner),
-                         ArgumentMatchers.anyBoolean(),
-                         ArgumentMatchers.eq(true))).thenReturn(true);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockGunner),
+                         anyBoolean(),
+                         eq(true))).thenReturn(true);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.VESSEL_GUNNER);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.VESSEL_GUNNER);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
         verify(unit, times(1)).addGunner(eq(mockGunner));
     }
 
     @Test
     public void spaceShipNeedingCrewAddsCrew() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -494,31 +452,26 @@ public class HirePersonnelUnitActionTest {
               mockCrew);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockCrew),
-                         ArgumentMatchers.anyBoolean(),
-                         ArgumentMatchers.eq(true))).thenReturn(true);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockCrew),
+                         anyBoolean(),
+                         eq(true))).thenReturn(true);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.VESSEL_CREW);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.VESSEL_CREW);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
         verify(unit, times(1)).addVesselCrew(eq(mockCrew));
     }
 
     @Test
     public void supportVehicleNeedingCrewAddsCrew() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -539,36 +492,31 @@ public class HirePersonnelUnitActionTest {
         doNothing().when(unit).addVesselCrew(eq(mockCrew));
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .newPerson(mockCampaign,
-                         ArgumentMatchers.any(mekhq.campaign.personnel.enums.PersonnelRole.class))).thenReturn(
+                   .newPerson(eq(mockCampaign),
+                         any(mekhq.campaign.personnel.enums.PersonnelRole.class))).thenReturn(
               mockCrew);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockCrew),
-                         ArgumentMatchers.anyBoolean(),
-                         ArgumentMatchers.eq(true))).thenReturn(true);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockCrew),
+                         anyBoolean(),
+                         eq(true))).thenReturn(true);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.VEHICLE_CREW_GROUND);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.VEHICLE_CREW_GROUND);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
         verify(unit, times(1)).addVesselCrew(eq(mockCrew));
     }
 
     @Test
     public void spaceShipNeedingNavigatorAddsNavigator() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -592,31 +540,26 @@ public class HirePersonnelUnitActionTest {
                          mekhq.campaign.personnel.enums.PersonnelRole.VESSEL_NAVIGATOR)).thenReturn(mockNavigator);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockNavigator),
-                         ArgumentMatchers.anyBoolean(),
-                         ArgumentMatchers.eq(true))).thenReturn(true);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockNavigator),
+                         anyBoolean(),
+                         eq(true))).thenReturn(true);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.VESSEL_NAVIGATOR);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.VESSEL_NAVIGATOR);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
         verify(unit, times(1)).setNavigator(eq(mockNavigator));
     }
 
     @Test
     public void mekNeedingTechOfficerAddsTechOfficer() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -639,31 +582,26 @@ public class HirePersonnelUnitActionTest {
               mockTechOfficer);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockTechOfficer),
-                         ArgumentMatchers.anyBoolean(),
-                         ArgumentMatchers.eq(true))).thenReturn(true);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockTechOfficer),
+                         anyBoolean(),
+                         eq(true))).thenReturn(true);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.MEKWARRIOR);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
         verify(unit, times(1)).setTechOfficer(eq(mockTechOfficer));
     }
 
     @Test
     public void tankNeedingTechOfficerAddsTechOfficer() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mock(Campaign.class, RETURNS_DEEP_STUBS);
         CampaignOptions mockOptions = mock(CampaignOptions.class);
         doReturn(mockOptions).when(mockCampaign).getCampaignOptions();
         doReturn(false).when(mockOptions).isUseArtillery();
@@ -688,25 +626,20 @@ public class HirePersonnelUnitActionTest {
               mockTechOfficer);
         when(mockCampaign.getPlayerForce()
                    .getHumanResources()
-                   .recruitPerson(mockCampaign,
-                         ArgumentMatchers.eq(mockTechOfficer),
-                         ArgumentMatchers.anyBoolean(),
-                         ArgumentMatchers.eq(true))).thenReturn(true);
+                   .recruitPerson(eq(mockCampaign),
+                         eq(mockTechOfficer),
+                         anyBoolean(),
+                         eq(true))).thenReturn(true);
 
         HirePersonnelUnitAction action = new HirePersonnelUnitAction(false);
         action.execute(mockCampaign, unit);
 
-        mekhq.campaign.Campaign campaign = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign.getPlayerForce()
-              .getHumanResources()
-              .newPerson(campaign, mekhq.campaign.personnel.enums.PersonnelRole.VEHICLE_CREW_GROUND);
-        Campaign campaign1 = Mockito.verify(mockCampaign, Mockito.times(1));
-        campaign1.getPlayerForce()
-              .getHumanResources()
-              .recruitPerson(campaign1,
-                    ArgumentMatchers.any(Person.class),
-                    ArgumentMatchers.eq(false),
-                    ArgumentMatchers.eq(true));
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).newPerson(mockCampaign,
+              mekhq.campaign.personnel.enums.PersonnelRole.VEHICLE_CREW_GROUND);
+        verify(mockCampaign.getPlayerForce().getHumanResources(), times(1)).recruitPerson(eq(mockCampaign),
+              any(Person.class),
+              eq(false),
+              eq(true));
         verify(unit, times(1)).setTechOfficer(eq(mockTechOfficer));
     }
 }

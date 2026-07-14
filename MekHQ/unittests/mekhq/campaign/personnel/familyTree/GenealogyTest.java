@@ -43,6 +43,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -93,7 +94,7 @@ public class GenealogyTest {
 
     @BeforeAll
     public static void createFamilyTree() {
-        mockCampaign = mock(Campaign.class);
+        mockCampaign = mockCampaign();
         Faction campaignFaction = mock(Faction.class);
         when(campaignFaction.isMercenary()).thenReturn(true);
         when(mockCampaign.getFaction()).thenReturn(campaignFaction);
@@ -707,11 +708,9 @@ public class GenealogyTest {
     @Test
     public void testGenerateInstanceFromXMLWithMultipleFamilyRelationships() throws Exception {
         final Person parent = new Person(mockCampaign);
-        final java.util.UUID id1 = ArgumentMatchers.argThat(PersonnelTestUtilities.matchPersonUUID(parent.getId()));
-        given(mockCampaign.getPlayerForce().getHumanResources().getPerson(id1)).willReturn(parent);
+        given(mockCampaign.getPerson(argThat(matchPersonUUID(parent.getId())))).willReturn(parent);
         final Person child = new Person(mockCampaign);
-        final java.util.UUID id = ArgumentMatchers.argThat(PersonnelTestUtilities.matchPersonUUID(child.getId()));
-        given(mockCampaign.getPlayerForce().getHumanResources().getPerson(id)).willReturn(child);
+        given(mockCampaign.getPerson(argThat(matchPersonUUID(child.getId())))).willReturn(child);
 
         final String text = String.format(
               "<genealogy><family>"

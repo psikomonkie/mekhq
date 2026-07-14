@@ -38,11 +38,13 @@ import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -94,7 +96,7 @@ class EducationControllerTest {
     }
 
     Campaign buildMinimalCampaignMock() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         when(campaign.getLocalDate()).thenReturn(LocalDate.of(3025, 1, 1));
 
         CampaignOptions options = mock(CampaignOptions.class);
@@ -117,7 +119,7 @@ class EducationControllerTest {
 
         when(campaign.getCampaignLocationManager()).thenReturn(mock(CampaignLocationManager.class));
 
-        PlayerForce playerForce = mock(PlayerForce.class);
+        PlayerForce playerForce = mock(PlayerForce.class, RETURNS_DEEP_STUBS);
         when(campaign.getPlayerForce()).thenReturn(playerForce);
         when(playerForce.getForceDetachment()).thenReturn(mock(Detachment.class));
 
@@ -144,8 +146,8 @@ class EducationControllerTest {
             person.setEduAcademyNameInSet(ACADEMY_NAME);
             person.setEduAcademySystem("TestSystem");
             person.setEduEducationStage(EducationStage.JOURNEY_TO_CAMPUS);
-            campaign = mock(Campaign.class);
-            PlayerForce playerForce = mock(PlayerForce.class);
+            campaign = mockCampaign();
+            PlayerForce playerForce = mock(PlayerForce.class, RETURNS_DEEP_STUBS);
             when(campaign.getPlayerForce()).thenReturn(playerForce);
             when(playerForce.getForceDetachment()).thenReturn(mock(Detachment.class));
             when(campaign.getCampaignLocationManager()).thenReturn(mock(CampaignLocationManager.class));
@@ -243,8 +245,8 @@ class EducationControllerTest {
             person.setEduAcademySystem("TestSystem");
 
             destSystem = mock(PlanetarySystem.class);
-            campaign = mock(Campaign.class);
-            PlayerForce playerForce = mock(PlayerForce.class);
+            campaign = mockCampaign();
+            PlayerForce playerForce = mock(PlayerForce.class, RETURNS_DEEP_STUBS);
             when(campaign.getPlayerForce()).thenReturn(playerForce);
             when(playerForce.getForceDetachment()).thenReturn(mock(Detachment.class));
             when(campaign.getCampaignLocationManager()).thenReturn(mock(CampaignLocationManager.class));

@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -85,7 +86,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodAndHousingExpenses_WhenFoodAndHousingDisabled() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -95,7 +96,8 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(java.util.List.of());
 
         // Act
         Money expected = Money.zero();
@@ -108,7 +110,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodAndHousingExpenses_WhenNoPersonnel() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -118,7 +120,8 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getHumanResources().getPersonnel()).thenReturn(java.util.List.of());
 
         // Act
         Money expected = Money.zero();
@@ -131,7 +134,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodAndHousingExpenses_WhenOnlyPrisoners() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -141,7 +144,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -164,7 +167,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyHousingExpenses_WhenOnlyPrisoners() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -174,7 +177,7 @@ public class AccountantTest {
         Accountant accountant = new Accountant(mockCampaign);
 
         CurrentLocation location = new CurrentLocation();
-        when(mockCampaign.getCurrentLocation()).thenReturn(location);
+        when(mockCampaign.getPlayerForce().getForceDetachment().getCurrentLocation()).thenReturn(location);
 
         Faction faction = new Faction();
         when(mockCampaign.getFaction()).thenReturn(faction);
@@ -196,7 +199,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodExpenses_WhenOnlyPrisoners() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -228,7 +231,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodAndHousingExpenses_WhenOnlyDependents() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -261,7 +264,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyHousingExpenses_WhenOnlyDependents() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -293,7 +296,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodExpenses_WhenOnlyDependents() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -325,7 +328,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodAndHousingExpenses_WhenOnlyEnlisted() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -359,7 +362,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyHousingExpenses_WhenOnlyEnlisted() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -392,7 +395,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodExpenses_WhenOnlyEnlisted() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -425,7 +428,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodAndHousingExpenses_WhenOnlyOfficers() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -459,7 +462,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyHousingExpenses_WhenOnlyOfficers() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -492,7 +495,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodExpenses_WhenOnlyOfficers() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -525,7 +528,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodAndHousingExpenses_Mixed() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -584,7 +587,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyHousingExpenses_Mixed() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -639,7 +642,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodExpenses_Mixed() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -694,7 +697,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodAndHousingExpenses_Mixed_InTransit() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -752,7 +755,7 @@ public class AccountantTest {
     @Test
     void testGetMonthlyFoodAndHousingExpenses_Mixed_ExcludingWarShipCrew() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -824,7 +827,7 @@ public class AccountantTest {
 
     @Test
     void testGetMonthlyFoodAndHousingExpenses_UsesContractBasedFactionStandingBarrackMultiplier() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -869,7 +872,7 @@ public class AccountantTest {
 
     @Test
     void testGetMonthlyFoodAndHousingExpenses_FallsBackToLocalFactionsWhenNoMatchingContract() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         CampaignOptions mockCampaignOptions = mock(CampaignOptions.class);
         when(mockCampaign.getCampaignOptions()).thenReturn(mockCampaignOptions);
@@ -928,7 +931,7 @@ public class AccountantTest {
 
         @BeforeEach
         void beforeEach() {
-            mockCampaign = mock(Campaign.class);
+            mockCampaign = mockCampaign();
             mockHumanResources = mock(mekhq.campaign.ForceHumanResources.class);
             campaignOptions = new CampaignOptions();
             accountant = new Accountant(mockCampaign);
@@ -1425,7 +1428,7 @@ public class AccountantTest {
 
         @BeforeEach
         void beforeEach() {
-            mockCampaign = mock(Campaign.class);
+            mockCampaign = mockCampaign();
             // A real CampaignOptions is used (rather than a mock) so that unrelated lookups such as
             // getRoleBaseSalaries() - consulted internally while totaling temporary crew pay - resolve to
             // real, non-null values instead of requiring exhaustive stubbing.
@@ -1752,7 +1755,7 @@ public class AccountantTest {
 
         @BeforeEach
         void beforeEach() {
-            mockCampaign = mock(Campaign.class);
+            mockCampaign = mockCampaign();
             when(mockCampaign.getFaction()).thenReturn(new Faction());
         }
 
@@ -2404,7 +2407,7 @@ public class AccountantTest {
 
         @BeforeEach
         void beforeEach() {
-            mockCampaign = mock(Campaign.class);
+            mockCampaign = mockCampaign();
             campaignOptions = new CampaignOptions();
             mockHangar = mock(LocalHangar.class);
             accountant = new Accountant(mockCampaign);

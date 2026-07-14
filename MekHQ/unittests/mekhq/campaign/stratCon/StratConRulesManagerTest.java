@@ -93,6 +93,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
+import testUtilities.MHQTestUtilities;
 
 /**
  * Tests for {@link StratConRulesManager}
@@ -149,7 +150,7 @@ class StratConRulesManagerTest {
 
     @Test
     void initializeObjectiveScenarios_skipsMissingTemplateWithoutAddingObjective() throws Exception {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = MHQTestUtilities.mockCampaign();
         AtBContract contract = mock(AtBContract.class);
         StratConTrackState track = new StratConTrackState();
         track.setWidth(1);
@@ -163,7 +164,7 @@ class StratConRulesManagerTest {
 
     @Test
     void initializeObjectiveScenarios_doesNotAddObjectiveWhenScenarioGenerationFails() throws Exception {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = MHQTestUtilities.mockCampaign();
         AtBContract contract = mock(AtBContract.class);
         StratConTrackState track = new StratConTrackState();
         track.setWidth(1);
@@ -226,7 +227,7 @@ class StratConRulesManagerTest {
 
     @Test
     void setupScenario_existingFacilitySkipsGenerationWhenFacilityTemplateMissing() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = MHQTestUtilities.mockCampaign();
         AtBContract contract = mock(AtBContract.class);
         StratConTrackState track = new StratConTrackState();
         StratConCoords coords = new StratConCoords(2, 6);
@@ -305,7 +306,7 @@ class StratConRulesManagerTest {
      */
     @Test
     void officialChallenge_deployToCoordsDoesNotAutoAssign_assignForceToScenarioCommits() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = MHQTestUtilities.mockCampaign();
         CampaignOptions options = mock(CampaignOptions.class);
         when(campaign.getCampaignOptions()).thenReturn(options);
 
@@ -352,7 +353,7 @@ class StratConRulesManagerTest {
      */
     @Test
     void deployForceToCoords_nonChallengeScenario_autoAssignsForce() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = MHQTestUtilities.mockCampaign();
         CampaignOptions options = mock(CampaignOptions.class);
         when(campaign.getCampaignOptions()).thenReturn(options);
 
@@ -404,7 +405,7 @@ class StratConRulesManagerTest {
      * @param explored whether the target hex has already been revealed (an explored hex is never an ambush)
      */
     private AmbushFixture buildAmbushFixture(boolean isPatrol, boolean explored) {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = MHQTestUtilities.mockCampaign();
         CampaignOptions options = mock(CampaignOptions.class);
         when(campaign.getCampaignOptions()).thenReturn(options);
 
@@ -546,7 +547,7 @@ class StratConRulesManagerTest {
      */
     @Test
     void assignForceToScenario_nonChallengeScenario_commitsSelectedForce() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = MHQTestUtilities.mockCampaign();
         CampaignOptions options = mock(CampaignOptions.class);
         when(campaign.getCampaignOptions()).thenReturn(options);
 
@@ -595,7 +596,7 @@ class StratConRulesManagerTest {
      */
     @Test
     void generateScenarioForExistingForces_officialChallenge_doesNotOverrideAutoAssignment() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = MHQTestUtilities.mockCampaign();
         CampaignOptions options = mock(CampaignOptions.class);
         when(campaign.getCampaignOptions()).thenReturn(options);
         when(options.isUseStratConMaplessMode()).thenReturn(false);
@@ -637,7 +638,7 @@ class StratConRulesManagerTest {
      */
     @Test
     void generateScenarioForExistingForces_nonChallenge_overridesAutoAssignment() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = MHQTestUtilities.mockCampaign();
         CampaignOptions options = mock(CampaignOptions.class);
         when(campaign.getCampaignOptions()).thenReturn(options);
         when(options.isUseStratConMaplessMode()).thenReturn(false);
@@ -705,7 +706,7 @@ class StratConRulesManagerTest {
         CampaignOptions options = mock(CampaignOptions.class);
         when(options.isUseDropShips()).thenReturn(isUseDropShips);
 
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = MHQTestUtilities.mockCampaign();
         when(campaign.getCampaignOptions()).thenReturn(options);
         when(campaign.getLocalDate()).thenReturn(LocalDate.of(3025, 1, 15));
 
@@ -876,14 +877,14 @@ class StratConRulesManagerTest {
             assertEquals(0, modifiers.get(3).value());  // SPA
         }
 
-        @Test
-        void testBuildScoutMap_NullFormation() {
-            List<ScoutRecord> scouts =
-                  StratConRulesManager.buildScoutMap(null,
-                        mock(mekhq.campaign.LocalHangar.class),
-                        mock(Campaign.class));
-            assertNotNull(scouts);
-            assertTrue(scouts.isEmpty());
+        private static Campaign mockCampaign(boolean useAgingEffects, boolean isClanCampaign) {
+            Campaign campaign = MHQTestUtilities.mockCampaign();
+            when(campaign.isClanCampaign()).thenReturn(isClanCampaign);
+            when(campaign.getLocalDate()).thenReturn(LocalDate.now());
+            CampaignOptions campaignOptions = mock(CampaignOptions.class);
+            when(campaignOptions.isUseAgeEffects()).thenReturn(useAgingEffects);
+            when(campaign.getCampaignOptions()).thenReturn(campaignOptions);
+            return campaign;
         }
 
         @Test
@@ -997,15 +998,12 @@ class StratConRulesManagerTest {
         }
 
         @Test
-        void testBuildScoutMap_EmptyCrewSkipsUnit() {
-            Formation formation = mock(Formation.class);
-            mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
-            Unit unit = mock(Unit.class);
-
-            when(formation.getAllUnitsAsUnits(hangar, false)).thenReturn(Collections.singletonList(unit));
-            when(unit.getCrew()).thenReturn(new ArrayList<>());
-
-            List<ScoutRecord> scouts = StratConRulesManager.buildScoutMap(formation, hangar, mock(Campaign.class));
+        void testBuildScoutMap_NullFormation() {
+            List<ScoutRecord> scouts =
+                  StratConRulesManager.buildScoutMap(null,
+                        mock(mekhq.campaign.LocalHangar.class),
+                        MHQTestUtilities.mockCampaign());
+            assertNotNull(scouts);
             assertTrue(scouts.isEmpty());
         }
 
@@ -1022,14 +1020,19 @@ class StratConRulesManagerTest {
             return spy(person);
         }
 
-        private static Campaign mockCampaign(boolean useAgingEffects, boolean isClanCampaign) {
-            Campaign campaign = mock(Campaign.class);
-            when(campaign.isClanCampaign()).thenReturn(isClanCampaign);
-            when(campaign.getLocalDate()).thenReturn(LocalDate.now());
-            CampaignOptions campaignOptions = mock(CampaignOptions.class);
-            when(campaignOptions.isUseAgeEffects()).thenReturn(useAgingEffects);
-            when(campaign.getCampaignOptions()).thenReturn(campaignOptions);
-            return campaign;
+        @Test
+        void testBuildScoutMap_EmptyCrewSkipsUnit() {
+            Formation formation = mock(Formation.class);
+            mekhq.campaign.LocalHangar hangar = mock(mekhq.campaign.LocalHangar.class);
+            Unit unit = mock(Unit.class);
+
+            when(formation.getAllUnitsAsUnits(hangar, false)).thenReturn(Collections.singletonList(unit));
+            when(unit.getCrew()).thenReturn(new ArrayList<>());
+
+            List<ScoutRecord> scouts = StratConRulesManager.buildScoutMap(formation,
+                  hangar,
+                  MHQTestUtilities.mockCampaign());
+            assertTrue(scouts.isEmpty());
         }
 
         private ScoutRecord getBestScoutForUnit(List<Person> crew, double unitWeight, int unitSpeed,

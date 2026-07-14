@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.ResourceBundle;
 
@@ -50,6 +51,7 @@ import mekhq.campaign.universe.companyGeneration.CompanyGenerationOptions;
 import mekhq.campaign.universe.generators.companyGenerators.AtBCompanyGenerator;
 import mekhq.campaign.universe.generators.companyGenerators.WindchildCompanyGenerator;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 
 class CompanyGenerationMethodTest {
     // region Variable Declarations
@@ -95,9 +97,9 @@ class CompanyGenerationMethodTest {
 
     @Test
     void testGetGenerator() {
-        final Campaign mockCampaign = mock(Campaign.class);
+        final Campaign mockCampaign = mockCampaign();
         when(mockCampaign.getPlayerForce().getHumanResources()
-                   .getPersonnelGenerator(mockCampaign.getCampaignOptions(),
+                   .getPersonnelGenerator(ArgumentMatchers.any(),
                          ArgumentMatchers.any(),
                          ArgumentMatchers.any())).thenReturn(mock(AbstractPersonnelGenerator.class));
         when(mockCampaign.getRandomSkillPreferences()).thenReturn(mock(RandomSkillPreferences.class));

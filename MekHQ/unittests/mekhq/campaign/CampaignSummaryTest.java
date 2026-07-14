@@ -35,6 +35,7 @@ package mekhq.campaign;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.List;
 
@@ -59,7 +60,7 @@ class CampaignSummaryTest {
     }
 
     private static Campaign campaignWithEmptySummaryInputs() {
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         LocalHangar hangar = mock(LocalHangar.class);
         CargoStatistics cargoStatistics = mock(CargoStatistics.class);
 

@@ -52,6 +52,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static testUtilities.MHQTestUtilities.TEST_CANON_SYSTEMS_DIR;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -75,6 +76,7 @@ import mekhq.campaign.enums.CampaignTransportType;
 import mekhq.campaign.personnel.Person;
 import mekhq.campaign.personnel.enums.PersonnelRole;
 import mekhq.campaign.personnel.enums.PersonnelStatus;
+import mekhq.campaign.personnel.ranks.Ranks;
 import mekhq.campaign.unit.AbstractTransportedUnitsSummary;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.PlanetarySystem;
@@ -86,6 +88,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentMatchers;
 import testUtilities.MHQTestUtilities;
 
 /**
@@ -99,6 +102,7 @@ public class CampaignTest {
     @BeforeAll
     public static void setup() {
         EquipmentType.initializeTypes();
+        Ranks.initializeRankSystems();
     }
 
     @BeforeEach
@@ -198,13 +202,13 @@ public class CampaignTest {
         LocalDate today = LocalDate.of(3067, 1, 1);
         List<Unit> noUnits = List.of();
 
-        Campaign testCampaign = mock(Campaign.class);
+        Campaign testCampaign = mockCampaign();
         when(testCampaign.getPlayerForce()
                    .getHumanResources()
-                   .getTechs(testCampaign.getPlayerForce().getHangar().getUnits(),
-                         testCampaign.getCampaignOptions(),
-                         testCampaign.isClanCampaign(),
-                         testCampaign.getLocalDate())).thenAnswer(inv ->
+                   .getTechs(ArgumentMatchers.any(),
+                         ArgumentMatchers.any(),
+                         ArgumentMatchers.anyBoolean(),
+                         ArgumentMatchers.any())).thenAnswer(inv ->
                                                          ForceHumanResources.getTechsExpanded(testActivePersonList,
                                                                  noUnits,
                                                                  campaignOptions,
@@ -215,10 +219,10 @@ public class CampaignTest {
                                                                  false));
         when(testCampaign.getPlayerForce()
                    .getHumanResources()
-                   .getTechs(testCampaign.getPlayerForce().getHangar().getUnits(),
-                         testCampaign.getCampaignOptions(),
-                         testCampaign.isClanCampaign(),
-                         testCampaign.getLocalDate(),
+                   .getTechs(ArgumentMatchers.any(),
+                         ArgumentMatchers.any(),
+                         ArgumentMatchers.anyBoolean(),
+                         ArgumentMatchers.any(),
                          ArgumentMatchers.anyBoolean())).thenAnswer(inv ->
                                                                      ForceHumanResources.getTechsExpanded(
                                                                              testActivePersonList,
@@ -226,15 +230,15 @@ public class CampaignTest {
                                                                              campaignOptions,
                                                                              false,
                                                                              today,
-                                                                             (boolean) inv.getArgument(0),
+                                                                           (boolean) inv.getArgument(4),
                                                                              false,
                                                                              false));
         when(testCampaign.getPlayerForce()
                    .getHumanResources()
-                   .getTechs(testCampaign.getPlayerForce().getHangar().getUnits(),
-                         testCampaign.getCampaignOptions(),
-                         testCampaign.isClanCampaign(),
-                         testCampaign.getLocalDate(),
+                   .getTechs(ArgumentMatchers.any(),
+                         ArgumentMatchers.any(),
+                         ArgumentMatchers.anyBoolean(),
+                         ArgumentMatchers.any(),
                          ArgumentMatchers.anyBoolean(),
                          ArgumentMatchers.anyBoolean())).thenAnswer(inv ->
                                                                                    ForceHumanResources.getTechsExpanded(
@@ -243,15 +247,15 @@ public class CampaignTest {
                                                                                            campaignOptions,
                                                                                            false,
                                                                                            today,
-                                                                                           (boolean) inv.getArgument(0),
-                                                                                           (boolean) inv.getArgument(1),
+                                                                                         (boolean) inv.getArgument(4),
+                                                                                         (boolean) inv.getArgument(5),
                                                                                            false));
         when(testCampaign.getPlayerForce()
                    .getHumanResources()
-                   .getTechsExpanded(testCampaign.getPlayerForce().getHangar().getUnits(),
-                         testCampaign.getCampaignOptions(),
-                         testCampaign.isClanCampaign(),
-                         testCampaign.getLocalDate(),
+                   .getTechsExpanded(ArgumentMatchers.any(),
+                         ArgumentMatchers.any(),
+                         ArgumentMatchers.anyBoolean(),
+                         ArgumentMatchers.any(),
                          ArgumentMatchers.anyBoolean(),
                          ArgumentMatchers.anyBoolean(),
                          ArgumentMatchers.anyBoolean())).thenAnswer(inv ->
@@ -261,12 +265,12 @@ public class CampaignTest {
                                                                                                                  campaignOptions,
                                                                                                                  false,
                                                                                                                  today,
-                                                                                                                 (boolean) inv.getArgument(
-                                                                                                                         0),
-                                                                                                                 (boolean) inv.getArgument(
-                                                                                                                         1),
-                                                                                                                 (boolean) inv.getArgument(
-                                                                                                                         2)));
+                                                                                                               (boolean) inv.getArgument(
+                                                                                                                     4),
+                                                                                                               (boolean) inv.getArgument(
+                                                                                                                     5),
+                                                                                                               (boolean) inv.getArgument(
+                                                                                                                     6)));
 
         // Test just getting the list of active techs.
         List<Person> expected = new ArrayList<>(3);
@@ -461,7 +465,7 @@ public class CampaignTest {
     @Test
     void getTechAvailabilityYearsRespectsLimitByYear() {
         CampaignOptions options = mock(CampaignOptions.class);
-        Campaign campaign = mock(Campaign.class);
+        Campaign campaign = mockCampaign();
         when(campaign.getCampaignOptions()).thenReturn(options);
         when(campaign.getGameYear()).thenReturn(3025);
         when(campaign.getTechIntroYear()).thenCallRealMethod();

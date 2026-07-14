@@ -43,6 +43,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.util.List;
 import java.util.UUID;
@@ -151,7 +152,7 @@ public class PartTest {
 
     @Test
     public void decrementQuantity() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
@@ -178,7 +179,7 @@ public class PartTest {
 
     @Test
     public void decrementQuantityDoesNotGoNegative() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
@@ -199,7 +200,7 @@ public class PartTest {
 
     @Test
     public void decrementQuantityZeroRemovesChildParts() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
@@ -227,7 +228,7 @@ public class PartTest {
 
     @Test
     public void setQuantity() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
@@ -249,7 +250,7 @@ public class PartTest {
 
     @Test
     public void setNegativeQuantity() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
@@ -271,7 +272,7 @@ public class PartTest {
 
     @Test
     public void setQuantityZeroRemovesChildParts() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         LocalWarehouse mockWarehouse = mock(LocalWarehouse.class);
         when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(mockWarehouse);
         Part part = new MekLocation();
@@ -359,7 +360,7 @@ public class PartTest {
 
     @Test
     public void childParts() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Part part = new MekLocation();
         part.setCampaign(mockCampaign);
 
@@ -421,7 +422,7 @@ public class PartTest {
 
     @Test
     public void testTransportBayPartNameNoEntity() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         int size = 1000;
         TransportBayPart tbp = new TransportBayPart(size, 1, size, mockCampaign);
         // Should return default name, _not_ throw NPE here
@@ -460,7 +461,7 @@ public class PartTest {
     class WarehouseLocalization {
         @Test
         void getWarehouse_sparePartInCampaignWarehouse_returnsCampaignWarehouse() {
-            Campaign mockCampaign = mock(Campaign.class);
+            Campaign mockCampaign = mockCampaign();
             LocalWarehouse campaignWarehouse = new LocalWarehouse();
             when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(campaignWarehouse);
 
@@ -473,7 +474,7 @@ public class PartTest {
 
         @Test
         void getWarehouse_sparePartInBaseWarehouse_returnsBaseWarehouse() {
-            Campaign mockCampaign = mock(Campaign.class);
+            Campaign mockCampaign = mockCampaign();
             LocalWarehouse campaignWarehouse = new LocalWarehouse();
             when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(campaignWarehouse);
 
@@ -488,7 +489,7 @@ public class PartTest {
 
         @Test
         void getWarehouse_partOnUnitAtBase_returnsBaseWarehouse() {
-            Campaign mockCampaign = mock(Campaign.class);
+            Campaign mockCampaign = mockCampaign();
             LocalWarehouse campaignWarehouse = new LocalWarehouse();
             when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(campaignWarehouse);
 
@@ -513,7 +514,7 @@ public class PartTest {
 
         @Test
         void getWarehouse_partOnMainForceUnit_returnsCampaignWarehouse() {
-            Campaign mockCampaign = mock(Campaign.class);
+            Campaign mockCampaign = mockCampaign();
             LocalWarehouse campaignWarehouse = new LocalWarehouse();
             when(mockCampaign.getPlayerForce().getWarehouse()).thenReturn(campaignWarehouse);
 

@@ -45,6 +45,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -122,7 +123,7 @@ class AtbMonthlyContractMarketTest {
         private static final String REACHABLE_TARGET_ID = "REACHABLE_TARGET";
         private static final String INTERMEDIATE_SYSTEM_ID = "INTERMEDIATE";
 
-        private final Campaign campaign = mock(Campaign.class);
+        private final Campaign campaign = mockCampaign();
         private final Faction employerFaction = mockFaction(EMPLOYER_CODE, "Contract Employer");
         private final Faction enemyFaction = mockFaction(ENEMY_CODE, "Contract Enemy");
         private final PlanetarySystem currentSystem = mockSystem(CURRENT_SYSTEM_ID);

@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.time.LocalDate;
 
@@ -176,7 +177,7 @@ class ExtraIncomeTest {
 
     @Test
     void testProcessExtraIncome_zeroExtraIncome_returnsEmptyString() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
@@ -193,7 +194,7 @@ class ExtraIncomeTest {
 
     @Test
     void testProcessExtraIncome_isChild_isNotCommander_returnsEmptyString() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
@@ -211,7 +212,7 @@ class ExtraIncomeTest {
 
     @Test
     void testProcessExtraIncome_isNotFirstOfMonth_returnsEmptyString() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
@@ -230,7 +231,7 @@ class ExtraIncomeTest {
 
     @Test
     void testProcessExtraIncome_isChild_isCommander_returnsNotEmptyString() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
@@ -249,7 +250,7 @@ class ExtraIncomeTest {
 
     @Test
     void testProcessExtraIncome_isAdult_isNotCommander_returnsEmptyString() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
@@ -267,7 +268,7 @@ class ExtraIncomeTest {
 
     @Test
     void testProcessExtraIncome_isAdult_isCommander_returnsNotEmptyString() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
@@ -286,7 +287,7 @@ class ExtraIncomeTest {
 
     @Test
     void testProcessExtraIncome_isChild_isNotCommander_noFinancialChange() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
@@ -315,7 +316,7 @@ class ExtraIncomeTest {
 
     @Test
     void testProcessExtraIncome_isChild_isCommander_campaignFinancesChangeOnly() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
@@ -345,7 +346,7 @@ class ExtraIncomeTest {
 
     @Test
     void testProcessExtraIncome_isAdult_isNotCommander_personalFinancesChangeOnly() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
@@ -374,7 +375,7 @@ class ExtraIncomeTest {
 
     @Test
     void testProcessExtraIncome_isAdult_isCommander_personalFinancesChangeOnly() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 
@@ -404,7 +405,7 @@ class ExtraIncomeTest {
 
     @Test
     void testProcessExtraIncome_isAdult_isCommander_negativeExtraIncome() {
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Finances finances = new Finances();
 

@@ -36,6 +36,7 @@ import static mekhq.gui.dialog.nagDialogs.nagLogic.UnableToAffordExpensesNagLogi
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.LocalWarehouse;
@@ -66,7 +67,7 @@ class UnableToAffordExpensesNagLogicTest {
     @BeforeEach
     void init() {
         // Initialize the mock objects
-        campaign = mock(Campaign.class);
+        campaign = mockCampaign();
         CampaignOptions campaignOptions = mock(CampaignOptions.class);
 
         Finances finances = mock(Finances.class);
