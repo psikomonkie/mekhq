@@ -45,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -84,7 +85,7 @@ class CapturePrisonersTest {
     @Test
     void testCapturePrisoners_Ground() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Scenario scenario = new Scenario();
         LocalDate today = LocalDate.of(3151, 1, 1);
@@ -113,7 +114,7 @@ class CapturePrisonersTest {
     @Test
     void testCapturePrisoners_Ground_ActiveProbe() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Scenario scenario = new Scenario();
         LocalDate today = LocalDate.of(3151, 1, 1);
@@ -143,7 +144,7 @@ class CapturePrisonersTest {
     @Test
     void testCapturePrisoners_Ground_ImprovedSensors() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
         Scenario scenario = new Scenario();
         LocalDate today = LocalDate.of(3151, 1, 1);
@@ -173,7 +174,7 @@ class CapturePrisonersTest {
     @Test
     void testCapturePrisoners_Space() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
 
         Scenario scenario = new Scenario();
@@ -201,7 +202,7 @@ class CapturePrisonersTest {
     @Test
     void testAttemptCaptureOfNPC_PickedUp() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
 
         Scenario scenario = new Scenario();
@@ -222,7 +223,7 @@ class CapturePrisonersTest {
     @Test
     void testAttemptCaptureOfNPC_NotPickedUp_Captured() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
 
         Scenario scenario = new Scenario();
@@ -250,7 +251,7 @@ class CapturePrisonersTest {
     @Test
     void testAttemptCaptureOfNPC_NotPickedUp_Escaped() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
         Faction mockFaction = mock(Faction.class);
 
         Scenario scenario = new Scenario();
@@ -278,7 +279,7 @@ class CapturePrisonersTest {
     @Test
     void testProcessPrisoner_CampaignOperations_InnerSphereFaction() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         LocalDate today = LocalDate.of(3151, 1, 1);
         when(mockCampaign.getLocalDate()).thenReturn(today);
@@ -313,7 +314,7 @@ class CapturePrisonersTest {
     @Test
     void testProcessPrisoner_CampaignOperations_ClanFaction_TakenAsPrisoner() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         LocalDate today = LocalDate.of(3151, 1, 1);
         when(mockCampaign.getLocalDate()).thenReturn(today);
@@ -348,7 +349,7 @@ class CapturePrisonersTest {
     @Test
     void testProcessPrisoner_CampaignOperations_ClanFaction_TakenAsBondsman() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         LocalDate today = LocalDate.of(3151, 1, 1);
         when(mockCampaign.getLocalDate()).thenReturn(today);
@@ -385,7 +386,7 @@ class CapturePrisonersTest {
     @Test
     void testProcessPrisoner_MekHQ_InnerSphereFaction() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         LocalDate today = LocalDate.of(3151, 1, 1);
         when(mockCampaign.getLocalDate()).thenReturn(today);
@@ -420,7 +421,7 @@ class CapturePrisonersTest {
     @Test
     void testProcessPrisoner_MekHQ_ClanFaction_TakenAsPrisoner() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         LocalDate today = LocalDate.of(3151, 1, 1);
         when(mockCampaign.getLocalDate()).thenReturn(today);
@@ -455,7 +456,7 @@ class CapturePrisonersTest {
     @Test
     void testProcessPrisoner_MekHQ_ClanFaction_TakenAsBondsman() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         LocalDate today = LocalDate.of(3151, 1, 1);
         when(mockCampaign.getLocalDate()).thenReturn(today);
@@ -492,7 +493,7 @@ class CapturePrisonersTest {
     @Test
     void testDetermineDefectionChance() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         LocalDate today = LocalDate.of(3151, 1, 1);
         when(mockCampaign.getLocalDate()).thenReturn(today);
@@ -520,7 +521,7 @@ class CapturePrisonersTest {
     @Test
     void testDetermineDefection_Chance_MercenaryPrisoner() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         LocalDate today = LocalDate.of(3151, 1, 1);
         when(mockCampaign.getLocalDate()).thenReturn(today);
@@ -552,7 +553,7 @@ class CapturePrisonersTest {
     @Test
     void testDetermineDefection_Chance_ClanPrisoner_NotDezgraFaction() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         LocalDate today = LocalDate.of(3151, 1, 1);
         when(mockCampaign.getLocalDate()).thenReturn(today);
@@ -582,7 +583,7 @@ class CapturePrisonersTest {
     @Test
     void testDetermineDefection_Chance_ClanPrisoner_DezgraFaction() {
         // Setup
-        Campaign mockCampaign = mock(Campaign.class);
+        Campaign mockCampaign = mockCampaign();
 
         LocalDate today = LocalDate.of(3151, 1, 1);
         when(mockCampaign.getLocalDate()).thenReturn(today);

@@ -128,7 +128,7 @@ public class DetachmentLocationManager {
         setLocation(campaign.getCampaignLocationManager(), new CurrentLocation(planetarySystem, 0.0));
         MekHQ.triggerEvent(new LocationChangedEvent(detachment.getCurrentLocation(), false));
 
-        if (campaign.getAutomatedMothballUnits().isEmpty()) {
+        if (campaign.getPlayerForce().getAutomatedMothballUnits().isEmpty()) {
             performAutomatedActivation(campaign);
         }
 
