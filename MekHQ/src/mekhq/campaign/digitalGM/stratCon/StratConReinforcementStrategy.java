@@ -67,7 +67,7 @@ public class StratConReinforcementStrategy implements ReinforcementStrategy {
     public ReinforcementResultsType processReinforcementDeployment(Formation formation,
           ReinforcementEligibilityType reinforcementType, StratConCampaignState campaignState,
           StratConScenario scenario, Campaign campaign, int reinforcementTargetNumber, boolean isGMReinforcement) {
-        return StratConRulesManager.processReinforcementDeployment(formation,
+        return processReinforcementDeployment(formation,
               reinforcementType,
               campaignState,
               scenario,
