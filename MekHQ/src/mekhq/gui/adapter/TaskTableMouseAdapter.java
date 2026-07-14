@@ -266,7 +266,11 @@ public class TaskTableMouseAdapter extends JPopupMenuAdapter {
             popup.add(menuItem);
         }
 
-        // Cancel task (unassign tech; spent minutes are not refunded)
+        // Cancel task (unassign tech; spent minutes are not refunded).
+        // Unlike Mode/Scrap above, this deliberately omits the (p instanceof Part) guard. Some IPartWork
+        // implementations are not Parts (e.g. PodSpace) yet can still be assigned a tech, so the guarded
+        // isBeingWorked flag would leave Cancel disabled for those in-progress tasks. Enable it for any
+        // IPartWork currently being worked on.
         boolean anyBeingWorked = false;
         for (IPartWork p : parts) {
             anyBeingWorked |= p.isBeingWorkedOn();
