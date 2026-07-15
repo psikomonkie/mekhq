@@ -133,6 +133,8 @@ import mekhq.campaign.camOpsReputation.IUnitRating;
 import mekhq.campaign.campaignOptions.AcquisitionsType;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.campaignOptions.CampaignOptionsMarshaller;
+import mekhq.campaign.digitalGM.stratCon.StratConContractInitializer;
+import mekhq.campaign.digitalGM.stratCon.StratConRulesManager;
 import mekhq.campaign.enums.CampaignTransportType;
 import mekhq.campaign.enums.DailyReportType;
 import mekhq.campaign.events.*;
@@ -225,8 +227,6 @@ import mekhq.campaign.personnel.turnoverAndRetention.RetirementDefectionTracker;
 import mekhq.campaign.randomEvents.prisoners.PrisonerStatus;
 import mekhq.campaign.randomEvents.randomEventsSystem.RandomEventLibraries;
 import mekhq.campaign.storyArc.StoryArc;
-import mekhq.campaign.stratCon.StratConContractInitializer;
-import mekhq.campaign.stratCon.StratConRulesManager;
 import mekhq.campaign.unit.CargoStatistics;
 import mekhq.campaign.unit.CrewType;
 import mekhq.campaign.unit.HangarStatistics;
@@ -2014,7 +2014,7 @@ public class Campaign implements ITechManager {
 
     /**
      * @return all hangars across all locations associated with this campaign.
-     *                                                                                                             TODO: This won't work once we support multiple hangars. Method separated from getHangar() for future refactor
+     *                                                                                                                         TODO: This won't work once we support multiple hangars. Method separated from getHangar() for future refactor
      *
      * @deprecated Use {@link PlayerForce#getHangar()} directly.
      */
@@ -2174,7 +2174,9 @@ public class Campaign implements ITechManager {
      *
      * @return A new {@link Person}.
      *
-     * @deprecated Use {@link ForceHumanResources#newPerson(Campaign, PersonnelRole, PersonnelRole, AbstractFactionSelector, AbstractPlanetSelector, Gender)} directly.
+     * @deprecated Use
+     *       {@link ForceHumanResources#newPerson(Campaign, PersonnelRole, PersonnelRole, AbstractFactionSelector,
+     *       AbstractPlanetSelector, Gender)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person newPerson(final PersonnelRole primaryRole, final PersonnelRole secondaryRole,
@@ -2192,7 +2194,8 @@ public class Campaign implements ITechManager {
      *
      * @return A new {@link Person} configured using {@code personnelGenerator}.
      *
-     * @deprecated Use {@link ForceHumanResources#newPerson(Campaign, PersonnelRole, AbstractPersonnelGenerator)} directly.
+     * @deprecated Use {@link ForceHumanResources#newPerson(Campaign, PersonnelRole, AbstractPersonnelGenerator)}
+     *       directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person newPerson(final PersonnelRole primaryRole, final AbstractPersonnelGenerator personnelGenerator) {
@@ -2209,7 +2212,9 @@ public class Campaign implements ITechManager {
      *
      * @return A new {@link Person} configured using {@code personnelGenerator}.
      *
-     * @deprecated Use {@link ForceHumanResources#newPerson(Campaign, PersonnelRole, PersonnelRole, AbstractPersonnelGenerator, Gender)} directly.
+     * @deprecated Use
+     *       {@link ForceHumanResources#newPerson(Campaign, PersonnelRole, PersonnelRole, AbstractPersonnelGenerator,
+     *       Gender)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person newPerson(final PersonnelRole primaryRole, final PersonnelRole secondaryRole,
@@ -2306,7 +2311,6 @@ public class Campaign implements ITechManager {
      *
      * @see #recruitPerson(Person, PrisonerStatus, boolean, boolean, boolean, boolean)
      * @see #importPerson(Person)
-     *
      * @deprecated Use {@link ForceHumanResources#recruitPerson(Campaign, Person)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
@@ -2341,7 +2345,6 @@ public class Campaign implements ITechManager {
      *
      * @see #recruitPerson(Person, PrisonerStatus, boolean, boolean, boolean, boolean)
      * @see #importPerson(Person)
-     *
      * @deprecated Use {@link ForceHumanResources#recruitPerson(Campaign, Person, boolean, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
@@ -2375,7 +2378,6 @@ public class Campaign implements ITechManager {
      *
      * @see #recruitPerson(Person, PrisonerStatus, boolean, boolean, boolean, boolean)
      * @see #importPerson(Person)
-     *
      * @deprecated Use {@link ForceHumanResources#recruitPerson(Campaign, Person, PrisonerStatus, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
@@ -2404,8 +2406,9 @@ public class Campaign implements ITechManager {
      * @author Illiani
      * @see #importPerson(Person)
      * @since 0.50.07
-     *
-     * @deprecated Use {@link ForceHumanResources#recruitPerson(Campaign, Person, PrisonerStatus, boolean, boolean, boolean)} directly.
+     * @deprecated Use
+     *       {@link ForceHumanResources#recruitPerson(Campaign, Person, PrisonerStatus, boolean, boolean, boolean)}
+     *       directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean recruitPerson(Person person, PrisonerStatus prisonerStatus, boolean gmAdd, boolean log,
@@ -2440,8 +2443,9 @@ public class Campaign implements ITechManager {
      *       or insufficient funds
      *
      * @see #importPerson(Person)
-     *
-     * @deprecated Use {@link ForceHumanResources#recruitPerson(Campaign, Person, PrisonerStatus, boolean, boolean, boolean, boolean)} directly.
+     * @deprecated Use
+     *       {@link ForceHumanResources#recruitPerson(Campaign, Person, PrisonerStatus, boolean, boolean, boolean,
+     *       boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean recruitPerson(Person person, PrisonerStatus prisonerStatus, boolean gmAdd, boolean log,
@@ -2589,7 +2593,6 @@ public class Campaign implements ITechManager {
      *
      * @author Illiani
      * @since 0.50.06
-     *
      * @deprecated Use {@link ForceHumanResources#getSalaryEligiblePersonnel()} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
@@ -2731,7 +2734,9 @@ public class Campaign implements ITechManager {
      *
      * @return An {@link AbstractPersonnelGenerator} to use when creating new personnel.
      *
-     * @deprecated Use {@link ForceHumanResources#getPersonnelGenerator(CampaignOptions, AbstractFactionSelector, AbstractPlanetSelector)} directly.
+     * @deprecated Use
+     *       {@link ForceHumanResources#getPersonnelGenerator(CampaignOptions, AbstractFactionSelector,
+     *       AbstractPlanetSelector)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public AbstractPersonnelGenerator getPersonnelGenerator(final AbstractFactionSelector factionSelector,
@@ -3142,7 +3147,9 @@ public class Campaign implements ITechManager {
      *
      * @return The person in the designated role with the most experience.
      *
-     * @deprecated Use {@link ForceHumanResources#findBestInRole(PersonnelRole, String, String, CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use
+     *       {@link ForceHumanResources#findBestInRole(PersonnelRole, String, String, CampaignOptions, boolean,
+     *       LocalDate)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Person findBestInRole(PersonnelRole role, String primary, @Nullable String secondary) {
@@ -3155,7 +3162,8 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * @deprecated Use {@link ForceHumanResources#findBestInRole(PersonnelRole, String, CampaignOptions, boolean, LocalDate)}
+     * @deprecated Use
+     *       {@link ForceHumanResources#findBestInRole(PersonnelRole, String, CampaignOptions, boolean, LocalDate)}
      *       directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
@@ -3172,7 +3180,8 @@ public class Campaign implements ITechManager {
      * @return the {@link Person} with the highest calculated total skill level in the specified skill, or {@code null}
      *       if no qualifying person is found
      *
-     * @deprecated Use {@link ForceHumanResources#findBestAtSkill(String, CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use {@link ForceHumanResources#findBestAtSkill(String, CampaignOptions, boolean, LocalDate)}
+     *       directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public @Nullable Person findBestAtSkill(String skillName) {
@@ -3242,7 +3251,9 @@ public class Campaign implements ITechManager {
      *
      * @return A list of active technicians sorted appropriately.
      *
-     * @deprecated Use {@link ForceHumanResources#getTechsExpanded(Collection, CampaignOptions, boolean, LocalDate, boolean, boolean, boolean)} directly.
+     * @deprecated Use
+     *       {@link ForceHumanResources#getTechsExpanded(Collection, CampaignOptions, boolean, LocalDate, boolean,
+     *       boolean, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<Person> getTechsExpanded(final boolean noZeroMinute, final boolean eliteFirst, final boolean expanded) {
@@ -3366,8 +3377,9 @@ public class Campaign implements ITechManager {
      *       </ul>
      *
      * @throws IllegalStateException if {@code type} is null or an unsupported value.
-     *
-     * @deprecated Use {@link ForceHumanResources#getSeniorAdminPerson(AdministratorSpecialization, CampaignOptions, boolean, LocalDate)} directly.
+     * @deprecated Use
+     *       {@link ForceHumanResources#getSeniorAdminPerson(AdministratorSpecialization, CampaignOptions, boolean,
+     *       LocalDate)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public @Nullable Person getSeniorAdminPerson(AdministratorSpecialization type) {
@@ -3557,8 +3569,8 @@ public class Campaign implements ITechManager {
     }
 
     /**
-     * Shops for items on the {@link ForceShoppingList}, where each acquisition is attempted on nearby planets by available
-     * logistics personnel.
+     * Shops for items on the {@link ForceShoppingList}, where each acquisition is attempted on nearby planets by
+     * available logistics personnel.
      *
      * @param sList The shopping list to use when shopping.
      *
@@ -4709,7 +4721,6 @@ public class Campaign implements ITechManager {
      *
      * @author Illiani
      * @since 0.50.06
-     *
      * @deprecated Use {@link ForceHumanResources#refreshApplicants(Campaign, boolean)} directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
@@ -7725,7 +7736,8 @@ public class Campaign implements ITechManager {
      *
      * @param role the personnel role to fill
      *
-     * @deprecated Use {@link ForceHumanResources#fillTempCrewPoolForRole(Campaign, CampaignOptions, PersonnelRole)} directly.
+     * @deprecated Use {@link ForceHumanResources#fillTempCrewPoolForRole(Campaign, CampaignOptions, PersonnelRole)}
+     *       directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void fillTempCrewPoolForRole(PersonnelRole role) {
@@ -7811,7 +7823,9 @@ public class Campaign implements ITechManager {
      *
      * @param role the personnel role to distribute
      *
-     * @deprecated Use {@link ForceHumanResources#distributeTempCrewPoolToUnits(Campaign, CampaignOptions, PersonnelRole)} directly.
+     * @deprecated Use
+     *       {@link ForceHumanResources#distributeTempCrewPoolToUnits(Campaign, CampaignOptions, PersonnelRole)}
+     *       directly.
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void distributeTempCrewPoolToUnits(PersonnelRole role) {
