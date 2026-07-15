@@ -163,7 +163,7 @@ public class MissionTargetFinder {
         // The contract type's preferred geography, when it has one (rear areas for training, deep strikes for
         // raids, occupied territory for guerrillas...). A preference only: an empty result falls through to the
         // default chain below rather than failing contract generation.
-        List<PlanetarySystem> profileTargets = findProfileTargets(profile, attacker, defender, location, radius,
+        List<PlanetarySystem> profileTargets = profile.findTargets(this, attacker, defender, location, radius,
               currentDate);
         if (!profileTargets.isEmpty()) {
             return profileTargets;
@@ -190,7 +190,7 @@ public class MissionTargetFinder {
      * opponent of the defender, as a proxy for the attacker's otherwise poorly-defined local presence. Either way the
      * result is always defender-owned, since {@code getBorderSystems(self, other)} returns OTHER's systems near SELF.
      */
-    private List<PlanetarySystem> findSharedBorderTargets(Faction attacker, Faction defender, ILocation location,
+    public List<PlanetarySystem> findSharedBorderTargets(Faction attacker, Faction defender, ILocation location,
           double radius, LocalDate currentDate) {
         Set<PlanetarySystem> planetSet = new HashSet<>(borderTracker.getBorderSystems(attacker, defender, location,
               radius));
@@ -217,34 +217,11 @@ public class MissionTargetFinder {
     private static final double DEEP_RAID_BORDER_MULTIPLIER = 2.0;
 
     /**
-     * Dispatches to the given profile's preferred-tier search. {@link MissionLocationProfile#DEFAULT} and
-     * {@link MissionLocationProfile#HIGH_VALUE} intentionally return nothing here: DEFAULT has no preference, and
-     * HIGH_VALUE uses the default candidate pool unchanged, differing only in how the final pick is weighted (see
-     * {@code RandomFactionGenerator}). An empty result from {@link MissionLocationProfile#INVASION} does NOT fall
-     * through &mdash; {@link #find} blocks it from reaching the deep fallbacks, since an invasion with no shared border
-     * has no viable target.
-     *
-     * @return the profile's preferred candidate systems, or an empty list to fall through to the default chain
-     */
-    private List<PlanetarySystem> findProfileTargets(MissionLocationProfile profile, Faction attacker,
-          Faction defender, ILocation location, double radius, LocalDate date) {
-        return switch (profile) {
-            case REAR_AREA -> findRearAreaTargets(attacker, defender, location, radius, date);
-            case INTERIOR_POPULATED -> findAllDefenderTargets(defender, location, radius, date);
-            case DEEP_RAID -> borderTracker.getBorderSystems(attacker, defender, location, radius,
-                  deepRaidBorderSize(attacker, defender));
-            case OCCUPIED_TERRITORY -> findOccupiedTerritoryTargets(attacker, defender, location, radius, date);
-            case INVASION -> findSharedBorderTargets(attacker, defender, location, radius, date);
-            case HIGH_VALUE, DEFAULT -> Collections.emptyList();
-        };
-    }
-
-    /**
      * Finds the defender's systems in range that are <em>not</em> on the shared border with the attacker: training
      * cadres and standing retainers are stationed in the safe rear, not on a contested front-line world. Empty when
      * everything the defender holds in range is border (fall back to the default chain, i.e. accept the front).
      */
-    private List<PlanetarySystem> findRearAreaTargets(Faction attacker, Faction defender, ILocation location,
+    public List<PlanetarySystem> findRearAreaTargets(Faction attacker, Faction defender, ILocation location,
           double radius, LocalDate date) {
         Set<PlanetarySystem> interior = new HashSet<>(findAllDefenderTargets(defender, location, radius, date));
         interior.removeAll(borderTracker.getBorderSystems(attacker, defender, location, radius));
@@ -255,9 +232,20 @@ public class MissionTargetFinder {
      * Finds every system the defender holds in range, border or not: riots and internal-security work can flare up
      * anywhere in the defender's space, with no particular relationship to the enemy's border.
      */
-    private List<PlanetarySystem> findAllDefenderTargets(Faction defender, ILocation location, double radius,
+    public List<PlanetarySystem> findAllDefenderTargets(Faction defender, ILocation location, double radius,
           LocalDate date) {
         return systemsOf(borderTracker.getBorders(defender, location, radius), date);
+    }
+
+    /**
+     * Finds the defender's systems in range within a widened border reaching roughly twice as deep as a conventional
+     * front line (see {@link #deepRaidBorderSize}): a hit-and-run strike can punch past the immediate border into the
+     * defender's near interior.
+     */
+    public List<PlanetarySystem> findDeepRaidTargets(Faction attacker, Faction defender, ILocation location,
+          double radius) {
+        return borderTracker.getBorderSystems(attacker, defender, location, radius,
+              deepRaidBorderSize(attacker, defender));
     }
 
     /**
@@ -276,7 +264,7 @@ public class MissionTargetFinder {
      * in range away from the shared border, since a guerrilla campaign on the contested front is just the regular war.
      * Empty only when the defender holds nothing in range beyond the border itself.
      */
-    private List<PlanetarySystem> findOccupiedTerritoryTargets(Faction attacker, Faction defender, ILocation location,
+    public List<PlanetarySystem> findOccupiedTerritoryTargets(Faction attacker, Faction defender, ILocation location,
           double radius, LocalDate date) {
         List<PlanetarySystem> defenderSystems = findAllDefenderTargets(defender, location, radius, date);
         if (defenderSystems.isEmpty()) {
