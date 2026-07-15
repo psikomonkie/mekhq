@@ -5603,12 +5603,16 @@ public class Campaign implements ITechManager {
 
     }
 
-    public static CampaignOptions getCampaignOptions() {
+    public static CampaignOptions campaignOptions() {
         if (campaignOptions == null) {
             throw new IllegalStateException(
                   "CampaignOptions accessed before it was set; a Campaign must be initialized first.");
         }
         return campaignOptions;
+    }
+
+    public CampaignOptions getCampaignOptions() {
+        return Campaign.campaignOptions();
     }
 
     public void setCampaignOptions(CampaignOptions options) {
