@@ -46,6 +46,7 @@ import static megamek.common.planetaryConditions.Atmosphere.THIN;
 import static megamek.common.planetaryConditions.Wind.TORNADO_F4;
 import static megamek.common.units.UnitType.*;
 import static mekhq.MHQConstants.BATTLE_OF_TUKAYYID;
+import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.scenarioModifierShouldBeBlocked;
 import static mekhq.campaign.enums.DailyReportType.BATTLE;
 import static mekhq.campaign.mission.AtBScenario.selectBotTeamCommanders;
 import static mekhq.campaign.mission.RandomFactionCamouflage.pickRandomCamouflage;
@@ -58,7 +59,6 @@ import static mekhq.campaign.mission.enums.CombatRole.FRONTLINE;
 import static mekhq.campaign.mission.enums.CombatRole.MANEUVER;
 import static mekhq.campaign.mission.enums.CombatRole.PATROL;
 import static mekhq.campaign.personnel.skills.SkillType.EXP_LEGENDARY;
-import static mekhq.campaign.stratCon.StratConRulesManager.scenarioModifierShouldBeBlocked;
 import static mekhq.campaign.universe.IUnitGenerator.unitTypeSupportsWeightClass;
 import static mekhq.utilities.EntityUtilities.getEntityFromUnitId;
 
@@ -113,6 +113,13 @@ import mekhq.campaign.againstTheBot.AtBConfiguration;
 import mekhq.campaign.camOpsReputation.IUnitRating;
 import mekhq.campaign.campaignOptions.BoardScalingType;
 import mekhq.campaign.campaignOptions.CampaignOptions;
+import mekhq.campaign.digitalGM.stratCon.StratConBiomeManifest;
+import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
+import mekhq.campaign.digitalGM.stratCon.StratConContractInitializer;
+import mekhq.campaign.digitalGM.stratCon.StratConFacility;
+import mekhq.campaign.digitalGM.stratCon.StratConFacility.FacilityType;
+import mekhq.campaign.digitalGM.stratCon.StratConScenario;
+import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 import mekhq.campaign.enums.DragoonRating;
 import mekhq.campaign.force.CombatTeam;
 import mekhq.campaign.force.Formation;
@@ -131,13 +138,6 @@ import mekhq.campaign.personnel.SpecialAbility;
 import mekhq.campaign.personnel.enums.Phenotype;
 import mekhq.campaign.personnel.skills.RandomSkillPreferences;
 import mekhq.campaign.personnel.skills.SkillType;
-import mekhq.campaign.stratCon.StratConBiomeManifest;
-import mekhq.campaign.stratCon.StratConCampaignState;
-import mekhq.campaign.stratCon.StratConContractInitializer;
-import mekhq.campaign.stratCon.StratConFacility;
-import mekhq.campaign.stratCon.StratConFacility.FacilityType;
-import mekhq.campaign.stratCon.StratConScenario;
-import mekhq.campaign.stratCon.StratConTrackState;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.Factions;
@@ -4670,7 +4670,7 @@ public class AtBDynamicScenarioFactory {
      * @since 0.50.07
      */
     private static void processDelayedArrivals(AtBDynamicScenario scenario, mekhq.campaign.LocalHangar hangar,
-            int strategy) {
+          int strategy) {
         List<Entity> delayedEntities = new ArrayList<>();
         for (UUID unitId : scenario.getFriendlyDelayedReinforcements()) {
             Entity entity = EntityUtilities.getEntityFromUnitId(hangar, unitId);
@@ -4822,8 +4822,8 @@ public class AtBDynamicScenarioFactory {
      * @see #setDeploymentTurnsForReinforcements(LocalHangar, Scenario, List, int, boolean)
      */
     public static void setDeploymentTurnsForReinforcements(mekhq.campaign.LocalHangar hangar, Scenario scenario,
-            List<Entity> entityList,
-            int turnModifier) {
+          List<Entity> entityList,
+          int turnModifier) {
         setDeploymentTurnsForReinforcements(hangar, scenario, entityList, turnModifier, false);
     }
 
@@ -4858,8 +4858,8 @@ public class AtBDynamicScenarioFactory {
      *                     assigned a higher arrival scale, increasing their arrival turn.
      */
     public static void setDeploymentTurnsForReinforcements(mekhq.campaign.LocalHangar hangar, Scenario scenario,
-            List<Entity> entityList,
-            int turnModifier, boolean isDelayed) {
+          List<Entity> entityList,
+          int turnModifier, boolean isDelayed) {
         // Build a set of all player transported entities. We don't need to do this for NPC entities
         // as how they're transported is different and their arrival times are better isolated when
         // dealing with transported vs. untransported units.
