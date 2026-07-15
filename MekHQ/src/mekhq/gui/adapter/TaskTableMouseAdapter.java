@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2017-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -167,6 +167,19 @@ public class TaskTableMouseAdapter extends JPopupMenuAdapter {
 
                 reportAndTriggerEvent(p);
             }
+        } else if (command.equalsIgnoreCase("CANCEL")) {
+            for (IPartWork work : parts) {
+                if (!work.isBeingWorkedOn()) {
+                    continue;
+                }
+
+                // Cancel the assignment without refunding the minutes already spent.
+                work.cancelAssignment(false);
+                if (work instanceof Part part) {
+                    MekHQ.triggerEvent(new PartChangedEvent(part));
+                }
+            }
+            taskTable.repaint();
         }
     }
 
@@ -384,6 +397,21 @@ public class TaskTableMouseAdapter extends JPopupMenuAdapter {
             menuItem.setEnabled(!isBeingWorked);
             popup.add(menuItem);
         }
+
+        // Cancel task (unassign tech; spent minutes are not refunded).
+        // Unlike Mode/Scrap above, this deliberately omits the (p instanceof Part) guard. Some IPartWork
+        // implementations are not Parts (e.g. PodSpace) yet can still be assigned a tech, so the guarded
+        // isBeingWorked flag would leave Cancel disabled for those in-progress tasks. Enable it for any
+        // IPartWork currently being worked on.
+        boolean anyBeingWorked = false;
+        for (IPartWork p : parts) {
+            anyBeingWorked |= p.isBeingWorkedOn();
+        }
+        menuItem = new JMenuItem(getTextAt(RESOURCE_BUNDLE, "TaskTableMouseAdapter.CANCEL"));
+        menuItem.setActionCommand("CANCEL");
+        menuItem.addActionListener(this);
+        menuItem.setEnabled(anyBeingWorked);
+        popup.add(menuItem);
 
         // Strip part: one-click salvage removal using the currently selected tech, even though the unit is set to
         // repair. Only offered for a single installed, damaged component so the target number and time can be shown.

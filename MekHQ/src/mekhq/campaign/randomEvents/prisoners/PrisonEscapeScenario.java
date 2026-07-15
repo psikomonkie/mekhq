@@ -34,14 +34,14 @@ package mekhq.campaign.randomEvents.prisoners;
 
 import static java.io.File.separator;
 import static megamek.common.board.Board.START_SW;
+import static mekhq.campaign.digitalGM.stratCon.StratConContractInitializer.getUnoccupiedCoords;
+import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.generateExternalScenario;
 import static mekhq.campaign.personnel.enums.PersonnelRole.SOLDIER;
 import static mekhq.campaign.personnel.skills.SkillType.S_SMALL_ARMS;
 import static mekhq.campaign.randomEvents.prisoners.MobType.HUGE;
 import static mekhq.campaign.randomEvents.prisoners.MobType.LARGE;
 import static mekhq.campaign.randomEvents.prisoners.MobType.MEDIUM;
 import static mekhq.campaign.randomEvents.prisoners.MobType.SMALL;
-import static mekhq.campaign.stratCon.StratConContractInitializer.getUnoccupiedCoords;
-import static mekhq.campaign.stratCon.StratConRulesManager.generateExternalScenario;
 import static mekhq.utilities.MHQInternationalization.getFormattedTextAt;
 
 import java.util.ArrayList;
@@ -58,15 +58,15 @@ import megamek.common.units.Crew;
 import megamek.common.units.Entity;
 import megamek.logging.MMLogger;
 import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
+import mekhq.campaign.digitalGM.stratCon.StratConCoords;
+import mekhq.campaign.digitalGM.stratCon.StratConScenario;
+import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.AtBScenario;
 import mekhq.campaign.mission.BotForce;
 import mekhq.campaign.mission.ScenarioTemplate;
 import mekhq.campaign.personnel.Person;
-import mekhq.campaign.stratCon.StratConCampaignState;
-import mekhq.campaign.stratCon.StratConCoords;
-import mekhq.campaign.stratCon.StratConScenario;
-import mekhq.campaign.stratCon.StratConTrackState;
 import mekhq.campaign.unit.Unit;
 import mekhq.gui.baseComponents.immersiveDialogs.ImmersiveDialogSimple;
 
