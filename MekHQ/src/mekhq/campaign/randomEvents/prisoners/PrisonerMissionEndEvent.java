@@ -410,7 +410,7 @@ public class PrisonerMissionEndEvent {
      * @param ransom   The ransom amount being transacted.
      * @param today    The current campaign date for the transaction record.
      */
-    private void performRansom(boolean isCredit, Money ransom, LocalDate today) {
+    void performRansom(boolean isCredit, Money ransom, LocalDate today) {
         if (isCredit) {
             campaign.getPlayerForce().getFinances()
                   .credit(RANSOM, today, ransom, getFormattedTextAt(RESOURCE_BUNDLE, "transaction.ransom"));
@@ -428,7 +428,7 @@ public class PrisonerMissionEndEvent {
      *
      * @param prisoners The list of prisoners to be removed.
      */
-    private void removeAllPrisoners(List<Person> prisoners) {
+    void removeAllPrisoners(List<Person> prisoners) {
         for (Person prisoner : prisoners) {
             campaign.getPlayerForce().getHumanResources().removePerson(campaign, prisoner);
         }
@@ -442,7 +442,7 @@ public class PrisonerMissionEndEvent {
      *
      * @param prisoners The list of prisoners to be executed.
      */
-    private void executePrisoners(List<Person> prisoners) {
+    void executePrisoners(List<Person> prisoners) {
         // Was the crime noticed?
         int crimeNoticeRoll = randomInt(100);
         boolean crimeNoticed = crimeNoticeRoll < prisoners.size();
