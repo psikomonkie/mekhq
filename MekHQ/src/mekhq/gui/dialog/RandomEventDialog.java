@@ -52,6 +52,7 @@ import mekhq.campaign.Campaign;
 import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.enums.DailyReportType;
 import mekhq.campaign.personnel.Person;
+import mekhq.campaign.personnel.skills.ActionCheck;
 import mekhq.campaign.personnel.skills.ActionCheckResult;
 import mekhq.campaign.personnel.skills.AttributeCheck;
 import mekhq.campaign.personnel.skills.Attributes;
@@ -90,13 +91,11 @@ public class RandomEventDialog {
     private int personalityModifier = 0;
 
     private final Map<Integer, String> followOnEventMap = new HashMap<>();
-    private final Map<Integer, SkillCheck> skillCheckMap = new HashMap<>();
-    private final Map<Integer, AttributeCheck> attributeCheckMap = new HashMap<>();
+    private final Map<Integer, ActionCheck<?>> actionCheckMap = new HashMap<>();
     private final Map<Integer, Integer> difficultyMap = new HashMap<>();
 
     private int choiceIndex;
-    private String skillCheckResultsText = "";
-    private String attributeCheckResultsText = "";
+    private String actionCheckResultsText = "";
     private boolean wasSuccessful;
 
     public int getDialogChoice() {
@@ -150,8 +149,7 @@ public class RandomEventDialog {
         triggerDialog(campaign, activeEventParticipant, passiveEventParticipant, eventData);
 
         resolveEvent(useEdge);
-        reportSkillCheckResults();
-        reportAttributeCheckResults();
+        reportActionCheckResults();
     }
 
     private void triggerDialog(Campaign campaign, Person activeEventParticipant,
@@ -216,11 +214,12 @@ public class RandomEventDialog {
 
     private void addAttributeCheck(SkillAttribute attribute, List<TargetRollModifier> externalModifiers,
           int responseIndex) {
-        if (attribute != SkillAttribute.NO_ATTRIBUTE) {
+        // Skill checks take precedence over attribute checks, so don't overwrite one that's already present.
+        if (attribute != SkillAttribute.NO_ATTRIBUTE && !actionCheckMap.containsKey(responseIndex)) {
             AttributeCheck attributeCheck = activeEventParticipant.checkAttribute(attribute)
                                                   .withExternalModifiers(externalModifiers);
 
-            attributeCheckMap.put(responseIndex, attributeCheck);
+            actionCheckMap.put(responseIndex, attributeCheck);
         }
     }
 
@@ -233,7 +232,7 @@ public class RandomEventDialog {
                         today)
                                           .withExternalModifiers(externalModifiers);
 
-            skillCheckMap.put(responseIndex, skillCheck);
+            actionCheckMap.put(responseIndex, skillCheck);
         }
     }
 
@@ -277,11 +276,12 @@ public class RandomEventDialog {
         String resourceKey = RESPONSE_PREFIX + "." + responseIndex + "." + eventName + BUTTON_SUFFIX;
         String optionText = getFormattedTextAt(RESOURCES_RANDOM_EVENT_EFFECTS, resourceKey);
 
-        SkillCheck skillCheck = skillCheckMap.get(responseIndex);
-        AttributeCheck attributeCheck = attributeCheckMap.get(responseIndex);
-        if (skillCheck != null) {
+        // The addendum is UI-specific (localized labels, skill/attribute levels rendered for this dialog), so it
+        // stays here rather than in the domain check classes; the check type selects the appropriate rendering.
+        ActionCheck<?> actionCheck = actionCheckMap.get(responseIndex);
+        if (actionCheck instanceof SkillCheck skillCheck) {
             optionText = getSkillAddendum(skillCheck, optionText);
-        } else if (attributeCheck != null) {
+        } else if (actionCheck instanceof AttributeCheck attributeCheck) {
             optionText = getAttributeAddendum(attributeCheck, optionText);
         }
 
@@ -326,20 +326,15 @@ public class RandomEventDialog {
     }
 
     public void resolveEvent(boolean useEdge) {
-        SkillCheck skillCheck = skillCheckMap.get(choiceIndex);
-        AttributeCheck attributeCheck = attributeCheckMap.get(choiceIndex);
+        // Skill checks take precedence over attribute checks; that precedence is applied when the map is populated,
+        // so whichever check is present here resolves polymorphically.
+        ActionCheck<?> actionCheck = actionCheckMap.get(choiceIndex);
 
-        String reason = getTextAt(RESOURCES_RANDOM_EVENT_DIALOG, CHECK_REASON_KEY);
-
-        // Skill checks take precedence over attribute checks
-        if (skillCheck != null) {
-            resolveSkillCheck(useEdge, skillCheck, reason);
-            return;
-        }
-
-        // Attribute checks
-        if (attributeCheck != null) {
-            resolveAttributeCheck(useEdge, attributeCheck, reason);
+        if (actionCheck != null) {
+            String reason = getTextAt(RESOURCES_RANDOM_EVENT_DIALOG, CHECK_REASON_KEY);
+            ActionCheckResult result = actionCheck.resolve(useEdge, reason);
+            actionCheckResultsText = result.getReport(true);
+            wasSuccessful = result.isSuccess();
             return;
         }
 
@@ -351,27 +346,9 @@ public class RandomEventDialog {
         wasSuccessful = roll >= RESPONSE_TARGET_NUMBER;
     }
 
-    private void resolveAttributeCheck(boolean useEdge, AttributeCheck attributeCheck, String reason) {
-        ActionCheckResult result = attributeCheck.resolve(useEdge, reason);
-        attributeCheckResultsText = result.getReport(true);
-        wasSuccessful = result.isSuccess();
-    }
-
-    private void resolveSkillCheck(boolean useEdge, SkillCheck skillCheck, String reason) {
-        ActionCheckResult result = skillCheck.resolve(useEdge, reason);
-        skillCheckResultsText = result.getReport(true);
-        wasSuccessful = result.isSuccess();
-    }
-
-    public void reportSkillCheckResults() {
-        if (!skillCheckResultsText.isBlank()) {
-            campaign.addReport(DailyReportType.SKILL_CHECKS, skillCheckResultsText);
-        }
-    }
-
-    public void reportAttributeCheckResults() {
-        if (!attributeCheckResultsText.isBlank()) {
-            campaign.addReport(DailyReportType.SKILL_CHECKS, attributeCheckResultsText);
+    public void reportActionCheckResults() {
+        if (!actionCheckResultsText.isBlank()) {
+            campaign.addReport(DailyReportType.SKILL_CHECKS, actionCheckResultsText);
         }
     }
 
