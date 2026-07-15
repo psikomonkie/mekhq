@@ -41,8 +41,6 @@ import static mekhq.campaign.randomEvents.prisoners.prisonerEvents.MobType.HUGE;
 import static mekhq.campaign.randomEvents.prisoners.prisonerEvents.MobType.LARGE;
 import static mekhq.campaign.randomEvents.prisoners.prisonerEvents.MobType.MEDIUM;
 import static mekhq.campaign.randomEvents.prisoners.prisonerEvents.MobType.SMALL;
-import static mekhq.campaign.stratCon.StratConContractInitializer.getUnoccupiedCoords;
-import static mekhq.campaign.stratCon.StratConRulesManager.generateExternalScenario;
 import static mekhq.utilities.MHQInternationalization.getFormattedTextAt;
 
 import java.util.ArrayList;
@@ -269,7 +267,7 @@ public class RiotScenario {
         if (campaign.isClanCampaign()) {
             key = "RiotScenario.report.clan";
         } else {
-            if (campaign.getFaction().isComStarOrWoB()) {
+            if (campaign.getPlayerForce().getFaction().isComStarOrWoB()) {
                 key = "RiotScenario.report.cs";
             } else if (campaign.isMercenaryCampaign()) {
                 key = "RiotScenario.report.merc";
