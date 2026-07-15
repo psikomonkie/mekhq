@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -30,20 +30,12 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.randomEvents.personalities.enums;
+package mekhq.campaign.randomEvents.randomEventsSystem;
 
-import static mekhq.utilities.MHQInternationalization.isResourceKeyValid;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import mekhq.campaign.randomEvents.personalities.PersonalityTraitType;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
-
-class PersonalityTraitTypeTest {
-    @ParameterizedTest
-    @EnumSource(value = PersonalityTraitType.class)
-    void testGetLabel_notInvalid(PersonalityTraitType status) {
-        String label = status.getLabel();
-        assertTrue(isResourceKeyValid(label));
-    }
+public enum RandomEventEffectedPersonnelType {
+    CAMP_FOLLOWERS,
+    COMBAT_PERSONNEL,
+    PRISONERS,
+    SECURITY_GUARD,
+    SUPPORT_PERSONNEL
 }

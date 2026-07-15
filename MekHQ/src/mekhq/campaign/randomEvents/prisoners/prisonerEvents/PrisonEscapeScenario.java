@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.randomEvents.prisoners;
+package mekhq.campaign.randomEvents.prisoners.prisonerEvents;
 
 import static java.io.File.separator;
 import static megamek.common.board.Board.START_SW;
@@ -38,10 +38,10 @@ import static mekhq.campaign.digitalGM.stratCon.StratConContractInitializer.getU
 import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.generateExternalScenario;
 import static mekhq.campaign.personnel.enums.PersonnelRole.SOLDIER;
 import static mekhq.campaign.personnel.skills.SkillType.S_SMALL_ARMS;
-import static mekhq.campaign.randomEvents.prisoners.MobType.HUGE;
-import static mekhq.campaign.randomEvents.prisoners.MobType.LARGE;
-import static mekhq.campaign.randomEvents.prisoners.MobType.MEDIUM;
-import static mekhq.campaign.randomEvents.prisoners.MobType.SMALL;
+import static mekhq.campaign.randomEvents.prisoners.prisonerEvents.MobType.HUGE;
+import static mekhq.campaign.randomEvents.prisoners.prisonerEvents.MobType.LARGE;
+import static mekhq.campaign.randomEvents.prisoners.prisonerEvents.MobType.MEDIUM;
+import static mekhq.campaign.randomEvents.prisoners.prisonerEvents.MobType.SMALL;
 import static mekhq.utilities.MHQInternationalization.getFormattedTextAt;
 
 import java.util.ArrayList;
@@ -144,7 +144,7 @@ public class PrisonEscapeScenario {
                     escapee.addSkill(S_SMALL_ARMS, 0, 0);
                 }
 
-                escapee.setPrimaryRole(campaign, SOLDIER);
+                escapee.setPrimaryRole(campaign.getLocalDate(), SOLDIER);
                 assignedEscapees.add(escapee);
 
                 if (assignedEscapees.size() == maximumCrewSize) {
