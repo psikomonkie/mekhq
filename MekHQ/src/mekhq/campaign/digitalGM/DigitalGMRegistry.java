@@ -46,7 +46,7 @@ import mekhq.campaign.campaignOptions.CampaignOptions;
  * <p>Every registered GM is offered each lookup; {@link #getActiveGM(CampaignOptions)} returns the one whose
  * {@link IDigitalGM#isEnabled(CampaignOptions)} accepts the campaign. Because the StratCon play types are mutually
  * exclusive, at most one GM matches (none when play is disabled). Registration is handled by
- * {@link AbstractIDigitalGM#startup()} / {@link AbstractIDigitalGM#shutdown()}.</p>
+ * {@link AbstractDigitalGM#startup()} / {@link AbstractDigitalGM#shutdown()}.</p>
  *
  * @author Illiani
  * @since 0.51.01

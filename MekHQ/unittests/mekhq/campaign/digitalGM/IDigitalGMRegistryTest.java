@@ -42,9 +42,9 @@ import java.util.List;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.campaignOptions.CampaignOptions;
-import mekhq.campaign.digitalGM.stratCon.MaplessStratConGMI;
-import mekhq.campaign.digitalGM.stratCon.SinglesStratConGMI;
-import mekhq.campaign.digitalGM.stratCon.StratConIDigitalGM;
+import mekhq.campaign.digitalGM.stratCon.MaplessStratConGM;
+import mekhq.campaign.digitalGM.stratCon.SinglesStratConGM;
+import mekhq.campaign.digitalGM.stratCon.StratConDigitalGM;
 import mekhq.campaign.digitalGM.stratCon.StratConPlayType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -81,9 +81,9 @@ class IDigitalGMRegistryTest {
 
     @Test
     void getActiveGmReturnsTheGmMatchingThePlayType() {
-        StratConIDigitalGM normal = new StratConIDigitalGM();
-        MaplessStratConGMI mapless = new MaplessStratConGMI();
-        SinglesStratConGMI singles = new SinglesStratConGMI();
+        StratConDigitalGM normal = new StratConDigitalGM();
+        MaplessStratConGM mapless = new MaplessStratConGM();
+        SinglesStratConGM singles = new SinglesStratConGM();
         register(normal);
         register(mapless);
         register(singles);
@@ -98,9 +98,9 @@ class IDigitalGMRegistryTest {
 
     @Test
     void getActiveGmIsEmptyWhenPlayIsDisabled() {
-        register(new StratConIDigitalGM());
-        register(new MaplessStratConGMI());
-        register(new SinglesStratConGMI());
+        register(new StratConDigitalGM());
+        register(new MaplessStratConGM());
+        register(new SinglesStratConGM());
 
         assertTrue(DigitalGMRegistry.getActiveGM(campaignWith(StratConPlayType.DISABLED).getCampaignOptions())
                          .isEmpty());
@@ -108,7 +108,7 @@ class IDigitalGMRegistryTest {
 
     @Test
     void unregisterRemovesTheGm() {
-        StratConIDigitalGM gm = new StratConIDigitalGM();
+        StratConDigitalGM gm = new StratConDigitalGM();
         DigitalGMRegistry.register(gm);
         DigitalGMRegistry.unregister(gm);
 

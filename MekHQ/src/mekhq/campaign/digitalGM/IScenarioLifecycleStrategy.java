@@ -34,7 +34,7 @@ package mekhq.campaign.digitalGM;
 
 import mekhq.campaign.Campaign;
 import mekhq.campaign.ResolveScenarioTracker;
-import mekhq.campaign.digitalGM.stratCon.AbstractStratConGMI;
+import mekhq.campaign.digitalGM.stratCon.AbstractStratConGM;
 import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
 import mekhq.campaign.digitalGM.stratCon.StratConScenario;
 import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
@@ -46,7 +46,7 @@ import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
  * <p>The method signatures mirror the corresponding static entry points on
  * {@link mekhq.campaign.digitalGM.stratCon.StratConRulesManager StratConRulesManager}; the default StratCon
  * implementation delegates to them, so the rules themselves are unchanged &mdash; only the daily loop that invokes them
- * now lives in {@link AbstractStratConGMI AbstractStratConGM}.</p>
+ * now lives in {@link AbstractStratConGM AbstractStratConGM}.</p>
  *
  * @author Illiani
  * @since 0.51.01

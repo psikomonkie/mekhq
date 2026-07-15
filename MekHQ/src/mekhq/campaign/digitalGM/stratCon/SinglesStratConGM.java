@@ -32,35 +32,39 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
+import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.digitalGM.IFacilityStrategy;
-import mekhq.campaign.mission.AtBContract;
-import mekhq.campaign.mission.AtBScenario;
 
 /**
- * {@link IFacilityStrategy} for play types with no facility map (Mapless and Singles). Every facility operation is a
- * deliberate no-op: Mapless/Singles skip facility placement entirely (see {@link StratConContractInitializer}), so
- * there are never any facilities to affect. The periodic no-op also mirrors the legacy engine's
- * {@code if (!isUseStratConMapless)} guard.
+ * Digital GM for StratCon <b>Singles</b> play ({@link StratConPlayType#SINGLES}). Singles uses the same no-op facility
+ * handling as Mapless and additionally caps the campaign to a single scenario per week by enabling
+ * {@linkplain #isSingleDropMode() single-drop mode}. This mirrors the legacy engine, where
+ * {@code isUseStratConMaplessMode()} was already {@code true} for Singles.
  *
  * @author Illiani
  * @since 0.51.01
  */
-public class NoOpIFacilityStrategy implements IFacilityStrategy {
+public class SinglesStratConGM extends AbstractStratConGM {
+
+    private final IFacilityStrategy noOpFacility = new NoOpFacilityStrategy();
 
     @Override
-    public void applyPeriodicEffects(StratConTrackState track, StratConCampaignState campaignState,
-          boolean isStartOfMonth) {
-        // Intentionally empty: Mapless and Singles play have no facility map.
+    public String getName() {
+        return StratConPlayType.SINGLES.getLabel();
     }
 
     @Override
-    public void updateFacilityForScenario(AtBScenario scenario, AtBContract contract, boolean destroy,
-          boolean capture) {
-        // Intentionally empty: Mapless and Singles play have no facilities to update.
+    public boolean isEnabled(CampaignOptions campaignOptions) {
+        return campaignOptions.getStratConPlayType() == StratConPlayType.SINGLES;
     }
 
     @Override
-    public void switchFacilityOwner(StratConFacility facility) {
-        // Intentionally empty: Mapless and Singles play have no facilities to transfer.
+    protected boolean isSingleDropMode() {
+        return true;
+    }
+
+    @Override
+    protected IFacilityStrategy getFacilityStrategy() {
+        return noOpFacility;
     }
 }

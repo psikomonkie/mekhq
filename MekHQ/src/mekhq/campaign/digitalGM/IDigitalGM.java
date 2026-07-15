@@ -48,7 +48,7 @@ import mekhq.campaign.events.NewDayEvent;
  * <p>An implementation is expected to be a long-lived singleton registered on the MekHQ event bus (see
  * {@link #startup()} / {@link #shutdown()}). The behaviour that varies between GMs is expressed through the strategy
  * interfaces alongside this one (for example {@link IForceDeploymentStrategy}); common wiring lives in
- * {@link AbstractIDigitalGM}.</p>
+ * {@link AbstractDigitalGM}.</p>
  *
  * @author Illiani
  * @since 0.51.01

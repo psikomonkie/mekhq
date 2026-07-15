@@ -37,7 +37,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import mekhq.campaign.Campaign;
-import mekhq.campaign.digitalGM.AbstractIDigitalGM;
+import mekhq.campaign.digitalGM.AbstractDigitalGM;
 import mekhq.campaign.digitalGM.IFacilityStrategy;
 import mekhq.campaign.digitalGM.IForceDeploymentStrategy;
 import mekhq.campaign.digitalGM.IMapGenerationStrategy;
@@ -71,16 +71,16 @@ import mekhq.campaign.mission.AtBContract;
  * @author Illiani
  * @since 0.51.01
  */
-public abstract class AbstractStratConGMI extends AbstractIDigitalGM {
+public abstract class AbstractStratConGM extends AbstractDigitalGM {
 
-    private final IScenarioGenerationStrategy scenarioGeneration = new StratConIScenarioGenerationStrategy();
-    private final IScenarioLifecycleStrategy scenarioLifecycle = new StratConIScenarioLifecycleStrategy();
-    private final IFacilityStrategy facility = new StratConIFacilityStrategy();
-    private final IForceDeploymentStrategy forceDeployment = new StratConIForceDeploymentStrategy();
-    private final IReinforcementStrategy reinforcement = new StratConIReinforcementStrategy();
-    private final IOpForGenerationStrategy opForGeneration = new StratConIOpForGenerationStrategy();
-    private final IOpForDeploymentStrategy opForDeployment = new StratConIOpForDeploymentStrategy();
-    private final IMapGenerationStrategy mapGeneration = new StratConIMapGenerationStrategy();
+    private final IScenarioGenerationStrategy scenarioGeneration = new StratConScenarioGenerationStrategy();
+    private final IScenarioLifecycleStrategy scenarioLifecycle = new StratConScenarioLifecycleStrategy();
+    private final IFacilityStrategy facility = new StratConFacilityStrategy();
+    private final IForceDeploymentStrategy forceDeployment = new StratConForceDeploymentStrategy();
+    private final IReinforcementStrategy reinforcement = new StratConReinforcementStrategy();
+    private final IOpForGenerationStrategy opForGeneration = new StratConOpForGenerationStrategy();
+    private final IOpForDeploymentStrategy opForDeployment = new StratConOpForDeploymentStrategy();
+    private final IMapGenerationStrategy mapGeneration = new StratConMapGenerationStrategy();
 
     /**
      * @return the strategy that decides when and how scenarios are generated for this GM
@@ -119,7 +119,7 @@ public abstract class AbstractStratConGMI extends AbstractIDigitalGM {
 
     /**
      * @return the strategy governing periodic facility effects; map-based play returns the real StratCon strategy,
-     *       Mapless/Singles override this to a {@link NoOpIFacilityStrategy}
+     *       Mapless/Singles override this to a {@link NoOpFacilityStrategy}
      */
     protected IFacilityStrategy getFacilityStrategy() {
         return facility;
@@ -152,7 +152,7 @@ public abstract class AbstractStratConGMI extends AbstractIDigitalGM {
      * contract: cleaning up phantom scenarios, returning forces whose deployment has ended, applying facility effects,
      * expiring ignored scenarios, scheduling the coming week's scenarios, and generating those due today.
      *
-     * @param event the new-day event (already enable-gated by {@link AbstractIDigitalGM#onNewDay})
+     * @param event the new-day event (already enable-gated by {@link AbstractDigitalGM#onNewDay})
      */
     @Override
     public void handleNewDay(NewDayEvent event) {

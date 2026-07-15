@@ -83,7 +83,7 @@ class StratConGMsTest {
     }
 
     /** A Normal-play GM that supplies sentinel strategies so routing can be observed. */
-    private static class SentinelGMI extends StratConIDigitalGM {
+    private static class SentinelGM extends StratConDigitalGM {
         final IForceDeploymentStrategy forceDeploymentSentinel = mock(IForceDeploymentStrategy.class);
         final IOpForGenerationStrategy opForGenerationSentinel = mock(IOpForGenerationStrategy.class);
         final IOpForDeploymentStrategy opForDeploymentSentinel = mock(IOpForDeploymentStrategy.class);
@@ -112,7 +112,7 @@ class StratConGMsTest {
 
     @Test
     void routesToActiveGmForceDeploymentStrategy() {
-        SentinelGMI gm = new SentinelGMI();
+        SentinelGM gm = new SentinelGM();
         register(gm);
 
         assertSame(gm.forceDeploymentSentinel,
@@ -121,7 +121,7 @@ class StratConGMsTest {
 
     @Test
     void routesToActiveGmOpForGenerationStrategy() {
-        SentinelGMI gm = new SentinelGMI();
+        SentinelGM gm = new SentinelGM();
         register(gm);
 
         assertSame(gm.opForGenerationSentinel,
@@ -130,7 +130,7 @@ class StratConGMsTest {
 
     @Test
     void routesToActiveGmOpForDeploymentStrategy() {
-        SentinelGMI gm = new SentinelGMI();
+        SentinelGM gm = new SentinelGM();
         register(gm);
 
         assertSame(gm.opForDeploymentSentinel,
@@ -139,7 +139,7 @@ class StratConGMsTest {
 
     @Test
     void routesToActiveGmMapGenerationStrategy() {
-        SentinelGMI gm = new SentinelGMI();
+        SentinelGM gm = new SentinelGM();
         register(gm);
 
         assertSame(gm.mapGenerationSentinel,
@@ -149,13 +149,13 @@ class StratConGMsTest {
     @Test
     void fallsBackToDefaultStrategyWhenNoGmIsActive() {
         // Nothing enabled for a disabled campaign -> default StratCon strategies (delegate to the static rules)
-        assertInstanceOf(StratConIForceDeploymentStrategy.class,
+        assertInstanceOf(StratConForceDeploymentStrategy.class,
               StratConGMs.forceDeployment(campaignWith(StratConPlayType.DISABLED).getCampaignOptions()));
-        assertInstanceOf(StratConIOpForGenerationStrategy.class,
+        assertInstanceOf(StratConOpForGenerationStrategy.class,
               StratConGMs.opForGeneration(campaignWith(StratConPlayType.DISABLED).getCampaignOptions()));
-        assertInstanceOf(StratConIOpForDeploymentStrategy.class,
+        assertInstanceOf(StratConOpForDeploymentStrategy.class,
               StratConGMs.opForDeployment(campaignWith(StratConPlayType.DISABLED).getCampaignOptions()));
-        assertInstanceOf(StratConIMapGenerationStrategy.class,
+        assertInstanceOf(StratConMapGenerationStrategy.class,
               StratConGMs.mapGeneration(campaignWith(StratConPlayType.DISABLED).getCampaignOptions()));
     }
 }

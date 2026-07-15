@@ -47,9 +47,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import megamek.Version;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.digitalGM.stratCon.MaplessStratConGMI;
-import mekhq.campaign.digitalGM.stratCon.SinglesStratConGMI;
-import mekhq.campaign.digitalGM.stratCon.StratConIDigitalGM;
+import mekhq.campaign.digitalGM.stratCon.MaplessStratConGM;
+import mekhq.campaign.digitalGM.stratCon.SinglesStratConGM;
+import mekhq.campaign.digitalGM.stratCon.StratConDigitalGM;
 import mekhq.campaign.digitalGM.stratCon.StratConPlayType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -135,9 +135,9 @@ class StratConPlayTypePersistenceTest {
         Campaign campaign = campaignWith(unmarshal(marshal(original)));
         CampaignOptions options = campaign.getCampaignOptions();
 
-        assertEquals(playType == StratConPlayType.NORMAL, new StratConIDigitalGM().isEnabled(options));
-        assertEquals(playType == StratConPlayType.MAPLESS, new MaplessStratConGMI().isEnabled(options));
-        assertEquals(playType == StratConPlayType.SINGLES, new SinglesStratConGMI().isEnabled(options));
+        assertEquals(playType == StratConPlayType.NORMAL, new StratConDigitalGM().isEnabled(options));
+        assertEquals(playType == StratConPlayType.MAPLESS, new MaplessStratConGM().isEnabled(options));
+        assertEquals(playType == StratConPlayType.SINGLES, new SinglesStratConGM().isEnabled(options));
     }
 
     // endregion

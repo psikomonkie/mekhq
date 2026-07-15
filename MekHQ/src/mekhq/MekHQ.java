@@ -107,9 +107,9 @@ import mekhq.campaign.ResolveScenarioTracker;
 import mekhq.campaign.autoResolve.MekHQSetupForces;
 import mekhq.campaign.autoResolve.StratConSetupForces;
 import mekhq.campaign.digitalGM.IDigitalGM;
-import mekhq.campaign.digitalGM.stratCon.MaplessStratConGMI;
-import mekhq.campaign.digitalGM.stratCon.SinglesStratConGMI;
-import mekhq.campaign.digitalGM.stratCon.StratConIDigitalGM;
+import mekhq.campaign.digitalGM.stratCon.MaplessStratConGM;
+import mekhq.campaign.digitalGM.stratCon.SinglesStratConGM;
+import mekhq.campaign.digitalGM.stratCon.StratConDigitalGM;
 import mekhq.campaign.handler.PostScenarioDialogHandler;
 import mekhq.campaign.handler.XPHandler;
 import mekhq.campaign.mission.AtBDynamicScenario;
@@ -963,9 +963,9 @@ public class MekHQ implements GameListener {
 
         // Register every digital GM. All receive the new-day event, but only the one matching the campaign's StratCon
         // play type acts (see DigitalGM#isEnabled); the play types are mutually exclusive, so at most one runs per day.
-        for (IDigitalGM IDigitalGM : List.of(new StratConIDigitalGM(),
-              new MaplessStratConGMI(),
-              new SinglesStratConGMI())) {
+        for (IDigitalGM IDigitalGM : List.of(new StratConDigitalGM(),
+              new MaplessStratConGM(),
+              new SinglesStratConGM())) {
             IDigitalGM.startup();
         }
     }

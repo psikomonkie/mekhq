@@ -32,23 +32,35 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import megamek.common.annotations.Nullable;
-import mekhq.campaign.digitalGM.IOpForDeploymentStrategy;
+import mekhq.campaign.digitalGM.IFacilityStrategy;
+import mekhq.campaign.mission.AtBContract;
+import mekhq.campaign.mission.AtBScenario;
 
 /**
- * Default StratCon implementation of {@link IOpForDeploymentStrategy}: the standard weighted-random placement of a
- * hostile scenario on an unoccupied hex. Delegates to {@link StratConContractInitializer#getUnoccupiedCoords}, so this
- * class introduces the overridable seam without moving any behaviour.
+ * {@link IFacilityStrategy} for play types with no facility map (Mapless and Singles). Every facility operation is a
+ * deliberate no-op: Mapless/Singles skip facility placement entirely (see {@link StratConContractInitializer}), so
+ * there are never any facilities to affect. The periodic no-op also mirrors the legacy engine's
+ * {@code if (!isUseStratConMapless)} guard.
  *
  * @author Illiani
  * @since 0.51.01
  */
-public class StratConIOpForDeploymentStrategy implements IOpForDeploymentStrategy {
+public class NoOpFacilityStrategy implements IFacilityStrategy {
 
     @Override
-    public @Nullable StratConCoords getUnoccupiedCoords(StratConTrackState track, boolean allowPlayerFacilities,
-          boolean allowPlayerForces, boolean emphasizeStrategicTargets) {
-        return StratConContractInitializer.getUnoccupiedCoords(track, allowPlayerFacilities, allowPlayerForces,
-              emphasizeStrategicTargets);
+    public void applyPeriodicEffects(StratConTrackState track, StratConCampaignState campaignState,
+          boolean isStartOfMonth) {
+        // Intentionally empty: Mapless and Singles play have no facility map.
+    }
+
+    @Override
+    public void updateFacilityForScenario(AtBScenario scenario, AtBContract contract, boolean destroy,
+          boolean capture) {
+        // Intentionally empty: Mapless and Singles play have no facilities to update.
+    }
+
+    @Override
+    public void switchFacilityOwner(StratConFacility facility) {
+        // Intentionally empty: Mapless and Singles play have no facilities to transfer.
     }
 }

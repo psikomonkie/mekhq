@@ -32,32 +32,33 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.Campaign;
-import mekhq.campaign.ResolveScenarioTracker;
-import mekhq.campaign.digitalGM.IScenarioLifecycleStrategy;
+import mekhq.campaign.digitalGM.IFacilityStrategy;
+import mekhq.campaign.mission.AtBContract;
+import mekhq.campaign.mission.AtBScenario;
 
 /**
- * Default StratCon implementation of {@link IScenarioLifecycleStrategy}. Every method delegates to the existing static
- * logic on {@link StratConRulesManager}, so this class introduces the overridable seam without moving any behaviour.
+ * Default (map-based) StratCon implementation of {@link IFacilityStrategy}. Every method delegates to the existing
+ * facility logic on {@link StratConRulesManager}, so behaviour is unchanged from the legacy engine.
  *
  * @author Illiani
  * @since 0.51.01
  */
-public class StratConIScenarioLifecycleStrategy implements IScenarioLifecycleStrategy {
+public class StratConFacilityStrategy implements IFacilityStrategy {
 
     @Override
-    public void processForceReturnDates(StratConTrackState track, Campaign campaign) {
-        StratConRulesManager.processTrackForceReturnDates(track, campaign);
+    public void applyPeriodicEffects(StratConTrackState track, StratConCampaignState campaignState,
+          boolean isStartOfMonth) {
+        StratConRulesManager.processFacilityEffects(track, campaignState, isStartOfMonth);
     }
 
     @Override
-    public void processExpiredScenario(StratConScenario scenario, StratConTrackState track,
-          StratConCampaignState campaignState) {
-        StratConRulesManager.processIgnoredStratConScenario(scenario, track, campaignState);
+    public void updateFacilityForScenario(AtBScenario scenario, AtBContract contract, boolean destroy,
+          boolean capture) {
+        StratConRulesManager.updateFacilityForScenario(scenario, contract, destroy, capture);
     }
 
     @Override
-    public void processScenarioCompletion(ResolveScenarioTracker tracker) {
-        StratConRulesManager.processScenarioCompletion(tracker);
+    public void switchFacilityOwner(StratConFacility facility) {
+        StratConRulesManager.switchFacilityOwner(facility);
     }
 }

@@ -33,27 +33,32 @@
 package mekhq.campaign.digitalGM.stratCon;
 
 import mekhq.campaign.campaignOptions.CampaignOptions;
+import mekhq.campaign.digitalGM.IFacilityStrategy;
 
 /**
- * The default digital GM: classic map-based StratCon ("Normal" play, {@link StratConPlayType#NORMAL}). It inherits the
- * full StratCon daily lifecycle from {@link AbstractStratConGMI} and keeps every strategy at its StratCon default
- * &mdash; facility effects are applied and scenarios are generated at the normal weekly cadence.
- *
- * <p>It is also the base the reduced play types specialise: {@link MaplessStratConGMI} switches off facility effects,
- * and {@link SinglesStratConGMI} additionally caps generation to one scenario per week.</p>
+ * Digital GM for StratCon <b>Mapless</b> play ({@link StratConPlayType#MAPLESS}). Identical to the map-based
+ * {@link StratConDigitalGM} except that it has no facility map: it supplies a {@link NoOpFacilityStrategy}, which
+ * reproduces the legacy engine's {@code if (!isUseStratConMapless)} guard around facility effects.
  *
  * @author Illiani
  * @since 0.51.01
  */
-public class StratConIDigitalGM extends AbstractStratConGMI {
+public class MaplessStratConGM extends AbstractStratConGM {
+
+    private final IFacilityStrategy noOpFacility = new NoOpFacilityStrategy();
 
     @Override
     public String getName() {
-        return StratConPlayType.NORMAL.getLabel();
+        return StratConPlayType.MAPLESS.getLabel();
     }
 
     @Override
     public boolean isEnabled(CampaignOptions campaignOptions) {
-        return campaignOptions.getStratConPlayType() == StratConPlayType.NORMAL;
+        return campaignOptions.getStratConPlayType() == StratConPlayType.MAPLESS;
+    }
+
+    @Override
+    protected IFacilityStrategy getFacilityStrategy() {
+        return noOpFacility;
     }
 }

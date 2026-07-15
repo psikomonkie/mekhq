@@ -56,9 +56,9 @@ public final class StratConGMs {
     /**
      * The GM consulted when no digital GM governs the campaign (or the active one is not StratCon-based): the default,
      * map-based StratCon system. Its strategies <i>are</i> the StratCon defaults, defined once by the concrete system
-     * ({@link StratConIDigitalGM} / {@link AbstractStratConGMI}) rather than duplicated here.
+     * ({@link StratConDigitalGM} / {@link AbstractStratConGM}) rather than duplicated here.
      */
-    private static final AbstractStratConGMI DEFAULT_GM = new StratConIDigitalGM();
+    private static final AbstractStratConGM DEFAULT_GM = new StratConDigitalGM();
 
     private StratConGMs() {
     }
@@ -121,10 +121,10 @@ public final class StratConGMs {
      *
      * @return the governing StratCon GM, or the default StratCon GM
      */
-    private static AbstractStratConGMI resolveGM(CampaignOptions campaignOptions) {
+    private static AbstractStratConGM resolveGM(CampaignOptions campaignOptions) {
         IDigitalGM activeGM = DigitalGMRegistry.getActiveGM(campaignOptions).orElse(null);
 
-        if (activeGM instanceof AbstractStratConGMI stratConGM) {
+        if (activeGM instanceof AbstractStratConGM stratConGM) {
             return stratConGM;
         }
 

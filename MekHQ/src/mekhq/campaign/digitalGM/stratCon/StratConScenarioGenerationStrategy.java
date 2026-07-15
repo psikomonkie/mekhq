@@ -33,38 +33,27 @@
 package mekhq.campaign.digitalGM.stratCon;
 
 import mekhq.campaign.Campaign;
-import mekhq.campaign.digitalGM.IForceDeploymentStrategy;
+import mekhq.campaign.digitalGM.IScenarioGenerationStrategy;
 import mekhq.campaign.mission.AtBContract;
 
 /**
- * Default StratCon implementation of {@link IForceDeploymentStrategy}. Every method delegates to the existing static
+ * Default StratCon implementation of {@link IScenarioGenerationStrategy}. Every method delegates to the existing static
  * logic on {@link StratConRulesManager}, so this class introduces the overridable seam without moving any behaviour.
  *
  * @author Illiani
  * @since 0.51.01
  */
-public class StratConIForceDeploymentStrategy implements IForceDeploymentStrategy {
+public class StratConScenarioGenerationStrategy implements IScenarioGenerationStrategy {
 
     @Override
-    public void deployForceToCoords(StratConCoords coords, int forceID, Campaign campaign, AtBContract contract,
-          StratConTrackState track, boolean sticky) {
-        StratConRulesManager.deployForceToCoords(coords, forceID, campaign, contract, track, sticky);
+    public void generateWeeklyScenarioDates(Campaign campaign, StratConCampaignState campaignState,
+          AtBContract contract, StratConTrackState track, boolean singleDropMode) {
+        StratConRulesManager.generateScenariosDatesForWeek(campaign, campaignState, contract, track, singleDropMode);
     }
 
     @Override
-    public void assignForceToScenario(StratConCoords coords, int forceID, Campaign campaign, AtBContract contract,
-          StratConTrackState track, boolean sticky) {
-        StratConRulesManager.assignForceToScenario(coords, forceID, campaign, contract, track, sticky);
-    }
-
-    @Override
-    public void processForceDeployment(StratConCoords coords, int forceID, Campaign campaign, StratConTrackState track,
-          boolean sticky) {
-        StratConRulesManager.processForceDeployment(coords, forceID, campaign, track, sticky);
-    }
-
-    @Override
-    public void commitPrimaryForces(Campaign campaign, StratConScenario scenario, StratConTrackState trackState) {
-        StratConRulesManager.commitPrimaryForces(campaign, scenario, trackState);
+    public void generateDailyScenarios(Campaign campaign, StratConCampaignState campaignState, AtBContract contract,
+          int scenarioCount) {
+        StratConRulesManager.generateDailyScenariosForTrack(campaign, campaignState, contract, scenarioCount);
     }
 }

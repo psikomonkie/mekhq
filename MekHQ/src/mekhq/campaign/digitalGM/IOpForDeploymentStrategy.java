@@ -33,7 +33,7 @@
 package mekhq.campaign.digitalGM;
 
 import megamek.common.annotations.Nullable;
-import mekhq.campaign.digitalGM.stratCon.AbstractStratConGMI;
+import mekhq.campaign.digitalGM.stratCon.AbstractStratConGM;
 import mekhq.campaign.digitalGM.stratCon.StratConCoords;
 import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 
@@ -46,7 +46,7 @@ import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
  * <p>The default StratCon implementation delegates to
  * {@link mekhq.campaign.digitalGM.stratCon.StratConContractInitializer#getUnoccupiedCoords
  * StratConContractInitializer.getUnoccupiedCoords} &mdash; the existing weighted-random selection of an unoccupied,
- * non-ocean hex. The accessor lives on {@link AbstractStratConGMI AbstractStratConGM}.</p>
+ * non-ocean hex. The accessor lives on {@link AbstractStratConGM AbstractStratConGM}.</p>
  *
  * @author Illiani
  * @since 0.51.01

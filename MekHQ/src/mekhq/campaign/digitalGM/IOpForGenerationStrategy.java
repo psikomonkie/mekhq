@@ -33,7 +33,7 @@
 package mekhq.campaign.digitalGM;
 
 import mekhq.campaign.Campaign;
-import mekhq.campaign.digitalGM.stratCon.AbstractStratConGMI;
+import mekhq.campaign.digitalGM.stratCon.AbstractStratConGM;
 import mekhq.campaign.mission.AtBContract;
 import mekhq.campaign.mission.AtBDynamicScenario;
 
@@ -46,7 +46,7 @@ import mekhq.campaign.mission.AtBDynamicScenario;
  * <p>The default StratCon implementation delegates to
  * {@link mekhq.campaign.mission.AtBDynamicScenarioFactory#finalizeScenario AtBDynamicScenarioFactory.finalizeScenario}
  * &mdash; the existing dynamic/random AtB generation &mdash; so the rules themselves are unchanged. The accessor lives
- * on {@link AbstractStratConGMI AbstractStratConGM}.</p>
+ * on {@link AbstractStratConGM AbstractStratConGM}.</p>
  *
  * @author Illiani
  * @since 0.51.01

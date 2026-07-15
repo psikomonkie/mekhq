@@ -49,7 +49,7 @@ import mekhq.campaign.personnel.Person;
  * @author Illiani
  * @since 0.51.01
  */
-public class StratConIReinforcementStrategy implements IReinforcementStrategy {
+public class StratConReinforcementStrategy implements IReinforcementStrategy {
 
     @Override
     public ReinforcementEligibilityType getReinforcementType(int forceID, StratConTrackState trackState,

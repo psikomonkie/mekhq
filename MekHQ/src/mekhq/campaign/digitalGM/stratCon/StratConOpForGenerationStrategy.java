@@ -32,20 +32,24 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.digitalGM.IMapGenerationStrategy;
+import mekhq.campaign.Campaign;
+import mekhq.campaign.digitalGM.IOpForGenerationStrategy;
+import mekhq.campaign.mission.AtBContract;
+import mekhq.campaign.mission.AtBDynamicScenario;
+import mekhq.campaign.mission.AtBDynamicScenarioFactory;
 
 /**
- * Default StratCon implementation of {@link IMapGenerationStrategy}: the standard biome-driven terrain selection.
- * Delegates to {@link StratConRulesManager#setScenarioParametersFromBiome}, so this class introduces the overridable
- * seam without moving any behaviour.
+ * Default StratCon implementation of {@link IOpForGenerationStrategy}: the standard dynamic/random AtB generation. It
+ * delegates to {@link AtBDynamicScenarioFactory#finalizeScenario}, so this class introduces the overridable seam
+ * without moving any behaviour.
  *
  * @author Illiani
  * @since 0.51.01
  */
-public class StratConIMapGenerationStrategy implements IMapGenerationStrategy {
+public class StratConOpForGenerationStrategy implements IOpForGenerationStrategy {
 
     @Override
-    public void setScenarioTerrain(StratConTrackState track, StratConScenario scenario, boolean isNoTornadoes) {
-        StratConRulesManager.setScenarioParametersFromBiome(track, scenario, isNoTornadoes);
+    public void generateOpFor(AtBDynamicScenario backingScenario, AtBContract contract, Campaign campaign) {
+        AtBDynamicScenarioFactory.finalizeScenario(backingScenario, contract, campaign);
     }
 }

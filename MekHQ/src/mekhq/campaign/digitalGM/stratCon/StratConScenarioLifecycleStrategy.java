@@ -32,39 +32,32 @@
  */
 package mekhq.campaign.digitalGM.stratCon;
 
-import mekhq.campaign.campaignOptions.CampaignOptions;
-import mekhq.campaign.digitalGM.IFacilityStrategy;
+import mekhq.campaign.Campaign;
+import mekhq.campaign.ResolveScenarioTracker;
+import mekhq.campaign.digitalGM.IScenarioLifecycleStrategy;
 
 /**
- * Digital GM for StratCon <b>Singles</b> play ({@link StratConPlayType#SINGLES}). Singles uses the same no-op facility
- * handling as Mapless and additionally caps the campaign to a single scenario per week by enabling
- * {@linkplain #isSingleDropMode() single-drop mode}. This mirrors the legacy engine, where
- * {@code isUseStratConMaplessMode()} was already {@code true} for Singles.
+ * Default StratCon implementation of {@link IScenarioLifecycleStrategy}. Every method delegates to the existing static
+ * logic on {@link StratConRulesManager}, so this class introduces the overridable seam without moving any behaviour.
  *
  * @author Illiani
  * @since 0.51.01
  */
-public class SinglesStratConGMI extends AbstractStratConGMI {
-
-    private final IFacilityStrategy noOpFacility = new NoOpIFacilityStrategy();
+public class StratConScenarioLifecycleStrategy implements IScenarioLifecycleStrategy {
 
     @Override
-    public String getName() {
-        return StratConPlayType.SINGLES.getLabel();
+    public void processForceReturnDates(StratConTrackState track, Campaign campaign) {
+        StratConRulesManager.processTrackForceReturnDates(track, campaign);
     }
 
     @Override
-    public boolean isEnabled(CampaignOptions campaignOptions) {
-        return campaignOptions.getStratConPlayType() == StratConPlayType.SINGLES;
+    public void processExpiredScenario(StratConScenario scenario, StratConTrackState track,
+          StratConCampaignState campaignState) {
+        StratConRulesManager.processIgnoredStratConScenario(scenario, track, campaignState);
     }
 
     @Override
-    protected boolean isSingleDropMode() {
-        return true;
-    }
-
-    @Override
-    protected IFacilityStrategy getFacilityStrategy() {
-        return noOpFacility;
+    public void processScenarioCompletion(ResolveScenarioTracker tracker) {
+        StratConRulesManager.processScenarioCompletion(tracker);
     }
 }
