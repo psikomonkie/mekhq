@@ -141,15 +141,14 @@ class MHQDisplayPage extends MHQOptionsPage {
         JLabel guiScaleLabel = new JLabel(Messages.getString("CommonSettingsDialog.guiScale"));
         guiScaleSlider = new JSlider(7, 24);
         guiScaleSlider.setName("guiScale");
-        guiScaleSlider.setMajorTickSpacing(3);
-        // Label every 30% stop and the 240% maximum so the full supported range is explicit.
+                        guiScaleSlider.setMinorTickSpacing(1);
+                        // Six labels divide the 70-240% range into symmetric 30%/40% gaps without crowding either endpoint.
         Hashtable<Integer, JComponent> labelTable = new Hashtable<>();
         labelTable.put(7, new JLabel("70%"));
         labelTable.put(10, new JLabel("100%"));
-        labelTable.put(13, new JLabel("130%"));
-        labelTable.put(16, new JLabel("160%"));
-        labelTable.put(19, new JLabel("190%"));
-        labelTable.put(22, new JLabel("220%"));
+                        labelTable.put(14, new JLabel("140%"));
+                        labelTable.put(17, new JLabel("170%"));
+                        labelTable.put(21, new JLabel("210%"));
                         labelTable.put(24, new JLabel("240%"));
         guiScaleSlider.setLabelTable(labelTable);
         guiScaleSlider.setPaintTicks(true);
