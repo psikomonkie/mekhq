@@ -302,12 +302,12 @@ public class StratConRulesManager {
             // if forces are already assigned to these coordinates, use those instead of randomly
             // selected ones
             StratConScenario scenario;
+            // A scenario spawning on top of an already-deployed force is an ambush; restrict template selection
+            // to templates flagged as suitable for that context.
+            ScenarioTemplate ambushTemplate = null;
             if (track.getAssignedCoordForces().containsKey(scenarioCoords)) {
                 Set<Integer> assignedForceIDs = track.getAssignedCoordForces().get(scenarioCoords);
 
-                // A scenario spawning on top of an already-deployed force is an ambush; restrict template selection
-                // to templates flagged as suitable for that context.
-                ScenarioTemplate ambushTemplate = null;
                 if (!assignedForceIDs.isEmpty()) {
                     ambushTemplate = getAmbushTemplateForForce(campaign, assignedForceIDs.iterator().next());
                 }
@@ -336,6 +336,13 @@ public class StratConRulesManager {
 
             if (scenario != null) {
                 finalizeBackingScenario(campaign, contract, track, false, scenario);
+
+                if (ambushTemplate != null) {
+                    // Ambushes are always Crisis scenarios, never Turning Points; mirror the manual-deployment
+                    // path in deployForceToCoords so auto-generated ambushes get the same post-finalization state.
+                    scenario.getBackingScenario().setIsCrisis(true);
+                    scenario.setTurningPoint(false);
+                }
             }
         }
     }
@@ -2571,9 +2578,10 @@ public class StratConRulesManager {
             }
         }
 
-        // Ambush and bungled-patrol scenarios are determined and pre-selected up-front in deployForceToCoords, where
-        // the pre-deployment fog-of-war state is still known. Scenarios reaching this random-selection path (auto
-        // generation, deployments into already-explored hexes) are never ambushes.
+        // This random-template path is only reached when no force is pre-deployed at the coords, so it never
+        // produces an ambush. Ambushes (a scenario spawning on top of an already-deployed force) are handled up
+        // front by generateScenarioForExistingForces in deployForceToCoords and generateDailyScenariosForTrack,
+        // which pass an explicit ambush template instead of the random one selected here.
         ScenarioTemplate template = StratConScenarioFactory.getRandomScenario(unitType, false, false);
         // useful for debugging specific scenario types
         // template = StratConScenarioFactory.getSpecificScenario("Defend Grounded
