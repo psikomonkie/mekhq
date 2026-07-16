@@ -77,7 +77,7 @@ public class AlternateInjuries {
     private static final int ORGAN_TRAUMA_HEALING_DAYS = 21; // Internet says 6-8 weeks
     private static final int DISEMBOWELED_HEALING_DAYS = 21; // Internet says 6-8 weeks
     private static final int BONE_BRUISE_HEALING_DAYS = 21; // Internet says 6 weeks
-    private static final int BLOOD_LOSS_HEALING_DAYS = 14; // Internet says 4-6 week
+    private static final int BLOOD_LOSS_HEALING_DAYS = 14; // Internet says 4-6 weeks
     // Copied from Blood Loss as ATOW has this always be blood loss
     private static final int MEDICAL_COMPLICATION_HEALING_DAYS = 14;
     private static final int SEVER_HEALING_DAYS = 180; // We need to have something here for Advanced Medical

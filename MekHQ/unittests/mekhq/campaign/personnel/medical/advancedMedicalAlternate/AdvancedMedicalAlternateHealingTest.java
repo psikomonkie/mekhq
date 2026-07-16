@@ -383,6 +383,7 @@ class AdvancedMedicalAlternateHealingTest {
                         List.class,
                         int.class,
                         boolean.class,
+                        boolean.class,
                         boolean.class
                   },
                   doctor,
@@ -390,6 +391,7 @@ class AdvancedMedicalAlternateHealingTest {
                   List.of(),
                   6,
                   true,
+                  false,
                   false);
 
             assertEquals(1, margin);

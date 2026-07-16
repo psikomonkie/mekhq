@@ -81,9 +81,6 @@ public class AdvancedMedicalAlternateHealing {
     private static final String RESOURCE_BUNDLE = "mekhq.resources.AdvancedMedicalAlternateHealing";
     private static final int PROSTHETIC_PENALTY = 4; // Interstellar Operations page 70
 
-    // ATOW pg193 6th printing
-    private static final int PERMANENT_INJURY_THRESHOLD = -3;
-
     /**
      * Processes the start-of-day healing for a given patient.
      *
@@ -298,16 +295,26 @@ public class AdvancedMedicalAlternateHealing {
                   healingSPAOptions.hasTraumaSurgeon(), healingSPAOptions.hasProthesisTechnician());
             miscPenalty += healingSPAOptions.hasHypochondriac() ? 1 : 0;
 
+            boolean isUseKinderHealing = campaign.getCampaignOptions()
+                                               .isUseAlternativeAdvancedMedicalFewerPermanentInjuries();
+
+            // The healing outcome is only applied on the cycle where the recovery timer has run out; on every other
+            // cycle a bad roll simply stalls that cycle's progress. Medical Edge is a limited resource, so we only
+            // allow it to be spent on the resolving cycle (and, within the roll, only to avert an injury that is
+            // genuinely permanent under the active campaign options).
+            boolean willResolveThisCycle = injury.getTime() <= 0;
+
             boolean useEdge = campaign.getCampaignOptions().isUseEdge();
-            useEdge = useEdge && healingSPAOptions.hasMedicalEdge();
+            useEdge = useEdge && healingSPAOptions.hasMedicalEdge() && willResolveThisCycle;
             int marginOfSuccess = getMarginOfSuccessForHealing(doctor,
                   campaign,
                   modifiers,
                   miscPenalty,
                   useEdge,
-                  isUnassistedHealing);
+                  isUnassistedHealing,
+                  isUseKinderHealing);
 
-            if (injury.getTime() <= 0) {
+            if (willResolveThisCycle) {
                 HealingMarginOfSuccessEffects outcome = processHealingEffects(campaign,
                       patient,
                       injury,
@@ -335,39 +342,59 @@ public class AdvancedMedicalAlternateHealing {
      * @since 0.50.10
      */
     private static int getMarginOfSuccessForHealing(Person doctor, Campaign campaign,
-          List<TargetRollModifier> modifiers, int miscPenalty, boolean useEdge, boolean isUnassistedHealing) {
+          List<TargetRollModifier> modifiers, int miscPenalty, boolean useEdge, boolean isUnassistedHealing,
+          boolean isUseKinderHealing) {
         ActionCheckResult actionCheckResult = getActionCheckResult(doctor,
               campaign,
               modifiers,
               miscPenalty,
               useEdge,
-              isUnassistedHealing);
+              isUnassistedHealing,
+              isUseKinderHealing);
 
         return actionCheckResult.getMarginOfSuccess();
     }
 
     private static ActionCheckResult getActionCheckResult(Person doctor, Campaign campaign,
-          List<TargetRollModifier> modifiers, int miscPenalty, boolean useEdge, boolean isUnassistedHealing) {
+          List<TargetRollModifier> modifiers, int miscPenalty, boolean useEdge, boolean isUnassistedHealing,
+          boolean isUseKinderHealing) {
         ActionCheckResult actionCheckResult;
         if (isUnassistedHealing) {
-            actionCheckResult = performBodyAttributeCheck(doctor, modifiers, miscPenalty, useEdge);
+            actionCheckResult = performBodyAttributeCheck(doctor, modifiers, miscPenalty, useEdge, isUseKinderHealing);
         } else {
-            actionCheckResult = performSurgerySkillCheck(doctor, campaign, modifiers, miscPenalty, useEdge);
+            actionCheckResult = performSurgerySkillCheck(doctor,
+                  campaign,
+                  modifiers,
+                  miscPenalty,
+                  useEdge,
+                  isUseKinderHealing);
         }
 
         return actionCheckResult;
     }
 
     /**
+     * Determines whether the supplied healing roll would leave the injury permanent under the currently active campaign
+     * options.
+     *
+     * <p>This is what gates a Medical Edge reroll: with {@code useAlternativeAdvancedMedicalFewerPermanentInjuries}
+     * enabled, margins of -3 through -5 resolve to a delay rather than a permanent injury, so Edge should not be spent
+     * (and potentially rerolled into a worse result) in that case.</p>
+     */
+    private static boolean isPermanentOutcome(ActionCheckResult actionCheckResult, boolean isUseKinderHealing) {
+        return getEffectFromHealingAttempt(actionCheckResult.getMarginOfSuccess(), isUseKinderHealing).isPermanent();
+    }
+
+    /**
      * Performs a healing action check.
      *
      * <p>The roll is an attribute check based on the patient's {@link SkillAttribute#BODY} attribute, modified by the
-     * provided target roll modifiers and miscellaneous penalties. If the initial result causes the injury to become
-     * permanent (margin of success &le; -6) and {@code useEdge} is {@code true}, a second roll is made and its result
-     * replaces the original.</p>
+     * provided target roll modifiers and miscellaneous penalties. If the initial result would leave the injury
+     * permanent under the active campaign options and {@code useEdge} is {@code true}, a second roll is made and its
+     * result replaces the original.</p>
      */
     private static ActionCheckResult performBodyAttributeCheck(Person doctor, List<TargetRollModifier> modifiers,
-          int miscPenalty, boolean useEdge) {
+          int miscPenalty, boolean useEdge, boolean isUseKinderHealing) {
         ActionCheckResult actionCheckResult;
         AttributeCheck attributeCheck = doctor.checkAttribute(BODY)
                                               .withMiscModifier(miscPenalty)
@@ -377,9 +404,7 @@ public class AdvancedMedicalAlternateHealing {
         actionCheckResult = attributeCheck.resolve(false, reportText);
 
         // Edge
-        if (actionCheckResult.getMarginOfSuccess() <= PERMANENT_INJURY_THRESHOLD &&
-                  useEdge &&
-                  doctor.getCurrentEdge() > 0) {
+        if (isPermanentOutcome(actionCheckResult, isUseKinderHealing) && useEdge && doctor.getCurrentEdge() > 0) {
             // manually update edge because if we pass useEdge == true, the doctor will get one free roll
             doctor.spendEdge();
             actionCheckResult = attributeCheck.resolve(false, getTextAt(RESOURCE_BUNDLE,
@@ -392,12 +417,12 @@ public class AdvancedMedicalAlternateHealing {
      * Performs a healing action check.
      *
      * <p>The roll is a skill check using the doctor's {@code Surgery} skill, modified by the provided target roll
-     * modifiers and miscellaneous penalties. If the initial result causes the injury to become permanent (margin of
-     * success &le; {@link #PERMANENT_INJURY_THRESHOLD}) and {@code useEdge} is {@code true}, a second roll is made and
-     * its result replaces the original.</p>
+     * modifiers and miscellaneous penalties. If the initial result would leave the injury permanent under the active
+     * campaign options and {@code useEdge} is {@code true}, a second roll is made and its result replaces the
+     * original.</p>
      */
     private static ActionCheckResult performSurgerySkillCheck(Person doctor, Campaign campaign,
-          List<TargetRollModifier> modifiers, int miscPenalty, boolean useEdge) {
+          List<TargetRollModifier> modifiers, int miscPenalty, boolean useEdge, boolean isUseKinderHealing) {
         ActionCheckResult actionCheckResult;
         SkillCheck skillCheck = doctor.checkSkill(S_SURGERY, campaign)
                                       .withMiscModifier(miscPenalty)
@@ -407,9 +432,7 @@ public class AdvancedMedicalAlternateHealing {
         actionCheckResult = skillCheck.resolve(false, reportText);
 
         // Edge
-        if (actionCheckResult.getMarginOfSuccess() <= PERMANENT_INJURY_THRESHOLD &&
-                  useEdge &&
-                  doctor.getCurrentEdge() > 0) {
+        if (isPermanentOutcome(actionCheckResult, isUseKinderHealing) && useEdge && doctor.getCurrentEdge() > 0) {
             // manually update edge because if we pass useEdge == true, the doctor will get one free roll
             doctor.spendEdge();
             actionCheckResult = skillCheck.resolve(false, getTextAt(RESOURCE_BUNDLE,
