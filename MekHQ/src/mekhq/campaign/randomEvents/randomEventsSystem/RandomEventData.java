@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -32,35 +32,16 @@
  */
 package mekhq.campaign.randomEvents.randomEventsSystem;
 
+import java.util.List;
+
 /**
- * Represents the quality of a response in prisoner-related random events.
+ * Represents data relevant to a random event, including its type, severity, and response map structure.
  *
- * <p>This enumeration defines three levels of response quality, which influence how various
- * prisoner events and interactions are processed in the campaign. It is used to categorize reactions or results in
- * situations involving prisoners.</p>
+ * @param randomEventType The type of random event as a {@link String}. This represents the name of the event.
+ * @param responseEntries A list of {@link RandomEventResponseEntry} defining the responses and their associated
+ *                        qualities and effects.
  */
-public enum ResponseQuality {
-    /**
-     * Represents a neutral response quality.
-     *
-     * <p>Indicates that the response neither has a positive nor a negative influence, but
-     * reflects a balanced or indifferent outcome from the associated prisoner interaction.</p>
-     */
-    RESPONSE_NEUTRAL,
-
-    /**
-     * Represents a positive response quality.
-     *
-     * <p>Indicates a favorable interaction or result, often leading to improved outcomes
-     * during prisoner-related events, such as successful negotiations or rescues.</p>
-     */
-    RESPONSE_POSITIVE,
-
-    /**
-     * Represents a negative response quality.
-     *
-     * <p>Indicates an unfavorable interaction or result, often leading to deteriorated
-     * outcomes during prisoner-related events, such as failed negotiations or missed rescues.</p>
-     */
-    RESPONSE_NEGATIVE
-}
+public record RandomEventData(
+      String randomEventType,
+      List<RandomEventResponseEntry> responseEntries
+) {}
