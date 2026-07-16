@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -30,22 +30,32 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekhq.campaign.randomEvents.randomEventsSystem;
+package mekhq.campaign.randomEvents.prisoners.prisonerEvents;
 
-import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 /**
- * Represents an individual response entry for a prisoner event. Each response entry defines a response quality and its
- * associated effects.
+ * A test class for validating the behavior and properties of the {@code MobType} enumeration.
  *
- * @param quality        the quality of the response, as defined by the {@link ResponseQuality} enum
- * @param effectsSuccess a list of effects resulting from successful resolution of the event, as defined by the
- *                       {@link EventResult} record
- * @param effectsFailure a list of effects resulting from failing to resolve the event, as defined by the
- *                       {@link EventResult} record
+ * <p>This class contains unit tests to ensure that the ranges defined by each {@code MobType}
+ * are consistent and correctly implemented. It checks whether the minimum value of each subsequent {@code MobType} is
+ * one greater than the maximum value of the previous {@code MobType}.</p>
+ *
+ * <p>These tests aim to validate that the {@code MobType} enumerations are properly sequential and
+ * follow the expected logical configuration.</p>
  */
-public record PrisonerResponseEntry(
-      ResponseQuality quality,
-      List<EventResult> effectsSuccess,
-      List<EventResult> effectsFailure
-) {}
+class MobTypeTest {
+    @Test
+    void testToStringSmall() {
+        int maximum = 0;
+        for (MobType mobType : MobType.values()) {
+            int minimum = mobType.getMinimum();
+
+            assertEquals(maximum + 1, minimum);
+
+            maximum = mobType.getMaximum();
+        }
+    }
+}

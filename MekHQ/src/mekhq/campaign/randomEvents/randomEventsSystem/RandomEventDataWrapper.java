@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 The MegaMek Team. All Rights Reserved.
+ * Copyright (C) 2025-2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekHQ.
  *
@@ -35,25 +35,25 @@ package mekhq.campaign.randomEvents.randomEventsSystem;
 import java.util.List;
 
 /**
- * A wrapper class for managing a list of {@link PrisonerEventData}. This class provides getter and setter methods to
+ * A wrapper class for managing a list of {@link RandomEventData}. This class provides getter and setter methods to
  * access and modify the list of prisoner events.
  */
-public class PrisonerEventDataWrapper {
-    private List<PrisonerEventData> events;
+public class RandomEventDataWrapper {
+    private List<RandomEventData> events;
 
     /**
-     * @return a {@link List} of {@link PrisonerEventData} objects representing the prisoner events.
+     * @return a {@link List} of {@link RandomEventData} objects representing the prisoner events.
      */
-    public List<PrisonerEventData> getEvents() {
+    public List<RandomEventData> getEvents() {
         return events;
     }
 
     /**
-     * Sets the list of {@link PrisonerEventData} for this wrapper.
+     * Sets the list of {@link RandomEventData} for this wrapper.
      *
-     * @param events a {@link List} of {@link PrisonerEventData} objects to be associated with this wrapper.
+     * @param events a {@link List} of {@link RandomEventData} objects to be associated with this wrapper.
      */
-    public void setEvents(List<PrisonerEventData> events) {
+    public void setEvents(List<RandomEventData> events) {
         this.events = events;
     }
 }
