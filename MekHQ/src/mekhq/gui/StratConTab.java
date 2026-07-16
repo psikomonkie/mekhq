@@ -69,6 +69,7 @@ import mekhq.campaign.digitalGM.stratCon.StratConStrategicObjective;
 import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 import mekhq.campaign.events.NewDayEvent;
 import mekhq.campaign.events.StratConDeploymentEvent;
+import mekhq.campaign.events.missions.MissionChangedEvent;
 import mekhq.campaign.events.missions.MissionCompletedEvent;
 import mekhq.campaign.events.missions.MissionRemovedEvent;
 import mekhq.campaign.mission.AtBContract;
@@ -78,6 +79,7 @@ import mekhq.gui.baseComponents.roundedComponents.RoundedLineBorder;
 import mekhq.gui.enums.MHQTabType;
 import mekhq.gui.panels.TutorialHyperlinkPanel;
 import mekhq.gui.stratCon.CampaignManagementDialog;
+import mekhq.gui.view.ContractMeterBar;
 import mekhq.utilities.ReportingUtilities;
 
 /**
@@ -101,6 +103,7 @@ public class StratConTab extends CampaignGuiTab {
     private JLabel infoPanelText;
     private JLabel campaignStatusText;
     private JLabel objectiveStatusText;
+    private JPanel victoryPointsPanel;
     private JScrollPane expandedObjectivePanel;
     private boolean objectivesCollapsed = false;
 
@@ -231,6 +234,16 @@ public class StratConTab extends CampaignGuiTab {
         constraints.gridy = gridY++;
         infoPanel.add(btnManageCampaignState, constraints);
 
+        // Add the victory-point progress bar directly above the objectives list
+        victoryPointsPanel = new JPanel(new BorderLayout());
+        victoryPointsPanel.setOpaque(false);
+        constraints.gridy = gridY++;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.weightx = 1.0;
+        infoPanel.add(victoryPointsPanel, constraints);
+        constraints.fill = GridBagConstraints.NONE;
+        constraints.weightx = 0.0;
+
         // Add an expanded objective panel (scrollable)
         expandedObjectivePanel = new FastJScrollPane(objectiveStatusText);
         expandedObjectivePanel.setBorder(RoundedLineBorder.createRoundedLineBorder());
@@ -337,6 +350,7 @@ public class StratConTab extends CampaignGuiTab {
         if (currentContract == null) {
             campaignStatusText.setText(getTextAt(RESOURCE_BUNDLE, "stratConTab.status.noContract"));
             expandedObjectivePanel.setVisible(false);
+            victoryPointsPanel.setVisible(false);
             return;
         }
 
@@ -346,11 +360,13 @@ public class StratConTab extends CampaignGuiTab {
         if (startDate != null && startDate.isAfter(currentDate)) {
             campaignStatusText.setText(getTextAt(RESOURCE_BUNDLE, "stratConTab.status.notStarted"));
             expandedObjectivePanel.setVisible(false);
+            victoryPointsPanel.setVisible(false);
             return;
         }
 
         StratConCampaignState campaignState = currentContract.getStratConCampaignState();
         expandedObjectivePanel.setVisible(true);
+        updateVictoryPointsBar(campaignState);
 
         StringBuilder sb = new StringBuilder();
         sb.append(getFormattedTextAt(RESOURCE_BUNDLE, "stratConTab.status.header",
@@ -361,8 +377,8 @@ public class StratConTab extends CampaignGuiTab {
             sb.append(getTextAt(RESOURCE_BUNDLE, "stratConTab.status.expired"));
         }
 
-        sb.append(getFormattedTextAt(RESOURCE_BUNDLE, "stratConTab.status.victoryPoints",
-              String.valueOf(campaignState.getVictoryPoints())));
+        // Campaign Victory Points are charted by the progress bar above the objectives list, so they are no longer
+        // repeated as text here; only the support-point total remains in the status header.
         sb.append(getFormattedTextAt(RESOURCE_BUNDLE, "stratConTab.status.supportPoints",
               String.valueOf(campaignState.getSupportPoints())));
 
@@ -382,6 +398,36 @@ public class StratConTab extends CampaignGuiTab {
 
         // keep the sector tab colors in sync as objectives are completed/failed over the course of the contract
         applySectorTabColors();
+    }
+
+    /**
+     * Refreshes the victory-point progress bar shown above the objectives list. Mirrors the Briefing Room's contract
+     * gauge: a {@link ContractMeterBar} charting current-versus-required Campaign Victory Points when a positive target
+     * exists, falling back to a plain current/required label when it does not.
+     *
+     * @param campaignState the StratCon state of the currently selected contract
+     */
+    private void updateVictoryPointsBar(StratConCampaignState campaignState) {
+        victoryPointsPanel.removeAll();
+        victoryPointsPanel.setVisible(true);
+
+        boolean maplessMode = getCampaignGui().getCampaign().getCampaignOptions().isUseStratConMaplessMode();
+        int currentScore = currentContract.getContractScore(maplessMode);
+        int requiredScore = currentContract.getRequiredVictoryPoints();
+
+        if (requiredScore > 0) {
+            boolean canEndEarly = (campaignState == null) || campaignState.allowEarlyVictory();
+            victoryPointsPanel.add(ContractMeterBar.victoryPoints(currentScore, requiredScore, canEndEarly),
+                  BorderLayout.CENTER);
+        } else {
+            // No positive target to chart (e.g., a contract with a zero requirement); show the figures as text instead,
+            // matching the Briefing Room's fallback.
+            victoryPointsPanel.add(new JLabel(getFormattedTextAt(RESOURCE_BUNDLE,
+                  "stratConTab.status.victoryPointsBarFallback", currentScore, requiredScore)), BorderLayout.CENTER);
+        }
+
+        victoryPointsPanel.revalidate();
+        victoryPointsPanel.repaint();
     }
 
     /**
@@ -725,6 +771,14 @@ public class StratConTab extends CampaignGuiTab {
 
     @Subscribe
     public void handle(MissionCompletedEvent ev) {
+        repopulateContractsAndSectors();
+        updateCampaignState();
+    }
+
+    @Subscribe
+    public void handle(MissionChangedEvent ev) {
+        // Fired (among other times) once a newly accepted contract's StratCon state has been initialized, so a
+        // concurrent contract shows up in the selector immediately instead of only after the next day.
         repopulateContractsAndSectors();
         updateCampaignState();
     }
