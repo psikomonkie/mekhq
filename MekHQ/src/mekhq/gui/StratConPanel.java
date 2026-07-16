@@ -101,7 +101,7 @@ public class StratConPanel extends JPanel implements ActionListener {
     private static final double ZOOM_STEP = 1.1;
 
     /**
-     * How far (in screen pixels) a right-mouse press may move before it is treated as a pan rather than a context-menu
+     * How far (in screen pixels) a left-mouse press may move before it is treated as a pan rather than a hex-selection
      * click.
      */
     private static final int DRAG_THRESHOLD = 5;
@@ -151,10 +151,10 @@ public class StratConPanel extends JPanel implements ActionListener {
     /** Current zoom factor applied to the hex map. 1.0 == no zoom. */
     private double scale = 1.0;
 
-    // Right-mouse-drag panning state, tracked in screen coordinates so it is stable as the view scrolls beneath us.
-    private Point rightDragStartScreen;
-    private Point rightDragLastScreen;
-    private boolean rightDragging;
+    // Left-mouse-drag panning state, tracked in screen coordinates so it is stable as the view scrolls beneath us.
+    private Point panDragStartScreen;
+    private Point panDragLastScreen;
+    private boolean panning;
 
     // data structure holding how many unit/scenario/base icons have been drawn in
     // the hex
@@ -197,41 +197,51 @@ public class StratConPanel extends JPanel implements ActionListener {
     }
 
     /**
-     * Handles map navigation input: right-mouse-drag to pan (bounded by the map edges via the enclosing viewport) and
-     * mouse-wheel to zoom in/out centered on the cursor. A right-mouse press that does not move beyond
-     * {@link #DRAG_THRESHOLD} is treated as a context-menu click instead of a pan.
+     * Handles map navigation input: left-mouse-drag to pan (bounded by the map edges via the enclosing viewport) and
+     * mouse-wheel to zoom in/out centered on the cursor, matching the interstellar map's controls. A left-mouse press
+     * that does not move beyond {@link #DRAG_THRESHOLD} is treated as a hex-selection click instead of a pan.
      */
     private class MapInputHandler extends MouseAdapter {
         @Override
         public void mousePressed(MouseEvent e) {
-            if (SwingUtilities.isRightMouseButton(e)) {
-                rightDragStartScreen = e.getLocationOnScreen();
-                rightDragLastScreen = e.getLocationOnScreen();
-                rightDragging = false;
+            if (SwingUtilities.isLeftMouseButton(e)) {
+                panDragStartScreen = e.getLocationOnScreen();
+                panDragLastScreen = e.getLocationOnScreen();
+                panning = false;
             }
         }
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            if ((rightDragLastScreen == null) || !SwingUtilities.isRightMouseButton(e)) {
+            if ((panDragStartScreen == null) || !SwingUtilities.isLeftMouseButton(e)) {
                 return;
             }
 
             Point current = e.getLocationOnScreen();
-            panBy(current.x - rightDragLastScreen.x, current.y - rightDragLastScreen.y);
-            rightDragLastScreen = current;
 
-            if ((Math.abs(current.x - rightDragStartScreen.x) > DRAG_THRESHOLD) ||
-                      (Math.abs(current.y - rightDragStartScreen.y) > DRAG_THRESHOLD)) {
-                rightDragging = true;
+            // Don't move the map until the cursor travels past the click threshold; below it the gesture is still a
+            // hex-selection click, not a pan.
+            if (!panning) {
+                if ((Math.abs(current.x - panDragStartScreen.x) <= DRAG_THRESHOLD) &&
+                          (Math.abs(current.y - panDragStartScreen.y) <= DRAG_THRESHOLD)) {
+                    return;
+                }
+
+                // Transition into panning; re-anchor here so the first pan step doesn't jump by the threshold distance.
+                panning = true;
+                panDragLastScreen = current;
+                return;
             }
+
+            panBy(current.x - panDragLastScreen.x, current.y - panDragLastScreen.y);
+            panDragLastScreen = current;
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
             mouseReleasedHandler(e);
-            rightDragStartScreen = null;
-            rightDragLastScreen = null;
+            panDragStartScreen = null;
+            panDragLastScreen = null;
         }
 
         @Override
@@ -1016,8 +1026,13 @@ public class StratConPanel extends JPanel implements ActionListener {
             return;
         }
 
-        // left button generally selects a hex
+        // left button generally selects a hex...
         if (e.getButton() == MouseEvent.BUTTON1) {
+            // ...unless the player was dragging to pan the map, in which case suppress the selection
+            if (panning) {
+                return;
+            }
+
             clickedPoint = e.getPoint();
             boolean pointFoundOnBoard = detectClickedHex();
 
@@ -1026,13 +1041,8 @@ public class StratConPanel extends JPanel implements ActionListener {
             }
 
             repaint();
-            // right button generally pops up a context menu
+            // right button pops up a context menu
         } else if (e.getButton() == MouseEvent.BUTTON3) {
-            // ...unless the player was dragging to pan the map, in which case suppress the menu
-            if (rightDragging) {
-                return;
-            }
-
             clickedPoint = e.getPoint();
             detectClickedHex();
 

@@ -418,17 +418,23 @@ public class StratConTab extends CampaignGuiTab {
             }
         }
 
-        StringBuilder sb = new StringBuilder();
-        if (completedObjectives >= desiredObjectives) {
-            sb.append("<span color='").append(ReportingUtilities.getPositiveColor()).append("'>");
-        } else {
-            sb.append("<span color='").append(ReportingUtilities.getNegativeColor()).append("'>");
-        }
+        String summary = getFormattedTextAt(RESOURCE_BUNDLE, "stratConTab.objectives.summary",
+              String.valueOf(completedObjectives), String.valueOf(desiredObjectives));
 
-        sb.append(getFormattedTextAt(RESOURCE_BUNDLE, "stratConTab.objectives.summary",
-                    String.valueOf(completedObjectives), String.valueOf(desiredObjectives)))
-              .append("</span>");
-        return sb.toString();
+        // Colour the summary to match this sector's tab and detailed objective list: green only when every
+        // objective is complete, red only when every objective has failed, amber while any remain in progress, and
+        // no emphasis colour when the sector has no objectives at all (a 0/0 sector is not "complete").
+        String color = switch (sectorObjectiveState(track)) {
+            case NONE -> null;
+            case ALL_COMPLETE -> ReportingUtilities.getPositiveColor();
+            case ALL_FAILED -> ReportingUtilities.getNegativeColor();
+            case IN_PROGRESS -> ReportingUtilities.getWarningColor();
+        };
+
+        if (color == null) {
+            return summary;
+        }
+        return "<span color='" + color + "'>" + summary + "</span>";
     }
 
     /**
@@ -644,10 +650,17 @@ public class StratConTab extends CampaignGuiTab {
     }
 
     /**
-     * @return the tab color for the given sector, or {@code null} to use the default color when the sector has no
-     *       objectives.
+     * The aggregate objective status of a single sector, shared by the sector tab colour and the objective summary
+     * one-liner so the two can never disagree.
      */
-    private Color sectorTabColor(StratConTrackState track) {
+    private enum SectorObjectiveState {NONE, ALL_COMPLETE, ALL_FAILED, IN_PROGRESS}
+
+    /**
+     * @return the aggregate objective state for the given sector: {@link SectorObjectiveState#NONE} when it has no
+     *       objectives, {@code ALL_COMPLETE}/{@code ALL_FAILED} only when <em>every</em> objective is complete/failed,
+     *       and {@code IN_PROGRESS} whenever any objectives remain outstanding.
+     */
+    private SectorObjectiveState sectorObjectiveState(StratConTrackState track) {
         boolean hasObjectives = false;
         boolean allCompleted = true;
         boolean allFailed = true;
@@ -664,15 +677,28 @@ public class StratConTab extends CampaignGuiTab {
         }
 
         if (!hasObjectives) {
-            return null;
+            return SectorObjectiveState.NONE;
         }
         if (allCompleted) {
-            return MekHQ.getMHQOptions().getFontColorPositive();
+            return SectorObjectiveState.ALL_COMPLETE;
         }
         if (allFailed) {
-            return MekHQ.getMHQOptions().getFontColorNegative();
+            return SectorObjectiveState.ALL_FAILED;
         }
-        return MekHQ.getMHQOptions().getFontColorWarning();
+        return SectorObjectiveState.IN_PROGRESS;
+    }
+
+    /**
+     * @return the tab color for the given sector, or {@code null} to use the default color when the sector has no
+     *       objectives.
+     */
+    private Color sectorTabColor(StratConTrackState track) {
+        return switch (sectorObjectiveState(track)) {
+            case NONE -> null;
+            case ALL_COMPLETE -> MekHQ.getMHQOptions().getFontColorPositive();
+            case ALL_FAILED -> MekHQ.getMHQOptions().getFontColorNegative();
+            case IN_PROGRESS -> MekHQ.getMHQOptions().getFontColorWarning();
+        };
     }
 
     private void showCampaignStateManagement(ActionEvent e) {
