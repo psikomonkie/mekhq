@@ -139,10 +139,10 @@ class MHQDisplayPage extends MHQOptionsPage {
               dateFormatControl(fieldLongDisplayDateFormat));
 
         JLabel guiScaleLabel = new JLabel(Messages.getString("CommonSettingsDialog.guiScale"));
-        guiScaleSlider = new JSlider(7, 25);
+        guiScaleSlider = new JSlider(7, 24);
         guiScaleSlider.setName("guiScale");
         guiScaleSlider.setMajorTickSpacing(3);
-        // Label every 30% stop, including the 250% maximum, so each tick is numbered.
+        // Label every 30% stop and the 240% maximum so the full supported range is explicit.
         Hashtable<Integer, JComponent> labelTable = new Hashtable<>();
         labelTable.put(7, new JLabel("70%"));
         labelTable.put(10, new JLabel("100%"));
@@ -150,7 +150,7 @@ class MHQDisplayPage extends MHQOptionsPage {
         labelTable.put(16, new JLabel("160%"));
         labelTable.put(19, new JLabel("190%"));
         labelTable.put(22, new JLabel("220%"));
-        labelTable.put(25, new JLabel("250%"));
+                        labelTable.put(24, new JLabel("240%"));
         guiScaleSlider.setLabelTable(labelTable);
         guiScaleSlider.setPaintTicks(true);
         guiScaleSlider.setPaintLabels(true);

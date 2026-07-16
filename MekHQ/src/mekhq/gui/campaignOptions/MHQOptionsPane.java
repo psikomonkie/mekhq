@@ -160,7 +160,48 @@ public class MHQOptionsPane extends JPanel {
         Component page = getPage(route.getId());
         if (page != null) {
             contentHost.setContent(page, null, false);
+            expandSectionsForActiveFilter(page);
         }
+    }
+
+    /**
+     * When a page is opened while a navigation search is active, expands the section(s) whose title or summary match
+     * the search so the result the user selected is visible. If the filter matched the page rather than a particular
+     * section, every section is expanded so the page's content is still revealed.
+     *
+     * @param page the page component just shown
+     */
+    private void expandSectionsForActiveFilter(Component page) {
+        if (navigationPanel == null) {
+            return;
+        }
+
+        String activeFilter = navigationPanel.getActiveFilter();
+        if (activeFilter.isBlank()) {
+            return;
+        }
+
+        CampaignOptionsPagePanel pagePanel = CampaignOptionsContentHost.findPagePanel(page);
+        if (pagePanel == null) {
+            return;
+        }
+
+        String[] tokens = activeFilter.split("\\s+");
+        boolean expandedMatchingSection = pagePanel.expandSectionsMatching(
+              sectionText -> sectionMatchesAllTokens(sectionText, tokens));
+        if (!expandedMatchingSection) {
+            pagePanel.expandAllSections();
+        }
+    }
+
+    private static boolean sectionMatchesAllTokens(String rawSectionText, String[] normalizedTokens) {
+        String normalizedSectionText = CampaignOptionsRoute.normalizeSearchText(rawSectionText);
+        for (String token : normalizedTokens) {
+            if (!token.isBlank() && !normalizedSectionText.contains(token)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private Component getPage(String routeId) {
