@@ -32,7 +32,6 @@
  */
 package mekhq.gui.dialog;
 
-import static java.lang.Math.round;
 import static megamek.client.ui.WrapLayout.wordWrap;
 import static megamek.client.ui.util.UIUtil.scaleForGUI;
 import static megamek.common.options.PilotOptions.LVL3_ADVANTAGES;
@@ -736,9 +735,8 @@ public class AdvancedReplacementLimbDialog extends JDialog {
         performSurgerySkillChecks(prioritizedSurgeries, successfulSurgeries, unsuccessfulSurgeries);
 
         // Then perform the actual surgeries
-        double healingTimeMultiplier = campaignOptions.getAlternativeAdvancedMedicalHealingTimeMultiplier();
         for (PlannedSurgery surgery : prioritizedSurgeries) {
-            performSurgery(surgery, healingTimeMultiplier, successfulSurgeries);
+            performSurgery(surgery, successfulSurgeries);
         }
 
         // Notify the player of the results
@@ -816,15 +814,13 @@ public class AdvancedReplacementLimbDialog extends JDialog {
      * Applies the outcome of a single planned surgery. On success, removes applicable injuries, adds a record injury,
      * and adds recovery injuries. On failure, adds a failed-surgery recovery injury.
      *
-     * @param surgery               the surgery being performed
-     * @param healingTimeMultiplier a multiplier applied to all healing times
-     * @param successfulSurgeries   the list of surgeries that passed their skill checks
+     * @param surgery             the surgery being performed
+     * @param successfulSurgeries the list of surgeries that passed their skill checks
      *
      * @author Illiani
      * @since 0.50.10
      */
-    private void performSurgery(PlannedSurgery surgery, double healingTimeMultiplier,
-          List<PlannedSurgery> successfulSurgeries) {
+    private void performSurgery(PlannedSurgery surgery, List<PlannedSurgery> successfulSurgeries) {
         BodyLocation location = surgery.location;
         ProstheticType type = surgery.type;
 
@@ -838,14 +834,12 @@ public class AdvancedReplacementLimbDialog extends JDialog {
             // Add recovery period injuries
             InjuryType recoveryInjuryType = getRecoveryInjuryType(surgery);
             Injury recoveryInjury = recoveryInjuryType.newInjury(campaign, patient, GENERIC, 1);
-            adjustHealingTimeForCampaignOptions(healingTimeMultiplier, recoveryInjury);
             patient.addInjury(recoveryInjury);
 
             addImplantsAndAbilities(type);
         } else {
             // Add failed surgery injury
             Injury recoveryInjury = FAILED_SURGERY_RECOVERY.newInjury(campaign, patient, GENERIC, 1);
-            adjustHealingTimeForCampaignOptions(healingTimeMultiplier, recoveryInjury);
             patient.addInjury(recoveryInjury);
         }
 
@@ -975,27 +969,6 @@ public class AdvancedReplacementLimbDialog extends JDialog {
             return EI_IMPLANT_RECOVERY;
         } else {
             return REPLACEMENT_ORGAN_RECOVERY;
-        }
-    }
-
-    /**
-     * Adjusts an injury's recovery time when "kinder" advanced medical rules are enabled by halving both the original
-     * and current recovery time.
-     *
-     * @param healingTimeMultiplier a multiplier applied to healing times
-     * @param injury                the injury whose recovery time should be adjusted
-     *
-     * @author Illiani
-     * @since 0.50.10
-     */
-    private static void adjustHealingTimeForCampaignOptions(double healingTimeMultiplier,
-          Injury injury) {
-        if (healingTimeMultiplier != 1.0) {
-            int originalRecoveryTime = injury.getOriginalTime();
-            int newRecoveryTime = (int) round(originalRecoveryTime * healingTimeMultiplier);
-            newRecoveryTime = Math.max(newRecoveryTime, 1);
-            injury.setOriginalTime(newRecoveryTime);
-            injury.setTime(newRecoveryTime);
         }
     }
 

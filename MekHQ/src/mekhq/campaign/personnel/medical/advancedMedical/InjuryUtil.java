@@ -126,13 +126,7 @@ public final class InjuryUtil {
      */
     public static void resolveCombatDamage(Campaign campaign, Person person, int hits) {
         if (campaign.getCampaignOptions().isUseAlternativeAdvancedMedical()) {
-            double healingTimeMultiplier = campaign.getCampaignOptions()
-                                                 .getAlternativeAdvancedMedicalHealingTimeMultiplier();
-            resolveCombatDamageUsingAlternateModel(campaign,
-                  person,
-                  hits,
-                  healingTimeMultiplier,
-                  campaign.getLocalDate());
+            resolveCombatDamageUsingAlternateModel(campaign, person, hits, campaign.getLocalDate());
         } else {
             resolveCombatDamageUsingStandardModel(campaign, person, hits);
         }
@@ -169,27 +163,17 @@ public final class InjuryUtil {
      * <p>Injuries may be automatically removed during processing if the body location they affect has been severed
      * by another injury.</p>
      *
-     * @param campaign              the current campaign
-     * @param person                the person who suffered combat damage
-     * @param hits                  the number of TW-scale Hits taken
-     * @param healingTimeMultiplier A multiplier applied to all healing times
+     * @param campaign the current campaign
+     * @param person   the person who suffered combat damage
+     * @param hits     the number of TW-scale Hits taken
      *
      * @author Illiani
      * @since 0.50.10
      */
     private static void resolveCombatDamageUsingAlternateModel(Campaign campaign, Person person, int hits,
-          double healingTimeMultiplier, LocalDate today) {
-        boolean hasRelevantHealingTimeMultiplier = healingTimeMultiplier != 1.0;
+          LocalDate today) {
         Collection<Injury> newInjuries = AdvancedMedicalAlternate.generateInjuriesFromHits(campaign, person, hits);
         for (Injury injury : newInjuries) {
-            if (hasRelevantHealingTimeMultiplier) {
-                int originalRecoveryTime = injury.getOriginalTime();
-                int newRecoveryTime = (int) round(originalRecoveryTime * healingTimeMultiplier);
-                newRecoveryTime = max(newRecoveryTime, 1);
-                injury.setOriginalTime(newRecoveryTime);
-                injury.setTime(newRecoveryTime);
-            }
-
             person.addInjury(injury);
         }
 
@@ -200,16 +184,9 @@ public final class InjuryUtil {
         boolean hasNewInjuries = false;
         boolean hasMissingLimbHandled = false;
         Injury injuryToRemove = null;
-        // Prepare an amputation recovery injury in case we need it later
+        // Prepare an amputation recovery injury in case we need it later.
         Injury amputationRecovery = AlternateInjuries.AMPUTATION_RECOVERY.newInjury(campaign, person,
               BodyLocation.RIGHT_HAND, 1);
-        if (healingTimeMultiplier != 1.0) {
-            int originalRecoveryTime = amputationRecovery.getOriginalTime();
-            int newRecoveryTime = (int) round(originalRecoveryTime * healingTimeMultiplier);
-            newRecoveryTime = max(newRecoveryTime, 1);
-            amputationRecovery.setOriginalTime(newRecoveryTime);
-            amputationRecovery.setTime(newRecoveryTime);
-        }
 
         List<Injury> currentInjuries = person.getInjuries();
         for (Injury injury : newInjuries) {
