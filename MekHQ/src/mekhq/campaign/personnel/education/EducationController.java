@@ -2362,9 +2362,9 @@ public class EducationController {
             educationLevel = getCombatEducationLevel(experienceLevel, flunked, passRate);
         } else {
             // Calculate effective experience level (boost for doctors)
-            int effectiveExperienceLevel = isDoctor ? experienceLevel + EXP_VETERAN : experienceLevel;
+            final int effectiveExperienceLevel = isDoctor ? max(experienceLevel, EXP_VETERAN) : experienceLevel;
             // Determine education levels for non-combat roles
-            educationLevel = getNonCombatEducationLevel(experienceLevel, flunked, passRate);
+            educationLevel = getNonCombatEducationLevel(effectiveExperienceLevel, flunked, passRate);
         }
 
         // Assign the determined education level
