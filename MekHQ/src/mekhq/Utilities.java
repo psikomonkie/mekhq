@@ -309,6 +309,10 @@ public class Utilities {
 
             LocalDate today = campaign.getLocalDate();
 
+            if (!campaign.getCampaignOptions().isLimitByYear()) {
+                today = BATTLE_OF_TUKAYYID;
+            }
+
             if (!campaignIsClan && modelIsClan && today.isBefore(BATTLE_OF_TUKAYYID)) {
                 continue;
             }
@@ -1285,8 +1289,7 @@ public class Utilities {
      * @param table the table to save to csv
      * @param file  the file to save to
      *
-     * @return a report summarizing how many rows were written if the operation succeeded
-     *         or an error report otherwise
+     * @return a report summarizing how many rows were written if the operation succeeded or an error report otherwise
      */
     public static String exportTableToCSV(JTable table, File file) {
         TableModel model = table.getModel();
