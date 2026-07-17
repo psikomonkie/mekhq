@@ -205,7 +205,7 @@ public abstract class AbstractContractMarket {
                           clauseMods.get(contract.getId()).mods[clause],
                           campaign.getCampaignOptions().getContractMaxSalvagePercentage());
 
-                    if (campaign.getCampaignOptions().isLimitClanTech()){
+                    if (campaign.getCampaignOptions().isLimitClanTech()) {
                         contract.clanTechSalvageOverride();
                     }
                 }

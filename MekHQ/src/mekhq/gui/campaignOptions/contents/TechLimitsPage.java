@@ -119,7 +119,7 @@ class TechLimitsPage {
         allowCanonRefitOnlyBox = new CampaignOptionsCheckBox("AllowCanonRefitOnlyBox");
         allowCanonRefitOnlyBox.addMouseListener(createTipPanelUpdater("AllowCanonRefitOnlyBox"));
 
-        //Clan Tech Refits Pre 3052
+        // Clan Tech Refits Pre 3052
         limitClanTechBox = new CampaignOptionsCheckBox("LimitClanTechBox");
         limitClanTechBox.addMouseListener(createTipPanelUpdater("LimitClanTechBox"));
 

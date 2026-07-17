@@ -596,7 +596,7 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
 
         contract.setName(generateDefaultName(employer, contract, campaign));
 
-        if (campaign.getCampaignOptions().isLimitClanTech()){
+        if (campaign.getCampaignOptions().isLimitClanTech()) {
             contract.clanTechSalvageOverride();
         }
 
@@ -715,7 +715,7 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
               contract.getSystem().getName(parent.getStartDate()),
               contract.getContractType()));
 
-        if (campaign.getCampaignOptions().isLimitClanTech()){
+        if (campaign.getCampaignOptions().isLimitClanTech()) {
             contract.clanTechSalvageOverride();
         }
         return contract;
@@ -819,7 +819,7 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
         followup.initContractDetails(campaign);
         followup.calculateContract(campaign);
 
-        if (campaign.getCampaignOptions().isLimitClanTech()){
+        if (campaign.getCampaignOptions().isLimitClanTech()) {
             contract.clanTechSalvageOverride();
         }
 
