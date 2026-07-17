@@ -4368,15 +4368,15 @@ public class CampaignOptions {
         return limitByYear;
     }
 
-    public boolean isLimitClanTech() {
-        return limitClanTech;
-    }
-
     public void setLimitByYear(final boolean limitByYear) {
         this.limitByYear = limitByYear;
     }
 
-    public void setLimitClanTech(final boolean limitByYear) {
+    public boolean isLimitClanTech() {
+        return limitClanTech;
+    }
+
+    public void setLimitClanTech(final boolean limitClanTech) {
         this.limitClanTech = limitClanTech;
     }
 

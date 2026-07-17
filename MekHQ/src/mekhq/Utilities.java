@@ -309,11 +309,12 @@ public class Utilities {
 
             LocalDate today = campaign.getLocalDate();
 
-            if (!campaign.getCampaignOptions().isLimitClanTech()) {
-                today = BATTLE_OF_TUKAYYID;
-            }
-
-            if (!campaignIsClan && modelIsClan && today.isBefore(BATTLE_OF_TUKAYYID)) {
+            boolean isLimitClanTech = campaign.getCampaignOptions().isLimitClanTech();
+            boolean isBeforeTukayyid = !today.isAfter(BATTLE_OF_TUKAYYID);
+            if (!campaignIsClan &&
+                      modelIsClan &&
+                      isLimitClanTech &&
+                      isBeforeTukayyid) {
                 continue;
             }
 
