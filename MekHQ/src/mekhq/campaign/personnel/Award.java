@@ -409,7 +409,7 @@ public class Award implements Comparable<Award> {
 
         if ((awardEdge) && (edge > 0)) {
             if (isReplaceEdgeAwards) {
-                tooltip.append("XP: +").append(edge * EDGE_AWARD_REPLACEMENT_XP);
+                tooltip.append("XP (from Edge): +").append(edge * EDGE_AWARD_REPLACEMENT_XP);
 
                 if (issueCount > 1) {
                     tooltip.append(" (+").append(edge * issueCount * EDGE_AWARD_REPLACEMENT_XP).append(')');
