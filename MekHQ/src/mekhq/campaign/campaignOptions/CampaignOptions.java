@@ -108,6 +108,8 @@ public class CampaignOptions {
 
     public static final int REPUTATION_PERFORMANCE_CUT_OFF_YEARS = 10;
 
+    public static final int EDGE_AWARD_REPLACEMENT_XP = 10;
+
     public static String getTechLevelName(final int techLevel) {
         return switch (techLevel) {
             case TECH_INTRO -> TechConstants.T_SIMPLE_NAMES[TechConstants.T_SIMPLE_INTRO];
@@ -320,6 +322,7 @@ public class CampaignOptions {
 
     // Awards
     private AwardBonus awardBonusStyle;
+    private boolean useReplaceEdgeAwards;
     private boolean enableAutoAwards;
     private boolean issuePosthumousAwards;
     private boolean issueBestAwardOnly;
@@ -980,6 +983,7 @@ public class CampaignOptions {
 
         // Awards
         setAwardBonusStyle(AwardBonus.BOTH);
+        setUseReplaceEdgeAwards(false);
         setEnableAutoAwards(false);
         setIssuePosthumousAwards(false);
         setIssueBestAwardOnly(true);
@@ -3532,6 +3536,14 @@ public class CampaignOptions {
 
     public void setAwardBonusStyle(final AwardBonus awardBonusStyle) {
         this.awardBonusStyle = awardBonusStyle;
+    }
+
+    public boolean isUseReplaceEdgeAwards() {
+        return useReplaceEdgeAwards;
+    }
+
+    public void setUseReplaceEdgeAwards(final boolean useReplaceEdgeAwards) {
+        this.useReplaceEdgeAwards = useReplaceEdgeAwards;
     }
 
     public boolean isEnableAutoAwards() {

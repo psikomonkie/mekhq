@@ -32,6 +32,8 @@
  */
 package mekhq.gui.model;
 
+import static mekhq.campaign.campaignOptions.CampaignOptions.EDGE_AWARD_REPLACEMENT_XP;
+
 import java.awt.Component;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +46,7 @@ import javax.swing.table.TableCellRenderer;
 
 import megamek.logging.MMLogger;
 import mekhq.campaign.Campaign;
+import mekhq.campaign.campaignOptions.CampaignOptions;
 import mekhq.campaign.personnel.Award;
 import mekhq.campaign.personnel.Person;
 import mekhq.campaign.personnel.enums.AwardBonus;
@@ -169,16 +172,22 @@ public class AutoAwardsTableModel extends AbstractTableModel {
      * @return A {@link String} containing the awards based on the style, including XP and Edge rewards if applicable.
      */
     private String getDescriptionString(Award award) {
-        AwardBonus style = campaign.getCampaignOptions().getAwardBonusStyle();
+        CampaignOptions campaignOptions = campaign.getCampaignOptions();
+        boolean isReplaceEdgeAwards = campaignOptions.isUseReplaceEdgeAwards();
+        AwardBonus style = campaignOptions.getAwardBonusStyle();
         int xpAward = award.getXPReward();
         int edgeAward = award.getEdgeReward();
 
         String awards = "";
         if (style.isBoth() || style.isXP()) {
-            awards += (xpAward > 0) ? " (" + xpAward + "XP)" : "";
+            awards += (xpAward > 0) ? " (" + xpAward + " XP)" : "";
         }
         if (style.isBoth() || style.isEdge()) {
-            awards += (edgeAward > 0) ? " (" + edgeAward + " Edge)" : "";
+            if (isReplaceEdgeAwards) {
+                awards += (edgeAward > 0) ? " (" + edgeAward * EDGE_AWARD_REPLACEMENT_XP + " XP)" : "";
+            } else {
+                awards += (edgeAward > 0) ? " (" + edgeAward + " Edge)" : "";
+            }
         }
         return awards;
     }
