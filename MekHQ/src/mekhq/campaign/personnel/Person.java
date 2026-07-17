@@ -46,6 +46,7 @@ import static megamek.common.icons.Portrait.DEFAULT_IMAGE_WIDTH;
 import static megamek.common.icons.Portrait.DEFAULT_PORTRAIT_FILENAME;
 import static megamek.common.icons.Portrait.NO_PORTRAIT_NAME;
 import static megamek.common.options.OptionsConstants.UNOFFICIAL_EI_IMPLANT;
+import static megamek.common.units.Crew.DEATH;
 import static mekhq.MHQConstants.BATTLE_OF_TUKAYYID;
 import static mekhq.campaign.enums.DailyReportType.PERSONNEL;
 import static mekhq.campaign.log.LogEntryType.ASSIGNMENT;
@@ -6212,6 +6213,54 @@ public class Person implements ILocatable {
         } else {
             LOGGER.error("Trying to spend edge, but it is at {}", getCurrentEdge(), new IllegalArgumentException());
         }
+    }
+
+    /**
+     * Processes the survival logic based on the "Twist of Fate" mechanism.
+     *
+     * @param isUseTwistOfFateSurvival a boolean indicating whether the "Twist of Fate" survival mechanism is enabled in
+     *                                 {@link CampaignOptions}
+     *
+     * @return {@code true} if the "Twist of Fate" survival is successfully applied
+     */
+    public boolean processTwistOfFateSurvival(boolean isUseTwistOfFateSurvival) {
+        if (!isUseTwistOfFateSurvival) {
+            return false;
+        }
+
+        int currentInjurySeverity = getTotalInjurySeverity();
+        int nearDeath = DEATH - 1;
+        if (currentInjurySeverity == nearDeath) {
+            return canUseTwistOfFateSurvival(true);
+        }
+
+        return false;
+    }
+
+    /**
+     * Determines whether the "Twist of Fate Survival" ability can be used based on current permanent Edge.
+     *
+     * <p>If Twist of Fate Survival is enabled and the character has at least 1 permanent Edge, their permanent Edge
+     * score is reduced by 1 and the method returns {@code true}. If the character's current Edge now exceeds their
+     * maximum Edge attribute, their current Edge is reduced accordingly.</p>
+     *
+     * @param isUseTwistOfFateSurvival whether "Twist of Fate Survival" is enabled in Campaign Options.
+     *
+     * @return {@code true} if the ability can be used and the Edge attribute was reduced.
+     */
+    private boolean canUseTwistOfFateSurvival(boolean isUseTwistOfFateSurvival) {
+        int permanentEdgeScore = getAttributeScore(SkillAttribute.EDGE);
+        if (permanentEdgeScore > 0) {
+            changeAttributeScore(SkillAttribute.EDGE, -1);
+            permanentEdgeScore -= 1;
+            if (getCurrentEdge() > permanentEdgeScore) {
+                setCurrentEdge(permanentEdgeScore);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
