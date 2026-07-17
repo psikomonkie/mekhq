@@ -54,6 +54,7 @@ class PersonnelOptionsModel {
     boolean onlyCommandersMatterInfantry;
     boolean onlyCommandersMatterBattleArmor;
     boolean useEdge;
+    boolean useTwistOfFateSurvival;
     EdgeRefreshPeriod edgeRefreshPeriod;
     int edgeRefreshCost;
     boolean useImplants;
@@ -144,6 +145,7 @@ class PersonnelOptionsModel {
         onlyCommandersMatterInfantry = options.isOnlyCommandersMatterInfantry();
         onlyCommandersMatterBattleArmor = options.isOnlyCommandersMatterBattleArmor();
         useEdge = options.isUseEdge();
+        useTwistOfFateSurvival = options.isUseTwistOfFateSurvival();
         edgeRefreshPeriod = options.getEdgeRefreshPeriod();
         edgeRefreshCost = options.getEdgeRefreshCost();
         useImplants = options.isUseImplants();
@@ -235,6 +237,7 @@ class PersonnelOptionsModel {
         options.setOnlyCommandersMatterInfantry(onlyCommandersMatterInfantry);
         options.setOnlyCommandersMatterBattleArmor(onlyCommandersMatterBattleArmor);
         options.setUseEdge(useEdge);
+        options.setUseTwistOfFateSurvival(useTwistOfFateSurvival);
         options.setEdgeRefreshPeriod(edgeRefreshPeriod);
         options.setEdgeRefreshCost(edgeRefreshCost);
         options.setUseImplants(useImplants);
