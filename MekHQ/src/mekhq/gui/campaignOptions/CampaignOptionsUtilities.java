@@ -269,10 +269,12 @@ public class CampaignOptionsUtilities {
 
         JPanel quotePanel = new JPanel(new GridBagLayout());
         quotePanel.setBorder(BorderFactory.createEmptyBorder(QUOTE_TOP_PADDING, 0, QUOTE_BOTTOM_PADDING, 0));
-        JLabel quote = new JLabel(String.format(
+        String resolvedQuoteText = getTextAt(resourceBundleName, quoteResourceName + ".border");
+        String quoteHtml = String.format(
               "<html><div style='width: %spx; text-align:center;'>%s</div></html>",
               quoteWidth,
-              getTextAt(resourceBundleName, quoteResourceName + ".border")));
+                            resolvedQuoteText);
+        JLabel quote = new JLabel(quoteHtml);
 
         GridBagConstraints quoteConstraints = new GridBagConstraints();
         quoteConstraints.gridx = GridBagConstraints.RELATIVE;

@@ -138,25 +138,24 @@ class MHQDisplayPage extends MHQOptionsPage {
         panel.addRow(new CampaignOptionsLabel(RESOURCE_BUNDLE, "labelLongDisplayDateFormat"),
               dateFormatControl(fieldLongDisplayDateFormat));
 
-        JLabel guiScaleLabel = new JLabel(Messages.getString("CommonSettingsDialog.guiScale"));
+        String guiScaleText = Messages.getString("CommonSettingsDialog.guiScale");
+        JLabel guiScaleLabel = new JLabel(guiScaleText);
         guiScaleSlider = new JSlider(7, 24);
         guiScaleSlider.setName("guiScale");
-                        guiScaleSlider.setMinorTickSpacing(1);
-                        // Six labels divide the 70-240% range into symmetric 30%/40% gaps without crowding either endpoint.
+        guiScaleSlider.setMinorTickSpacing(1);
+        // Six labels divide the 70-240% range into symmetric 30%/40% gaps without crowding either endpoint.
         Hashtable<Integer, JComponent> labelTable = new Hashtable<>();
         labelTable.put(7, new JLabel("70%"));
         labelTable.put(10, new JLabel("100%"));
-                        labelTable.put(14, new JLabel("140%"));
-                        labelTable.put(17, new JLabel("170%"));
-                        labelTable.put(21, new JLabel("210%"));
-                        labelTable.put(24, new JLabel("240%"));
+        labelTable.put(14, new JLabel("140%"));
+        labelTable.put(17, new JLabel("170%"));
+        labelTable.put(21, new JLabel("210%"));
+        labelTable.put(24, new JLabel("240%"));
         guiScaleSlider.setLabelTable(labelTable);
         guiScaleSlider.setPaintTicks(true);
         guiScaleSlider.setPaintLabels(true);
         guiScaleSlider.setValue(model.guiScaleValue);
         guiScaleSlider.setToolTipText(Messages.getString("CommonSettingsDialog.guiScaleTT"));
-        // Give the slider a fixed, roomy width so its seven stop labels do not crowd together, and left-align it so it
-        // stays compact rather than stretching across the whole control column (which would force the section wide).
         guiScaleSlider.setPreferredSize(new Dimension(UIUtil.scaleForGUI(320),
               guiScaleSlider.getPreferredSize().height));
         JPanel guiScaleControl = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
@@ -183,10 +182,11 @@ class MHQDisplayPage extends MHQOptionsPage {
      */
     private JComponent dateFormatControl(JTextField field) {
         JLabel example = new JLabel();
+        String invalidDateFormatText = getTextAt(RESOURCE_BUNDLE, "invalidDateFormat.error");
         Runnable updateExample = () -> example.setText(validateDateFormat(field.getText())
               ? LocalDate.now().format(DateTimeFormatter.ofPattern(field.getText())
                     .withLocale(MekHQ.getMHQOptions().getDateLocale()))
-              : getTextAt(RESOURCE_BUNDLE, "invalidDateFormat.error"));
+              : invalidDateFormatText);
         // Refresh on every document edit (typing, paste, delete), not only on Enter, so the example and validation
         // stay in step with the field instead of lagging behind until an ActionEvent fires.
         field.getDocument().addDocumentListener(new DocumentListener() {

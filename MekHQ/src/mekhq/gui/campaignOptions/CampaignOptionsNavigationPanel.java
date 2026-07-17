@@ -350,11 +350,11 @@ class CampaignOptionsNavigationPanel extends JPanel {
         }
 
         if (matchCount == 0) {
-            filterStatusLabel.setText(getTextAt(resourceBundleName,
-                  "campaignOptionsFilter.noMatches"));
+            String noMatchesText = getTextAt(resourceBundleName, "campaignOptionsFilter.noMatches");
+            filterStatusLabel.setText(noMatchesText);
         } else {
-            filterStatusLabel.setText(String.format(getTextAt(resourceBundleName,
-                  "campaignOptionsFilter.matches"), matchCount));
+            String matchesFormat = getTextAt(resourceBundleName, "campaignOptionsFilter.matches");
+            filterStatusLabel.setText(String.format(matchesFormat, matchCount));
         }
         filterStatusLabel.setVisible(true);
     }

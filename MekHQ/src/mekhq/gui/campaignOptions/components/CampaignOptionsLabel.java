@@ -146,7 +146,8 @@ public class CampaignOptionsLabel extends JLabel {
      * @param name               the resource key base and internal name (no {@code "lbl"} prefix is added)
      */
     public CampaignOptionsLabel(String resourceBundleName, String name) {
-        super(String.format("<html>%s</html>", getTextAt(resourceBundleName, name + ".text")));
+        String labelText = getTextAt(resourceBundleName, name + ".text");
+        setText(String.format("<html>%s</html>", labelText));
         String tooltipText = getTextAt(resourceBundleName, name + ".tooltip");
         if (!isResourceKeyValid(tooltipText)) {
             tooltipText = getTextAt(resourceBundleName, name + ".toolTipText");

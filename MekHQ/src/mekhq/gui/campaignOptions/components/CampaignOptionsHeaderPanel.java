@@ -130,21 +130,18 @@ public class CampaignOptionsHeaderPanel extends JPanel {
         JLabel lblImage = new JLabel(imageIcon);
 
         // Create the header label with text from the resource bundle
-        final JLabel lblHeader = new JLabel("<html>" +
-                                                  getFormattedTextAt(resourceBundleName,
-                                                        "lbl" + name + ".text") +
-                                                  "</html>",
-              SwingConstants.CENTER);
+        String headerText = getFormattedTextAt(resourceBundleName, "lbl" + name + ".text");
+        final JLabel lblHeader = new JLabel("<html>" + headerText + "</html>", SwingConstants.CENTER);
         lblHeader.setName("lbl" + name);
         setFontScaling(lblHeader, true, 2);
 
         // Optionally create a body label with additional text if includeBodyText is true
         JLabel lblBody = new JLabel();
         if (includeBodyText) {
-            lblBody = new JLabel(String.format("<html><div style='width: %s'>%s</div></html>",
-                  UIUtil.scaleForGUI(DEFAULT_BODY_TEXT_WIDTH),
-                  getTextAt(resourceBundleName, "lbl" + name + "Body.text")),
-                  SwingConstants.CENTER);
+            String bodyText = getTextAt(resourceBundleName, "lbl" + name + "Body.text");
+            String bodyHtml = String.format("<html><div style='width: %s'>%s</div></html>",
+                  UIUtil.scaleForGUI(DEFAULT_BODY_TEXT_WIDTH), bodyText);
+            lblBody = new JLabel(bodyHtml, SwingConstants.CENTER);
             lblBody.setName("lbl" + name + "Body");
             setFontScaling(lblBody, false, 1);
         }
