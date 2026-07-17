@@ -309,7 +309,7 @@ public class Utilities {
 
             LocalDate today = campaign.getLocalDate();
 
-            if (!campaign.getCampaignOptions().isLimitByYear()) {
+            if (!campaign.getCampaignOptions().isLimitClanTech()) {
                 today = BATTLE_OF_TUKAYYID;
             }
 

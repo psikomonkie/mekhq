@@ -222,6 +222,7 @@ public class CampaignOptions {
     private boolean variableTechLevel;
     private boolean factionIntroDate;
     private boolean useAmmoByType; // Unofficial
+    private boolean limitClanTech;
     // endregion Techlimits Tab
 
     // region Personnel Tab
@@ -844,6 +845,7 @@ public class CampaignOptions {
         variableTechLevel = false;
         factionIntroDate = false;
         useAmmoByType = false;
+        limitClanTech = true;
         // endregion Techlimits Tab
 
         // region Personnel Tab
@@ -4366,8 +4368,16 @@ public class CampaignOptions {
         return limitByYear;
     }
 
+    public boolean isLimitClanTech() {
+        return limitClanTech;
+    }
+
     public void setLimitByYear(final boolean limitByYear) {
         this.limitByYear = limitByYear;
+    }
+
+    public void setLimitClanTech(final boolean limitByYear) {
+        this.limitClanTech = limitClanTech;
     }
 
     public boolean isDisallowExtinctStuff() {
