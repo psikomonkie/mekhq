@@ -3675,7 +3675,7 @@ public class AtBDynamicScenarioFactory {
         // calculating the gaussian-weighted average. Specifically, we need it to calculate the crude mean (which the
         // averages will be weighted against).
         List<Integer> battleValues = new ArrayList<>();
-        List<CombatRole> validRoles = List.of(FRONTLINE, MANEUVER, CADRE, PATROL);
+        List<CombatRole> validRoles = List.of(FRONTLINE, MANEUVER);
         for (CombatTeam combatTeam : campaign.getPlayerForce().getCombatTeamsAsList(campaign)) {
             CombatRole role = combatTeam.getRole();
             if (!validRoles.contains(role)) {
