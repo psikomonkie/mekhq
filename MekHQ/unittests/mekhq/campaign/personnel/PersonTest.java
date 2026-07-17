@@ -41,18 +41,21 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static testUtilities.MHQTestUtilities.mockCampaign;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,6 +88,7 @@ import mekhq.campaign.personnel.enums.education.EducationLevel;
 import mekhq.campaign.personnel.enums.education.EducationStage;
 import mekhq.campaign.personnel.skills.SkillCheck;
 import mekhq.campaign.personnel.skills.SkillType;
+import mekhq.campaign.personnel.skills.enums.SkillAttribute;
 import mekhq.campaign.randomEvents.personalities.Aggression;
 import mekhq.campaign.randomEvents.personalities.Ambition;
 import mekhq.campaign.randomEvents.personalities.Greed;
@@ -2016,6 +2020,97 @@ public class PersonTest {
                 verify(campaign).isClanCampaign();
                 verify(campaign).getLocalDate();
             }
+        }
+    }
+
+    /**
+     * Tests for {@code Person#attemptToCheatDeath(Campaign)} (the "Twist of Fate Survival" ability). The method is
+     * private, so it is exercised here via reflection.
+     */
+    @Nested
+    class AttemptToCheatDeath {
+        private static final int DEATH = 6;
+
+        /** Invokes the private {@code attemptToCheatDeath(Campaign)} method reflectively. */
+        private boolean invokeAttemptToCheatDeath(Person person, Campaign campaign) throws Exception {
+            Method method = Person.class.getDeclaredMethod("attemptToCheatDeath", Campaign.class);
+            method.setAccessible(true);
+            return (boolean) method.invoke(person, campaign);
+        }
+
+        private Campaign mockCampaignWith(CampaignOptions options) {
+            Campaign campaign = mockCampaign();
+            when(campaign.getCampaignOptions()).thenReturn(options);
+            when(campaign.getLocalDate()).thenReturn(LocalDate.of(3151, 1, 1));
+            return campaign;
+        }
+
+        @Test
+        void returnsFalseWhenTwistOfFateDisabled() throws Exception {
+            Person person = new Person("GivenName", "Surname", null, "MERC");
+            person.setAttributeScore(SkillAttribute.EDGE, 3);
+
+            CampaignOptions options = mock(CampaignOptions.class);
+            when(options.isUseTwistOfFateSurvival()).thenReturn(false);
+            Campaign campaign = mockCampaignWith(options);
+
+            assertFalse(invokeAttemptToCheatDeath(person, campaign));
+            // Edge must not be consumed when the ability is disabled.
+            assertEquals(3, person.getAttributeScore(SkillAttribute.EDGE));
+            verify(campaign, never()).addReport(any(), anyString());
+        }
+
+        @Test
+        void returnsFalseWhenNoPermanentEdge() throws Exception {
+            Person person = new Person("GivenName", "Surname", null, "MERC");
+            // Fresh personnel default to an Edge score of 0.
+            assertEquals(0, person.getAttributeScore(SkillAttribute.EDGE));
+
+            CampaignOptions options = mock(CampaignOptions.class);
+            when(options.isUseTwistOfFateSurvival()).thenReturn(true);
+            Campaign campaign = mockCampaignWith(options);
+
+            assertFalse(invokeAttemptToCheatDeath(person, campaign));
+            assertEquals(0, person.getAttributeScore(SkillAttribute.EDGE));
+            verify(campaign, never()).addReport(any(), anyString());
+        }
+
+        @Test
+        void survivesAndConsumesEdgeWhenNoLethalDamage() throws Exception {
+            Person person = new Person("GivenName", "Surname", null, "MERC");
+            person.setAttributeScore(SkillAttribute.EDGE, 3);
+
+            CampaignOptions options = mock(CampaignOptions.class);
+            when(options.isUseTwistOfFateSurvival()).thenReturn(true);
+            when(options.isUseAdvancedMedical()).thenReturn(false);
+            Campaign campaign = mockCampaignWith(options);
+
+            assertTrue(invokeAttemptToCheatDeath(person, campaign));
+            // A single point of permanent Edge is spent to cheat death.
+            assertEquals(2, person.getAttributeScore(SkillAttribute.EDGE));
+            // No lethal damage, so nothing is healed.
+            assertEquals(0, person.getHits());
+            // The escaped-death report is posted.
+            verify(campaign).addReport(any(), anyString());
+        }
+
+        @Test
+        void survivesAndHealsExcessHits() throws Exception {
+            Person person = new Person("GivenName", "Surname", null, "MERC");
+            person.setAttributeScore(SkillAttribute.EDGE, 3);
+            person.setHits(DEATH + 2); // lethal hit total
+
+            CampaignOptions options = mock(CampaignOptions.class);
+            when(options.isUseTwistOfFateSurvival()).thenReturn(true);
+            when(options.isUseAdvancedMedical()).thenReturn(false);
+            Campaign campaign = mockCampaignWith(options);
+
+            assertTrue(invokeAttemptToCheatDeath(person, campaign));
+            assertEquals(2, person.getAttributeScore(SkillAttribute.EDGE));
+            // Hits are healed down to just below the lethal threshold.
+            assertEquals(DEATH - 1, person.getHits());
+            // Both the excess-hits heal report and the escaped-death report are posted.
+            verify(campaign, atLeast(2)).addReport(any(), anyString());
         }
     }
 
