@@ -1054,7 +1054,7 @@ public class AtBContract extends Contract {
         setContractDifficulty(calculateContractDifficulty(contract, contract.getStartDate().getYear(),
               true, campaign.getAllCombatEntities()));
 
-        if (campaign.getCampaignOptions().isLimitClanTech()){
+        if (campaign.getCampaignOptions().isLimitClanTech()) {
             clanTechSalvageOverride();
         }
     }
