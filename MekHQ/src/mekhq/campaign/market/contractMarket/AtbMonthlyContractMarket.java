@@ -820,7 +820,7 @@ public class AtbMonthlyContractMarket extends AbstractContractMarket {
         followup.calculateContract(campaign);
 
         if (campaign.getCampaignOptions().isLimitClanTech()) {
-            contract.clanTechSalvageOverride();
+            followup.clanTechSalvageOverride();
         }
 
         followup.setName(String.format("(Followup) %s - %s - %s %s",
