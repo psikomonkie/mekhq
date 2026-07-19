@@ -1836,6 +1836,7 @@ public class Person implements ILocatable {
         while (!potentiallyHealedInjuries.isEmpty() && getNonPermanentInjurySeverity() >= DEATH) {
             Injury randomInjury = ObjectUtility.getRandomItem(potentiallyHealedInjuries);
             clearSpecificInjury(today, randomInjury);
+            potentiallyHealedInjuries.remove(randomInjury);
 
             String injuryHealingReport = getFormattedTextAt(RESOURCE_BUNDLE, "twistOfFate.miracle.injury",
                   getHyperlinkedFullTitle(),
@@ -1850,8 +1851,8 @@ public class Person implements ILocatable {
 
     private void healExcessHits(Campaign campaign) {
         if (hits >= DEATH) {
-            int hitsHealed = hits - DEATH;
-            int hitsHealedEnumeration = hitsHealed == 1 ? 1 : 0;
+            int hitsHealed = hits - (DEATH - 1);
+            int hitsHealedEnumeration = hitsHealed == 1 ? 0 : 1;
 
             String hitHealingReport = getFormattedTextAt(RESOURCE_BUNDLE, "twistOfFate.miracle.hits",
                   getHyperlinkedFullTitle(),
