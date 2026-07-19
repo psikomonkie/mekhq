@@ -480,6 +480,7 @@ public class CampaignOptionsMarshaller {
 
         // region Awards
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "awardBonusStyle", campaignOptions.getAwardBonusStyle().name());
+        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "useReplaceEdgeAwards", campaignOptions.isUseReplaceEdgeAwards());
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "enableAutoAwards", campaignOptions.isEnableAutoAwards());
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "issuePosthumousAwards", campaignOptions.isIssuePosthumousAwards());
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "issueBestAwardOnly", campaignOptions.isIssueBestAwardOnly());

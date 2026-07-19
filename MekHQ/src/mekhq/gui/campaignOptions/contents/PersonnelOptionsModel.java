@@ -92,6 +92,7 @@ class PersonnelOptionsModel {
     boolean trackTotalXPEarnings;
     boolean showOriginFaction;
     AwardBonus awardBonusStyle;
+    boolean useReplaceEdgeAwards;
     int awardTierSize;
     boolean enableAutoAwards;
     boolean issuePosthumousAwards;
@@ -183,6 +184,7 @@ class PersonnelOptionsModel {
         trackTotalXPEarnings = options.isTrackTotalXPEarnings();
         showOriginFaction = options.isShowOriginFaction();
         awardBonusStyle = options.getAwardBonusStyle();
+        useReplaceEdgeAwards = options.isUseReplaceEdgeAwards();
         awardTierSize = options.getAwardTierSize();
         enableAutoAwards = options.isEnableAutoAwards();
         issuePosthumousAwards = options.isIssuePosthumousAwards();
@@ -276,6 +278,7 @@ class PersonnelOptionsModel {
         options.setShowOriginFaction(showOriginFaction);
         options.setAwardBonusStyle(awardBonusStyle);
         options.setAwardTierSize(awardTierSize);
+        options.setUseReplaceEdgeAwards(useReplaceEdgeAwards);
         options.setEnableAutoAwards(enableAutoAwards);
         options.setIssuePosthumousAwards(issuePosthumousAwards);
         options.setIssueBestAwardOnly(issueBestAwardOnly);
