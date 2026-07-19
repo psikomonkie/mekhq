@@ -52,6 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import megamek.Version;
 import megamek.common.TechConstants;
 import megamek.common.enums.SkillLevel;
@@ -121,36 +122,7 @@ public class CampaignOptions {
     // Typed-key store backing options that have been migrated off dedicated fields (see CampaignOption).
     // Initialized here so it is ready before any migrated setter runs in the constructor body.
     private final CampaignOptionsStore options = new CampaignOptionsStore(CampaignOption.values());
-    private final EnumMap<PlanetarySophistication, Integer> planetTechAcquisitionBonus = new EnumMap<>(
-          PlanetarySophistication.class);
-    private final EnumMap<PlanetaryRating, Integer> planetIndustryAcquisitionBonus = new EnumMap<>(PlanetaryRating.class);
-    private final EnumMap<PlanetaryRating, Integer> planetOutputAcquisitionBonus = new EnumMap<>(PlanetaryRating.class);
-    private boolean useAmmoByType; // Unofficial
-    private boolean useAdvancedMedical; // Unofficial
-    private Money[] roleBaseSalaries;
-    private boolean useDylansRandomXP; // Unofficial
-    private boolean usePercentageMaintenance; // Unofficial
-    private boolean infantryDontCount; // Unofficial
-    private double[] usedPartPriceMultipliers;
-    private double equipmentContractPercent;
-    private double dropShipContractPercent;
-    private double jumpShipContractPercent;
-    private double warShipContractPercent;
-    private final int[] phenotypeProbabilities;
-    private final boolean[] usePortraitForRole;
-
-    @Deprecated(since = "0.50.06")
-    private String personnelMarketName;
-
-    @Deprecated(since = "0.50.06")
-    private Map<SkillLevel, Integer> personnelMarketRandomRemovalTargets;
-
-    private final int[] atbBattleChance;
-
-    private String strategicViewMinimapTheme;
-    // endregion Against the Bot Tab
-
-    private boolean useFactionStandingOutlawed; // TODO
+    // endregion Variable Declarations
 
     // region Constructors
     public CampaignOptions() {
@@ -160,24 +132,24 @@ public class CampaignOptions {
         for (final PartRepairType type : PartRepairType.values()) {
             getMRMSOptions().add(new MRMSOption(type));
         }
-        planetTechAcquisitionBonus.put(PlanetarySophistication.ADVANCED, -2); // TODO: needs to be verified
-        planetTechAcquisitionBonus.put(PlanetarySophistication.A, -1);
-        planetTechAcquisitionBonus.put(PlanetarySophistication.B, 0);
-        planetTechAcquisitionBonus.put(PlanetarySophistication.C, 1);
-        planetTechAcquisitionBonus.put(PlanetarySophistication.D, 2);
-        planetTechAcquisitionBonus.put(PlanetarySophistication.F, 8);
-        planetTechAcquisitionBonus.put(PlanetarySophistication.REGRESSED, 16); // TODO: needs to be verified
-        planetIndustryAcquisitionBonus.put(PlanetaryRating.A, 0);
-        planetIndustryAcquisitionBonus.put(PlanetaryRating.B, 0);
-        planetIndustryAcquisitionBonus.put(PlanetaryRating.C, 0);
-        planetIndustryAcquisitionBonus.put(PlanetaryRating.D, 0);
-        planetIndustryAcquisitionBonus.put(PlanetaryRating.F, 0);
-        planetOutputAcquisitionBonus.put(PlanetaryRating.A, -1);
-        planetOutputAcquisitionBonus.put(PlanetaryRating.B, 0);
-        planetOutputAcquisitionBonus.put(PlanetaryRating.C, 1);
-        planetOutputAcquisitionBonus.put(PlanetaryRating.D, 2);
-        planetOutputAcquisitionBonus.put(PlanetaryRating.F, 8);
-        useAmmoByType = false;
+        getAllPlanetTechAcquisitionBonuses().put(PlanetarySophistication.ADVANCED, -2); // TODO: needs to be verified
+        getAllPlanetTechAcquisitionBonuses().put(PlanetarySophistication.A, -1);
+        getAllPlanetTechAcquisitionBonuses().put(PlanetarySophistication.B, 0);
+        getAllPlanetTechAcquisitionBonuses().put(PlanetarySophistication.C, 1);
+        getAllPlanetTechAcquisitionBonuses().put(PlanetarySophistication.D, 2);
+        getAllPlanetTechAcquisitionBonuses().put(PlanetarySophistication.F, 8);
+        getAllPlanetTechAcquisitionBonuses().put(PlanetarySophistication.REGRESSED, 16); // TODO: needs to be verified
+        getAllPlanetIndustryAcquisitionBonuses().put(PlanetaryRating.A, 0);
+        getAllPlanetIndustryAcquisitionBonuses().put(PlanetaryRating.B, 0);
+        getAllPlanetIndustryAcquisitionBonuses().put(PlanetaryRating.C, 0);
+        getAllPlanetIndustryAcquisitionBonuses().put(PlanetaryRating.D, 0);
+        getAllPlanetIndustryAcquisitionBonuses().put(PlanetaryRating.F, 0);
+        getAllPlanetOutputAcquisitionBonuses().put(PlanetaryRating.A, -1);
+        getAllPlanetOutputAcquisitionBonuses().put(PlanetaryRating.B, 0);
+        getAllPlanetOutputAcquisitionBonuses().put(PlanetaryRating.C, 1);
+        getAllPlanetOutputAcquisitionBonuses().put(PlanetaryRating.D, 2);
+        getAllPlanetOutputAcquisitionBonuses().put(PlanetaryRating.F, 8);
+        setUseAmmoByType(false);
         setUseAdvancedMedical(false);
         getSalaryXPMultipliers().put(SkillLevel.NONE, 0.5);
         getSalaryXPMultipliers().put(SkillLevel.ULTRA_GREEN, 0.6);
@@ -249,27 +221,27 @@ public class CampaignOptions {
         getEnabledRandomDeathAgeGroups().put(AgeGroup.CHILD, false);
         getEnabledRandomDeathAgeGroups().put(AgeGroup.TODDLER, false);
         getEnabledRandomDeathAgeGroups().put(AgeGroup.BABY, false);
-        usePercentageMaintenance = false;
-        infantryDontCount = false;
+        setUsePercentageMaintenance(false);
+        setUseInfantryDontCount(false);
 
         setUsedPartPriceMultipliers(0.1, 0.2, 0.3, 0.5, 0.7, 0.9);
 
-        equipmentContractPercent = 5.0;
+        setEquipmentContractPercent(5.0);
         setDropShipContractPercent(1.0);
         setJumpShipContractPercent(0.0);
         setWarShipContractPercent(0.0);
 
-        phenotypeProbabilities = new int[Phenotype.getExternalPhenotypes().size()];
-        phenotypeProbabilities[Phenotype.MEKWARRIOR.ordinal()] = 95;
-        phenotypeProbabilities[Phenotype.ELEMENTAL.ordinal()] = 100;
-        phenotypeProbabilities[Phenotype.AEROSPACE.ordinal()] = 95;
-        phenotypeProbabilities[Phenotype.VEHICLE.ordinal()] = 0;
-        phenotypeProbabilities[Phenotype.PROTOMEK.ordinal()] = 95;
-        phenotypeProbabilities[Phenotype.NAVAL.ordinal()] = 25;
+        set(CampaignOption.PHENOTYPE_PROBABILITIES, new int[Phenotype.getExternalPhenotypes().size()]);
+        getPhenotypeProbabilities()[Phenotype.MEKWARRIOR.ordinal()] = 95;
+        getPhenotypeProbabilities()[Phenotype.ELEMENTAL.ordinal()] = 100;
+        getPhenotypeProbabilities()[Phenotype.AEROSPACE.ordinal()] = 95;
+        getPhenotypeProbabilities()[Phenotype.VEHICLE.ordinal()] = 0;
+        getPhenotypeProbabilities()[Phenotype.PROTOMEK.ordinal()] = 95;
+        getPhenotypeProbabilities()[Phenotype.NAVAL.ordinal()] = 25;
 
-        usePortraitForRole = new boolean[personnelRoles.length];
-        Arrays.fill(usePortraitForRole, false);
-        usePortraitForRole[PersonnelRole.MEKWARRIOR.ordinal()] = true;
+        set(CampaignOption.USE_PORTRAIT_FOR_ROLE, new boolean[personnelRoles.length]);
+        Arrays.fill(isUsePortraitForRoles(), false);
+        isUsePortraitForRoles()[PersonnelRole.MEKWARRIOR.ordinal()] = true;
 
         setPersonnelMarketName(PersonnelMarket.getTypeName(PersonnelMarket.TYPE_NONE));
         setPersonnelMarketRandomRemovalTargets(new HashMap<>());
@@ -282,16 +254,16 @@ public class CampaignOptions {
         getPersonnelMarketRandomRemovalTargets().put(SkillLevel.HEROIC, 11);
         getPersonnelMarketRandomRemovalTargets().put(SkillLevel.LEGENDARY, 11);
 
-        strategicViewMinimapTheme = "gbc green.theme";
+        set(CampaignOption.STRATEGIC_VIEW_MINIMAP_THEME, "gbc green.theme");
 
-        atbBattleChance = new int[CombatRole.values().length - 1];
-        atbBattleChance[CombatRole.MANEUVER.ordinal()] = 40;
-        atbBattleChance[CombatRole.FRONTLINE.ordinal()] = 20;
-        atbBattleChance[CombatRole.PATROL.ordinal()] = 60;
-        atbBattleChance[CombatRole.TRAINING.ordinal()] = 10;
-        atbBattleChance[CombatRole.CADRE.ordinal()] = 10;
+        set(CampaignOption.ATB_BATTLE_CHANCE, new int[CombatRole.values().length - 1]);
+        getAllAtBBattleChances()[CombatRole.MANEUVER.ordinal()] = 40;
+        getAllAtBBattleChances()[CombatRole.FRONTLINE.ordinal()] = 20;
+        getAllAtBBattleChances()[CombatRole.PATROL.ordinal()] = 60;
+        getAllAtBBattleChances()[CombatRole.TRAINING.ordinal()] = 10;
+        getAllAtBBattleChances()[CombatRole.CADRE.ordinal()] = 10;
 
-        useFactionStandingOutlawed = true;
+        setUseFactionStandingOutlawed(true);
     }
 
     /**
@@ -302,7 +274,7 @@ public class CampaignOptions {
      *
      * @return the option's current value
      */
-    public <T> T get(final CampaignOption<T> option) {
+    public @Nonnull <T> T get(final @Nonnull CampaignOption<T> option) {
         return options.get(option);
     }
 
@@ -313,7 +285,7 @@ public class CampaignOptions {
      * @param value  the new value
      * @param <T>    the option's value type
      */
-    public <T> void set(final CampaignOption<T> option, final T value) {
+    public <T> void set(final @Nonnull CampaignOption<T> option, final T value) {
         options.set(option, value);
     }
     // endregion Constructors
@@ -327,7 +299,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getManualUnitRatingModifier() {
-        return options.get(CampaignOption.MANUAL_UNIT_RATING_MODIFIER);
+        return get(CampaignOption.MANUAL_UNIT_RATING_MODIFIER);
     }
 
     /**
@@ -337,7 +309,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setManualUnitRatingModifier(final int manualUnitRatingModifier) {
-        options.set(CampaignOption.MANUAL_UNIT_RATING_MODIFIER, manualUnitRatingModifier);
+        set(CampaignOption.MANUAL_UNIT_RATING_MODIFIER, manualUnitRatingModifier);
     }
 
     /**
@@ -347,7 +319,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isRequireSupportForceTransportation() {
-        return options.get(CampaignOption.REQUIRE_SUPPORT_FORCE_TRANSPORTATION);
+        return get(CampaignOption.REQUIRE_SUPPORT_FORCE_TRANSPORTATION);
     }
 
     /**
@@ -357,7 +329,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRequireSupportForceTransportation(final boolean requireSupportForceTransportation) {
-        options.set(CampaignOption.REQUIRE_SUPPORT_FORCE_TRANSPORTATION, requireSupportForceTransportation);
+        set(CampaignOption.REQUIRE_SUPPORT_FORCE_TRANSPORTATION, requireSupportForceTransportation);
     }
 
     /**
@@ -367,7 +339,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isClampReputationPayMultiplier() {
-        return options.get(CampaignOption.CLAMP_REPUTATION_PAY_MULTIPLIER);
+        return get(CampaignOption.CLAMP_REPUTATION_PAY_MULTIPLIER);
     }
 
     /**
@@ -377,7 +349,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setClampReputationPayMultiplier(final boolean clampReputationPayMultiplier) {
-        options.set(CampaignOption.CLAMP_REPUTATION_PAY_MULTIPLIER, clampReputationPayMultiplier);
+        set(CampaignOption.CLAMP_REPUTATION_PAY_MULTIPLIER, clampReputationPayMultiplier);
     }
 
     /**
@@ -387,7 +359,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isReduceReputationPerformanceModifier() {
-        return options.get(CampaignOption.REDUCE_REPUTATION_PERFORMANCE_MODIFIER);
+        return get(CampaignOption.REDUCE_REPUTATION_PERFORMANCE_MODIFIER);
     }
 
     /**
@@ -397,7 +369,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setReduceReputationPerformanceModifier(final boolean reduceReputationPerformanceModifier) {
-        options.set(CampaignOption.REDUCE_REPUTATION_PERFORMANCE_MODIFIER, reduceReputationPerformanceModifier);
+        set(CampaignOption.REDUCE_REPUTATION_PERFORMANCE_MODIFIER, reduceReputationPerformanceModifier);
     }
 
     /**
@@ -407,7 +379,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isReputationPerformanceModifierCutOff() {
-        return options.get(CampaignOption.REPUTATION_PERFORMANCE_MODIFIER_CUT_OFF);
+        return get(CampaignOption.REPUTATION_PERFORMANCE_MODIFIER_CUT_OFF);
     }
 
     /**
@@ -417,7 +389,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setReputationPerformanceModifierCutOff(final boolean reputationPerformanceModifierCutOff) {
-        options.set(CampaignOption.REPUTATION_PERFORMANCE_MODIFIER_CUT_OFF, reputationPerformanceModifierCutOff);
+        set(CampaignOption.REPUTATION_PERFORMANCE_MODIFIER_CUT_OFF, reputationPerformanceModifierCutOff);
     }
     // endregion General Tab
 
@@ -432,7 +404,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isCheckMaintenance() {
-        return options.get(CampaignOption.CHECK_MAINTENANCE);
+        return get(CampaignOption.CHECK_MAINTENANCE);
     }
 
     /**
@@ -442,7 +414,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setCheckMaintenance(final boolean checkMaintenance) {
-        options.set(CampaignOption.CHECK_MAINTENANCE, checkMaintenance);
+        set(CampaignOption.CHECK_MAINTENANCE, checkMaintenance);
     }
 
     /**
@@ -451,7 +423,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMaintenanceCycleDays() {
-        return options.get(CampaignOption.MAINTENANCE_CYCLE_DAYS);
+        return get(CampaignOption.MAINTENANCE_CYCLE_DAYS);
     }
 
     /**
@@ -461,7 +433,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMaintenanceCycleDays(final int maintenanceCycleDays) {
-        options.set(CampaignOption.MAINTENANCE_CYCLE_DAYS, maintenanceCycleDays);
+        set(CampaignOption.MAINTENANCE_CYCLE_DAYS, maintenanceCycleDays);
     }
 
     /**
@@ -469,7 +441,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMaintenanceBonus() {
-        return options.get(CampaignOption.MAINTENANCE_BONUS);
+        return get(CampaignOption.MAINTENANCE_BONUS);
     }
 
     /**
@@ -479,7 +451,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMaintenanceBonus(final int maintenanceBonus) {
-        options.set(CampaignOption.MAINTENANCE_BONUS, maintenanceBonus);
+        set(CampaignOption.MAINTENANCE_BONUS, maintenanceBonus);
     }
 
     /**
@@ -488,7 +460,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseQualityMaintenance() {
-        return options.get(CampaignOption.USE_QUALITY_MAINTENANCE);
+        return get(CampaignOption.USE_QUALITY_MAINTENANCE);
     }
 
     /**
@@ -498,7 +470,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseQualityMaintenance(final boolean useQualityMaintenance) {
-        options.set(CampaignOption.USE_QUALITY_MAINTENANCE, useQualityMaintenance);
+        set(CampaignOption.USE_QUALITY_MAINTENANCE, useQualityMaintenance);
     }
 
     /**
@@ -507,7 +479,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isReverseQualityNames() {
-        return options.get(CampaignOption.REVERSE_QUALITY_NAMES);
+        return get(CampaignOption.REVERSE_QUALITY_NAMES);
     }
 
     /**
@@ -517,7 +489,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setReverseQualityNames(final boolean reverseQualityNames) {
-        options.set(CampaignOption.REVERSE_QUALITY_NAMES, reverseQualityNames);
+        set(CampaignOption.REVERSE_QUALITY_NAMES, reverseQualityNames);
     }
 
     /**
@@ -526,7 +498,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomUnitQualities() {
-        return options.get(CampaignOption.USE_RANDOM_UNIT_QUALITIES);
+        return get(CampaignOption.USE_RANDOM_UNIT_QUALITIES);
     }
 
     /**
@@ -536,7 +508,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomUnitQualities(final boolean useRandomUnitQualities) {
-        options.set(CampaignOption.USE_RANDOM_UNIT_QUALITIES, useRandomUnitQualities);
+        set(CampaignOption.USE_RANDOM_UNIT_QUALITIES, useRandomUnitQualities);
     }
 
     /**
@@ -545,7 +517,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUsePlanetaryModifiers() {
-        return options.get(CampaignOption.USE_PLANETARY_MODIFIERS);
+        return get(CampaignOption.USE_PLANETARY_MODIFIERS);
     }
 
     /**
@@ -555,7 +527,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUsePlanetaryModifiers(final boolean usePlanetaryModifiers) {
-        options.set(CampaignOption.USE_PLANETARY_MODIFIERS, usePlanetaryModifiers);
+        set(CampaignOption.USE_PLANETARY_MODIFIERS, usePlanetaryModifiers);
     }
 
     /**
@@ -564,7 +536,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseUnofficialMaintenance() {
-        return options.get(CampaignOption.USE_UNOFFICIAL_MAINTENANCE);
+        return get(CampaignOption.USE_UNOFFICIAL_MAINTENANCE);
     }
 
     /**
@@ -574,7 +546,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseUnofficialMaintenance(final boolean useUnofficialMaintenance) {
-        options.set(CampaignOption.USE_UNOFFICIAL_MAINTENANCE, useUnofficialMaintenance);
+        set(CampaignOption.USE_UNOFFICIAL_MAINTENANCE, useUnofficialMaintenance);
     }
 
     /**
@@ -582,7 +554,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isLogMaintenance() {
-        return options.get(CampaignOption.LOG_MAINTENANCE);
+        return get(CampaignOption.LOG_MAINTENANCE);
     }
 
     /**
@@ -592,7 +564,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setLogMaintenance(final boolean logMaintenance) {
-        options.set(CampaignOption.LOG_MAINTENANCE, logMaintenance);
+        set(CampaignOption.LOG_MAINTENANCE, logMaintenance);
     }
 
     /**
@@ -603,7 +575,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getDefaultMaintenanceTime() {
-        return options.get(CampaignOption.DEFAULT_MAINTENANCE_TIME);
+        return get(CampaignOption.DEFAULT_MAINTENANCE_TIME);
     }
 
     /**
@@ -617,7 +589,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDefaultMaintenanceTime(final int defaultMaintenanceTime) {
-        options.set(CampaignOption.DEFAULT_MAINTENANCE_TIME, defaultMaintenanceTime);
+        set(CampaignOption.DEFAULT_MAINTENANCE_TIME, defaultMaintenanceTime);
     }
     // endregion Maintenance
 
@@ -628,7 +600,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isMRMSUseRepair() {
-        return options.get(CampaignOption.MRMS_USE_REPAIR);
+        return get(CampaignOption.MRMS_USE_REPAIR);
     }
 
     /**
@@ -638,7 +610,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMRMSUseRepair(final boolean mrmsUseRepair) {
-        options.set(CampaignOption.MRMS_USE_REPAIR, mrmsUseRepair);
+        set(CampaignOption.MRMS_USE_REPAIR, mrmsUseRepair);
     }
 
     /**
@@ -646,7 +618,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isMRMSUseSalvage() {
-        return options.get(CampaignOption.MRMS_USE_SALVAGE);
+        return get(CampaignOption.MRMS_USE_SALVAGE);
     }
 
     /**
@@ -656,7 +628,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMRMSUseSalvage(final boolean mrmsUseSalvage) {
-        options.set(CampaignOption.MRMS_USE_SALVAGE, mrmsUseSalvage);
+        set(CampaignOption.MRMS_USE_SALVAGE, mrmsUseSalvage);
     }
 
     /**
@@ -665,7 +637,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isMRMSUseExtraTime() {
-        return options.get(CampaignOption.MRMS_USE_EXTRA_TIME);
+        return get(CampaignOption.MRMS_USE_EXTRA_TIME);
     }
 
     /**
@@ -675,7 +647,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMRMSUseExtraTime(final boolean mrmsUseExtraTime) {
-        options.set(CampaignOption.MRMS_USE_EXTRA_TIME, mrmsUseExtraTime);
+        set(CampaignOption.MRMS_USE_EXTRA_TIME, mrmsUseExtraTime);
     }
 
     /**
@@ -683,7 +655,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isMRMSUseRushJob() {
-        return options.get(CampaignOption.MRMS_USE_RUSH_JOB);
+        return get(CampaignOption.MRMS_USE_RUSH_JOB);
     }
 
     /**
@@ -693,7 +665,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMRMSUseRushJob(final boolean mrmsUseRushJob) {
-        options.set(CampaignOption.MRMS_USE_RUSH_JOB, mrmsUseRushJob);
+        set(CampaignOption.MRMS_USE_RUSH_JOB, mrmsUseRushJob);
     }
 
     /**
@@ -702,7 +674,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isMRMSAllowCarryover() {
-        return options.get(CampaignOption.MRMS_ALLOW_CARRYOVER);
+        return get(CampaignOption.MRMS_ALLOW_CARRYOVER);
     }
 
     /**
@@ -712,7 +684,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMRMSAllowCarryover(final boolean mrmsAllowCarryover) {
-        options.set(CampaignOption.MRMS_ALLOW_CARRYOVER, mrmsAllowCarryover);
+        set(CampaignOption.MRMS_ALLOW_CARRYOVER, mrmsAllowCarryover);
     }
 
     /**
@@ -722,7 +694,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isMRMSOptimizeToCompleteToday() {
-        return options.get(CampaignOption.MRMS_OPTIMIZE_TO_COMPLETE_TODAY);
+        return get(CampaignOption.MRMS_OPTIMIZE_TO_COMPLETE_TODAY);
     }
 
     /**
@@ -732,7 +704,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMRMSOptimizeToCompleteToday(final boolean mrmsOptimizeToCompleteToday) {
-        options.set(CampaignOption.MRMS_OPTIMIZE_TO_COMPLETE_TODAY, mrmsOptimizeToCompleteToday);
+        set(CampaignOption.MRMS_OPTIMIZE_TO_COMPLETE_TODAY, mrmsOptimizeToCompleteToday);
     }
 
     /**
@@ -741,7 +713,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isMRMSScrapImpossible() {
-        return options.get(CampaignOption.MRMS_SCRAP_IMPOSSIBLE);
+        return get(CampaignOption.MRMS_SCRAP_IMPOSSIBLE);
     }
 
     /**
@@ -751,7 +723,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMRMSScrapImpossible(final boolean mrmsScrapImpossible) {
-        options.set(CampaignOption.MRMS_SCRAP_IMPOSSIBLE, mrmsScrapImpossible);
+        set(CampaignOption.MRMS_SCRAP_IMPOSSIBLE, mrmsScrapImpossible);
     }
 
     /**
@@ -761,7 +733,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isMRMSUseAssignedTechsFirst() {
-        return options.get(CampaignOption.MRMS_USE_ASSIGNED_TECHS_FIRST);
+        return get(CampaignOption.MRMS_USE_ASSIGNED_TECHS_FIRST);
     }
 
     /**
@@ -771,7 +743,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMRMSUseAssignedTechsFirst(final boolean mrmsUseAssignedTechsFirst) {
-        options.set(CampaignOption.MRMS_USE_ASSIGNED_TECHS_FIRST, mrmsUseAssignedTechsFirst);
+        set(CampaignOption.MRMS_USE_ASSIGNED_TECHS_FIRST, mrmsUseAssignedTechsFirst);
     }
 
     /**
@@ -779,7 +751,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isMRMSReplacePod() {
-        return options.get(CampaignOption.MRMS_REPLACE_POD);
+        return get(CampaignOption.MRMS_REPLACE_POD);
     }
 
     /**
@@ -789,7 +761,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMRMSReplacePod(final boolean mrmsReplacePod) {
-        options.set(CampaignOption.MRMS_REPLACE_POD, mrmsReplacePod);
+        set(CampaignOption.MRMS_REPLACE_POD, mrmsReplacePod);
     }
 
     /**
@@ -797,7 +769,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public List<MRMSOption> getMRMSOptions() {
-        return options.get(CampaignOption.MRMS_OPTIONS);
+        return get(CampaignOption.MRMS_OPTIONS);
     }
 
     /**
@@ -807,7 +779,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMRMSOptions(final List<MRMSOption> mrmsOptions) {
-        options.set(CampaignOption.MRMS_OPTIONS, mrmsOptions);
+        set(CampaignOption.MRMS_OPTIONS, mrmsOptions);
     }
 
     public void addMRMSOption(final MRMSOption mrmsOption) {
@@ -832,7 +804,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseTactics() {
-        return options.get(CampaignOption.USE_TACTICS);
+        return get(CampaignOption.USE_TACTICS);
     }
 
     /**
@@ -841,7 +813,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseTactics(final boolean useTactics) {
-        options.set(CampaignOption.USE_TACTICS, useTactics);
+        set(CampaignOption.USE_TACTICS, useTactics);
     }
 
     /**
@@ -850,7 +822,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseInitiativeBonus() {
-        return options.get(CampaignOption.USE_INITIATIVE_BONUS);
+        return get(CampaignOption.USE_INITIATIVE_BONUS);
     }
 
     /**
@@ -860,7 +832,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseInitiativeBonus(final boolean useInitiativeBonus) {
-        options.set(CampaignOption.USE_INITIATIVE_BONUS, useInitiativeBonus);
+        set(CampaignOption.USE_INITIATIVE_BONUS, useInitiativeBonus);
     }
 
     /**
@@ -869,7 +841,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseSensibleTactics() {
-        return options.get(CampaignOption.USE_SENSIBLE_TACTICS);
+        return get(CampaignOption.USE_SENSIBLE_TACTICS);
     }
 
     /**
@@ -879,7 +851,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseSensibleTactics(final boolean useSensibleTactics) {
-        options.set(CampaignOption.USE_SENSIBLE_TACTICS, useSensibleTactics);
+        set(CampaignOption.USE_SENSIBLE_TACTICS, useSensibleTactics);
     }
 
     /**
@@ -887,7 +859,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseToughness() {
-        return options.get(CampaignOption.USE_TOUGHNESS);
+        return get(CampaignOption.USE_TOUGHNESS);
     }
 
     /**
@@ -897,7 +869,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseToughness(final boolean useToughness) {
-        options.set(CampaignOption.USE_TOUGHNESS, useToughness);
+        set(CampaignOption.USE_TOUGHNESS, useToughness);
     }
 
     /**
@@ -906,7 +878,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomToughness() {
-        return options.get(CampaignOption.USE_RANDOM_TOUGHNESS);
+        return get(CampaignOption.USE_RANDOM_TOUGHNESS);
     }
 
     /**
@@ -916,7 +888,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomToughness(final boolean useRandomToughness) {
-        options.set(CampaignOption.USE_RANDOM_TOUGHNESS, useRandomToughness);
+        set(CampaignOption.USE_RANDOM_TOUGHNESS, useRandomToughness);
     }
 
     /**
@@ -924,7 +896,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseArtillery() {
-        return options.get(CampaignOption.USE_ARTILLERY);
+        return get(CampaignOption.USE_ARTILLERY);
     }
 
     /**
@@ -934,7 +906,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseArtillery(final boolean useArtillery) {
-        options.set(CampaignOption.USE_ARTILLERY, useArtillery);
+        set(CampaignOption.USE_ARTILLERY, useArtillery);
     }
 
     /**
@@ -942,7 +914,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseAbilities() {
-        return options.get(CampaignOption.USE_ABILITIES);
+        return get(CampaignOption.USE_ABILITIES);
     }
 
     /**
@@ -952,7 +924,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseAbilities(final boolean useAbilities) {
-        options.set(CampaignOption.USE_ABILITIES, useAbilities);
+        set(CampaignOption.USE_ABILITIES, useAbilities);
     }
 
     /**
@@ -962,7 +934,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isOnlyCommandersMatterVehicles() {
-        return options.get(CampaignOption.ONLY_COMMANDERS_MATTER_VEHICLES);
+        return get(CampaignOption.ONLY_COMMANDERS_MATTER_VEHICLES);
     }
 
     /**
@@ -972,7 +944,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setOnlyCommandersMatterVehicles(final boolean onlyCommandersMatterVehicles) {
-        options.set(CampaignOption.ONLY_COMMANDERS_MATTER_VEHICLES, onlyCommandersMatterVehicles);
+        set(CampaignOption.ONLY_COMMANDERS_MATTER_VEHICLES, onlyCommandersMatterVehicles);
     }
 
     /**
@@ -982,7 +954,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isOnlyCommandersMatterInfantry() {
-        return options.get(CampaignOption.ONLY_COMMANDERS_MATTER_INFANTRY);
+        return get(CampaignOption.ONLY_COMMANDERS_MATTER_INFANTRY);
     }
 
     /**
@@ -992,7 +964,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setOnlyCommandersMatterInfantry(final boolean onlyCommandersMatterInfantry) {
-        options.set(CampaignOption.ONLY_COMMANDERS_MATTER_INFANTRY, onlyCommandersMatterInfantry);
+        set(CampaignOption.ONLY_COMMANDERS_MATTER_INFANTRY, onlyCommandersMatterInfantry);
     }
 
     /**
@@ -1002,7 +974,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isOnlyCommandersMatterBattleArmor() {
-        return options.get(CampaignOption.ONLY_COMMANDERS_MATTER_BATTLE_ARMOR);
+        return get(CampaignOption.ONLY_COMMANDERS_MATTER_BATTLE_ARMOR);
     }
 
     /**
@@ -1012,7 +984,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setOnlyCommandersMatterBattleArmor(final boolean onlyCommandersMatterBattleArmor) {
-        options.set(CampaignOption.ONLY_COMMANDERS_MATTER_BATTLE_ARMOR, onlyCommandersMatterBattleArmor);
+        set(CampaignOption.ONLY_COMMANDERS_MATTER_BATTLE_ARMOR, onlyCommandersMatterBattleArmor);
     }
 
     /**
@@ -1021,7 +993,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public EdgeRefreshPeriod getEdgeRefreshPeriod() {
-        return options.get(CampaignOption.EDGE_REFRESH_PERIOD);
+        return get(CampaignOption.EDGE_REFRESH_PERIOD);
     }
 
     /**
@@ -1031,7 +1003,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEdgeRefreshPeriod(final EdgeRefreshPeriod edgeRefreshPeriod) {
-        options.set(CampaignOption.EDGE_REFRESH_PERIOD, edgeRefreshPeriod);
+        set(CampaignOption.EDGE_REFRESH_PERIOD, edgeRefreshPeriod);
     }
 
     /**
@@ -1039,7 +1011,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseEdge() {
-        return options.get(CampaignOption.USE_EDGE);
+        return get(CampaignOption.USE_EDGE);
     }
 
     /**
@@ -1048,7 +1020,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseEdge(final boolean useEdge) {
-        options.set(CampaignOption.USE_EDGE, useEdge);
+        set(CampaignOption.USE_EDGE, useEdge);
     }
 
     /**
@@ -1056,7 +1028,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseImplants() {
-        return options.get(CampaignOption.USE_IMPLANTS);
+        return get(CampaignOption.USE_IMPLANTS);
     }
 
     /**
@@ -1066,7 +1038,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseImplants(final boolean useImplants) {
-        options.set(CampaignOption.USE_IMPLANTS, useImplants);
+        set(CampaignOption.USE_IMPLANTS, useImplants);
     }
 
     /**
@@ -1076,7 +1048,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAlternativeQualityAveraging() {
-        return options.get(CampaignOption.ALTERNATIVE_QUALITY_AVERAGING);
+        return get(CampaignOption.ALTERNATIVE_QUALITY_AVERAGING);
     }
 
     /**
@@ -1086,7 +1058,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAlternativeQualityAveraging(final boolean alternativeQualityAveraging) {
-        options.set(CampaignOption.ALTERNATIVE_QUALITY_AVERAGING, alternativeQualityAveraging);
+        set(CampaignOption.ALTERNATIVE_QUALITY_AVERAGING, alternativeQualityAveraging);
     }
 
     /**
@@ -1094,7 +1066,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseAgeEffects() {
-        return options.get(CampaignOption.USE_AGE_EFFECTS);
+        return get(CampaignOption.USE_AGE_EFFECTS);
     }
 
     /**
@@ -1104,7 +1076,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseAgeEffects(final boolean useAgeEffects) {
-        options.set(CampaignOption.USE_AGE_EFFECTS, useAgeEffects);
+        set(CampaignOption.USE_AGE_EFFECTS, useAgeEffects);
     }
 
     /**
@@ -1112,7 +1084,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseTransfers() {
-        return options.get(CampaignOption.USE_TRANSFERS);
+        return get(CampaignOption.USE_TRANSFERS);
     }
 
     /**
@@ -1122,7 +1094,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseTransfers(final boolean useTransfers) {
-        options.set(CampaignOption.USE_TRANSFERS, useTransfers);
+        set(CampaignOption.USE_TRANSFERS, useTransfers);
     }
 
     /**
@@ -1132,7 +1104,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseExtendedTOEForceName() {
-        return options.get(CampaignOption.USE_EXTENDED_TOE_FORCE_NAME);
+        return get(CampaignOption.USE_EXTENDED_TOE_FORCE_NAME);
     }
 
     /**
@@ -1142,7 +1114,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseExtendedTOEForceName(final boolean useExtendedTOEForceName) {
-        options.set(CampaignOption.USE_EXTENDED_TOE_FORCE_NAME, useExtendedTOEForceName);
+        set(CampaignOption.USE_EXTENDED_TOE_FORCE_NAME, useExtendedTOEForceName);
     }
 
     /**
@@ -1151,7 +1123,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPersonnelLogSkillGain() {
-        return options.get(CampaignOption.PERSONNEL_LOG_SKILL_GAIN);
+        return get(CampaignOption.PERSONNEL_LOG_SKILL_GAIN);
     }
 
     /**
@@ -1161,7 +1133,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPersonnelLogSkillGain(final boolean personnelLogSkillGain) {
-        options.set(CampaignOption.PERSONNEL_LOG_SKILL_GAIN, personnelLogSkillGain);
+        set(CampaignOption.PERSONNEL_LOG_SKILL_GAIN, personnelLogSkillGain);
     }
 
     /**
@@ -1170,7 +1142,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPersonnelLogAbilityGain() {
-        return options.get(CampaignOption.PERSONNEL_LOG_ABILITY_GAIN);
+        return get(CampaignOption.PERSONNEL_LOG_ABILITY_GAIN);
     }
 
     /**
@@ -1180,7 +1152,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPersonnelLogAbilityGain(final boolean personnelLogAbilityGain) {
-        options.set(CampaignOption.PERSONNEL_LOG_ABILITY_GAIN, personnelLogAbilityGain);
+        set(CampaignOption.PERSONNEL_LOG_ABILITY_GAIN, personnelLogAbilityGain);
     }
 
     /**
@@ -1189,7 +1161,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPersonnelLogEdgeGain() {
-        return options.get(CampaignOption.PERSONNEL_LOG_EDGE_GAIN);
+        return get(CampaignOption.PERSONNEL_LOG_EDGE_GAIN);
     }
 
     /**
@@ -1199,7 +1171,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPersonnelLogEdgeGain(final boolean personnelLogEdgeGain) {
-        options.set(CampaignOption.PERSONNEL_LOG_EDGE_GAIN, personnelLogEdgeGain);
+        set(CampaignOption.PERSONNEL_LOG_EDGE_GAIN, personnelLogEdgeGain);
     }
 
     /**
@@ -1208,7 +1180,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDisplayPersonnelLog() {
-        return options.get(CampaignOption.DISPLAY_PERSONNEL_LOG);
+        return get(CampaignOption.DISPLAY_PERSONNEL_LOG);
     }
 
     /**
@@ -1218,7 +1190,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisplayPersonnelLog(final boolean displayPersonnelLog) {
-        options.set(CampaignOption.DISPLAY_PERSONNEL_LOG, displayPersonnelLog);
+        set(CampaignOption.DISPLAY_PERSONNEL_LOG, displayPersonnelLog);
     }
 
     /**
@@ -1227,7 +1199,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDisplayScenarioLog() {
-        return options.get(CampaignOption.DISPLAY_SCENARIO_LOG);
+        return get(CampaignOption.DISPLAY_SCENARIO_LOG);
     }
 
     /**
@@ -1237,7 +1209,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisplayScenarioLog(final boolean displayScenarioLog) {
-        options.set(CampaignOption.DISPLAY_SCENARIO_LOG, displayScenarioLog);
+        set(CampaignOption.DISPLAY_SCENARIO_LOG, displayScenarioLog);
     }
 
     /**
@@ -1246,7 +1218,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDisplayKillRecord() {
-        return options.get(CampaignOption.DISPLAY_KILL_RECORD);
+        return get(CampaignOption.DISPLAY_KILL_RECORD);
     }
 
     /**
@@ -1256,7 +1228,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisplayKillRecord(final boolean displayKillRecord) {
-        options.set(CampaignOption.DISPLAY_KILL_RECORD, displayKillRecord);
+        set(CampaignOption.DISPLAY_KILL_RECORD, displayKillRecord);
     }
 
     /**
@@ -1265,7 +1237,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDisplayMedicalRecord() {
-        return options.get(CampaignOption.DISPLAY_MEDICAL_RECORD);
+        return get(CampaignOption.DISPLAY_MEDICAL_RECORD);
     }
 
     /**
@@ -1275,7 +1247,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisplayMedicalRecord(final boolean displayMedicalRecord) {
-        options.set(CampaignOption.DISPLAY_MEDICAL_RECORD, displayMedicalRecord);
+        set(CampaignOption.DISPLAY_MEDICAL_RECORD, displayMedicalRecord);
     }
 
     /**
@@ -1284,7 +1256,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDisplayPatientRecord() {
-        return options.get(CampaignOption.DISPLAY_PATIENT_RECORD);
+        return get(CampaignOption.DISPLAY_PATIENT_RECORD);
     }
 
     /**
@@ -1294,7 +1266,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisplayPatientRecord(final boolean displayPatientRecord) {
-        options.set(CampaignOption.DISPLAY_PATIENT_RECORD, displayPatientRecord);
+        set(CampaignOption.DISPLAY_PATIENT_RECORD, displayPatientRecord);
     }
 
     /**
@@ -1303,7 +1275,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDisplayAssignmentRecord() {
-        return options.get(CampaignOption.DISPLAY_ASSIGNMENT_RECORD);
+        return get(CampaignOption.DISPLAY_ASSIGNMENT_RECORD);
     }
 
     /**
@@ -1313,7 +1285,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisplayAssignmentRecord(final boolean displayAssignmentRecord) {
-        options.set(CampaignOption.DISPLAY_ASSIGNMENT_RECORD, displayAssignmentRecord);
+        set(CampaignOption.DISPLAY_ASSIGNMENT_RECORD, displayAssignmentRecord);
     }
 
     /**
@@ -1322,7 +1294,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDisplayPerformanceRecord() {
-        return options.get(CampaignOption.DISPLAY_PERFORMANCE_RECORD);
+        return get(CampaignOption.DISPLAY_PERFORMANCE_RECORD);
     }
 
     /**
@@ -1332,7 +1304,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisplayPerformanceRecord(final boolean displayPerformanceRecord) {
-        options.set(CampaignOption.DISPLAY_PERFORMANCE_RECORD, displayPerformanceRecord);
+        set(CampaignOption.DISPLAY_PERFORMANCE_RECORD, displayPerformanceRecord);
     }
 
     /**
@@ -1341,7 +1313,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAwardVeterancySPAs() {
-        return options.get(CampaignOption.AWARD_VETERANCY_SP_AS);
+        return get(CampaignOption.AWARD_VETERANCY_SP_AS);
     }
 
     /**
@@ -1351,7 +1323,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAwardVeterancySPAs(final boolean awardVeterancySPAs) {
-        options.set(CampaignOption.AWARD_VETERANCY_SP_AS, awardVeterancySPAs);
+        set(CampaignOption.AWARD_VETERANCY_SP_AS, awardVeterancySPAs);
     }
 
     /**
@@ -1361,7 +1333,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAwardRelevantVeterancySPAs() {
-        return options.get(CampaignOption.AWARD_RELEVANT_VETERANCY_SP_AS);
+        return get(CampaignOption.AWARD_RELEVANT_VETERANCY_SP_AS);
     }
 
     /**
@@ -1371,7 +1343,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAwardRelevantVeterancySPAs(final boolean awardRelevantVeterancySPAs) {
-        options.set(CampaignOption.AWARD_RELEVANT_VETERANCY_SP_AS, awardRelevantVeterancySPAs);
+        set(CampaignOption.AWARD_RELEVANT_VETERANCY_SP_AS, awardRelevantVeterancySPAs);
     }
 
     /**
@@ -1381,7 +1353,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isRewardComingOfAgeAbilities() {
-        return options.get(CampaignOption.REWARD_COMING_OF_AGE_ABILITIES);
+        return get(CampaignOption.REWARD_COMING_OF_AGE_ABILITIES);
     }
 
     /**
@@ -1391,7 +1363,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRewardComingOfAgeAbilities(final boolean rewardComingOfAgeAbilities) {
-        options.set(CampaignOption.REWARD_COMING_OF_AGE_ABILITIES, rewardComingOfAgeAbilities);
+        set(CampaignOption.REWARD_COMING_OF_AGE_ABILITIES, rewardComingOfAgeAbilities);
     }
 
     /**
@@ -1401,7 +1373,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isRewardComingOfAgeRPSkills() {
-        return options.get(CampaignOption.REWARD_COMING_OF_AGE_RP_SKILLS);
+        return get(CampaignOption.REWARD_COMING_OF_AGE_RP_SKILLS);
     }
 
     /**
@@ -1411,7 +1383,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRewardComingOfAgeRPSkills(final boolean rewardComingOfAgeRPSkills) {
-        options.set(CampaignOption.REWARD_COMING_OF_AGE_RP_SKILLS, rewardComingOfAgeRPSkills);
+        set(CampaignOption.REWARD_COMING_OF_AGE_RP_SKILLS, rewardComingOfAgeRPSkills);
     }
 
     /**
@@ -1419,7 +1391,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFatigue() {
-        return options.get(CampaignOption.USE_FATIGUE);
+        return get(CampaignOption.USE_FATIGUE);
     }
 
     /**
@@ -1428,7 +1400,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFatigue(final boolean useFatigue) {
-        options.set(CampaignOption.USE_FATIGUE, useFatigue);
+        set(CampaignOption.USE_FATIGUE, useFatigue);
     }
 
     /**
@@ -1436,7 +1408,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getFatigueRate() {
-        return options.get(CampaignOption.FATIGUE_RATE);
+        return get(CampaignOption.FATIGUE_RATE);
     }
 
     /**
@@ -1446,7 +1418,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setFatigueRate(final Integer fatigueRate) {
-        options.set(CampaignOption.FATIGUE_RATE, fatigueRate);
+        set(CampaignOption.FATIGUE_RATE, fatigueRate);
     }
 
     /**
@@ -1455,7 +1427,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseInjuryFatigue() {
-        return options.get(CampaignOption.USE_INJURY_FATIGUE);
+        return get(CampaignOption.USE_INJURY_FATIGUE);
     }
 
     /**
@@ -1465,7 +1437,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseInjuryFatigue(final boolean useInjuryFatigue) {
-        options.set(CampaignOption.USE_INJURY_FATIGUE, useInjuryFatigue);
+        set(CampaignOption.USE_INJURY_FATIGUE, useInjuryFatigue);
     }
 
     /**
@@ -1474,7 +1446,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getFieldKitchenCapacity() {
-        return options.get(CampaignOption.FIELD_KITCHEN_CAPACITY);
+        return get(CampaignOption.FIELD_KITCHEN_CAPACITY);
     }
 
     /**
@@ -1484,7 +1456,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setFieldKitchenCapacity(final Integer fieldKitchenCapacity) {
-        options.set(CampaignOption.FIELD_KITCHEN_CAPACITY, fieldKitchenCapacity);
+        set(CampaignOption.FIELD_KITCHEN_CAPACITY, fieldKitchenCapacity);
     }
 
     /**
@@ -1494,7 +1466,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFieldKitchenIgnoreNonCombatants() {
-        return options.get(CampaignOption.FIELD_KITCHEN_IGNORE_NON_COMBATANTS);
+        return get(CampaignOption.FIELD_KITCHEN_IGNORE_NON_COMBATANTS);
     }
 
     /**
@@ -1504,7 +1476,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setFieldKitchenIgnoreNonCombatants(final boolean fieldKitchenIgnoreNonCombatants) {
-        options.set(CampaignOption.FIELD_KITCHEN_IGNORE_NON_COMBATANTS, fieldKitchenIgnoreNonCombatants);
+        set(CampaignOption.FIELD_KITCHEN_IGNORE_NON_COMBATANTS, fieldKitchenIgnoreNonCombatants);
     }
 
     /**
@@ -1514,7 +1486,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getFatigueUndeploymentThreshold() {
-        return options.get(CampaignOption.FATIGUE_UNDEPLOYMENT_THRESHOLD);
+        return get(CampaignOption.FATIGUE_UNDEPLOYMENT_THRESHOLD);
     }
 
     /**
@@ -1524,7 +1496,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setFatigueUndeploymentThreshold(final Integer fatigueUndeploymentThreshold) {
-        options.set(CampaignOption.FATIGUE_UNDEPLOYMENT_THRESHOLD, fatigueUndeploymentThreshold);
+        set(CampaignOption.FATIGUE_UNDEPLOYMENT_THRESHOLD, fatigueUndeploymentThreshold);
     }
 
     /**
@@ -1533,7 +1505,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getFatigueLeaveThreshold() {
-        return options.get(CampaignOption.FATIGUE_LEAVE_THRESHOLD);
+        return get(CampaignOption.FATIGUE_LEAVE_THRESHOLD);
     }
 
     /**
@@ -1543,7 +1515,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setFatigueLeaveThreshold(final Integer fatigueLeaveThreshold) {
-        options.set(CampaignOption.FATIGUE_LEAVE_THRESHOLD, fatigueLeaveThreshold);
+        set(CampaignOption.FATIGUE_LEAVE_THRESHOLD, fatigueLeaveThreshold);
     }
 
     // endregion General Personnel
@@ -1558,7 +1530,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseTimeInService() {
-        return options.get(CampaignOption.USE_TIME_IN_SERVICE);
+        return get(CampaignOption.USE_TIME_IN_SERVICE);
     }
 
     /**
@@ -1570,7 +1542,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseTimeInService(final boolean useTimeInService) {
-        options.set(CampaignOption.USE_TIME_IN_SERVICE, useTimeInService);
+        set(CampaignOption.USE_TIME_IN_SERVICE, useTimeInService);
     }
 
     /**
@@ -1582,7 +1554,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public TimeInDisplayFormat getTimeInServiceDisplayFormat() {
-        return options.get(CampaignOption.TIME_IN_SERVICE_DISPLAY_FORMAT);
+        return get(CampaignOption.TIME_IN_SERVICE_DISPLAY_FORMAT);
     }
 
     /**
@@ -1594,7 +1566,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTimeInServiceDisplayFormat(final TimeInDisplayFormat timeInServiceDisplayFormat) {
-        options.set(CampaignOption.TIME_IN_SERVICE_DISPLAY_FORMAT, timeInServiceDisplayFormat);
+        set(CampaignOption.TIME_IN_SERVICE_DISPLAY_FORMAT, timeInServiceDisplayFormat);
     }
 
     /**
@@ -1604,7 +1576,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseTimeInRank() {
-        return options.get(CampaignOption.USE_TIME_IN_RANK);
+        return get(CampaignOption.USE_TIME_IN_RANK);
     }
 
     /**
@@ -1616,7 +1588,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseTimeInRank(final boolean useTimeInRank) {
-        options.set(CampaignOption.USE_TIME_IN_RANK, useTimeInRank);
+        set(CampaignOption.USE_TIME_IN_RANK, useTimeInRank);
     }
 
     /**
@@ -1628,7 +1600,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public TimeInDisplayFormat getTimeInRankDisplayFormat() {
-        return options.get(CampaignOption.TIME_IN_RANK_DISPLAY_FORMAT);
+        return get(CampaignOption.TIME_IN_RANK_DISPLAY_FORMAT);
     }
 
     /**
@@ -1640,7 +1612,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTimeInRankDisplayFormat(final TimeInDisplayFormat timeInRankDisplayFormat) {
-        options.set(CampaignOption.TIME_IN_RANK_DISPLAY_FORMAT, timeInRankDisplayFormat);
+        set(CampaignOption.TIME_IN_RANK_DISPLAY_FORMAT, timeInRankDisplayFormat);
     }
 
     /**
@@ -1651,7 +1623,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isTrackTotalEarnings() {
-        return options.get(CampaignOption.TRACK_TOTAL_EARNINGS);
+        return get(CampaignOption.TRACK_TOTAL_EARNINGS);
     }
 
     /**
@@ -1663,7 +1635,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTrackTotalEarnings(final boolean trackTotalEarnings) {
-        options.set(CampaignOption.TRACK_TOTAL_EARNINGS, trackTotalEarnings);
+        set(CampaignOption.TRACK_TOTAL_EARNINGS, trackTotalEarnings);
     }
 
     /**
@@ -1674,7 +1646,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isTrackTotalXPEarnings() {
-        return options.get(CampaignOption.TRACK_TOTAL_XP_EARNINGS);
+        return get(CampaignOption.TRACK_TOTAL_XP_EARNINGS);
     }
 
     /**
@@ -1686,7 +1658,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTrackTotalXPEarnings(final boolean trackTotalXPEarnings) {
-        options.set(CampaignOption.TRACK_TOTAL_XP_EARNINGS, trackTotalXPEarnings);
+        set(CampaignOption.TRACK_TOTAL_XP_EARNINGS, trackTotalXPEarnings);
     }
 
     /**
@@ -1697,7 +1669,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isShowOriginFaction() {
-        return options.get(CampaignOption.SHOW_ORIGIN_FACTION);
+        return get(CampaignOption.SHOW_ORIGIN_FACTION);
     }
 
     /**
@@ -1709,7 +1681,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setShowOriginFaction(final boolean showOriginFaction) {
-        options.set(CampaignOption.SHOW_ORIGIN_FACTION, showOriginFaction);
+        set(CampaignOption.SHOW_ORIGIN_FACTION, showOriginFaction);
     }
 
     /**
@@ -1718,7 +1690,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAdminsHaveNegotiation() {
-        return options.get(CampaignOption.ADMINS_HAVE_NEGOTIATION);
+        return get(CampaignOption.ADMINS_HAVE_NEGOTIATION);
     }
 
     /**
@@ -1728,7 +1700,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAdminsHaveNegotiation(final boolean useAdminsHaveNegotiation) {
-        options.set(CampaignOption.ADMINS_HAVE_NEGOTIATION, useAdminsHaveNegotiation);
+        set(CampaignOption.ADMINS_HAVE_NEGOTIATION, useAdminsHaveNegotiation);
     }
 
     /**
@@ -1738,7 +1710,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAdminExperienceLevelIncludeNegotiation() {
-        return options.get(CampaignOption.ADMIN_EXPERIENCE_LEVEL_INCLUDE_NEGOTIATION);
+        return get(CampaignOption.ADMIN_EXPERIENCE_LEVEL_INCLUDE_NEGOTIATION);
     }
 
     /**
@@ -1748,7 +1720,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAdminExperienceLevelIncludeNegotiation(final boolean useAdminExperienceLevelIncludeNegotiation) {
-        options.set(CampaignOption.ADMIN_EXPERIENCE_LEVEL_INCLUDE_NEGOTIATION,
+        set(CampaignOption.ADMIN_EXPERIENCE_LEVEL_INCLUDE_NEGOTIATION,
               useAdminExperienceLevelIncludeNegotiation);
     }
 
@@ -1767,7 +1739,17 @@ public class CampaignOptions {
      * @see #isUseAdvancedMedicalDirect()
      */
     public boolean isUseAdvancedMedical() {
-        return useAdvancedMedical || get(CampaignOption.USE_ALTERNATIVE_ADVANCED_MEDICAL);
+        return get(CampaignOption.USE_ADVANCED_MEDICAL) || get(CampaignOption.USE_ALTERNATIVE_ADVANCED_MEDICAL);
+    }
+
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#set(CampaignOption, Object) CampaignOptions.set(CampaignOption.USE_ADVANCED_MEDICAL,
+     *       value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
+    public void setUseAdvancedMedical(final boolean useAdvancedMedical) {
+        set(CampaignOption.USE_ADVANCED_MEDICAL, useAdvancedMedical);
     }
 
     /**
@@ -1779,13 +1761,12 @@ public class CampaignOptions {
      * @return {@code true} if the standard advanced medical system is enabled, {@code false} otherwise
      *
      * @see #isUseAdvancedMedical()
+     *
+     * @deprecated Use {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.USE_ADVANCED_MEDICAL)}
      */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseAdvancedMedicalDirect() {
-        return useAdvancedMedical;
-    }
-
-    public void setUseAdvancedMedical(final boolean useAdvancedMedical) {
-        this.useAdvancedMedical = useAdvancedMedical;
+        return get(CampaignOption.USE_ADVANCED_MEDICAL);
     }
 
     /**
@@ -1794,7 +1775,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getHealingWaitingPeriod() {
-        return options.get(CampaignOption.HEAL_WAITING_PERIOD);
+        return get(CampaignOption.HEAL_WAITING_PERIOD);
     }
 
     /**
@@ -1804,7 +1785,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setHealingWaitingPeriod(final int healWaitingPeriod) {
-        options.set(CampaignOption.HEAL_WAITING_PERIOD, healWaitingPeriod);
+        set(CampaignOption.HEAL_WAITING_PERIOD, healWaitingPeriod);
     }
 
     /**
@@ -1814,7 +1795,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getNaturalHealingWaitingPeriod() {
-        return options.get(CampaignOption.NATURAL_HEALING_WAITING_PERIOD);
+        return get(CampaignOption.NATURAL_HEALING_WAITING_PERIOD);
     }
 
     /**
@@ -1824,7 +1805,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setNaturalHealingWaitingPeriod(final int naturalHealingWaitingPeriod) {
-        options.set(CampaignOption.NATURAL_HEALING_WAITING_PERIOD, naturalHealingWaitingPeriod);
+        set(CampaignOption.NATURAL_HEALING_WAITING_PERIOD, naturalHealingWaitingPeriod);
     }
 
     /**
@@ -1833,7 +1814,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMinimumHitsForVehicles() {
-        return options.get(CampaignOption.MINIMUM_HITS_FOR_VEHICLES);
+        return get(CampaignOption.MINIMUM_HITS_FOR_VEHICLES);
     }
 
     /**
@@ -1843,7 +1824,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMinimumHitsForVehicles(final int minimumHitsForVehicles) {
-        options.set(CampaignOption.MINIMUM_HITS_FOR_VEHICLES, minimumHitsForVehicles);
+        set(CampaignOption.MINIMUM_HITS_FOR_VEHICLES, minimumHitsForVehicles);
     }
 
     /**
@@ -1853,7 +1834,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomHitsForVehicles() {
-        return options.get(CampaignOption.USE_RANDOM_HITS_FOR_VEHICLES);
+        return get(CampaignOption.USE_RANDOM_HITS_FOR_VEHICLES);
     }
 
     /**
@@ -1863,7 +1844,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomHitsForVehicles(final boolean useRandomHitsForVehicles) {
-        options.set(CampaignOption.USE_RANDOM_HITS_FOR_VEHICLES, useRandomHitsForVehicles);
+        set(CampaignOption.USE_RANDOM_HITS_FOR_VEHICLES, useRandomHitsForVehicles);
     }
 
     /**
@@ -1871,7 +1852,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isTougherHealing() {
-        return options.get(CampaignOption.TOUGHER_HEALING);
+        return get(CampaignOption.TOUGHER_HEALING);
     }
 
     /**
@@ -1881,7 +1862,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTougherHealing(final boolean tougherHealing) {
-        options.set(CampaignOption.TOUGHER_HEALING, tougherHealing);
+        set(CampaignOption.TOUGHER_HEALING, tougherHealing);
     }
 
     /**
@@ -1891,7 +1872,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseAlternativeAdvancedMedical() {
-        return options.get(CampaignOption.USE_ALTERNATIVE_ADVANCED_MEDICAL);
+        return get(CampaignOption.USE_ALTERNATIVE_ADVANCED_MEDICAL);
     }
 
     /**
@@ -1901,7 +1882,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseAlternativeAdvancedMedical(final boolean useAlternativeAdvancedMedical) {
-        options.set(CampaignOption.USE_ALTERNATIVE_ADVANCED_MEDICAL, useAlternativeAdvancedMedical);
+        set(CampaignOption.USE_ALTERNATIVE_ADVANCED_MEDICAL, useAlternativeAdvancedMedical);
     }
 
     /**
@@ -1911,7 +1892,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseKinderAlternativeAdvancedMedical() {
-        return options.get(CampaignOption.USE_KINDER_ALTERNATIVE_ADVANCED_MEDICAL);
+        return get(CampaignOption.USE_KINDER_ALTERNATIVE_ADVANCED_MEDICAL);
     }
 
     /**
@@ -1921,7 +1902,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseKinderAlternativeAdvancedMedical(final boolean useKinderAlternativeAdvancedMedical) {
-        options.set(CampaignOption.USE_KINDER_ALTERNATIVE_ADVANCED_MEDICAL, useKinderAlternativeAdvancedMedical);
+        set(CampaignOption.USE_KINDER_ALTERNATIVE_ADVANCED_MEDICAL, useKinderAlternativeAdvancedMedical);
     }
 
     /**
@@ -1930,7 +1911,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomDiseases() {
-        return options.get(CampaignOption.USE_RANDOM_DISEASES);
+        return get(CampaignOption.USE_RANDOM_DISEASES);
     }
 
     /**
@@ -1940,7 +1921,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomDiseases(final boolean useRandomDiseases) {
-        options.set(CampaignOption.USE_RANDOM_DISEASES, useRandomDiseases);
+        set(CampaignOption.USE_RANDOM_DISEASES, useRandomDiseases);
     }
 
     /**
@@ -1948,7 +1929,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMaximumPatients() {
-        return options.get(CampaignOption.MAXIMUM_PATIENTS);
+        return get(CampaignOption.MAXIMUM_PATIENTS);
     }
 
     /**
@@ -1958,7 +1939,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMaximumPatients(final int maximumPatients) {
-        options.set(CampaignOption.MAXIMUM_PATIENTS, maximumPatients);
+        set(CampaignOption.MAXIMUM_PATIENTS, maximumPatients);
     }
 
     /**
@@ -1967,7 +1948,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDoctorsUseAdministration() {
-        return options.get(CampaignOption.DOCTORS_USE_ADMINISTRATION);
+        return get(CampaignOption.DOCTORS_USE_ADMINISTRATION);
     }
 
     /**
@@ -1977,7 +1958,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDoctorsUseAdministration(final boolean doctorsUseAdministration) {
-        options.set(CampaignOption.DOCTORS_USE_ADMINISTRATION, doctorsUseAdministration);
+        set(CampaignOption.DOCTORS_USE_ADMINISTRATION, doctorsUseAdministration);
     }
 
     /**
@@ -1985,7 +1966,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseUsefulMedics() {
-        return options.get(CampaignOption.USE_USEFUL_MEDICS);
+        return get(CampaignOption.USE_USEFUL_MEDICS);
     }
 
     /**
@@ -1995,7 +1976,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setIsUseUsefulMedics(final boolean useUsefulMedics) {
-        options.set(CampaignOption.USE_USEFUL_MEDICS, useUsefulMedics);
+        set(CampaignOption.USE_USEFUL_MEDICS, useUsefulMedics);
     }
 
     /**
@@ -2003,7 +1984,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseBlobInfantry() {
-        return options.get(CampaignOption.USE_BLOB_INFANTRY);
+        return get(CampaignOption.USE_BLOB_INFANTRY);
     }
 
     /**
@@ -2013,7 +1994,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseBlobInfantry(final boolean useBlobInfantry) {
-        options.set(CampaignOption.USE_BLOB_INFANTRY, useBlobInfantry);
+        set(CampaignOption.USE_BLOB_INFANTRY, useBlobInfantry);
     }
 
     /**
@@ -2022,7 +2003,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseBlobBattleArmor() {
-        return options.get(CampaignOption.USE_BLOB_BATTLE_ARMOR);
+        return get(CampaignOption.USE_BLOB_BATTLE_ARMOR);
     }
 
     /**
@@ -2032,7 +2013,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseBlobBattleArmor(final boolean useBlobBattleArmor) {
-        options.set(CampaignOption.USE_BLOB_BATTLE_ARMOR, useBlobBattleArmor);
+        set(CampaignOption.USE_BLOB_BATTLE_ARMOR, useBlobBattleArmor);
     }
 
     /**
@@ -2042,7 +2023,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseBlobVehicleCrewGround() {
-        return options.get(CampaignOption.USE_BLOB_VEHICLE_CREW_GROUND);
+        return get(CampaignOption.USE_BLOB_VEHICLE_CREW_GROUND);
     }
 
     /**
@@ -2052,7 +2033,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseBlobVehicleCrewGround(final boolean useBlobVehicleCrewGround) {
-        options.set(CampaignOption.USE_BLOB_VEHICLE_CREW_GROUND, useBlobVehicleCrewGround);
+        set(CampaignOption.USE_BLOB_VEHICLE_CREW_GROUND, useBlobVehicleCrewGround);
     }
 
     /**
@@ -2061,7 +2042,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseBlobVehicleCrewVTOL() {
-        return options.get(CampaignOption.USE_BLOB_VEHICLE_CREW_VTOL);
+        return get(CampaignOption.USE_BLOB_VEHICLE_CREW_VTOL);
     }
 
     /**
@@ -2071,7 +2052,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseBlobVehicleCrewVTOL(final boolean useBlobVehicleCrewVTOL) {
-        options.set(CampaignOption.USE_BLOB_VEHICLE_CREW_VTOL, useBlobVehicleCrewVTOL);
+        set(CampaignOption.USE_BLOB_VEHICLE_CREW_VTOL, useBlobVehicleCrewVTOL);
     }
 
     /**
@@ -2081,7 +2062,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseBlobVehicleCrewNaval() {
-        return options.get(CampaignOption.USE_BLOB_VEHICLE_CREW_NAVAL);
+        return get(CampaignOption.USE_BLOB_VEHICLE_CREW_NAVAL);
     }
 
     /**
@@ -2091,7 +2072,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseBlobVehicleCrewNaval(final boolean useBlobVehicleCrewNaval) {
-        options.set(CampaignOption.USE_BLOB_VEHICLE_CREW_NAVAL, useBlobVehicleCrewNaval);
+        set(CampaignOption.USE_BLOB_VEHICLE_CREW_NAVAL, useBlobVehicleCrewNaval);
     }
 
     /**
@@ -2100,7 +2081,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseBlobVesselPilot() {
-        return options.get(CampaignOption.USE_BLOB_VESSEL_PILOT);
+        return get(CampaignOption.USE_BLOB_VESSEL_PILOT);
     }
 
     /**
@@ -2110,7 +2091,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseBlobVesselPilot(final boolean useBlobVesselPilot) {
-        options.set(CampaignOption.USE_BLOB_VESSEL_PILOT, useBlobVesselPilot);
+        set(CampaignOption.USE_BLOB_VESSEL_PILOT, useBlobVesselPilot);
     }
 
     /**
@@ -2119,7 +2100,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseBlobVesselGunner() {
-        return options.get(CampaignOption.USE_BLOB_VESSEL_GUNNER);
+        return get(CampaignOption.USE_BLOB_VESSEL_GUNNER);
     }
 
     /**
@@ -2129,7 +2110,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseBlobVesselGunner(final boolean useBlobVesselGunner) {
-        options.set(CampaignOption.USE_BLOB_VESSEL_GUNNER, useBlobVesselGunner);
+        set(CampaignOption.USE_BLOB_VESSEL_GUNNER, useBlobVesselGunner);
     }
 
     /**
@@ -2138,7 +2119,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseBlobVesselCrew() {
-        return options.get(CampaignOption.USE_BLOB_VESSEL_CREW);
+        return get(CampaignOption.USE_BLOB_VESSEL_CREW);
     }
 
     /**
@@ -2148,7 +2129,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseBlobVesselCrew(final boolean useBlobVesselCrew) {
-        options.set(CampaignOption.USE_BLOB_VESSEL_CREW, useBlobVesselCrew);
+        set(CampaignOption.USE_BLOB_VESSEL_CREW, useBlobVesselCrew);
     }
 
     /**
@@ -2156,7 +2137,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseMASHTheatres() {
-        return options.get(CampaignOption.USE_MASH_THEATRES);
+        return get(CampaignOption.USE_MASH_THEATRES);
     }
 
     /**
@@ -2166,7 +2147,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setIsUseMASHTheatres(final boolean useMASHTheatres) {
-        options.set(CampaignOption.USE_MASH_THEATRES, useMASHTheatres);
+        set(CampaignOption.USE_MASH_THEATRES, useMASHTheatres);
     }
 
     /**
@@ -2175,7 +2156,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMASHTheatreCapacity() {
-        return options.get(CampaignOption.MASH_THEATRE_CAPACITY);
+        return get(CampaignOption.MASH_THEATRE_CAPACITY);
     }
 
     /**
@@ -2185,7 +2166,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMASHTheatreCapacity(final int mashTheatreCapacity) {
-        options.set(CampaignOption.MASH_THEATRE_CAPACITY, mashTheatreCapacity);
+        set(CampaignOption.MASH_THEATRE_CAPACITY, mashTheatreCapacity);
     }
 
     // endregion Medical
@@ -2198,7 +2179,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public PrisonerCaptureStyle getPrisonerCaptureStyle() {
-        return options.get(CampaignOption.PRISONER_CAPTURE_STYLE);
+        return get(CampaignOption.PRISONER_CAPTURE_STYLE);
     }
 
     /**
@@ -2208,7 +2189,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPrisonerCaptureStyle(final PrisonerCaptureStyle prisonerCaptureStyle) {
-        options.set(CampaignOption.PRISONER_CAPTURE_STYLE, prisonerCaptureStyle);
+        set(CampaignOption.PRISONER_CAPTURE_STYLE, prisonerCaptureStyle);
     }
 
     /**
@@ -2218,7 +2199,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFunctionalEscapeArtist() {
-        return options.get(CampaignOption.USE_FUNCTIONAL_ESCAPE_ARTIST);
+        return get(CampaignOption.USE_FUNCTIONAL_ESCAPE_ARTIST);
     }
 
     /**
@@ -2228,17 +2209,29 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFunctionalEscapeArtist(final boolean useFunctionalEscapeArtist) {
-        options.set(CampaignOption.USE_FUNCTIONAL_ESCAPE_ARTIST, useFunctionalEscapeArtist);
+        set(CampaignOption.USE_FUNCTIONAL_ESCAPE_ARTIST, useFunctionalEscapeArtist);
     }
     // endregion Prisoners
 
     // region Personnel Randomization
+
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.USE_DYLANS_RANDOM_XP)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseDylansRandomXP() {
-        return useDylansRandomXP;
+        return get(CampaignOption.USE_DYLANS_RANDOM_XP);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#set(CampaignOption, Object) CampaignOptions.set(CampaignOption.USE_DYLANS_RANDOM_XP,
+     *       value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseDylansRandomXP(final boolean useDylansRandomXP) {
-        this.useDylansRandomXP = useDylansRandomXP;
+        set(CampaignOption.USE_DYLANS_RANDOM_XP, useDylansRandomXP);
     }
 
     /**
@@ -2247,7 +2240,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getNonBinaryDiceSize() {
-        return options.get(CampaignOption.NON_BINARY_DICE_SIZE);
+        return get(CampaignOption.NON_BINARY_DICE_SIZE);
     }
 
     /**
@@ -2257,7 +2250,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setNonBinaryDiceSize(final int nonBinaryDiceSize) {
-        options.set(CampaignOption.NON_BINARY_DICE_SIZE, nonBinaryDiceSize);
+        set(CampaignOption.NON_BINARY_DICE_SIZE, nonBinaryDiceSize);
     }
     // endregion Personnel Randomization
 
@@ -2269,7 +2262,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public RandomOriginOptions getRandomOriginOptions() {
-        return options.get(CampaignOption.RANDOM_ORIGIN_OPTIONS);
+        return get(CampaignOption.RANDOM_ORIGIN_OPTIONS);
     }
 
     /**
@@ -2279,7 +2272,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRandomOriginOptions(final RandomOriginOptions randomOriginOptions) {
-        options.set(CampaignOption.RANDOM_ORIGIN_OPTIONS, randomOriginOptions);
+        set(CampaignOption.RANDOM_ORIGIN_OPTIONS, randomOriginOptions);
     }
 
     /**
@@ -2288,7 +2281,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomPersonalities() {
-        return options.get(CampaignOption.USE_RANDOM_PERSONALITIES);
+        return get(CampaignOption.USE_RANDOM_PERSONALITIES);
     }
 
     /**
@@ -2298,7 +2291,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomPersonalities(final boolean useRandomPersonalities) {
-        options.set(CampaignOption.USE_RANDOM_PERSONALITIES, useRandomPersonalities);
+        set(CampaignOption.USE_RANDOM_PERSONALITIES, useRandomPersonalities);
     }
 
     /**
@@ -2308,7 +2301,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUsePersonalityLabelsOnly() {
-        return options.get(CampaignOption.USE_PERSONALITY_LABELS_ONLY);
+        return get(CampaignOption.USE_PERSONALITY_LABELS_ONLY);
     }
 
     /**
@@ -2318,7 +2311,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUsePersonalityLabelsOnly(final boolean usePersonalityLabelsOnly) {
-        options.set(CampaignOption.USE_PERSONALITY_LABELS_ONLY, usePersonalityLabelsOnly);
+        set(CampaignOption.USE_PERSONALITY_LABELS_ONLY, usePersonalityLabelsOnly);
     }
 
     /**
@@ -2328,7 +2321,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomPersonalityReputation() {
-        return options.get(CampaignOption.USE_RANDOM_PERSONALITY_REPUTATION);
+        return get(CampaignOption.USE_RANDOM_PERSONALITY_REPUTATION);
     }
 
     /**
@@ -2338,7 +2331,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomPersonalityReputation(final boolean useRandomPersonalityReputation) {
-        options.set(CampaignOption.USE_RANDOM_PERSONALITY_REPUTATION, useRandomPersonalityReputation);
+        set(CampaignOption.USE_RANDOM_PERSONALITY_REPUTATION, useRandomPersonalityReputation);
     }
 
     /**
@@ -2348,7 +2341,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseReasoningXpMultiplier() {
-        return options.get(CampaignOption.USE_REASONING_XP_MULTIPLIER);
+        return get(CampaignOption.USE_REASONING_XP_MULTIPLIER);
     }
 
     /**
@@ -2358,7 +2351,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseReasoningXpMultiplier(final boolean useReasoningXpMultiplier) {
-        options.set(CampaignOption.USE_REASONING_XP_MULTIPLIER, useReasoningXpMultiplier);
+        set(CampaignOption.USE_REASONING_XP_MULTIPLIER, useReasoningXpMultiplier);
     }
 
     /**
@@ -2368,7 +2361,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseSimulatedRelationships() {
-        return options.get(CampaignOption.USE_SIMULATED_RELATIONSHIPS);
+        return get(CampaignOption.USE_SIMULATED_RELATIONSHIPS);
     }
 
     /**
@@ -2378,7 +2371,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseSimulatedRelationships(final boolean useSimulatedRelationships) {
-        options.set(CampaignOption.USE_SIMULATED_RELATIONSHIPS, useSimulatedRelationships);
+        set(CampaignOption.USE_SIMULATED_RELATIONSHIPS, useSimulatedRelationships);
     }
     // endregion Random Histories
 
@@ -2390,7 +2383,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomRetirement() {
-        return options.get(CampaignOption.USE_RANDOM_RETIREMENT);
+        return get(CampaignOption.USE_RANDOM_RETIREMENT);
     }
 
     /**
@@ -2400,7 +2393,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomRetirement(final boolean useRandomRetirement) {
-        options.set(CampaignOption.USE_RANDOM_RETIREMENT, useRandomRetirement);
+        set(CampaignOption.USE_RANDOM_RETIREMENT, useRandomRetirement);
     }
 
     /**
@@ -2409,7 +2402,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public TurnoverFrequency getTurnoverFrequency() {
-        return options.get(CampaignOption.TURNOVER_FREQUENCY);
+        return get(CampaignOption.TURNOVER_FREQUENCY);
     }
 
     /**
@@ -2419,7 +2412,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTurnoverFrequency(final TurnoverFrequency turnoverFrequency) {
-        options.set(CampaignOption.TURNOVER_FREQUENCY, turnoverFrequency);
+        set(CampaignOption.TURNOVER_FREQUENCY, turnoverFrequency);
     }
 
     /**
@@ -2429,7 +2422,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseContractCompletionRandomRetirement() {
-        return options.get(CampaignOption.USE_CONTRACT_COMPLETION_RANDOM_RETIREMENT);
+        return get(CampaignOption.USE_CONTRACT_COMPLETION_RANDOM_RETIREMENT);
     }
 
     /**
@@ -2439,7 +2432,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseContractCompletionRandomRetirement(final boolean useContractCompletionRandomRetirement) {
-        options.set(CampaignOption.USE_CONTRACT_COMPLETION_RANDOM_RETIREMENT, useContractCompletionRandomRetirement);
+        set(CampaignOption.USE_CONTRACT_COMPLETION_RANDOM_RETIREMENT, useContractCompletionRandomRetirement);
     }
 
     /**
@@ -2449,7 +2442,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseCustomRetirementModifiers() {
-        return options.get(CampaignOption.USE_CUSTOM_RETIREMENT_MODIFIERS);
+        return get(CampaignOption.USE_CUSTOM_RETIREMENT_MODIFIERS);
     }
 
     /**
@@ -2459,7 +2452,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseCustomRetirementModifiers(final boolean useCustomRetirementModifiers) {
-        options.set(CampaignOption.USE_CUSTOM_RETIREMENT_MODIFIERS, useCustomRetirementModifiers);
+        set(CampaignOption.USE_CUSTOM_RETIREMENT_MODIFIERS, useCustomRetirementModifiers);
     }
 
     /**
@@ -2468,7 +2461,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFatigueModifiers() {
-        return options.get(CampaignOption.USE_FATIGUE_MODIFIERS);
+        return get(CampaignOption.USE_FATIGUE_MODIFIERS);
     }
 
     /**
@@ -2478,7 +2471,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFatigueModifiers(final boolean useFatigueModifiers) {
-        options.set(CampaignOption.USE_FATIGUE_MODIFIERS, useFatigueModifiers);
+        set(CampaignOption.USE_FATIGUE_MODIFIERS, useFatigueModifiers);
     }
 
     /**
@@ -2487,7 +2480,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseLoyaltyModifiers() {
-        return options.get(CampaignOption.USE_LOYALTY_MODIFIERS);
+        return get(CampaignOption.USE_LOYALTY_MODIFIERS);
     }
 
     /**
@@ -2497,7 +2490,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseLoyaltyModifiers(final boolean useLoyaltyModifiers) {
-        options.set(CampaignOption.USE_LOYALTY_MODIFIERS, useLoyaltyModifiers);
+        set(CampaignOption.USE_LOYALTY_MODIFIERS, useLoyaltyModifiers);
     }
 
     /**
@@ -2505,7 +2498,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseHideLoyalty() {
-        return options.get(CampaignOption.USE_HIDE_LOYALTY);
+        return get(CampaignOption.USE_HIDE_LOYALTY);
     }
 
     /**
@@ -2515,7 +2508,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseHideLoyalty(final boolean useHideLoyalty) {
-        options.set(CampaignOption.USE_HIDE_LOYALTY, useHideLoyalty);
+        set(CampaignOption.USE_HIDE_LOYALTY, useHideLoyalty);
     }
 
     /**
@@ -2525,7 +2518,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomFounderTurnover() {
-        return options.get(CampaignOption.USE_RANDOM_FOUNDER_TURNOVER);
+        return get(CampaignOption.USE_RANDOM_FOUNDER_TURNOVER);
     }
 
     /**
@@ -2535,7 +2528,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomFounderTurnover(final boolean useRandomFounderTurnover) {
-        options.set(CampaignOption.USE_RANDOM_FOUNDER_TURNOVER, useRandomFounderTurnover);
+        set(CampaignOption.USE_RANDOM_FOUNDER_TURNOVER, useRandomFounderTurnover);
     }
 
     /**
@@ -2544,7 +2537,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFounderRetirement() {
-        return options.get(CampaignOption.USE_FOUNDER_RETIREMENT);
+        return get(CampaignOption.USE_FOUNDER_RETIREMENT);
     }
 
     /**
@@ -2554,7 +2547,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFounderRetirement(final boolean useFounderRetirement) {
-        options.set(CampaignOption.USE_FOUNDER_RETIREMENT, useFounderRetirement);
+        set(CampaignOption.USE_FOUNDER_RETIREMENT, useFounderRetirement);
     }
 
     /**
@@ -2563,7 +2556,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseSubContractSoldiers() {
-        return options.get(CampaignOption.USE_SUB_CONTRACT_SOLDIERS);
+        return get(CampaignOption.USE_SUB_CONTRACT_SOLDIERS);
     }
 
     /**
@@ -2573,7 +2566,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseSubContractSoldiers(final boolean useSubContractSoldiers) {
-        options.set(CampaignOption.USE_SUB_CONTRACT_SOLDIERS, useSubContractSoldiers);
+        set(CampaignOption.USE_SUB_CONTRACT_SOLDIERS, useSubContractSoldiers);
     }
 
     /**
@@ -2583,7 +2576,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getTurnoverFixedTargetNumber() {
-        return options.get(CampaignOption.TURNOVER_FIXED_TARGET_NUMBER);
+        return get(CampaignOption.TURNOVER_FIXED_TARGET_NUMBER);
     }
 
     /**
@@ -2593,7 +2586,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTurnoverFixedTargetNumber(final Integer turnoverFixedTargetNumber) {
-        options.set(CampaignOption.TURNOVER_FIXED_TARGET_NUMBER, turnoverFixedTargetNumber);
+        set(CampaignOption.TURNOVER_FIXED_TARGET_NUMBER, turnoverFixedTargetNumber);
     }
 
     /**
@@ -2602,7 +2595,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getPayoutRateOfficer() {
-        return options.get(CampaignOption.PAYOUT_RATE_OFFICER);
+        return get(CampaignOption.PAYOUT_RATE_OFFICER);
     }
 
     /**
@@ -2612,7 +2605,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayoutRateOfficer(final Integer payoutRateOfficer) {
-        options.set(CampaignOption.PAYOUT_RATE_OFFICER, payoutRateOfficer);
+        set(CampaignOption.PAYOUT_RATE_OFFICER, payoutRateOfficer);
     }
 
     /**
@@ -2621,7 +2614,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getPayoutRateEnlisted() {
-        return options.get(CampaignOption.PAYOUT_RATE_ENLISTED);
+        return get(CampaignOption.PAYOUT_RATE_ENLISTED);
     }
 
     /**
@@ -2631,7 +2624,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayoutRateEnlisted(final Integer payoutRateEnlisted) {
-        options.set(CampaignOption.PAYOUT_RATE_ENLISTED, payoutRateEnlisted);
+        set(CampaignOption.PAYOUT_RATE_ENLISTED, payoutRateEnlisted);
     }
 
     /**
@@ -2641,7 +2634,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getPayoutRetirementMultiplier() {
-        return options.get(CampaignOption.PAYOUT_RETIREMENT_MULTIPLIER);
+        return get(CampaignOption.PAYOUT_RETIREMENT_MULTIPLIER);
     }
 
     /**
@@ -2651,7 +2644,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayoutRetirementMultiplier(final Integer payoutRetirementMultiplier) {
-        options.set(CampaignOption.PAYOUT_RETIREMENT_MULTIPLIER, payoutRetirementMultiplier);
+        set(CampaignOption.PAYOUT_RETIREMENT_MULTIPLIER, payoutRetirementMultiplier);
     }
 
     /**
@@ -2660,7 +2653,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUsePayoutServiceBonus() {
-        return options.get(CampaignOption.USE_PAYOUT_SERVICE_BONUS);
+        return get(CampaignOption.USE_PAYOUT_SERVICE_BONUS);
     }
 
     /**
@@ -2670,7 +2663,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUsePayoutServiceBonus(final boolean usePayoutServiceBonus) {
-        options.set(CampaignOption.USE_PAYOUT_SERVICE_BONUS, usePayoutServiceBonus);
+        set(CampaignOption.USE_PAYOUT_SERVICE_BONUS, usePayoutServiceBonus);
     }
 
     /**
@@ -2679,7 +2672,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getPayoutServiceBonusRate() {
-        return options.get(CampaignOption.PAYOUT_SERVICE_BONUS_RATE);
+        return get(CampaignOption.PAYOUT_SERVICE_BONUS_RATE);
     }
 
     /**
@@ -2689,7 +2682,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayoutServiceBonusRate(final Integer payoutServiceBonusRate) {
-        options.set(CampaignOption.PAYOUT_SERVICE_BONUS_RATE, payoutServiceBonusRate);
+        set(CampaignOption.PAYOUT_SERVICE_BONUS_RATE, payoutServiceBonusRate);
     }
 
     /**
@@ -2698,7 +2691,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseSkillModifiers() {
-        return options.get(CampaignOption.USE_SKILL_MODIFIERS);
+        return get(CampaignOption.USE_SKILL_MODIFIERS);
     }
 
     /**
@@ -2708,7 +2701,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseSkillModifiers(final boolean useSkillModifiers) {
-        options.set(CampaignOption.USE_SKILL_MODIFIERS, useSkillModifiers);
+        set(CampaignOption.USE_SKILL_MODIFIERS, useSkillModifiers);
     }
 
     /**
@@ -2716,7 +2709,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseAgeModifiers() {
-        return options.get(CampaignOption.USE_AGE_MODIFIERS);
+        return get(CampaignOption.USE_AGE_MODIFIERS);
     }
 
     /**
@@ -2726,7 +2719,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseAgeModifiers(final boolean useAgeModifiers) {
-        options.set(CampaignOption.USE_AGE_MODIFIERS, useAgeModifiers);
+        set(CampaignOption.USE_AGE_MODIFIERS, useAgeModifiers);
     }
 
     /**
@@ -2735,7 +2728,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseUnitRatingModifiers() {
-        return options.get(CampaignOption.USE_UNIT_RATING_MODIFIERS);
+        return get(CampaignOption.USE_UNIT_RATING_MODIFIERS);
     }
 
     /**
@@ -2745,7 +2738,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseUnitRatingModifiers(final boolean useUnitRatingModifiers) {
-        options.set(CampaignOption.USE_UNIT_RATING_MODIFIERS, useUnitRatingModifiers);
+        set(CampaignOption.USE_UNIT_RATING_MODIFIERS, useUnitRatingModifiers);
     }
 
     /**
@@ -2754,7 +2747,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFactionModifiers() {
-        return options.get(CampaignOption.USE_FACTION_MODIFIERS);
+        return get(CampaignOption.USE_FACTION_MODIFIERS);
     }
 
     /**
@@ -2764,7 +2757,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFactionModifiers(final boolean useFactionModifiers) {
-        options.set(CampaignOption.USE_FACTION_MODIFIERS, useFactionModifiers);
+        set(CampaignOption.USE_FACTION_MODIFIERS, useFactionModifiers);
     }
 
     /**
@@ -2774,7 +2767,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseMissionStatusModifiers() {
-        return options.get(CampaignOption.USE_MISSION_STATUS_MODIFIERS);
+        return get(CampaignOption.USE_MISSION_STATUS_MODIFIERS);
     }
 
     /**
@@ -2784,7 +2777,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseMissionStatusModifiers(final boolean useMissionStatusModifiers) {
-        options.set(CampaignOption.USE_MISSION_STATUS_MODIFIERS, useMissionStatusModifiers);
+        set(CampaignOption.USE_MISSION_STATUS_MODIFIERS, useMissionStatusModifiers);
     }
 
     /**
@@ -2794,7 +2787,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseHostileTerritoryModifiers() {
-        return options.get(CampaignOption.USE_HOSTILE_TERRITORY_MODIFIERS);
+        return get(CampaignOption.USE_HOSTILE_TERRITORY_MODIFIERS);
     }
 
     /**
@@ -2804,7 +2797,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseHostileTerritoryModifiers(final boolean useHostileTerritoryModifiers) {
-        options.set(CampaignOption.USE_HOSTILE_TERRITORY_MODIFIERS, useHostileTerritoryModifiers);
+        set(CampaignOption.USE_HOSTILE_TERRITORY_MODIFIERS, useHostileTerritoryModifiers);
     }
 
     /**
@@ -2813,7 +2806,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFamilyModifiers() {
-        return options.get(CampaignOption.USE_FAMILY_MODIFIERS);
+        return get(CampaignOption.USE_FAMILY_MODIFIERS);
     }
 
     /**
@@ -2823,7 +2816,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFamilyModifiers(final boolean useFamilyModifiers) {
-        options.set(CampaignOption.USE_FAMILY_MODIFIERS, useFamilyModifiers);
+        set(CampaignOption.USE_FAMILY_MODIFIERS, useFamilyModifiers);
     }
 
     /**
@@ -2831,7 +2824,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.50.07", forRemoval = true)
     public boolean isUseAdministrativeStrain() {
-        return options.get(CampaignOption.USE_HR_STRAIN);
+        return get(CampaignOption.USE_HR_STRAIN);
     }
 
     /**
@@ -2839,7 +2832,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.50.07", forRemoval = true)
     public void setUseAdministrativeStrain(final boolean UseHRStrain) {
-        options.set(CampaignOption.USE_HR_STRAIN, UseHRStrain);
+        set(CampaignOption.USE_HR_STRAIN, UseHRStrain);
     }
 
     /**
@@ -2847,7 +2840,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseHRStrain() {
-        return options.get(CampaignOption.USE_HR_STRAIN);
+        return get(CampaignOption.USE_HR_STRAIN);
     }
 
     /**
@@ -2857,7 +2850,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseHRStrain(final boolean UseHRStrain) {
-        options.set(CampaignOption.USE_HR_STRAIN, UseHRStrain);
+        set(CampaignOption.USE_HR_STRAIN, UseHRStrain);
     }
 
     /**
@@ -2865,7 +2858,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.50.07", forRemoval = true)
     public Integer getAdministrativeCapacity() {
-        return options.get(CampaignOption.HR_CAPACITY);
+        return get(CampaignOption.HR_CAPACITY);
     }
 
     /**
@@ -2873,7 +2866,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getHRCapacity() {
-        return options.get(CampaignOption.HR_CAPACITY);
+        return get(CampaignOption.HR_CAPACITY);
     }
 
     /**
@@ -2882,7 +2875,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setHRCapacity(final Integer hrCapacity) {
-        options.set(CampaignOption.HR_CAPACITY, hrCapacity);
+        set(CampaignOption.HR_CAPACITY, hrCapacity);
     }
 
     /**
@@ -2891,7 +2884,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseManagementSkill() {
-        return options.get(CampaignOption.USE_MANAGEMENT_SKILL);
+        return get(CampaignOption.USE_MANAGEMENT_SKILL);
     }
 
     /**
@@ -2901,7 +2894,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseManagementSkill(final boolean useManagementSkill) {
-        options.set(CampaignOption.USE_MANAGEMENT_SKILL, useManagementSkill);
+        set(CampaignOption.USE_MANAGEMENT_SKILL, useManagementSkill);
     }
 
     /**
@@ -2911,7 +2904,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseCommanderLeadershipOnly() {
-        return options.get(CampaignOption.USE_COMMANDER_LEADERSHIP_ONLY);
+        return get(CampaignOption.USE_COMMANDER_LEADERSHIP_ONLY);
     }
 
     /**
@@ -2921,7 +2914,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseCommanderLeadershipOnly(final boolean useCommanderLeadershipOnly) {
-        options.set(CampaignOption.USE_COMMANDER_LEADERSHIP_ONLY, useCommanderLeadershipOnly);
+        set(CampaignOption.USE_COMMANDER_LEADERSHIP_ONLY, useCommanderLeadershipOnly);
     }
 
     /**
@@ -2930,7 +2923,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getManagementSkillPenalty() {
-        return options.get(CampaignOption.MANAGEMENT_SKILL_PENALTY);
+        return get(CampaignOption.MANAGEMENT_SKILL_PENALTY);
     }
 
     /**
@@ -2940,7 +2933,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setManagementSkillPenalty(final Integer managementSkillPenalty) {
-        options.set(CampaignOption.MANAGEMENT_SKILL_PENALTY, managementSkillPenalty);
+        set(CampaignOption.MANAGEMENT_SKILL_PENALTY, managementSkillPenalty);
     }
 
     /**
@@ -2949,7 +2942,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getServiceContractDuration() {
-        return options.get(CampaignOption.SERVICE_CONTRACT_DURATION);
+        return get(CampaignOption.SERVICE_CONTRACT_DURATION);
     }
 
     /**
@@ -2959,7 +2952,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setServiceContractDuration(final Integer serviceContractDuration) {
-        options.set(CampaignOption.SERVICE_CONTRACT_DURATION, serviceContractDuration);
+        set(CampaignOption.SERVICE_CONTRACT_DURATION, serviceContractDuration);
     }
 
     /**
@@ -2968,7 +2961,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getServiceContractModifier() {
-        return options.get(CampaignOption.SERVICE_CONTRACT_MODIFIER);
+        return get(CampaignOption.SERVICE_CONTRACT_MODIFIER);
     }
 
     /**
@@ -2978,7 +2971,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setServiceContractModifier(final Integer serviceContractModifier) {
-        options.set(CampaignOption.SERVICE_CONTRACT_MODIFIER, serviceContractModifier);
+        set(CampaignOption.SERVICE_CONTRACT_MODIFIER, serviceContractModifier);
     }
 
     /**
@@ -2986,7 +2979,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPayBonusDefault() {
-        return options.get(CampaignOption.PAY_BONUS_DEFAULT);
+        return get(CampaignOption.PAY_BONUS_DEFAULT);
     }
 
     /**
@@ -2996,7 +2989,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayBonusDefault(final boolean payBonusDefault) {
-        options.set(CampaignOption.PAY_BONUS_DEFAULT, payBonusDefault);
+        set(CampaignOption.PAY_BONUS_DEFAULT, payBonusDefault);
     }
 
     /**
@@ -3006,7 +2999,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getPayBonusDefaultThreshold() {
-        return options.get(CampaignOption.PAY_BONUS_DEFAULT_THRESHOLD);
+        return get(CampaignOption.PAY_BONUS_DEFAULT_THRESHOLD);
     }
 
     /**
@@ -3016,7 +3009,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayBonusDefaultThreshold(final int payBonusDefaultThreshold) {
-        options.set(CampaignOption.PAY_BONUS_DEFAULT_THRESHOLD, payBonusDefaultThreshold);
+        set(CampaignOption.PAY_BONUS_DEFAULT_THRESHOLD, payBonusDefaultThreshold);
     }
 
     /**
@@ -3024,7 +3017,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isIncludeCivilians() {
-        return options.get(CampaignOption.INCLUDE_CIVILIANS);
+        return get(CampaignOption.INCLUDE_CIVILIANS);
     }
 
     /**
@@ -3034,7 +3027,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setIncludeCivilians(final boolean includeCivilians) {
-        options.set(CampaignOption.INCLUDE_CIVILIANS, includeCivilians);
+        set(CampaignOption.INCLUDE_CIVILIANS, includeCivilians);
     }
     // endregion Retirement
 
@@ -3048,7 +3041,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public FamilialRelationshipDisplayLevel getFamilyDisplayLevel() {
-        return options.get(CampaignOption.FAMILY_DISPLAY_LEVEL);
+        return get(CampaignOption.FAMILY_DISPLAY_LEVEL);
     }
 
     /**
@@ -3060,7 +3053,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setFamilyDisplayLevel(final FamilialRelationshipDisplayLevel familyDisplayLevel) {
-        options.set(CampaignOption.FAMILY_DISPLAY_LEVEL, familyDisplayLevel);
+        set(CampaignOption.FAMILY_DISPLAY_LEVEL, familyDisplayLevel);
     }
     // endregion Family
 
@@ -3072,7 +3065,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAnnounceBirthdays() {
-        return options.get(CampaignOption.ANNOUNCE_BIRTHDAYS);
+        return get(CampaignOption.ANNOUNCE_BIRTHDAYS);
     }
 
     /**
@@ -3082,7 +3075,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAnnounceBirthdays(final boolean announceBirthdays) {
-        options.set(CampaignOption.ANNOUNCE_BIRTHDAYS, announceBirthdays);
+        set(CampaignOption.ANNOUNCE_BIRTHDAYS, announceBirthdays);
     }
 
     /**
@@ -3096,7 +3089,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAnnounceRecruitmentAnniversaries() {
-        return options.get(CampaignOption.ANNOUNCE_RECRUITMENT_ANNIVERSARIES);
+        return get(CampaignOption.ANNOUNCE_RECRUITMENT_ANNIVERSARIES);
     }
 
     /**
@@ -3111,7 +3104,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAnnounceRecruitmentAnniversaries(final boolean announceRecruitmentAnniversaries) {
-        options.set(CampaignOption.ANNOUNCE_RECRUITMENT_ANNIVERSARIES, announceRecruitmentAnniversaries);
+        set(CampaignOption.ANNOUNCE_RECRUITMENT_ANNIVERSARIES, announceRecruitmentAnniversaries);
     }
 
     /**
@@ -3120,7 +3113,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAnnounceOfficersOnly() {
-        return options.get(CampaignOption.ANNOUNCE_OFFICERS_ONLY);
+        return get(CampaignOption.ANNOUNCE_OFFICERS_ONLY);
     }
 
     /**
@@ -3130,7 +3123,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAnnounceOfficersOnly(final boolean announceOfficersOnly) {
-        options.set(CampaignOption.ANNOUNCE_OFFICERS_ONLY, announceOfficersOnly);
+        set(CampaignOption.ANNOUNCE_OFFICERS_ONLY, announceOfficersOnly);
     }
 
     /**
@@ -3139,7 +3132,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAnnounceChildBirthdays() {
-        return options.get(CampaignOption.ANNOUNCE_CHILD_BIRTHDAYS);
+        return get(CampaignOption.ANNOUNCE_CHILD_BIRTHDAYS);
     }
 
     /**
@@ -3149,7 +3142,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAnnounceChildBirthdays(final boolean announceChildBirthdays) {
-        options.set(CampaignOption.ANNOUNCE_CHILD_BIRTHDAYS, announceChildBirthdays);
+        set(CampaignOption.ANNOUNCE_CHILD_BIRTHDAYS, announceChildBirthdays);
     }
 
     /**
@@ -3158,7 +3151,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAnnounceRetireeDeath() {
-        return options.get(CampaignOption.ANNOUNCE_RETIREE_DEATH);
+        return get(CampaignOption.ANNOUNCE_RETIREE_DEATH);
     }
 
     /**
@@ -3168,7 +3161,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAnnounceRetireeDeath(final boolean announceRetireeDeath) {
-        options.set(CampaignOption.ANNOUNCE_RETIREE_DEATH, announceRetireeDeath);
+        set(CampaignOption.ANNOUNCE_RETIREE_DEATH, announceRetireeDeath);
     }
 
     /**
@@ -3178,7 +3171,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAnnounceRetireeDeathExpanded() {
-        return options.get(CampaignOption.ANNOUNCE_RETIREE_DEATH_EXPANDED);
+        return get(CampaignOption.ANNOUNCE_RETIREE_DEATH_EXPANDED);
     }
 
     /**
@@ -3188,7 +3181,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAnnounceRetireeDeathExpanded(final boolean announceRetireeDeathExpanded) {
-        options.set(CampaignOption.ANNOUNCE_RETIREE_DEATH_EXPANDED, announceRetireeDeathExpanded);
+        set(CampaignOption.ANNOUNCE_RETIREE_DEATH_EXPANDED, announceRetireeDeathExpanded);
     }
     // endregion anniversaries
 
@@ -3201,7 +3194,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isShowLifeEventDialogBirths() {
-        return options.get(CampaignOption.SHOW_LIFE_EVENT_DIALOG_BIRTHS);
+        return get(CampaignOption.SHOW_LIFE_EVENT_DIALOG_BIRTHS);
     }
 
     /**
@@ -3211,7 +3204,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setShowLifeEventDialogBirths(final boolean showLifeEventDialogBirths) {
-        options.set(CampaignOption.SHOW_LIFE_EVENT_DIALOG_BIRTHS, showLifeEventDialogBirths);
+        set(CampaignOption.SHOW_LIFE_EVENT_DIALOG_BIRTHS, showLifeEventDialogBirths);
     }
 
     /**
@@ -3221,7 +3214,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isShowLifeEventDialogComingOfAge() {
-        return options.get(CampaignOption.SHOW_LIFE_EVENT_DIALOG_COMING_OF_AGE);
+        return get(CampaignOption.SHOW_LIFE_EVENT_DIALOG_COMING_OF_AGE);
     }
 
     /**
@@ -3231,7 +3224,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setShowLifeEventDialogComingOfAge(final boolean showLifeEventDialogComingOfAge) {
-        options.set(CampaignOption.SHOW_LIFE_EVENT_DIALOG_COMING_OF_AGE, showLifeEventDialogComingOfAge);
+        set(CampaignOption.SHOW_LIFE_EVENT_DIALOG_COMING_OF_AGE, showLifeEventDialogComingOfAge);
     }
 
     /**
@@ -3241,7 +3234,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isShowLifeEventDialogCelebrations() {
-        return options.get(CampaignOption.SHOW_LIFE_EVENT_DIALOG_CELEBRATIONS);
+        return get(CampaignOption.SHOW_LIFE_EVENT_DIALOG_CELEBRATIONS);
     }
 
     /**
@@ -3251,7 +3244,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setShowLifeEventDialogCelebrations(final boolean showLifeEventDialogCelebrations) {
-        options.set(CampaignOption.SHOW_LIFE_EVENT_DIALOG_CELEBRATIONS, showLifeEventDialogCelebrations);
+        set(CampaignOption.SHOW_LIFE_EVENT_DIALOG_CELEBRATIONS, showLifeEventDialogCelebrations);
     }
     //endregion Life Events
 
@@ -3264,7 +3257,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomDependentAddition() {
-        return options.get(CampaignOption.USE_RANDOM_DEPENDENT_ADDITION);
+        return get(CampaignOption.USE_RANDOM_DEPENDENT_ADDITION);
     }
 
     /**
@@ -3274,7 +3267,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomDependentAddition(final boolean useRandomDependentAddition) {
-        options.set(CampaignOption.USE_RANDOM_DEPENDENT_ADDITION, useRandomDependentAddition);
+        set(CampaignOption.USE_RANDOM_DEPENDENT_ADDITION, useRandomDependentAddition);
     }
 
     /**
@@ -3284,7 +3277,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomDependentRemoval() {
-        return options.get(CampaignOption.USE_RANDOM_DEPENDENT_REMOVAL);
+        return get(CampaignOption.USE_RANDOM_DEPENDENT_REMOVAL);
     }
 
     /**
@@ -3294,7 +3287,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomDependentRemoval(final boolean useRandomDependentRemoval) {
-        options.set(CampaignOption.USE_RANDOM_DEPENDENT_REMOVAL, useRandomDependentRemoval);
+        set(CampaignOption.USE_RANDOM_DEPENDENT_REMOVAL, useRandomDependentRemoval);
     }
 
     /**
@@ -3304,7 +3297,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getDependentProfessionDieSize() {
-        return options.get(CampaignOption.DEPENDENT_PROFESSION_DIE_SIZE);
+        return get(CampaignOption.DEPENDENT_PROFESSION_DIE_SIZE);
     }
 
     /**
@@ -3314,7 +3307,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDependentProfessionDieSize(final int dependentProfessionDieSize) {
-        options.set(CampaignOption.DEPENDENT_PROFESSION_DIE_SIZE, dependentProfessionDieSize);
+        set(CampaignOption.DEPENDENT_PROFESSION_DIE_SIZE, dependentProfessionDieSize);
     }
 
     /**
@@ -3324,7 +3317,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getCivilianProfessionDieSize() {
-        return options.get(CampaignOption.CIVILIAN_PROFESSION_DIE_SIZE);
+        return get(CampaignOption.CIVILIAN_PROFESSION_DIE_SIZE);
     }
 
     /**
@@ -3334,7 +3327,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setCivilianProfessionDieSize(final int civilianProfessionDieSize) {
-        options.set(CampaignOption.CIVILIAN_PROFESSION_DIE_SIZE, civilianProfessionDieSize);
+        set(CampaignOption.CIVILIAN_PROFESSION_DIE_SIZE, civilianProfessionDieSize);
     }
     // endregion Dependent
 
@@ -3346,7 +3339,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUsePersonnelRemoval() {
-        return options.get(CampaignOption.USE_PERSONNEL_REMOVAL);
+        return get(CampaignOption.USE_PERSONNEL_REMOVAL);
     }
 
     /**
@@ -3356,7 +3349,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUsePersonnelRemoval(final boolean usePersonnelRemoval) {
-        options.set(CampaignOption.USE_PERSONNEL_REMOVAL, usePersonnelRemoval);
+        set(CampaignOption.USE_PERSONNEL_REMOVAL, usePersonnelRemoval);
     }
 
     /**
@@ -3366,7 +3359,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRemovalExemptCemetery() {
-        return options.get(CampaignOption.USE_REMOVAL_EXEMPT_CEMETERY);
+        return get(CampaignOption.USE_REMOVAL_EXEMPT_CEMETERY);
     }
 
     /**
@@ -3376,7 +3369,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRemovalExemptCemetery(final boolean useRemovalExemptCemetery) {
-        options.set(CampaignOption.USE_REMOVAL_EXEMPT_CEMETERY, useRemovalExemptCemetery);
+        set(CampaignOption.USE_REMOVAL_EXEMPT_CEMETERY, useRemovalExemptCemetery);
     }
 
     /**
@@ -3386,7 +3379,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRemovalExemptRetirees() {
-        return options.get(CampaignOption.USE_REMOVAL_EXEMPT_RETIREES);
+        return get(CampaignOption.USE_REMOVAL_EXEMPT_RETIREES);
     }
 
     /**
@@ -3396,7 +3389,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRemovalExemptRetirees(final boolean useRemovalExemptRetirees) {
-        options.set(CampaignOption.USE_REMOVAL_EXEMPT_RETIREES, useRemovalExemptRetirees);
+        set(CampaignOption.USE_REMOVAL_EXEMPT_RETIREES, useRemovalExemptRetirees);
     }
     // endregion Personnel Removal
 
@@ -3409,7 +3402,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDisableSecondaryRoleSalary() {
-        return options.get(CampaignOption.DISABLE_SECONDARY_ROLE_SALARY);
+        return get(CampaignOption.DISABLE_SECONDARY_ROLE_SALARY);
     }
 
     /**
@@ -3419,7 +3412,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisableSecondaryRoleSalary(final boolean disableSecondaryRoleSalary) {
-        options.set(CampaignOption.DISABLE_SECONDARY_ROLE_SALARY, disableSecondaryRoleSalary);
+        set(CampaignOption.DISABLE_SECONDARY_ROLE_SALARY, disableSecondaryRoleSalary);
     }
 
     /**
@@ -3428,7 +3421,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getSalaryAntiMekMultiplier() {
-        return options.get(CampaignOption.SALARY_ANTI_MEK_MULTIPLIER);
+        return get(CampaignOption.SALARY_ANTI_MEK_MULTIPLIER);
     }
 
     /**
@@ -3438,7 +3431,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setSalaryAntiMekMultiplier(final double salaryAntiMekMultiplier) {
-        options.set(CampaignOption.SALARY_ANTI_MEK_MULTIPLIER, salaryAntiMekMultiplier);
+        set(CampaignOption.SALARY_ANTI_MEK_MULTIPLIER, salaryAntiMekMultiplier);
     }
 
     /**
@@ -3448,7 +3441,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getSalarySpecialistInfantryMultiplier() {
-        return options.get(CampaignOption.SALARY_SPECIALIST_INFANTRY_MULTIPLIER);
+        return get(CampaignOption.SALARY_SPECIALIST_INFANTRY_MULTIPLIER);
     }
 
     /**
@@ -3458,7 +3451,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setSalarySpecialistInfantryMultiplier(final double salarySpecialistInfantryMultiplier) {
-        options.set(CampaignOption.SALARY_SPECIALIST_INFANTRY_MULTIPLIER, salarySpecialistInfantryMultiplier);
+        set(CampaignOption.SALARY_SPECIALIST_INFANTRY_MULTIPLIER, salarySpecialistInfantryMultiplier);
     }
 
     /**
@@ -3467,7 +3460,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Map<SkillLevel, Double> getSalaryXPMultipliers() {
-        return options.get(CampaignOption.SALARY_XP_MULTIPLIERS);
+        return get(CampaignOption.SALARY_XP_MULTIPLIERS);
     }
 
     /**
@@ -3477,15 +3470,26 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setSalaryXPMultipliers(final Map<SkillLevel, Double> salaryXPMultipliers) {
-        options.set(CampaignOption.SALARY_XP_MULTIPLIERS, salaryXPMultipliers);
+        set(CampaignOption.SALARY_XP_MULTIPLIERS, salaryXPMultipliers);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.ROLE_BASE_SALARIES)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public Money[] getRoleBaseSalaries() {
-        return roleBaseSalaries;
+        return get(CampaignOption.ROLE_BASE_SALARIES);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#set(CampaignOption, Object) CampaignOptions.set(CampaignOption.ROLE_BASE_SALARIES,
+     *       value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRoleBaseSalaries(final Money... roleBaseSalaries) {
-        this.roleBaseSalaries = roleBaseSalaries;
+        set(CampaignOption.ROLE_BASE_SALARIES, roleBaseSalaries);
     }
 
     public void setRoleBaseSalary(final PersonnelRole role, final double baseSalary) {
@@ -3507,7 +3511,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseManualMarriages() {
-        return options.get(CampaignOption.USE_MANUAL_MARRIAGES);
+        return get(CampaignOption.USE_MANUAL_MARRIAGES);
     }
 
     /**
@@ -3519,7 +3523,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseManualMarriages(final boolean useManualMarriages) {
-        options.set(CampaignOption.USE_MANUAL_MARRIAGES, useManualMarriages);
+        set(CampaignOption.USE_MANUAL_MARRIAGES, useManualMarriages);
     }
 
     /**
@@ -3529,7 +3533,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseClanPersonnelMarriages() {
-        return options.get(CampaignOption.USE_CLAN_PERSONNEL_MARRIAGES);
+        return get(CampaignOption.USE_CLAN_PERSONNEL_MARRIAGES);
     }
 
     /**
@@ -3539,7 +3543,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseClanPersonnelMarriages(final boolean useClanPersonnelMarriages) {
-        options.set(CampaignOption.USE_CLAN_PERSONNEL_MARRIAGES, useClanPersonnelMarriages);
+        set(CampaignOption.USE_CLAN_PERSONNEL_MARRIAGES, useClanPersonnelMarriages);
     }
 
     /**
@@ -3548,7 +3552,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUsePrisonerMarriages() {
-        return options.get(CampaignOption.USE_PRISONER_MARRIAGES);
+        return get(CampaignOption.USE_PRISONER_MARRIAGES);
     }
 
     /**
@@ -3558,7 +3562,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUsePrisonerMarriages(final boolean usePrisonerMarriages) {
-        options.set(CampaignOption.USE_PRISONER_MARRIAGES, usePrisonerMarriages);
+        set(CampaignOption.USE_PRISONER_MARRIAGES, usePrisonerMarriages);
     }
 
     /**
@@ -3572,7 +3576,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getCheckMutualAncestorsDepth() {
-        return options.get(CampaignOption.CHECK_MUTUAL_ANCESTORS_DEPTH);
+        return get(CampaignOption.CHECK_MUTUAL_ANCESTORS_DEPTH);
     }
 
     /**
@@ -3586,7 +3590,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setCheckMutualAncestorsDepth(final int checkMutualAncestorsDepth) {
-        options.set(CampaignOption.CHECK_MUTUAL_ANCESTORS_DEPTH, checkMutualAncestorsDepth);
+        set(CampaignOption.CHECK_MUTUAL_ANCESTORS_DEPTH, checkMutualAncestorsDepth);
     }
 
     /**
@@ -3596,7 +3600,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getNoInterestInRelationshipsDiceSize() {
-        return options.get(CampaignOption.NO_INTEREST_IN_RELATIONSHIPS_DICE_SIZE);
+        return get(CampaignOption.NO_INTEREST_IN_RELATIONSHIPS_DICE_SIZE);
     }
 
     /**
@@ -3606,7 +3610,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setNoInterestInRelationshipsDiceSize(final int noInterestInRelationshipsDiceSize) {
-        options.set(CampaignOption.NO_INTEREST_IN_RELATIONSHIPS_DICE_SIZE, noInterestInRelationshipsDiceSize);
+        set(CampaignOption.NO_INTEREST_IN_RELATIONSHIPS_DICE_SIZE, noInterestInRelationshipsDiceSize);
     }
 
     /**
@@ -3617,7 +3621,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isLogMarriageNameChanges() {
-        return options.get(CampaignOption.LOG_MARRIAGE_NAME_CHANGES);
+        return get(CampaignOption.LOG_MARRIAGE_NAME_CHANGES);
     }
 
     /**
@@ -3629,7 +3633,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setLogMarriageNameChanges(final boolean logMarriageNameChanges) {
-        options.set(CampaignOption.LOG_MARRIAGE_NAME_CHANGES, logMarriageNameChanges);
+        set(CampaignOption.LOG_MARRIAGE_NAME_CHANGES, logMarriageNameChanges);
     }
 
     /**
@@ -3640,7 +3644,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Map<MergingSurnameStyle, Integer> getMarriageSurnameWeights() {
-        return options.get(CampaignOption.MARRIAGE_SURNAME_WEIGHTS);
+        return get(CampaignOption.MARRIAGE_SURNAME_WEIGHTS);
     }
 
     /**
@@ -3652,7 +3656,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMarriageSurnameWeights(final Map<MergingSurnameStyle, Integer> marriageSurnameWeights) {
-        options.set(CampaignOption.MARRIAGE_SURNAME_WEIGHTS, marriageSurnameWeights);
+        set(CampaignOption.MARRIAGE_SURNAME_WEIGHTS, marriageSurnameWeights);
     }
 
     /**
@@ -3661,7 +3665,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public RandomMarriageMethod getRandomMarriageMethod() {
-        return options.get(CampaignOption.RANDOM_MARRIAGE_METHOD);
+        return get(CampaignOption.RANDOM_MARRIAGE_METHOD);
     }
 
     /**
@@ -3671,7 +3675,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRandomMarriageMethod(final RandomMarriageMethod randomMarriageMethod) {
-        options.set(CampaignOption.RANDOM_MARRIAGE_METHOD, randomMarriageMethod);
+        set(CampaignOption.RANDOM_MARRIAGE_METHOD, randomMarriageMethod);
     }
 
     /**
@@ -3681,7 +3685,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomClanPersonnelMarriages() {
-        return options.get(CampaignOption.USE_RANDOM_CLAN_PERSONNEL_MARRIAGES);
+        return get(CampaignOption.USE_RANDOM_CLAN_PERSONNEL_MARRIAGES);
     }
 
     /**
@@ -3691,7 +3695,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomClanPersonnelMarriages(final boolean useRandomClanPersonnelMarriages) {
-        options.set(CampaignOption.USE_RANDOM_CLAN_PERSONNEL_MARRIAGES, useRandomClanPersonnelMarriages);
+        set(CampaignOption.USE_RANDOM_CLAN_PERSONNEL_MARRIAGES, useRandomClanPersonnelMarriages);
     }
 
     /**
@@ -3701,7 +3705,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomPrisonerMarriages() {
-        return options.get(CampaignOption.USE_RANDOM_PRISONER_MARRIAGES);
+        return get(CampaignOption.USE_RANDOM_PRISONER_MARRIAGES);
     }
 
     /**
@@ -3711,7 +3715,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomPrisonerMarriages(final boolean useRandomPrisonerMarriages) {
-        options.set(CampaignOption.USE_RANDOM_PRISONER_MARRIAGES, useRandomPrisonerMarriages);
+        set(CampaignOption.USE_RANDOM_PRISONER_MARRIAGES, useRandomPrisonerMarriages);
     }
 
     /**
@@ -3724,7 +3728,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getRandomMarriageAgeRange() {
-        return options.get(CampaignOption.RANDOM_MARRIAGE_AGE_RANGE);
+        return get(CampaignOption.RANDOM_MARRIAGE_AGE_RANGE);
     }
 
     /**
@@ -3738,7 +3742,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRandomMarriageAgeRange(final int randomMarriageAgeRange) {
-        options.set(CampaignOption.RANDOM_MARRIAGE_AGE_RANGE, randomMarriageAgeRange);
+        set(CampaignOption.RANDOM_MARRIAGE_AGE_RANGE, randomMarriageAgeRange);
     }
 
     /**
@@ -3749,7 +3753,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getRandomMarriageDiceSize() {
-        return options.get(CampaignOption.RANDOM_MARRIAGE_DICE_SIZE);
+        return get(CampaignOption.RANDOM_MARRIAGE_DICE_SIZE);
     }
 
     /**
@@ -3763,7 +3767,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRandomMarriageDiceSize(final int randomMarriageDiceSize) {
-        options.set(CampaignOption.RANDOM_MARRIAGE_DICE_SIZE, randomMarriageDiceSize);
+        set(CampaignOption.RANDOM_MARRIAGE_DICE_SIZE, randomMarriageDiceSize);
     }
 
     /**
@@ -3775,7 +3779,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getInterestedInSameSexDiceSize() {
-        return options.get(CampaignOption.INTERESTED_IN_SAME_SEX_DICE_SIZE);
+        return get(CampaignOption.INTERESTED_IN_SAME_SEX_DICE_SIZE);
     }
 
     /**
@@ -3789,7 +3793,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setInterestedInSameSexDiceSize(final int interestedInSameSexDiceSize) {
-        options.set(CampaignOption.INTERESTED_IN_SAME_SEX_DICE_SIZE, interestedInSameSexDiceSize);
+        set(CampaignOption.INTERESTED_IN_SAME_SEX_DICE_SIZE, interestedInSameSexDiceSize);
     }
 
     /**
@@ -3799,7 +3803,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getInterestedInBothSexesDiceSize() {
-        return options.get(CampaignOption.INTERESTED_IN_BOTH_SEXES_DICE_SIZE);
+        return get(CampaignOption.INTERESTED_IN_BOTH_SEXES_DICE_SIZE);
     }
 
     /**
@@ -3809,7 +3813,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setInterestedInBothSexesDiceSize(final int interestedInBothSexesDiceSize) {
-        options.set(CampaignOption.INTERESTED_IN_BOTH_SEXES_DICE_SIZE, interestedInBothSexesDiceSize);
+        set(CampaignOption.INTERESTED_IN_BOTH_SEXES_DICE_SIZE, interestedInBothSexesDiceSize);
     }
 
     /**
@@ -3821,7 +3825,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getRandomNewDependentMarriage() {
-        return options.get(CampaignOption.RANDOM_NEW_DEPENDENT_MARRIAGE);
+        return get(CampaignOption.RANDOM_NEW_DEPENDENT_MARRIAGE);
     }
 
     /**
@@ -3836,7 +3840,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRandomNewDependentMarriage(final int randomNewDependentMarriage) {
-        options.set(CampaignOption.RANDOM_NEW_DEPENDENT_MARRIAGE, randomNewDependentMarriage);
+        set(CampaignOption.RANDOM_NEW_DEPENDENT_MARRIAGE, randomNewDependentMarriage);
     }
     // endregion Marriage
 
@@ -3848,7 +3852,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseManualDivorce() {
-        return options.get(CampaignOption.USE_MANUAL_DIVORCE);
+        return get(CampaignOption.USE_MANUAL_DIVORCE);
     }
 
     /**
@@ -3858,7 +3862,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseManualDivorce(final boolean useManualDivorce) {
-        options.set(CampaignOption.USE_MANUAL_DIVORCE, useManualDivorce);
+        set(CampaignOption.USE_MANUAL_DIVORCE, useManualDivorce);
     }
 
     /**
@@ -3867,7 +3871,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseClanPersonnelDivorce() {
-        return options.get(CampaignOption.USE_CLAN_PERSONNEL_DIVORCE);
+        return get(CampaignOption.USE_CLAN_PERSONNEL_DIVORCE);
     }
 
     /**
@@ -3877,7 +3881,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseClanPersonnelDivorce(final boolean useClanPersonnelDivorce) {
-        options.set(CampaignOption.USE_CLAN_PERSONNEL_DIVORCE, useClanPersonnelDivorce);
+        set(CampaignOption.USE_CLAN_PERSONNEL_DIVORCE, useClanPersonnelDivorce);
     }
 
     /**
@@ -3886,7 +3890,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUsePrisonerDivorce() {
-        return options.get(CampaignOption.USE_PRISONER_DIVORCE);
+        return get(CampaignOption.USE_PRISONER_DIVORCE);
     }
 
     /**
@@ -3896,7 +3900,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUsePrisonerDivorce(final boolean usePrisonerDivorce) {
-        options.set(CampaignOption.USE_PRISONER_DIVORCE, usePrisonerDivorce);
+        set(CampaignOption.USE_PRISONER_DIVORCE, usePrisonerDivorce);
     }
 
     /**
@@ -3905,7 +3909,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Map<SplittingSurnameStyle, Integer> getDivorceSurnameWeights() {
-        return options.get(CampaignOption.DIVORCE_SURNAME_WEIGHTS);
+        return get(CampaignOption.DIVORCE_SURNAME_WEIGHTS);
     }
 
     /**
@@ -3915,7 +3919,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDivorceSurnameWeights(final Map<SplittingSurnameStyle, Integer> divorceSurnameWeights) {
-        options.set(CampaignOption.DIVORCE_SURNAME_WEIGHTS, divorceSurnameWeights);
+        set(CampaignOption.DIVORCE_SURNAME_WEIGHTS, divorceSurnameWeights);
     }
 
     /**
@@ -3924,7 +3928,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public RandomDivorceMethod getRandomDivorceMethod() {
-        return options.get(CampaignOption.RANDOM_DIVORCE_METHOD);
+        return get(CampaignOption.RANDOM_DIVORCE_METHOD);
     }
 
     /**
@@ -3934,7 +3938,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRandomDivorceMethod(final RandomDivorceMethod randomDivorceMethod) {
-        options.set(CampaignOption.RANDOM_DIVORCE_METHOD, randomDivorceMethod);
+        set(CampaignOption.RANDOM_DIVORCE_METHOD, randomDivorceMethod);
     }
 
     /**
@@ -3944,7 +3948,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomOppositeSexDivorce() {
-        return options.get(CampaignOption.USE_RANDOM_OPPOSITE_SEX_DIVORCE);
+        return get(CampaignOption.USE_RANDOM_OPPOSITE_SEX_DIVORCE);
     }
 
     /**
@@ -3954,7 +3958,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomOppositeSexDivorce(final boolean useRandomOppositeSexDivorce) {
-        options.set(CampaignOption.USE_RANDOM_OPPOSITE_SEX_DIVORCE, useRandomOppositeSexDivorce);
+        set(CampaignOption.USE_RANDOM_OPPOSITE_SEX_DIVORCE, useRandomOppositeSexDivorce);
     }
 
     /**
@@ -3964,7 +3968,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomSameSexDivorce() {
-        return options.get(CampaignOption.USE_RANDOM_SAME_SEX_DIVORCE);
+        return get(CampaignOption.USE_RANDOM_SAME_SEX_DIVORCE);
     }
 
     /**
@@ -3974,7 +3978,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomSameSexDivorce(final boolean useRandomSameSexDivorce) {
-        options.set(CampaignOption.USE_RANDOM_SAME_SEX_DIVORCE, useRandomSameSexDivorce);
+        set(CampaignOption.USE_RANDOM_SAME_SEX_DIVORCE, useRandomSameSexDivorce);
     }
 
     /**
@@ -3984,7 +3988,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomClanPersonnelDivorce() {
-        return options.get(CampaignOption.USE_RANDOM_CLAN_PERSONNEL_DIVORCE);
+        return get(CampaignOption.USE_RANDOM_CLAN_PERSONNEL_DIVORCE);
     }
 
     /**
@@ -3994,7 +3998,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomClanPersonnelDivorce(final boolean useRandomClanPersonnelDivorce) {
-        options.set(CampaignOption.USE_RANDOM_CLAN_PERSONNEL_DIVORCE, useRandomClanPersonnelDivorce);
+        set(CampaignOption.USE_RANDOM_CLAN_PERSONNEL_DIVORCE, useRandomClanPersonnelDivorce);
     }
 
     /**
@@ -4004,7 +4008,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomPrisonerDivorce() {
-        return options.get(CampaignOption.USE_RANDOM_PRISONER_DIVORCE);
+        return get(CampaignOption.USE_RANDOM_PRISONER_DIVORCE);
     }
 
     /**
@@ -4014,7 +4018,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomPrisonerDivorce(final boolean useRandomPrisonerDivorce) {
-        options.set(CampaignOption.USE_RANDOM_PRISONER_DIVORCE, useRandomPrisonerDivorce);
+        set(CampaignOption.USE_RANDOM_PRISONER_DIVORCE, useRandomPrisonerDivorce);
     }
 
     /**
@@ -4023,7 +4027,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getRandomDivorceDiceSize() {
-        return options.get(CampaignOption.RANDOM_DIVORCE_DICE_SIZE);
+        return get(CampaignOption.RANDOM_DIVORCE_DICE_SIZE);
     }
 
     /**
@@ -4033,7 +4037,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRandomDivorceDiceSize(final int randomDivorceDiceSize) {
-        options.set(CampaignOption.RANDOM_DIVORCE_DICE_SIZE, randomDivorceDiceSize);
+        set(CampaignOption.RANDOM_DIVORCE_DICE_SIZE, randomDivorceDiceSize);
     }
     // endregion Divorce
 
@@ -4045,7 +4049,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseManualProcreation() {
-        return options.get(CampaignOption.USE_MANUAL_PROCREATION);
+        return get(CampaignOption.USE_MANUAL_PROCREATION);
     }
 
     /**
@@ -4055,7 +4059,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseManualProcreation(final boolean useManualProcreation) {
-        options.set(CampaignOption.USE_MANUAL_PROCREATION, useManualProcreation);
+        set(CampaignOption.USE_MANUAL_PROCREATION, useManualProcreation);
     }
 
     /**
@@ -4065,7 +4069,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseClanPersonnelProcreation() {
-        return options.get(CampaignOption.USE_CLAN_PERSONNEL_PROCREATION);
+        return get(CampaignOption.USE_CLAN_PERSONNEL_PROCREATION);
     }
 
     /**
@@ -4075,7 +4079,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseClanPersonnelProcreation(final boolean useClanPersonnelProcreation) {
-        options.set(CampaignOption.USE_CLAN_PERSONNEL_PROCREATION, useClanPersonnelProcreation);
+        set(CampaignOption.USE_CLAN_PERSONNEL_PROCREATION, useClanPersonnelProcreation);
     }
 
     /**
@@ -4084,7 +4088,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUsePrisonerProcreation() {
-        return options.get(CampaignOption.USE_PRISONER_PROCREATION);
+        return get(CampaignOption.USE_PRISONER_PROCREATION);
     }
 
     /**
@@ -4094,7 +4098,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUsePrisonerProcreation(final boolean usePrisonerProcreation) {
-        options.set(CampaignOption.USE_PRISONER_PROCREATION, usePrisonerProcreation);
+        set(CampaignOption.USE_PRISONER_PROCREATION, usePrisonerProcreation);
     }
 
     /**
@@ -4106,7 +4110,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMultiplePregnancyOccurrences() {
-        return options.get(CampaignOption.MULTIPLE_PREGNANCY_OCCURRENCES);
+        return get(CampaignOption.MULTIPLE_PREGNANCY_OCCURRENCES);
     }
 
     /**
@@ -4119,7 +4123,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMultiplePregnancyOccurrences(final int multiplePregnancyOccurrences) {
-        options.set(CampaignOption.MULTIPLE_PREGNANCY_OCCURRENCES, multiplePregnancyOccurrences);
+        set(CampaignOption.MULTIPLE_PREGNANCY_OCCURRENCES, multiplePregnancyOccurrences);
     }
 
     /**
@@ -4130,7 +4134,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public BabySurnameStyle getBabySurnameStyle() {
-        return options.get(CampaignOption.BABY_SURNAME_STYLE);
+        return get(CampaignOption.BABY_SURNAME_STYLE);
     }
 
     /**
@@ -4142,7 +4146,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setBabySurnameStyle(final BabySurnameStyle babySurnameStyle) {
-        options.set(CampaignOption.BABY_SURNAME_STYLE, babySurnameStyle);
+        set(CampaignOption.BABY_SURNAME_STYLE, babySurnameStyle);
     }
 
     /**
@@ -4152,7 +4156,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAssignNonPrisonerBabiesFounderTag() {
-        return options.get(CampaignOption.ASSIGN_NON_PRISONER_BABIES_FOUNDER_TAG);
+        return get(CampaignOption.ASSIGN_NON_PRISONER_BABIES_FOUNDER_TAG);
     }
 
     /**
@@ -4162,7 +4166,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAssignNonPrisonerBabiesFounderTag(final boolean assignNonPrisonerBabiesFounderTag) {
-        options.set(CampaignOption.ASSIGN_NON_PRISONER_BABIES_FOUNDER_TAG, assignNonPrisonerBabiesFounderTag);
+        set(CampaignOption.ASSIGN_NON_PRISONER_BABIES_FOUNDER_TAG, assignNonPrisonerBabiesFounderTag);
     }
 
     /**
@@ -4172,7 +4176,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAssignChildrenOfFoundersFounderTag() {
-        return options.get(CampaignOption.ASSIGN_CHILDREN_OF_FOUNDERS_FOUNDER_TAG);
+        return get(CampaignOption.ASSIGN_CHILDREN_OF_FOUNDERS_FOUNDER_TAG);
     }
 
     /**
@@ -4182,7 +4186,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAssignChildrenOfFoundersFounderTag(final boolean assignChildrenOfFoundersFounderTag) {
-        options.set(CampaignOption.ASSIGN_CHILDREN_OF_FOUNDERS_FOUNDER_TAG, assignChildrenOfFoundersFounderTag);
+        set(CampaignOption.ASSIGN_CHILDREN_OF_FOUNDERS_FOUNDER_TAG, assignChildrenOfFoundersFounderTag);
     }
 
     /**
@@ -4191,7 +4195,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseMaternityLeave() {
-        return options.get(CampaignOption.USE_MATERNITY_LEAVE);
+        return get(CampaignOption.USE_MATERNITY_LEAVE);
     }
 
     /**
@@ -4201,7 +4205,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseMaternityLeave(final boolean useMaternityLeave) {
-        options.set(CampaignOption.USE_MATERNITY_LEAVE, useMaternityLeave);
+        set(CampaignOption.USE_MATERNITY_LEAVE, useMaternityLeave);
     }
 
     /**
@@ -4212,7 +4216,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDetermineFatherAtBirth() {
-        return options.get(CampaignOption.DETERMINE_FATHER_AT_BIRTH);
+        return get(CampaignOption.DETERMINE_FATHER_AT_BIRTH);
     }
 
     /**
@@ -4224,7 +4228,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDetermineFatherAtBirth(final boolean determineFatherAtBirth) {
-        options.set(CampaignOption.DETERMINE_FATHER_AT_BIRTH, determineFatherAtBirth);
+        set(CampaignOption.DETERMINE_FATHER_AT_BIRTH, determineFatherAtBirth);
     }
 
     /**
@@ -4235,7 +4239,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDisplayTrueDueDate() {
-        return options.get(CampaignOption.DISPLAY_TRUE_DUE_DATE);
+        return get(CampaignOption.DISPLAY_TRUE_DUE_DATE);
     }
 
     /**
@@ -4247,7 +4251,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisplayTrueDueDate(final boolean displayTrueDueDate) {
-        options.set(CampaignOption.DISPLAY_TRUE_DUE_DATE, displayTrueDueDate);
+        set(CampaignOption.DISPLAY_TRUE_DUE_DATE, displayTrueDueDate);
     }
 
     /**
@@ -4257,7 +4261,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getNoInterestInChildrenDiceSize() {
-        return options.get(CampaignOption.NO_INTEREST_IN_CHILDREN_DICE_SIZE);
+        return get(CampaignOption.NO_INTEREST_IN_CHILDREN_DICE_SIZE);
     }
 
     /**
@@ -4267,7 +4271,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setNoInterestInChildrenDiceSize(final int noInterestInChildrenDiceSize) {
-        options.set(CampaignOption.NO_INTEREST_IN_CHILDREN_DICE_SIZE, noInterestInChildrenDiceSize);
+        set(CampaignOption.NO_INTEREST_IN_CHILDREN_DICE_SIZE, noInterestInChildrenDiceSize);
     }
 
     /**
@@ -4277,7 +4281,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isLogProcreation() {
-        return options.get(CampaignOption.LOG_PROCREATION);
+        return get(CampaignOption.LOG_PROCREATION);
     }
 
     /**
@@ -4289,7 +4293,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setLogProcreation(final boolean logProcreation) {
-        options.set(CampaignOption.LOG_PROCREATION, logProcreation);
+        set(CampaignOption.LOG_PROCREATION, logProcreation);
     }
 
     /**
@@ -4298,7 +4302,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public RandomProcreationMethod getRandomProcreationMethod() {
-        return options.get(CampaignOption.RANDOM_PROCREATION_METHOD);
+        return get(CampaignOption.RANDOM_PROCREATION_METHOD);
     }
 
     /**
@@ -4308,7 +4312,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRandomProcreationMethod(final RandomProcreationMethod randomProcreationMethod) {
-        options.set(CampaignOption.RANDOM_PROCREATION_METHOD, randomProcreationMethod);
+        set(CampaignOption.RANDOM_PROCREATION_METHOD, randomProcreationMethod);
     }
 
     /**
@@ -4320,7 +4324,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRelationshiplessRandomProcreation() {
-        return options.get(CampaignOption.USE_RELATIONSHIPLESS_RANDOM_PROCREATION);
+        return get(CampaignOption.USE_RELATIONSHIPLESS_RANDOM_PROCREATION);
     }
 
     /**
@@ -4332,7 +4336,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRelationshiplessRandomProcreation(final boolean useRelationshiplessRandomProcreation) {
-        options.set(CampaignOption.USE_RELATIONSHIPLESS_RANDOM_PROCREATION, useRelationshiplessRandomProcreation);
+        set(CampaignOption.USE_RELATIONSHIPLESS_RANDOM_PROCREATION, useRelationshiplessRandomProcreation);
     }
 
     /**
@@ -4342,7 +4346,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomClanPersonnelProcreation() {
-        return options.get(CampaignOption.USE_RANDOM_CLAN_PERSONNEL_PROCREATION);
+        return get(CampaignOption.USE_RANDOM_CLAN_PERSONNEL_PROCREATION);
     }
 
     /**
@@ -4352,7 +4356,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomClanPersonnelProcreation(final boolean useRandomClanPersonnelProcreation) {
-        options.set(CampaignOption.USE_RANDOM_CLAN_PERSONNEL_PROCREATION, useRandomClanPersonnelProcreation);
+        set(CampaignOption.USE_RANDOM_CLAN_PERSONNEL_PROCREATION, useRandomClanPersonnelProcreation);
     }
 
     /**
@@ -4362,7 +4366,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomPrisonerProcreation() {
-        return options.get(CampaignOption.USE_RANDOM_PRISONER_PROCREATION);
+        return get(CampaignOption.USE_RANDOM_PRISONER_PROCREATION);
     }
 
     /**
@@ -4372,7 +4376,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomPrisonerProcreation(final boolean useRandomPrisonerProcreation) {
-        options.set(CampaignOption.USE_RANDOM_PRISONER_PROCREATION, useRandomPrisonerProcreation);
+        set(CampaignOption.USE_RANDOM_PRISONER_PROCREATION, useRandomPrisonerProcreation);
     }
 
     /**
@@ -4386,7 +4390,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getRandomProcreationRelationshipDiceSize() {
-        return options.get(CampaignOption.RANDOM_PROCREATION_RELATIONSHIP_DICE_SIZE);
+        return get(CampaignOption.RANDOM_PROCREATION_RELATIONSHIP_DICE_SIZE);
     }
 
     /**
@@ -4400,7 +4404,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRandomProcreationRelationshipDiceSize(final int randomProcreationRelationshipDiceSize) {
-        options.set(CampaignOption.RANDOM_PROCREATION_RELATIONSHIP_DICE_SIZE, randomProcreationRelationshipDiceSize);
+        set(CampaignOption.RANDOM_PROCREATION_RELATIONSHIP_DICE_SIZE, randomProcreationRelationshipDiceSize);
     }
 
     /**
@@ -4412,7 +4416,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getRandomProcreationRelationshiplessDiceSize() {
-        return options.get(CampaignOption.RANDOM_PROCREATION_RELATIONSHIPLESS_DICE_SIZE);
+        return get(CampaignOption.RANDOM_PROCREATION_RELATIONSHIPLESS_DICE_SIZE);
     }
 
     /**
@@ -4426,7 +4430,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRandomProcreationRelationshiplessDiceSize(final int randomProcreationRelationshiplessDiceSize) {
-        options.set(CampaignOption.RANDOM_PROCREATION_RELATIONSHIPLESS_DICE_SIZE,
+        set(CampaignOption.RANDOM_PROCREATION_RELATIONSHIPLESS_DICE_SIZE,
               randomProcreationRelationshiplessDiceSize);
     }
     // endregion Procreation
@@ -4439,7 +4443,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseEducationModule() {
-        return options.get(CampaignOption.USE_EDUCATION_MODULE);
+        return get(CampaignOption.USE_EDUCATION_MODULE);
     }
 
     /**
@@ -4449,7 +4453,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseEducationModule(boolean useEducationModule) {
-        options.set(CampaignOption.USE_EDUCATION_MODULE, useEducationModule);
+        set(CampaignOption.USE_EDUCATION_MODULE, useEducationModule);
     }
 
     /**
@@ -4458,7 +4462,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getCurriculumXpRate() {
-        return options.get(CampaignOption.CURRICULUM_XP_RATE);
+        return get(CampaignOption.CURRICULUM_XP_RATE);
     }
 
     /**
@@ -4468,7 +4472,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setCurriculumXpRate(final int curriculumXpRate) {
-        options.set(CampaignOption.CURRICULUM_XP_RATE, curriculumXpRate);
+        set(CampaignOption.CURRICULUM_XP_RATE, curriculumXpRate);
     }
 
     /**
@@ -4477,7 +4481,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getMaximumJumpCount() {
-        return options.get(CampaignOption.MAXIMUM_JUMP_COUNT);
+        return get(CampaignOption.MAXIMUM_JUMP_COUNT);
     }
 
     /**
@@ -4487,7 +4491,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMaximumJumpCount(Integer maximumJumpCount) {
-        options.set(CampaignOption.MAXIMUM_JUMP_COUNT, maximumJumpCount);
+        set(CampaignOption.MAXIMUM_JUMP_COUNT, maximumJumpCount);
     }
 
     /**
@@ -4496,7 +4500,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseReeducationCamps() {
-        return options.get(CampaignOption.USE_REEDUCATION_CAMPS);
+        return get(CampaignOption.USE_REEDUCATION_CAMPS);
     }
 
     /**
@@ -4506,7 +4510,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseReeducationCamps(boolean useReeducationCamps) {
-        options.set(CampaignOption.USE_REEDUCATION_CAMPS, useReeducationCamps);
+        set(CampaignOption.USE_REEDUCATION_CAMPS, useReeducationCamps);
     }
 
     /**
@@ -4515,7 +4519,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableLocalAcademies() {
-        return options.get(CampaignOption.ENABLE_LOCAL_ACADEMIES);
+        return get(CampaignOption.ENABLE_LOCAL_ACADEMIES);
     }
 
     /**
@@ -4525,7 +4529,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableLocalAcademies(boolean enableLocalAcademies) {
-        options.set(CampaignOption.ENABLE_LOCAL_ACADEMIES, enableLocalAcademies);
+        set(CampaignOption.ENABLE_LOCAL_ACADEMIES, enableLocalAcademies);
     }
 
     /**
@@ -4535,7 +4539,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnablePrestigiousAcademies() {
-        return options.get(CampaignOption.ENABLE_PRESTIGIOUS_ACADEMIES);
+        return get(CampaignOption.ENABLE_PRESTIGIOUS_ACADEMIES);
     }
 
     /**
@@ -4545,7 +4549,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnablePrestigiousAcademies(boolean enablePrestigiousAcademies) {
-        options.set(CampaignOption.ENABLE_PRESTIGIOUS_ACADEMIES, enablePrestigiousAcademies);
+        set(CampaignOption.ENABLE_PRESTIGIOUS_ACADEMIES, enablePrestigiousAcademies);
     }
 
     /**
@@ -4554,7 +4558,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableUnitEducation() {
-        return options.get(CampaignOption.ENABLE_UNIT_EDUCATION);
+        return get(CampaignOption.ENABLE_UNIT_EDUCATION);
     }
 
     /**
@@ -4564,7 +4568,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableUnitEducation(boolean enableUnitEducation) {
-        options.set(CampaignOption.ENABLE_UNIT_EDUCATION, enableUnitEducation);
+        set(CampaignOption.ENABLE_UNIT_EDUCATION, enableUnitEducation);
     }
 
     /**
@@ -4574,7 +4578,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableOverrideRequirements() {
-        return options.get(CampaignOption.ENABLE_OVERRIDE_REQUIREMENTS);
+        return get(CampaignOption.ENABLE_OVERRIDE_REQUIREMENTS);
     }
 
     /**
@@ -4584,7 +4588,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableOverrideRequirements(boolean enableOverrideRequirements) {
-        options.set(CampaignOption.ENABLE_OVERRIDE_REQUIREMENTS, enableOverrideRequirements);
+        set(CampaignOption.ENABLE_OVERRIDE_REQUIREMENTS, enableOverrideRequirements);
     }
 
     /**
@@ -4594,7 +4598,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableShowIneligibleAcademies() {
-        return options.get(CampaignOption.ENABLE_SHOW_INELIGIBLE_ACADEMIES);
+        return get(CampaignOption.ENABLE_SHOW_INELIGIBLE_ACADEMIES);
     }
 
     /**
@@ -4604,7 +4608,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableShowIneligibleAcademies(boolean enableShowIneligibleAcademies) {
-        options.set(CampaignOption.ENABLE_SHOW_INELIGIBLE_ACADEMIES, enableShowIneligibleAcademies);
+        set(CampaignOption.ENABLE_SHOW_INELIGIBLE_ACADEMIES, enableShowIneligibleAcademies);
     }
 
     /**
@@ -4614,7 +4618,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getEntranceExamBaseTargetNumber() {
-        return options.get(CampaignOption.ENTRANCE_EXAM_BASE_TARGET_NUMBER);
+        return get(CampaignOption.ENTRANCE_EXAM_BASE_TARGET_NUMBER);
     }
 
     /**
@@ -4624,7 +4628,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEntranceExamBaseTargetNumber(int entranceExamBaseTargetNumber) {
-        options.set(CampaignOption.ENTRANCE_EXAM_BASE_TARGET_NUMBER, entranceExamBaseTargetNumber);
+        set(CampaignOption.ENTRANCE_EXAM_BASE_TARGET_NUMBER, entranceExamBaseTargetNumber);
     }
 
     /**
@@ -4632,7 +4636,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Double getFacultyXpRate() {
-        return options.get(CampaignOption.FACULTY_XP_RATE);
+        return get(CampaignOption.FACULTY_XP_RATE);
     }
 
     /**
@@ -4642,7 +4646,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setFacultyXpRate(Double facultyXpRate) {
-        options.set(CampaignOption.FACULTY_XP_RATE, facultyXpRate);
+        set(CampaignOption.FACULTY_XP_RATE, facultyXpRate);
     }
 
     /**
@@ -4650,7 +4654,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableBonuses() {
-        return options.get(CampaignOption.ENABLE_BONUSES);
+        return get(CampaignOption.ENABLE_BONUSES);
     }
 
     /**
@@ -4660,7 +4664,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableBonuses(boolean enableBonuses) {
-        options.set(CampaignOption.ENABLE_BONUSES, enableBonuses);
+        set(CampaignOption.ENABLE_BONUSES, enableBonuses);
     }
 
     /**
@@ -4669,7 +4673,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getAdultDropoutChance() {
-        return options.get(CampaignOption.ADULT_DROPOUT_CHANCE);
+        return get(CampaignOption.ADULT_DROPOUT_CHANCE);
     }
 
     /**
@@ -4679,7 +4683,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAdultDropoutChance(Integer adultDropoutChance) {
-        options.set(CampaignOption.ADULT_DROPOUT_CHANCE, adultDropoutChance);
+        set(CampaignOption.ADULT_DROPOUT_CHANCE, adultDropoutChance);
     }
 
     /**
@@ -4688,7 +4692,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getChildrenDropoutChance() {
-        return options.get(CampaignOption.CHILDREN_DROPOUT_CHANCE);
+        return get(CampaignOption.CHILDREN_DROPOUT_CHANCE);
     }
 
     /**
@@ -4698,7 +4702,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setChildrenDropoutChance(Integer childrenDropoutChance) {
-        options.set(CampaignOption.CHILDREN_DROPOUT_CHANCE, childrenDropoutChance);
+        set(CampaignOption.CHILDREN_DROPOUT_CHANCE, childrenDropoutChance);
     }
 
     /**
@@ -4706,7 +4710,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAllAges() {
-        return options.get(CampaignOption.ALL_AGES);
+        return get(CampaignOption.ALL_AGES);
     }
 
     /**
@@ -4715,7 +4719,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAllAges(boolean allAges) {
-        options.set(CampaignOption.ALL_AGES, allAges);
+        set(CampaignOption.ALL_AGES, allAges);
     }
 
     /**
@@ -4724,7 +4728,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getMilitaryAcademyAccidents() {
-        return options.get(CampaignOption.MILITARY_ACADEMY_ACCIDENTS);
+        return get(CampaignOption.MILITARY_ACADEMY_ACCIDENTS);
     }
 
     /**
@@ -4734,7 +4738,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMilitaryAcademyAccidents(Integer militaryAcademyAccidents) {
-        options.set(CampaignOption.MILITARY_ACADEMY_ACCIDENTS, militaryAcademyAccidents);
+        set(CampaignOption.MILITARY_ACADEMY_ACCIDENTS, militaryAcademyAccidents);
     }
 
     /**
@@ -4744,7 +4748,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Map<AgeGroup, Boolean> getEnabledRandomDeathAgeGroups() {
-        return options.get(CampaignOption.ENABLED_RANDOM_DEATH_AGE_GROUPS);
+        return get(CampaignOption.ENABLED_RANDOM_DEATH_AGE_GROUPS);
     }
 
     /**
@@ -4754,7 +4758,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnabledRandomDeathAgeGroups(final Map<AgeGroup, Boolean> enabledRandomDeathAgeGroups) {
-        options.set(CampaignOption.ENABLED_RANDOM_DEATH_AGE_GROUPS, enabledRandomDeathAgeGroups);
+        set(CampaignOption.ENABLED_RANDOM_DEATH_AGE_GROUPS, enabledRandomDeathAgeGroups);
     }
 
     /**
@@ -4764,7 +4768,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRandomDeathSuicideCause() {
-        return options.get(CampaignOption.USE_RANDOM_DEATH_SUICIDE_CAUSE);
+        return get(CampaignOption.USE_RANDOM_DEATH_SUICIDE_CAUSE);
     }
 
     /**
@@ -4774,7 +4778,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRandomDeathSuicideCause(final boolean useRandomDeathSuicideCause) {
-        options.set(CampaignOption.USE_RANDOM_DEATH_SUICIDE_CAUSE, useRandomDeathSuicideCause);
+        set(CampaignOption.USE_RANDOM_DEATH_SUICIDE_CAUSE, useRandomDeathSuicideCause);
     }
 
     /**
@@ -4783,7 +4787,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getRandomDeathMultiplier() {
-        return options.get(CampaignOption.RANDOM_DEATH_MULTIPLIER);
+        return get(CampaignOption.RANDOM_DEATH_MULTIPLIER);
     }
 
     /**
@@ -4793,7 +4797,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRandomDeathMultiplier(final double randomDeathMultiplier) {
-        options.set(CampaignOption.RANDOM_DEATH_MULTIPLIER, randomDeathMultiplier);
+        set(CampaignOption.RANDOM_DEATH_MULTIPLIER, randomDeathMultiplier);
     }
     // endregion Death
 
@@ -4805,7 +4809,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isIssuePosthumousAwards() {
-        return options.get(CampaignOption.ISSUE_POSTHUMOUS_AWARDS);
+        return get(CampaignOption.ISSUE_POSTHUMOUS_AWARDS);
     }
 
     /**
@@ -4815,7 +4819,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setIssuePosthumousAwards(final boolean issuePosthumousAwards) {
-        options.set(CampaignOption.ISSUE_POSTHUMOUS_AWARDS, issuePosthumousAwards);
+        set(CampaignOption.ISSUE_POSTHUMOUS_AWARDS, issuePosthumousAwards);
     }
 
     /**
@@ -4824,7 +4828,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isIssueBestAwardOnly() {
-        return options.get(CampaignOption.ISSUE_BEST_AWARD_ONLY);
+        return get(CampaignOption.ISSUE_BEST_AWARD_ONLY);
     }
 
     /**
@@ -4834,7 +4838,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setIssueBestAwardOnly(final boolean issueBestAwardOnly) {
-        options.set(CampaignOption.ISSUE_BEST_AWARD_ONLY, issueBestAwardOnly);
+        set(CampaignOption.ISSUE_BEST_AWARD_ONLY, issueBestAwardOnly);
     }
 
     /**
@@ -4843,7 +4847,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isIgnoreStandardSet() {
-        return options.get(CampaignOption.IGNORE_STANDARD_SET);
+        return get(CampaignOption.IGNORE_STANDARD_SET);
     }
 
     /**
@@ -4853,7 +4857,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setIgnoreStandardSet(final boolean ignoreStandardSet) {
-        options.set(CampaignOption.IGNORE_STANDARD_SET, ignoreStandardSet);
+        set(CampaignOption.IGNORE_STANDARD_SET, ignoreStandardSet);
     }
 
     /**
@@ -4861,7 +4865,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAwardTierSize() {
-        return options.get(CampaignOption.AWARD_TIER_SIZE);
+        return get(CampaignOption.AWARD_TIER_SIZE);
     }
 
     /**
@@ -4871,7 +4875,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAwardTierSize(final int awardTierSize) {
-        options.set(CampaignOption.AWARD_TIER_SIZE, awardTierSize);
+        set(CampaignOption.AWARD_TIER_SIZE, awardTierSize);
     }
 
     /**
@@ -4879,7 +4883,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public AwardBonus getAwardBonusStyle() {
-        return options.get(CampaignOption.AWARD_BONUS_STYLE);
+        return get(CampaignOption.AWARD_BONUS_STYLE);
     }
 
     /**
@@ -4889,7 +4893,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAwardBonusStyle(final AwardBonus awardBonusStyle) {
-        options.set(CampaignOption.AWARD_BONUS_STYLE, awardBonusStyle);
+        set(CampaignOption.AWARD_BONUS_STYLE, awardBonusStyle);
     }
 
     /**
@@ -4898,7 +4902,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableAutoAwards() {
-        return options.get(CampaignOption.ENABLE_AUTO_AWARDS);
+        return get(CampaignOption.ENABLE_AUTO_AWARDS);
     }
 
     /**
@@ -4908,7 +4912,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableAutoAwards(final boolean enableAutoAwards) {
-        options.set(CampaignOption.ENABLE_AUTO_AWARDS, enableAutoAwards);
+        set(CampaignOption.ENABLE_AUTO_AWARDS, enableAutoAwards);
     }
 
     /**
@@ -4917,7 +4921,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableContractAwards() {
-        return options.get(CampaignOption.ENABLE_CONTRACT_AWARDS);
+        return get(CampaignOption.ENABLE_CONTRACT_AWARDS);
     }
 
     /**
@@ -4927,7 +4931,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableContractAwards(final boolean enableContractAwards) {
-        options.set(CampaignOption.ENABLE_CONTRACT_AWARDS, enableContractAwards);
+        set(CampaignOption.ENABLE_CONTRACT_AWARDS, enableContractAwards);
     }
 
     /**
@@ -4937,7 +4941,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableFactionHunterAwards() {
-        return options.get(CampaignOption.ENABLE_FACTION_HUNTER_AWARDS);
+        return get(CampaignOption.ENABLE_FACTION_HUNTER_AWARDS);
     }
 
     /**
@@ -4947,7 +4951,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableFactionHunterAwards(final boolean enableFactionHunterAwards) {
-        options.set(CampaignOption.ENABLE_FACTION_HUNTER_AWARDS, enableFactionHunterAwards);
+        set(CampaignOption.ENABLE_FACTION_HUNTER_AWARDS, enableFactionHunterAwards);
     }
 
     /**
@@ -4956,7 +4960,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableInjuryAwards() {
-        return options.get(CampaignOption.ENABLE_INJURY_AWARDS);
+        return get(CampaignOption.ENABLE_INJURY_AWARDS);
     }
 
     /**
@@ -4966,7 +4970,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableInjuryAwards(final boolean enableInjuryAwards) {
-        options.set(CampaignOption.ENABLE_INJURY_AWARDS, enableInjuryAwards);
+        set(CampaignOption.ENABLE_INJURY_AWARDS, enableInjuryAwards);
     }
 
     /**
@@ -4976,7 +4980,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableIndividualKillAwards() {
-        return options.get(CampaignOption.ENABLE_INDIVIDUAL_KILL_AWARDS);
+        return get(CampaignOption.ENABLE_INDIVIDUAL_KILL_AWARDS);
     }
 
     /**
@@ -4986,7 +4990,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableIndividualKillAwards(final boolean enableIndividualKillAwards) {
-        options.set(CampaignOption.ENABLE_INDIVIDUAL_KILL_AWARDS, enableIndividualKillAwards);
+        set(CampaignOption.ENABLE_INDIVIDUAL_KILL_AWARDS, enableIndividualKillAwards);
     }
 
     /**
@@ -4996,7 +5000,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableFormationKillAwards() {
-        return options.get(CampaignOption.ENABLE_FORMATION_KILL_AWARDS);
+        return get(CampaignOption.ENABLE_FORMATION_KILL_AWARDS);
     }
 
     /**
@@ -5006,7 +5010,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableFormationKillAwards(final boolean enableFormationKillAwards) {
-        options.set(CampaignOption.ENABLE_FORMATION_KILL_AWARDS, enableFormationKillAwards);
+        set(CampaignOption.ENABLE_FORMATION_KILL_AWARDS, enableFormationKillAwards);
     }
 
     /**
@@ -5015,7 +5019,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableRankAwards() {
-        return options.get(CampaignOption.ENABLE_RANK_AWARDS);
+        return get(CampaignOption.ENABLE_RANK_AWARDS);
     }
 
     /**
@@ -5025,7 +5029,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableRankAwards(final boolean enableRankAwards) {
-        options.set(CampaignOption.ENABLE_RANK_AWARDS, enableRankAwards);
+        set(CampaignOption.ENABLE_RANK_AWARDS, enableRankAwards);
     }
 
     /**
@@ -5034,7 +5038,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableScenarioAwards() {
-        return options.get(CampaignOption.ENABLE_SCENARIO_AWARDS);
+        return get(CampaignOption.ENABLE_SCENARIO_AWARDS);
     }
 
     /**
@@ -5044,7 +5048,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableScenarioAwards(final boolean enableScenarioAwards) {
-        options.set(CampaignOption.ENABLE_SCENARIO_AWARDS, enableScenarioAwards);
+        set(CampaignOption.ENABLE_SCENARIO_AWARDS, enableScenarioAwards);
     }
 
     /**
@@ -5053,7 +5057,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableSkillAwards() {
-        return options.get(CampaignOption.ENABLE_SKILL_AWARDS);
+        return get(CampaignOption.ENABLE_SKILL_AWARDS);
     }
 
     /**
@@ -5063,7 +5067,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableSkillAwards(final boolean enableSkillAwards) {
-        options.set(CampaignOption.ENABLE_SKILL_AWARDS, enableSkillAwards);
+        set(CampaignOption.ENABLE_SKILL_AWARDS, enableSkillAwards);
     }
 
     /**
@@ -5073,7 +5077,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableTheatreOfWarAwards() {
-        return options.get(CampaignOption.ENABLE_THEATRE_OF_WAR_AWARDS);
+        return get(CampaignOption.ENABLE_THEATRE_OF_WAR_AWARDS);
     }
 
     /**
@@ -5083,7 +5087,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableTheatreOfWarAwards(final boolean enableTheatreOfWarAwards) {
-        options.set(CampaignOption.ENABLE_THEATRE_OF_WAR_AWARDS, enableTheatreOfWarAwards);
+        set(CampaignOption.ENABLE_THEATRE_OF_WAR_AWARDS, enableTheatreOfWarAwards);
     }
 
     /**
@@ -5092,7 +5096,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableTimeAwards() {
-        return options.get(CampaignOption.ENABLE_TIME_AWARDS);
+        return get(CampaignOption.ENABLE_TIME_AWARDS);
     }
 
     /**
@@ -5102,7 +5106,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableTimeAwards(final boolean enableTimeAwards) {
-        options.set(CampaignOption.ENABLE_TIME_AWARDS, enableTimeAwards);
+        set(CampaignOption.ENABLE_TIME_AWARDS, enableTimeAwards);
     }
 
     /**
@@ -5111,7 +5115,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableTrainingAwards() {
-        return options.get(CampaignOption.ENABLE_TRAINING_AWARDS);
+        return get(CampaignOption.ENABLE_TRAINING_AWARDS);
     }
 
     /**
@@ -5121,7 +5125,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableTrainingAwards(final boolean enableTrainingAwards) {
-        options.set(CampaignOption.ENABLE_TRAINING_AWARDS, enableTrainingAwards);
+        set(CampaignOption.ENABLE_TRAINING_AWARDS, enableTrainingAwards);
     }
 
     /**
@@ -5130,7 +5134,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableMiscAwards() {
-        return options.get(CampaignOption.ENABLE_MISC_AWARDS);
+        return get(CampaignOption.ENABLE_MISC_AWARDS);
     }
 
     /**
@@ -5140,7 +5144,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableMiscAwards(final boolean enableMiscAwards) {
-        options.set(CampaignOption.ENABLE_MISC_AWARDS, enableMiscAwards);
+        set(CampaignOption.ENABLE_MISC_AWARDS, enableMiscAwards);
     }
 
     /**
@@ -5149,7 +5153,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public String getAwardSetFilterList() {
-        return options.get(CampaignOption.AWARD_SET_FILTER_LIST);
+        return get(CampaignOption.AWARD_SET_FILTER_LIST);
     }
 
     /**
@@ -5159,7 +5163,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAwardSetFilterList(final String awardSetFilterList) {
-        options.set(CampaignOption.AWARD_SET_FILTER_LIST, awardSetFilterList);
+        set(CampaignOption.AWARD_SET_FILTER_LIST, awardSetFilterList);
     }
     // endregion Awards
     // endregion Personnel Tab
@@ -5171,7 +5175,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPayForParts() {
-        return options.get(CampaignOption.PAY_FOR_PARTS);
+        return get(CampaignOption.PAY_FOR_PARTS);
     }
 
     /**
@@ -5181,7 +5185,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayForParts(final boolean payForParts) {
-        options.set(CampaignOption.PAY_FOR_PARTS, payForParts);
+        set(CampaignOption.PAY_FOR_PARTS, payForParts);
     }
 
     /**
@@ -5189,7 +5193,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPayForRepairs() {
-        return options.get(CampaignOption.PAY_FOR_REPAIRS);
+        return get(CampaignOption.PAY_FOR_REPAIRS);
     }
 
     /**
@@ -5199,7 +5203,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayForRepairs(final boolean payForRepairs) {
-        options.set(CampaignOption.PAY_FOR_REPAIRS, payForRepairs);
+        set(CampaignOption.PAY_FOR_REPAIRS, payForRepairs);
     }
 
     /**
@@ -5207,7 +5211,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPayForUnits() {
-        return options.get(CampaignOption.PAY_FOR_UNITS);
+        return get(CampaignOption.PAY_FOR_UNITS);
     }
 
     /**
@@ -5217,7 +5221,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayForUnits(final boolean payForUnits) {
-        options.set(CampaignOption.PAY_FOR_UNITS, payForUnits);
+        set(CampaignOption.PAY_FOR_UNITS, payForUnits);
     }
 
     /**
@@ -5225,7 +5229,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPayForSalaries() {
-        return options.get(CampaignOption.PAY_FOR_SALARIES);
+        return get(CampaignOption.PAY_FOR_SALARIES);
     }
 
     /**
@@ -5235,7 +5239,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayForSalaries(final boolean payForSalaries) {
-        options.set(CampaignOption.PAY_FOR_SALARIES, payForSalaries);
+        set(CampaignOption.PAY_FOR_SALARIES, payForSalaries);
     }
 
     /**
@@ -5243,7 +5247,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPayForOverhead() {
-        return options.get(CampaignOption.PAY_FOR_OVERHEAD);
+        return get(CampaignOption.PAY_FOR_OVERHEAD);
     }
 
     /**
@@ -5253,7 +5257,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayForOverhead(final boolean payForOverhead) {
-        options.set(CampaignOption.PAY_FOR_OVERHEAD, payForOverhead);
+        set(CampaignOption.PAY_FOR_OVERHEAD, payForOverhead);
     }
 
     /**
@@ -5261,7 +5265,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPayForMaintain() {
-        return options.get(CampaignOption.PAY_FOR_MAINTAIN);
+        return get(CampaignOption.PAY_FOR_MAINTAIN);
     }
 
     /**
@@ -5271,7 +5275,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayForMaintain(final boolean payForMaintain) {
-        options.set(CampaignOption.PAY_FOR_MAINTAIN, payForMaintain);
+        set(CampaignOption.PAY_FOR_MAINTAIN, payForMaintain);
     }
 
     /**
@@ -5279,7 +5283,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPayForTransport() {
-        return options.get(CampaignOption.PAY_FOR_TRANSPORT);
+        return get(CampaignOption.PAY_FOR_TRANSPORT);
     }
 
     /**
@@ -5289,7 +5293,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayForTransport(final boolean payForTransport) {
-        options.set(CampaignOption.PAY_FOR_TRANSPORT, payForTransport);
+        set(CampaignOption.PAY_FOR_TRANSPORT, payForTransport);
     }
 
     /**
@@ -5297,7 +5301,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isSellUnits() {
-        return options.get(CampaignOption.SELL_UNITS);
+        return get(CampaignOption.SELL_UNITS);
     }
 
     /**
@@ -5306,7 +5310,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setSellUnits(final boolean sellUnits) {
-        options.set(CampaignOption.SELL_UNITS, sellUnits);
+        set(CampaignOption.SELL_UNITS, sellUnits);
     }
 
     /**
@@ -5314,7 +5318,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isSellParts() {
-        return options.get(CampaignOption.SELL_PARTS);
+        return get(CampaignOption.SELL_PARTS);
     }
 
     /**
@@ -5323,7 +5327,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setSellParts(final boolean sellParts) {
-        options.set(CampaignOption.SELL_PARTS, sellParts);
+        set(CampaignOption.SELL_PARTS, sellParts);
     }
 
     /**
@@ -5332,7 +5336,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPayForRecruitment() {
-        return options.get(CampaignOption.PAY_FOR_RECRUITMENT);
+        return get(CampaignOption.PAY_FOR_RECRUITMENT);
     }
 
     /**
@@ -5342,7 +5346,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayForRecruitment(final boolean payForRecruitment) {
-        options.set(CampaignOption.PAY_FOR_RECRUITMENT, payForRecruitment);
+        set(CampaignOption.PAY_FOR_RECRUITMENT, payForRecruitment);
     }
 
     /**
@@ -5350,7 +5354,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPayForFood() {
-        return options.get(CampaignOption.PAY_FOR_FOOD);
+        return get(CampaignOption.PAY_FOR_FOOD);
     }
 
     /**
@@ -5360,7 +5364,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayForFood(final boolean payForFood) {
-        options.set(CampaignOption.PAY_FOR_FOOD, payForFood);
+        set(CampaignOption.PAY_FOR_FOOD, payForFood);
     }
 
     /**
@@ -5368,7 +5372,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPayForHousing() {
-        return options.get(CampaignOption.PAY_FOR_HOUSING);
+        return get(CampaignOption.PAY_FOR_HOUSING);
     }
 
     /**
@@ -5378,7 +5382,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPayForHousing(final boolean payForHousing) {
-        options.set(CampaignOption.PAY_FOR_HOUSING, payForHousing);
+        set(CampaignOption.PAY_FOR_HOUSING, payForHousing);
     }
 
     /**
@@ -5388,7 +5392,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getRentedFacilitiesCostHospitalBeds() {
-        return options.get(CampaignOption.RENTED_FACILITIES_COST_HOSPITAL_BEDS);
+        return get(CampaignOption.RENTED_FACILITIES_COST_HOSPITAL_BEDS);
     }
 
     /**
@@ -5398,7 +5402,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRentedFacilitiesCostHospitalBeds(final int rentedFacilitiesCostHospitalBeds) {
-        options.set(CampaignOption.RENTED_FACILITIES_COST_HOSPITAL_BEDS, rentedFacilitiesCostHospitalBeds);
+        set(CampaignOption.RENTED_FACILITIES_COST_HOSPITAL_BEDS, rentedFacilitiesCostHospitalBeds);
     }
 
     /**
@@ -5408,7 +5412,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getRentedFacilitiesCostKitchens() {
-        return options.get(CampaignOption.RENTED_FACILITIES_COST_KITCHENS);
+        return get(CampaignOption.RENTED_FACILITIES_COST_KITCHENS);
     }
 
     /**
@@ -5418,7 +5422,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRentedFacilitiesCostKitchens(final int rentedFacilitiesCostKitchens) {
-        options.set(CampaignOption.RENTED_FACILITIES_COST_KITCHENS, rentedFacilitiesCostKitchens);
+        set(CampaignOption.RENTED_FACILITIES_COST_KITCHENS, rentedFacilitiesCostKitchens);
     }
 
     /**
@@ -5428,7 +5432,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getRentedFacilitiesCostHoldingCells() {
-        return options.get(CampaignOption.RENTED_FACILITIES_COST_HOLDING_CELLS);
+        return get(CampaignOption.RENTED_FACILITIES_COST_HOLDING_CELLS);
     }
 
     /**
@@ -5438,7 +5442,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRentedFacilitiesCostHoldingCells(final int rentedFacilitiesCostHoldingCells) {
-        options.set(CampaignOption.RENTED_FACILITIES_COST_HOLDING_CELLS, rentedFacilitiesCostHoldingCells);
+        set(CampaignOption.RENTED_FACILITIES_COST_HOLDING_CELLS, rentedFacilitiesCostHoldingCells);
     }
 
     /**
@@ -5448,7 +5452,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getRentedFacilitiesCostRepairBays() {
-        return options.get(CampaignOption.RENTED_FACILITIES_COST_REPAIR_BAYS);
+        return get(CampaignOption.RENTED_FACILITIES_COST_REPAIR_BAYS);
     }
 
     /**
@@ -5458,7 +5462,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRentedFacilitiesCostRepairBays(final int rentedFacilitiesCostRepairBays) {
-        options.set(CampaignOption.RENTED_FACILITIES_COST_REPAIR_BAYS, rentedFacilitiesCostRepairBays);
+        set(CampaignOption.RENTED_FACILITIES_COST_REPAIR_BAYS, rentedFacilitiesCostRepairBays);
     }
 
     /**
@@ -5466,7 +5470,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseLoanLimits() {
-        return options.get(CampaignOption.USE_LOAN_LIMITS);
+        return get(CampaignOption.USE_LOAN_LIMITS);
     }
 
     /**
@@ -5476,23 +5480,45 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setLoanLimits(final boolean useLoanLimits) {
-        options.set(CampaignOption.USE_LOAN_LIMITS, useLoanLimits);
+        set(CampaignOption.USE_LOAN_LIMITS, useLoanLimits);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.USE_PERCENTAGE_MAINTENANCE)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUsePercentageMaintenance() {
-        return usePercentageMaintenance;
+        return get(CampaignOption.USE_PERCENTAGE_MAINTENANCE);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#set(CampaignOption, Object)
+     *       CampaignOptions.set(CampaignOption.USE_PERCENTAGE_MAINTENANCE, value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUsePercentageMaintenance(final boolean usePercentageMaintenance) {
-        this.usePercentageMaintenance = usePercentageMaintenance;
+        set(CampaignOption.USE_PERCENTAGE_MAINTENANCE, usePercentageMaintenance);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.INFANTRY_DONT_COUNT)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isInfantryDontCount() {
-        return infantryDontCount;
+        return get(CampaignOption.INFANTRY_DONT_COUNT);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#set(CampaignOption, Object) CampaignOptions.set(CampaignOption.INFANTRY_DONT_COUNT,
+     *       value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseInfantryDontCount(final boolean infantryDontCount) {
-        this.infantryDontCount = infantryDontCount;
+        set(CampaignOption.INFANTRY_DONT_COUNT, infantryDontCount);
     }
 
     /**
@@ -5501,7 +5527,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUsePeacetimeCost() {
-        return options.get(CampaignOption.USE_PEACETIME_COST);
+        return get(CampaignOption.USE_PEACETIME_COST);
     }
 
     /**
@@ -5511,7 +5537,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUsePeacetimeCost(final boolean usePeacetimeCost) {
-        options.set(CampaignOption.USE_PEACETIME_COST, usePeacetimeCost);
+        set(CampaignOption.USE_PEACETIME_COST, usePeacetimeCost);
     }
 
     /**
@@ -5521,7 +5547,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseExtendedPartsModifier() {
-        return options.get(CampaignOption.USE_EXTENDED_PARTS_MODIFIER);
+        return get(CampaignOption.USE_EXTENDED_PARTS_MODIFIER);
     }
 
     /**
@@ -5531,7 +5557,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseExtendedPartsModifier(final boolean useExtendedPartsModifier) {
-        options.set(CampaignOption.USE_EXTENDED_PARTS_MODIFIER, useExtendedPartsModifier);
+        set(CampaignOption.USE_EXTENDED_PARTS_MODIFIER, useExtendedPartsModifier);
     }
 
     /**
@@ -5540,7 +5566,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isShowPeacetimeCost() {
-        return options.get(CampaignOption.SHOW_PEACETIME_COST);
+        return get(CampaignOption.SHOW_PEACETIME_COST);
     }
 
     /**
@@ -5550,7 +5576,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setShowPeacetimeCost(final boolean showPeacetimeCost) {
-        options.set(CampaignOption.SHOW_PEACETIME_COST, showPeacetimeCost);
+        set(CampaignOption.SHOW_PEACETIME_COST, showPeacetimeCost);
     }
 
     /**
@@ -5561,7 +5587,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public FinancialYearDuration getFinancialYearDuration() {
-        return options.get(CampaignOption.FINANCIAL_YEAR_DURATION);
+        return get(CampaignOption.FINANCIAL_YEAR_DURATION);
     }
 
     /**
@@ -5573,7 +5599,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setFinancialYearDuration(final FinancialYearDuration financialYearDuration) {
-        options.set(CampaignOption.FINANCIAL_YEAR_DURATION, financialYearDuration);
+        set(CampaignOption.FINANCIAL_YEAR_DURATION, financialYearDuration);
     }
 
     /**
@@ -5585,7 +5611,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isNewFinancialYearFinancesToCSVExport() {
-        return options.get(CampaignOption.NEW_FINANCIAL_YEAR_FINANCES_TO_CSV_EXPORT);
+        return get(CampaignOption.NEW_FINANCIAL_YEAR_FINANCES_TO_CSV_EXPORT);
     }
 
     /**
@@ -5597,7 +5623,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setNewFinancialYearFinancesToCSVExport(final boolean newFinancialYearFinancesToCSVExport) {
-        options.set(CampaignOption.NEW_FINANCIAL_YEAR_FINANCES_TO_CSV_EXPORT, newFinancialYearFinancesToCSVExport);
+        set(CampaignOption.NEW_FINANCIAL_YEAR_FINANCES_TO_CSV_EXPORT, newFinancialYearFinancesToCSVExport);
     }
 
     /**
@@ -5606,7 +5632,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isSimulateGrayMonday() {
-        return options.get(CampaignOption.SIMULATE_GRAY_MONDAY);
+        return get(CampaignOption.SIMULATE_GRAY_MONDAY);
     }
 
     /**
@@ -5616,7 +5642,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setSimulateGrayMonday(final boolean simulateGrayMonday) {
-        options.set(CampaignOption.SIMULATE_GRAY_MONDAY, simulateGrayMonday);
+        set(CampaignOption.SIMULATE_GRAY_MONDAY, simulateGrayMonday);
     }
 
     /**
@@ -5625,7 +5651,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAllowMonthlyReinvestment() {
-        return options.get(CampaignOption.ALLOW_MONTHLY_REINVESTMENT);
+        return get(CampaignOption.ALLOW_MONTHLY_REINVESTMENT);
     }
 
     /**
@@ -5635,7 +5661,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAllowMonthlyReinvestment(final boolean allowMonthlyReinvestment) {
-        options.set(CampaignOption.ALLOW_MONTHLY_REINVESTMENT, allowMonthlyReinvestment);
+        set(CampaignOption.ALLOW_MONTHLY_REINVESTMENT, allowMonthlyReinvestment);
     }
 
     /**
@@ -5644,7 +5670,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDisplayAllAttributes() {
-        return options.get(CampaignOption.DISPLAY_ALL_ATTRIBUTES);
+        return get(CampaignOption.DISPLAY_ALL_ATTRIBUTES);
     }
 
     /**
@@ -5654,7 +5680,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisplayAllAttributes(final boolean displayAllAttributes) {
-        options.set(CampaignOption.DISPLAY_ALL_ATTRIBUTES, displayAllAttributes);
+        set(CampaignOption.DISPLAY_ALL_ATTRIBUTES, displayAllAttributes);
     }
 
     /**
@@ -5663,7 +5689,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAllowMonthlyConnections() {
-        return options.get(CampaignOption.ALLOW_MONTHLY_CONNECTIONS);
+        return get(CampaignOption.ALLOW_MONTHLY_CONNECTIONS);
     }
 
     /**
@@ -5673,7 +5699,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAllowMonthlyConnections(final boolean allowMonthlyConnections) {
-        options.set(CampaignOption.ALLOW_MONTHLY_CONNECTIONS, allowMonthlyConnections);
+        set(CampaignOption.ALLOW_MONTHLY_CONNECTIONS, allowMonthlyConnections);
     }
 
     /**
@@ -5682,7 +5708,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseBetterExtraIncome() {
-        return options.get(CampaignOption.USE_BETTER_EXTRA_INCOME);
+        return get(CampaignOption.USE_BETTER_EXTRA_INCOME);
     }
 
     /**
@@ -5692,7 +5718,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseBetterExtraIncome(final boolean useBetterExtraIncome) {
-        options.set(CampaignOption.USE_BETTER_EXTRA_INCOME, useBetterExtraIncome);
+        set(CampaignOption.USE_BETTER_EXTRA_INCOME, useBetterExtraIncome);
     }
 
     /**
@@ -5701,7 +5727,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseSmallArmsOnly() {
-        return options.get(CampaignOption.USE_SMALL_ARMS_ONLY);
+        return get(CampaignOption.USE_SMALL_ARMS_ONLY);
     }
 
     /**
@@ -5711,7 +5737,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseSmallArmsOnly(final boolean useSmallArmsOnly) {
-        options.set(CampaignOption.USE_SMALL_ARMS_ONLY, useSmallArmsOnly);
+        set(CampaignOption.USE_SMALL_ARMS_ONLY, useSmallArmsOnly);
     }
 
     // region Price Multipliers
@@ -5723,7 +5749,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getCommonPartPriceMultiplier() {
-        return options.get(CampaignOption.COMMON_PART_PRICE_MULTIPLIER);
+        return get(CampaignOption.COMMON_PART_PRICE_MULTIPLIER);
     }
 
     /**
@@ -5733,7 +5759,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setCommonPartPriceMultiplier(final double commonPartPriceMultiplier) {
-        options.set(CampaignOption.COMMON_PART_PRICE_MULTIPLIER, commonPartPriceMultiplier);
+        set(CampaignOption.COMMON_PART_PRICE_MULTIPLIER, commonPartPriceMultiplier);
     }
 
     /**
@@ -5743,7 +5769,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getInnerSphereUnitPriceMultiplier() {
-        return options.get(CampaignOption.INNER_SPHERE_UNIT_PRICE_MULTIPLIER);
+        return get(CampaignOption.INNER_SPHERE_UNIT_PRICE_MULTIPLIER);
     }
 
     /**
@@ -5753,7 +5779,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setInnerSphereUnitPriceMultiplier(final double innerSphereUnitPriceMultiplier) {
-        options.set(CampaignOption.INNER_SPHERE_UNIT_PRICE_MULTIPLIER, innerSphereUnitPriceMultiplier);
+        set(CampaignOption.INNER_SPHERE_UNIT_PRICE_MULTIPLIER, innerSphereUnitPriceMultiplier);
     }
 
     /**
@@ -5763,7 +5789,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getInnerSpherePartPriceMultiplier() {
-        return options.get(CampaignOption.INNER_SPHERE_PART_PRICE_MULTIPLIER);
+        return get(CampaignOption.INNER_SPHERE_PART_PRICE_MULTIPLIER);
     }
 
     /**
@@ -5773,7 +5799,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setInnerSpherePartPriceMultiplier(final double innerSpherePartPriceMultiplier) {
-        options.set(CampaignOption.INNER_SPHERE_PART_PRICE_MULTIPLIER, innerSpherePartPriceMultiplier);
+        set(CampaignOption.INNER_SPHERE_PART_PRICE_MULTIPLIER, innerSpherePartPriceMultiplier);
     }
 
     /**
@@ -5782,7 +5808,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getClanUnitPriceMultiplier() {
-        return options.get(CampaignOption.CLAN_UNIT_PRICE_MULTIPLIER);
+        return get(CampaignOption.CLAN_UNIT_PRICE_MULTIPLIER);
     }
 
     /**
@@ -5792,7 +5818,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setClanUnitPriceMultiplier(final double clanUnitPriceMultiplier) {
-        options.set(CampaignOption.CLAN_UNIT_PRICE_MULTIPLIER, clanUnitPriceMultiplier);
+        set(CampaignOption.CLAN_UNIT_PRICE_MULTIPLIER, clanUnitPriceMultiplier);
     }
 
     /**
@@ -5801,7 +5827,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getClanPartPriceMultiplier() {
-        return options.get(CampaignOption.CLAN_PART_PRICE_MULTIPLIER);
+        return get(CampaignOption.CLAN_PART_PRICE_MULTIPLIER);
     }
 
     /**
@@ -5811,7 +5837,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setClanPartPriceMultiplier(final double clanPartPriceMultiplier) {
-        options.set(CampaignOption.CLAN_PART_PRICE_MULTIPLIER, clanPartPriceMultiplier);
+        set(CampaignOption.CLAN_PART_PRICE_MULTIPLIER, clanPartPriceMultiplier);
     }
 
     /**
@@ -5821,7 +5847,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getMixedTechUnitPriceMultiplier() {
-        return options.get(CampaignOption.MIXED_TECH_UNIT_PRICE_MULTIPLIER);
+        return get(CampaignOption.MIXED_TECH_UNIT_PRICE_MULTIPLIER);
     }
 
     /**
@@ -5831,15 +5857,27 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMixedTechUnitPriceMultiplier(final double mixedTechUnitPriceMultiplier) {
-        options.set(CampaignOption.MIXED_TECH_UNIT_PRICE_MULTIPLIER, mixedTechUnitPriceMultiplier);
+        set(CampaignOption.MIXED_TECH_UNIT_PRICE_MULTIPLIER, mixedTechUnitPriceMultiplier);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption)
+     *       CampaignOptions.get(CampaignOption.USED_PART_PRICE_MULTIPLIERS)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public double[] getUsedPartPriceMultipliers() {
-        return usedPartPriceMultipliers;
+        return get(CampaignOption.USED_PART_PRICE_MULTIPLIERS);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#set(CampaignOption, Object)
+     *       CampaignOptions.set(CampaignOption.USED_PART_PRICE_MULTIPLIERS, value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUsedPartPriceMultipliers(final double... usedPartPriceMultipliers) {
-        this.usedPartPriceMultipliers = usedPartPriceMultipliers;
+        set(CampaignOption.USED_PART_PRICE_MULTIPLIERS, usedPartPriceMultipliers);
     }
 
     /**
@@ -5849,7 +5887,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getDamagedPartsValueMultiplier() {
-        return options.get(CampaignOption.DAMAGED_PARTS_VALUE_MULTIPLIER);
+        return get(CampaignOption.DAMAGED_PARTS_VALUE_MULTIPLIER);
     }
 
     /**
@@ -5859,7 +5897,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDamagedPartsValueMultiplier(final double damagedPartsValueMultiplier) {
-        options.set(CampaignOption.DAMAGED_PARTS_VALUE_MULTIPLIER, damagedPartsValueMultiplier);
+        set(CampaignOption.DAMAGED_PARTS_VALUE_MULTIPLIER, damagedPartsValueMultiplier);
     }
 
     /**
@@ -5869,7 +5907,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getUnrepairablePartsValueMultiplier() {
-        return options.get(CampaignOption.UNREPAIRABLE_PARTS_VALUE_MULTIPLIER);
+        return get(CampaignOption.UNREPAIRABLE_PARTS_VALUE_MULTIPLIER);
     }
 
     /**
@@ -5879,7 +5917,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUnrepairablePartsValueMultiplier(final double unrepairablePartsValueMultiplier) {
-        options.set(CampaignOption.UNREPAIRABLE_PARTS_VALUE_MULTIPLIER, unrepairablePartsValueMultiplier);
+        set(CampaignOption.UNREPAIRABLE_PARTS_VALUE_MULTIPLIER, unrepairablePartsValueMultiplier);
     }
 
     /**
@@ -5889,7 +5927,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getCancelledOrderRefundMultiplier() {
-        return options.get(CampaignOption.CANCELLED_ORDER_REFUND_MULTIPLIER);
+        return get(CampaignOption.CANCELLED_ORDER_REFUND_MULTIPLIER);
     }
 
     /**
@@ -5899,7 +5937,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setCancelledOrderRefundMultiplier(final double cancelledOrderRefundMultiplier) {
-        options.set(CampaignOption.CANCELLED_ORDER_REFUND_MULTIPLIER, cancelledOrderRefundMultiplier);
+        set(CampaignOption.CANCELLED_ORDER_REFUND_MULTIPLIER, cancelledOrderRefundMultiplier);
     }
     // endregion Price Multipliers
 
@@ -5910,7 +5948,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseTaxes() {
-        return options.get(CampaignOption.USE_TAXES);
+        return get(CampaignOption.USE_TAXES);
     }
 
     /**
@@ -5919,7 +5957,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseTaxes(final boolean useTaxes) {
-        options.set(CampaignOption.USE_TAXES, useTaxes);
+        set(CampaignOption.USE_TAXES, useTaxes);
     }
 
     /**
@@ -5927,7 +5965,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public Integer getTaxesPercentage() {
-        return options.get(CampaignOption.TAXES_PERCENTAGE);
+        return get(CampaignOption.TAXES_PERCENTAGE);
     }
 
     /**
@@ -5937,7 +5975,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTaxesPercentage(final int taxesPercentage) {
-        options.set(CampaignOption.TAXES_PERCENTAGE, taxesPercentage);
+        set(CampaignOption.TAXES_PERCENTAGE, taxesPercentage);
     }
     // endregion Taxes
     // endregion Finances Tab
@@ -5951,7 +5989,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public PersonnelMarketStyle getPersonnelMarketStyle() {
-        return options.get(CampaignOption.PERSONNEL_MARKET_STYLE);
+        return get(CampaignOption.PERSONNEL_MARKET_STYLE);
     }
 
     /**
@@ -5961,15 +5999,26 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPersonnelMarketStyle(final PersonnelMarketStyle personnelMarketStyle) {
-        options.set(CampaignOption.PERSONNEL_MARKET_STYLE, personnelMarketStyle);
+        set(CampaignOption.PERSONNEL_MARKET_STYLE, personnelMarketStyle);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.PERSONNEL_MARKET_NAME)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public String getPersonnelMarketName() {
-        return personnelMarketName;
+        return get(CampaignOption.PERSONNEL_MARKET_NAME);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#set(CampaignOption, Object)
+     *       CampaignOptions.set(CampaignOption.PERSONNEL_MARKET_NAME, value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPersonnelMarketName(final String personnelMarketName) {
-        this.personnelMarketName = personnelMarketName;
+        set(CampaignOption.PERSONNEL_MARKET_NAME, personnelMarketName);
     }
 
     /**
@@ -5979,7 +6028,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPersonnelMarketReportRefresh() {
-        return options.get(CampaignOption.PERSONNEL_MARKET_REPORT_REFRESH);
+        return get(CampaignOption.PERSONNEL_MARKET_REPORT_REFRESH);
     }
 
     /**
@@ -5989,16 +6038,28 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPersonnelMarketReportRefresh(final boolean personnelMarketReportRefresh) {
-        options.set(CampaignOption.PERSONNEL_MARKET_REPORT_REFRESH, personnelMarketReportRefresh);
+        set(CampaignOption.PERSONNEL_MARKET_REPORT_REFRESH, personnelMarketReportRefresh);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption)
+     *       CampaignOptions.get(CampaignOption.PERSONNEL_MARKET_RANDOM_REMOVAL_TARGETS)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public Map<SkillLevel, Integer> getPersonnelMarketRandomRemovalTargets() {
-        return personnelMarketRandomRemovalTargets;
+        return get(CampaignOption.PERSONNEL_MARKET_RANDOM_REMOVAL_TARGETS);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#set(CampaignOption, Object)
+     *       CampaignOptions.set(CampaignOption.PERSONNEL_MARKET_RANDOM_REMOVAL_TARGETS, value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPersonnelMarketRandomRemovalTargets(
           final Map<SkillLevel, Integer> personnelMarketRandomRemovalTargets) {
-        this.personnelMarketRandomRemovalTargets = personnelMarketRandomRemovalTargets;
+        set(CampaignOption.PERSONNEL_MARKET_RANDOM_REMOVAL_TARGETS, personnelMarketRandomRemovalTargets);
     }
 
     /**
@@ -6008,7 +6069,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getPersonnelMarketDylansWeight() {
-        return options.get(CampaignOption.PERSONNEL_MARKET_DYLANS_WEIGHT);
+        return get(CampaignOption.PERSONNEL_MARKET_DYLANS_WEIGHT);
     }
 
     /**
@@ -6018,7 +6079,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPersonnelMarketDylansWeight(final double personnelMarketDylansWeight) {
-        options.set(CampaignOption.PERSONNEL_MARKET_DYLANS_WEIGHT, personnelMarketDylansWeight);
+        set(CampaignOption.PERSONNEL_MARKET_DYLANS_WEIGHT, personnelMarketDylansWeight);
     }
 
     /**
@@ -6028,7 +6089,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUsePersonnelHireHiringHallOnly() {
-        return options.get(CampaignOption.USE_PERSONNEL_HIRE_HIRING_HALL_ONLY);
+        return get(CampaignOption.USE_PERSONNEL_HIRE_HIRING_HALL_ONLY);
     }
 
     /**
@@ -6038,7 +6099,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUsePersonnelHireHiringHallOnly(final boolean usePersonnelHireHiringHallOnly) {
-        options.set(CampaignOption.USE_PERSONNEL_HIRE_HIRING_HALL_ONLY, usePersonnelHireHiringHallOnly);
+        set(CampaignOption.USE_PERSONNEL_HIRE_HIRING_HALL_ONLY, usePersonnelHireHiringHallOnly);
     }
     // endregion Personnel Market
 
@@ -6050,7 +6111,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public UnitMarketMethod getUnitMarketMethod() {
-        return options.get(CampaignOption.UNIT_MARKET_METHOD);
+        return get(CampaignOption.UNIT_MARKET_METHOD);
     }
 
     /**
@@ -6060,7 +6121,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUnitMarketMethod(final UnitMarketMethod unitMarketMethod) {
-        options.set(CampaignOption.UNIT_MARKET_METHOD, unitMarketMethod);
+        set(CampaignOption.UNIT_MARKET_METHOD, unitMarketMethod);
     }
 
     /**
@@ -6070,7 +6131,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUnitMarketRegionalMekVariations() {
-        return options.get(CampaignOption.UNIT_MARKET_REGIONAL_MEK_VARIATIONS);
+        return get(CampaignOption.UNIT_MARKET_REGIONAL_MEK_VARIATIONS);
     }
 
     /**
@@ -6080,7 +6141,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUnitMarketRegionalMekVariations(final boolean unitMarketRegionalMekVariations) {
-        options.set(CampaignOption.UNIT_MARKET_REGIONAL_MEK_VARIATIONS, unitMarketRegionalMekVariations);
+        set(CampaignOption.UNIT_MARKET_REGIONAL_MEK_VARIATIONS, unitMarketRegionalMekVariations);
     }
 
     /**
@@ -6090,7 +6151,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getUnitMarketArtilleryUnitChance() {
-        return options.get(CampaignOption.UNIT_MARKET_ARTILLERY_UNIT_CHANCE);
+        return get(CampaignOption.UNIT_MARKET_ARTILLERY_UNIT_CHANCE);
     }
 
     /**
@@ -6100,7 +6161,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUnitMarketArtilleryUnitChance(final int unitMarketSpecialUnitChance) {
-        options.set(CampaignOption.UNIT_MARKET_ARTILLERY_UNIT_CHANCE, unitMarketSpecialUnitChance);
+        set(CampaignOption.UNIT_MARKET_ARTILLERY_UNIT_CHANCE, unitMarketSpecialUnitChance);
     }
 
     /**
@@ -6110,7 +6171,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getUnitMarketRarityModifier() {
-        return options.get(CampaignOption.UNIT_MARKET_RARITY_MODIFIER);
+        return get(CampaignOption.UNIT_MARKET_RARITY_MODIFIER);
     }
 
     /**
@@ -6120,7 +6181,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUnitMarketRarityModifier(final int unitMarketRarityModifier) {
-        options.set(CampaignOption.UNIT_MARKET_RARITY_MODIFIER, unitMarketRarityModifier);
+        set(CampaignOption.UNIT_MARKET_RARITY_MODIFIER, unitMarketRarityModifier);
     }
 
     /**
@@ -6130,7 +6191,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isInstantUnitMarketDelivery() {
-        return options.get(CampaignOption.INSTANT_UNIT_MARKET_DELIVERY);
+        return get(CampaignOption.INSTANT_UNIT_MARKET_DELIVERY);
     }
 
     /**
@@ -6140,7 +6201,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setInstantUnitMarketDelivery(final boolean instantUnitMarketDelivery) {
-        options.set(CampaignOption.INSTANT_UNIT_MARKET_DELIVERY, instantUnitMarketDelivery);
+        set(CampaignOption.INSTANT_UNIT_MARKET_DELIVERY, instantUnitMarketDelivery);
     }
 
     /**
@@ -6150,7 +6211,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isMothballUnitMarketDeliveries() {
-        return options.get(CampaignOption.MOTHBALL_UNIT_MARKET_DELIVERIES);
+        return get(CampaignOption.MOTHBALL_UNIT_MARKET_DELIVERIES);
     }
 
     /**
@@ -6160,7 +6221,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMothballUnitMarketDeliveries(final boolean mothballUnitMarketDeliveries) {
-        options.set(CampaignOption.MOTHBALL_UNIT_MARKET_DELIVERIES, mothballUnitMarketDeliveries);
+        set(CampaignOption.MOTHBALL_UNIT_MARKET_DELIVERIES, mothballUnitMarketDeliveries);
     }
 
     /**
@@ -6169,7 +6230,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUnitMarketReportRefresh() {
-        return options.get(CampaignOption.UNIT_MARKET_REPORT_REFRESH);
+        return get(CampaignOption.UNIT_MARKET_REPORT_REFRESH);
     }
 
     /**
@@ -6179,7 +6240,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUnitMarketReportRefresh(final boolean unitMarketReportRefresh) {
-        options.set(CampaignOption.UNIT_MARKET_REPORT_REFRESH, unitMarketReportRefresh);
+        set(CampaignOption.UNIT_MARKET_REPORT_REFRESH, unitMarketReportRefresh);
     }
     // endregion Unit Market
 
@@ -6191,7 +6252,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public ContractMarketMethod getContractMarketMethod() {
-        return options.get(CampaignOption.CONTRACT_MARKET_METHOD);
+        return get(CampaignOption.CONTRACT_MARKET_METHOD);
     }
 
     /**
@@ -6201,7 +6262,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setContractMarketMethod(final ContractMarketMethod contractMarketMethod) {
-        options.set(CampaignOption.CONTRACT_MARKET_METHOD, contractMarketMethod);
+        set(CampaignOption.CONTRACT_MARKET_METHOD, contractMarketMethod);
     }
 
     /**
@@ -6210,7 +6271,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getContractSearchRadius() {
-        return options.get(CampaignOption.CONTRACT_SEARCH_RADIUS);
+        return get(CampaignOption.CONTRACT_SEARCH_RADIUS);
     }
 
     /**
@@ -6220,7 +6281,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setContractSearchRadius(final int contractSearchRadius) {
-        options.set(CampaignOption.CONTRACT_SEARCH_RADIUS, contractSearchRadius);
+        set(CampaignOption.CONTRACT_SEARCH_RADIUS, contractSearchRadius);
     }
 
     /**
@@ -6229,7 +6290,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isVariableContractLength() {
-        return options.get(CampaignOption.VARIABLE_CONTRACT_LENGTH);
+        return get(CampaignOption.VARIABLE_CONTRACT_LENGTH);
     }
 
     /**
@@ -6239,7 +6300,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setVariableContractLength(final boolean variableContractLength) {
-        options.set(CampaignOption.VARIABLE_CONTRACT_LENGTH, variableContractLength);
+        set(CampaignOption.VARIABLE_CONTRACT_LENGTH, variableContractLength);
     }
 
     /**
@@ -6248,7 +6309,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseDynamicDifficulty() {
-        return options.get(CampaignOption.USE_DYNAMIC_DIFFICULTY);
+        return get(CampaignOption.USE_DYNAMIC_DIFFICULTY);
     }
 
     /**
@@ -6258,7 +6319,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseDynamicDifficulty(final boolean useDynamicDifficulty) {
-        options.set(CampaignOption.USE_DYNAMIC_DIFFICULTY, useDynamicDifficulty);
+        set(CampaignOption.USE_DYNAMIC_DIFFICULTY, useDynamicDifficulty);
     }
 
     /**
@@ -6267,7 +6328,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseBolsterContractSkill() {
-        return options.get(CampaignOption.USE_BOLSTER_CONTRACT_SKILL);
+        return get(CampaignOption.USE_BOLSTER_CONTRACT_SKILL);
     }
 
     /**
@@ -6277,7 +6338,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseBolsterContractSkill(final boolean useBolsterContractSkill) {
-        options.set(CampaignOption.USE_BOLSTER_CONTRACT_SKILL, useBolsterContractSkill);
+        set(CampaignOption.USE_BOLSTER_CONTRACT_SKILL, useBolsterContractSkill);
     }
 
     /**
@@ -6287,7 +6348,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isContractMarketReportRefresh() {
-        return options.get(CampaignOption.CONTRACT_MARKET_REPORT_REFRESH);
+        return get(CampaignOption.CONTRACT_MARKET_REPORT_REFRESH);
     }
 
     /**
@@ -6297,7 +6358,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setContractMarketReportRefresh(final boolean contractMarketReportRefresh) {
-        options.set(CampaignOption.CONTRACT_MARKET_REPORT_REFRESH, contractMarketReportRefresh);
+        set(CampaignOption.CONTRACT_MARKET_REPORT_REFRESH, contractMarketReportRefresh);
     }
 
     /**
@@ -6307,7 +6368,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getContractMaxSalvagePercentage() {
-        return options.get(CampaignOption.CONTRACT_MAX_SALVAGE_PERCENTAGE);
+        return get(CampaignOption.CONTRACT_MAX_SALVAGE_PERCENTAGE);
     }
 
     /**
@@ -6317,7 +6378,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setContractMaxSalvagePercentage(final int contractMaxSalvagePercentage) {
-        options.set(CampaignOption.CONTRACT_MAX_SALVAGE_PERCENTAGE, contractMaxSalvagePercentage);
+        set(CampaignOption.CONTRACT_MAX_SALVAGE_PERCENTAGE, contractMaxSalvagePercentage);
     }
 
     /**
@@ -6326,7 +6387,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getDropShipBonusPercentage() {
-        return options.get(CampaignOption.DROP_SHIP_BONUS_PERCENTAGE);
+        return get(CampaignOption.DROP_SHIP_BONUS_PERCENTAGE);
     }
 
     /**
@@ -6336,7 +6397,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDropShipBonusPercentage(final int dropShipBonusPercentage) {
-        options.set(CampaignOption.DROP_SHIP_BONUS_PERCENTAGE, dropShipBonusPercentage);
+        set(CampaignOption.DROP_SHIP_BONUS_PERCENTAGE, dropShipBonusPercentage);
     }
 
     /**
@@ -6344,7 +6405,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getPityContracts() {
-        return options.get(CampaignOption.PITY_CONTRACTS);
+        return get(CampaignOption.PITY_CONTRACTS);
     }
 
     /**
@@ -6354,7 +6415,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPityContracts(final int pityContracts) {
-        options.set(CampaignOption.PITY_CONTRACTS, pityContracts);
+        set(CampaignOption.PITY_CONTRACTS, pityContracts);
     }
 
     /**
@@ -6363,7 +6424,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseTwoWayPay() {
-        return options.get(CampaignOption.IS_USE_TWO_WAY_PAY);
+        return get(CampaignOption.IS_USE_TWO_WAY_PAY);
     }
 
     /**
@@ -6373,7 +6434,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseTwoWayPay(final boolean isUseTwoWayPay) {
-        options.set(CampaignOption.IS_USE_TWO_WAY_PAY, isUseTwoWayPay);
+        set(CampaignOption.IS_USE_TWO_WAY_PAY, isUseTwoWayPay);
     }
 
     /**
@@ -6382,7 +6443,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseCamOpsSalvage() {
-        return options.get(CampaignOption.IS_USE_CAM_OPS_SALVAGE);
+        return get(CampaignOption.IS_USE_CAM_OPS_SALVAGE);
     }
 
     /**
@@ -6392,7 +6453,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseCamOpsSalvage(final boolean isUseCamOpsSalvage) {
-        options.set(CampaignOption.IS_USE_CAM_OPS_SALVAGE, isUseCamOpsSalvage);
+        set(CampaignOption.IS_USE_CAM_OPS_SALVAGE, isUseCamOpsSalvage);
     }
 
     /**
@@ -6401,7 +6462,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseRiskySalvage() {
-        return options.get(CampaignOption.IS_USE_RISKY_SALVAGE);
+        return get(CampaignOption.IS_USE_RISKY_SALVAGE);
     }
 
     /**
@@ -6411,7 +6472,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseRiskySalvage(final boolean isUseRiskySalvage) {
-        options.set(CampaignOption.IS_USE_RISKY_SALVAGE, isUseRiskySalvage);
+        set(CampaignOption.IS_USE_RISKY_SALVAGE, isUseRiskySalvage);
     }
 
     /**
@@ -6421,7 +6482,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEnableSalvageFlagByDefault() {
-        return options.get(CampaignOption.IS_ENABLE_SALVAGE_FLAG_BY_DEFAULT);
+        return get(CampaignOption.IS_ENABLE_SALVAGE_FLAG_BY_DEFAULT);
     }
 
     /**
@@ -6431,7 +6492,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnableSalvageFlagByDefault(final boolean isEnableSalvageFlagByDefault) {
-        options.set(CampaignOption.IS_ENABLE_SALVAGE_FLAG_BY_DEFAULT, isEnableSalvageFlagByDefault);
+        set(CampaignOption.IS_ENABLE_SALVAGE_FLAG_BY_DEFAULT, isEnableSalvageFlagByDefault);
     }
     // endregion Contract Market
     // endregion Markets Tab
@@ -6441,7 +6502,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseEraMods() {
-        return options.get(CampaignOption.USE_ERA_MODS);
+        return get(CampaignOption.USE_ERA_MODS);
     }
 
     /**
@@ -6451,7 +6512,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEraMods(final boolean useEraMods) {
-        options.set(CampaignOption.USE_ERA_MODS, useEraMods);
+        set(CampaignOption.USE_ERA_MODS, useEraMods);
     }
 
     /**
@@ -6460,7 +6521,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAssignedTechFirst() {
-        return options.get(CampaignOption.ASSIGNED_TECH_FIRST);
+        return get(CampaignOption.ASSIGNED_TECH_FIRST);
     }
 
     /**
@@ -6470,7 +6531,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAssignedTechFirst(final boolean assignedTechFirst) {
-        options.set(CampaignOption.ASSIGNED_TECH_FIRST, assignedTechFirst);
+        set(CampaignOption.ASSIGNED_TECH_FIRST, assignedTechFirst);
     }
 
     /**
@@ -6479,7 +6540,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isResetToFirstTech() {
-        return options.get(CampaignOption.RESET_TO_FIRST_TECH);
+        return get(CampaignOption.RESET_TO_FIRST_TECH);
     }
 
     /**
@@ -6489,7 +6550,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setResetToFirstTech(final boolean resetToFirstTech) {
-        options.set(CampaignOption.RESET_TO_FIRST_TECH, resetToFirstTech);
+        set(CampaignOption.RESET_TO_FIRST_TECH, resetToFirstTech);
     }
 
     /**
@@ -6505,7 +6566,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isTechsUseAdministration() {
-        return options.get(CampaignOption.TECHS_USE_ADMINISTRATION);
+        return get(CampaignOption.TECHS_USE_ADMINISTRATION);
     }
 
     /**
@@ -6523,7 +6584,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTechsUseAdministration(final boolean techsUseAdministration) {
-        options.set(CampaignOption.TECHS_USE_ADMINISTRATION, techsUseAdministration);
+        set(CampaignOption.TECHS_USE_ADMINISTRATION, techsUseAdministration);
     }
 
     /**
@@ -6532,7 +6593,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseUsefulAsTechs() {
-        return options.get(CampaignOption.USE_USEFUL_AS_TECHS);
+        return get(CampaignOption.USE_USEFUL_AS_TECHS);
     }
 
     /**
@@ -6542,7 +6603,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setIsUseUsefulAsTechs(final boolean useUsefulAsTechs) {
-        options.set(CampaignOption.USE_USEFUL_AS_TECHS, useUsefulAsTechs);
+        set(CampaignOption.USE_USEFUL_AS_TECHS, useUsefulAsTechs);
     }
 
     /**
@@ -6554,7 +6615,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseOriginFactionForNames() {
-        return options.get(CampaignOption.USE_ORIGIN_FACTION_FOR_NAMES);
+        return get(CampaignOption.USE_ORIGIN_FACTION_FOR_NAMES);
     }
 
     /**
@@ -6566,7 +6627,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseOriginFactionForNames(final boolean useOriginFactionForNames) {
-        options.set(CampaignOption.USE_ORIGIN_FACTION_FOR_NAMES, useOriginFactionForNames);
+        set(CampaignOption.USE_ORIGIN_FACTION_FOR_NAMES, useOriginFactionForNames);
     }
 
     /**
@@ -6574,7 +6635,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseQuirks() {
-        return options.get(CampaignOption.USE_QUIRKS);
+        return get(CampaignOption.USE_QUIRKS);
     }
 
     /**
@@ -6583,7 +6644,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setQuirks(final boolean useQuirks) {
-        options.set(CampaignOption.USE_QUIRKS, useQuirks);
+        set(CampaignOption.USE_QUIRKS, useQuirks);
     }
 
     /**
@@ -6592,7 +6653,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getXpCostMultiplier() {
-        return options.get(CampaignOption.XP_COST_MULTIPLIER);
+        return get(CampaignOption.XP_COST_MULTIPLIER);
     }
 
     /**
@@ -6602,7 +6663,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setXpCostMultiplier(final double xpCostMultiplier) {
-        options.set(CampaignOption.XP_COST_MULTIPLIER, xpCostMultiplier);
+        set(CampaignOption.XP_COST_MULTIPLIER, xpCostMultiplier);
     }
 
     /**
@@ -6610,7 +6671,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getScenarioXP() {
-        return options.get(CampaignOption.SCENARIO_XP);
+        return get(CampaignOption.SCENARIO_XP);
     }
 
     /**
@@ -6619,7 +6680,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setScenarioXP(final int scenarioXP) {
-        options.set(CampaignOption.SCENARIO_XP, scenarioXP);
+        set(CampaignOption.SCENARIO_XP, scenarioXP);
     }
 
     /**
@@ -6627,7 +6688,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getKillsForXP() {
-        return options.get(CampaignOption.KILLS_FOR_XP);
+        return get(CampaignOption.KILLS_FOR_XP);
     }
 
     /**
@@ -6637,7 +6698,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setKillsForXP(final int killsForXP) {
-        options.set(CampaignOption.KILLS_FOR_XP, killsForXP);
+        set(CampaignOption.KILLS_FOR_XP, killsForXP);
     }
 
     /**
@@ -6645,7 +6706,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getKillXPAward() {
-        return options.get(CampaignOption.KILL_XP_AWARD);
+        return get(CampaignOption.KILL_XP_AWARD);
     }
 
     /**
@@ -6655,7 +6716,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setKillXPAward(final int killXPAward) {
-        options.set(CampaignOption.KILL_XP_AWARD, killXPAward);
+        set(CampaignOption.KILL_XP_AWARD, killXPAward);
     }
 
     /**
@@ -6663,7 +6724,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getNTasksXP() {
-        return options.get(CampaignOption.N_TASKS_XP);
+        return get(CampaignOption.N_TASKS_XP);
     }
 
     /**
@@ -6672,7 +6733,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setNTasksXP(final int nTasksXP) {
-        options.set(CampaignOption.N_TASKS_XP, nTasksXP);
+        set(CampaignOption.N_TASKS_XP, nTasksXP);
     }
 
     /**
@@ -6680,7 +6741,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getTaskXP() {
-        return options.get(CampaignOption.TASKS_XP);
+        return get(CampaignOption.TASKS_XP);
     }
 
     /**
@@ -6689,7 +6750,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTaskXP(final int tasksXP) {
-        options.set(CampaignOption.TASKS_XP, tasksXP);
+        set(CampaignOption.TASKS_XP, tasksXP);
     }
 
     /**
@@ -6697,7 +6758,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMistakeXP() {
-        return options.get(CampaignOption.MISTAKE_XP);
+        return get(CampaignOption.MISTAKE_XP);
     }
 
     /**
@@ -6706,7 +6767,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMistakeXP(final int mistakeXP) {
-        options.set(CampaignOption.MISTAKE_XP, mistakeXP);
+        set(CampaignOption.MISTAKE_XP, mistakeXP);
     }
 
     /**
@@ -6714,7 +6775,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getSuccessXP() {
-        return options.get(CampaignOption.SUCCESS_XP);
+        return get(CampaignOption.SUCCESS_XP);
     }
 
     /**
@@ -6723,7 +6784,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setSuccessXP(final int successXP) {
-        options.set(CampaignOption.SUCCESS_XP, successXP);
+        set(CampaignOption.SUCCESS_XP, successXP);
     }
 
     /**
@@ -6731,7 +6792,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isLimitByYear() {
-        return options.get(CampaignOption.LIMIT_BY_YEAR);
+        return get(CampaignOption.LIMIT_BY_YEAR);
     }
 
     /**
@@ -6741,7 +6802,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setLimitByYear(final boolean limitByYear) {
-        options.set(CampaignOption.LIMIT_BY_YEAR, limitByYear);
+        set(CampaignOption.LIMIT_BY_YEAR, limitByYear);
     }
 
     /**
@@ -6750,7 +6811,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDisallowExtinctStuff() {
-        return options.get(CampaignOption.DISALLOW_EXTINCT_STUFF);
+        return get(CampaignOption.DISALLOW_EXTINCT_STUFF);
     }
 
     /**
@@ -6760,7 +6821,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisallowExtinctStuff(final boolean disallowExtinctStuff) {
-        options.set(CampaignOption.DISALLOW_EXTINCT_STUFF, disallowExtinctStuff);
+        set(CampaignOption.DISALLOW_EXTINCT_STUFF, disallowExtinctStuff);
     }
 
     /**
@@ -6769,7 +6830,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAllowClanPurchases() {
-        return options.get(CampaignOption.ALLOW_CLAN_PURCHASES);
+        return get(CampaignOption.ALLOW_CLAN_PURCHASES);
     }
 
     /**
@@ -6779,7 +6840,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAllowClanPurchases(final boolean allowClanPurchases) {
-        options.set(CampaignOption.ALLOW_CLAN_PURCHASES, allowClanPurchases);
+        set(CampaignOption.ALLOW_CLAN_PURCHASES, allowClanPurchases);
     }
 
     /**
@@ -6788,7 +6849,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAllowISPurchases() {
-        return options.get(CampaignOption.ALLOW_IS_PURCHASES);
+        return get(CampaignOption.ALLOW_IS_PURCHASES);
     }
 
     /**
@@ -6798,7 +6859,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAllowISPurchases(final boolean allowISPurchases) {
-        options.set(CampaignOption.ALLOW_IS_PURCHASES, allowISPurchases);
+        set(CampaignOption.ALLOW_IS_PURCHASES, allowISPurchases);
     }
 
     /**
@@ -6806,7 +6867,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAllowCanonOnly() {
-        return options.get(CampaignOption.ALLOW_CANON_ONLY);
+        return get(CampaignOption.ALLOW_CANON_ONLY);
     }
 
     /**
@@ -6816,7 +6877,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAllowCanonOnly(final boolean allowCanonOnly) {
-        options.set(CampaignOption.ALLOW_CANON_ONLY, allowCanonOnly);
+        set(CampaignOption.ALLOW_CANON_ONLY, allowCanonOnly);
     }
 
     /**
@@ -6825,7 +6886,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAllowCanonRefitOnly() {
-        return options.get(CampaignOption.ALLOW_CANON_REFIT_ONLY);
+        return get(CampaignOption.ALLOW_CANON_REFIT_ONLY);
     }
 
     /**
@@ -6835,7 +6896,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAllowCanonRefitOnly(final boolean allowCanonRefitOnly) {
-        options.set(CampaignOption.ALLOW_CANON_REFIT_ONLY, allowCanonRefitOnly);
+        set(CampaignOption.ALLOW_CANON_REFIT_ONLY, allowCanonRefitOnly);
     }
 
     /**
@@ -6844,7 +6905,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isVariableTechLevel() {
-        return options.get(CampaignOption.VARIABLE_TECH_LEVEL);
+        return get(CampaignOption.VARIABLE_TECH_LEVEL);
     }
 
     /**
@@ -6854,7 +6915,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setVariableTechLevel(final boolean variableTechLevel) {
-        options.set(CampaignOption.VARIABLE_TECH_LEVEL, variableTechLevel);
+        set(CampaignOption.VARIABLE_TECH_LEVEL, variableTechLevel);
     }
 
     /**
@@ -6863,7 +6924,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isFactionIntroDate() {
-        return options.get(CampaignOption.FACTION_INTRO_DATE);
+        return get(CampaignOption.FACTION_INTRO_DATE);
     }
 
     /**
@@ -6873,15 +6934,25 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setIsUseFactionIntroDate(final boolean factionIntroDate) {
-        options.set(CampaignOption.FACTION_INTRO_DATE, factionIntroDate);
+        set(CampaignOption.FACTION_INTRO_DATE, factionIntroDate);
     }
 
+    /**
+     * @deprecated Use {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.USE_AMMO_BY_TYPE)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseAmmoByType() {
-        return useAmmoByType;
+        return get(CampaignOption.USE_AMMO_BY_TYPE);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#set(CampaignOption, Object) CampaignOptions.set(CampaignOption.USE_AMMO_BY_TYPE,
+     *       value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseAmmoByType(final boolean useAmmoByType) {
-        this.useAmmoByType = useAmmoByType;
+        set(CampaignOption.USE_AMMO_BY_TYPE, useAmmoByType);
     }
 
     /**
@@ -6889,7 +6960,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getTechLevel() {
-        return options.get(CampaignOption.TECH_LEVEL);
+        return get(CampaignOption.TECH_LEVEL);
     }
 
     /**
@@ -6898,11 +6969,16 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTechLevel(final int techLevel) {
-        options.set(CampaignOption.TECH_LEVEL, techLevel);
+        set(CampaignOption.TECH_LEVEL, techLevel);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.PHENOTYPE_PROBABILITIES)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public int[] getPhenotypeProbabilities() {
-        return phenotypeProbabilities;
+        return get(CampaignOption.PHENOTYPE_PROBABILITIES);
     }
 
     public int getPhenotypeProbability(final Phenotype phenotype) {
@@ -6910,11 +6986,16 @@ public class CampaignOptions {
     }
 
     public void setPhenotypeProbability(final int index, final int percentage) {
-        this.phenotypeProbabilities[index] = percentage;
+        getPhenotypeProbabilities()[index] = percentage;
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.USE_PORTRAIT_FOR_ROLE)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean[] isUsePortraitForRoles() {
-        return usePortraitForRole;
+        return get(CampaignOption.USE_PORTRAIT_FOR_ROLE);
     }
 
     public boolean isUsePortraitForRole(final PersonnelRole role) {
@@ -6922,7 +7003,7 @@ public class CampaignOptions {
     }
 
     public void setUsePortraitForRole(final int index, final boolean use) {
-        this.usePortraitForRole[index] = use;
+        isUsePortraitForRoles()[index] = use;
     }
 
     /**
@@ -6932,7 +7013,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAssignPortraitOnRoleChange() {
-        return options.get(CampaignOption.ASSIGN_PORTRAIT_ON_ROLE_CHANGE);
+        return get(CampaignOption.ASSIGN_PORTRAIT_ON_ROLE_CHANGE);
     }
 
     /**
@@ -6942,7 +7023,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAssignPortraitOnRoleChange(final boolean assignPortraitOnRoleChange) {
-        options.set(CampaignOption.ASSIGN_PORTRAIT_ON_ROLE_CHANGE, assignPortraitOnRoleChange);
+        set(CampaignOption.ASSIGN_PORTRAIT_ON_ROLE_CHANGE, assignPortraitOnRoleChange);
     }
 
     /**
@@ -6951,7 +7032,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAllowDuplicatePortraits() {
-        return options.get(CampaignOption.ALLOW_DUPLICATE_PORTRAITS);
+        return get(CampaignOption.ALLOW_DUPLICATE_PORTRAITS);
     }
 
     /**
@@ -6961,7 +7042,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAllowDuplicatePortraits(final boolean allowDuplicatePortraits) {
-        options.set(CampaignOption.ALLOW_DUPLICATE_PORTRAITS, allowDuplicatePortraits);
+        set(CampaignOption.ALLOW_DUPLICATE_PORTRAITS, allowDuplicatePortraits);
     }
 
     /**
@@ -6971,7 +7052,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseGenderedPortraitsOnly() {
-        return options.get(CampaignOption.USE_GENDERED_PORTRAITS_ONLY);
+        return get(CampaignOption.USE_GENDERED_PORTRAITS_ONLY);
     }
 
     /**
@@ -6981,7 +7062,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseGenderedPortraitsOnly(final boolean useGenderedPortraitsOnly) {
-        options.set(CampaignOption.USE_GENDERED_PORTRAITS_ONLY, useGenderedPortraitsOnly);
+        set(CampaignOption.USE_GENDERED_PORTRAITS_ONLY, useGenderedPortraitsOnly);
     }
 
     /**
@@ -6991,7 +7072,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isNoRandomPortraitsForChildren() {
-        return options.get(CampaignOption.NO_RANDOM_PORTRAITS_FOR_CHILDREN);
+        return get(CampaignOption.NO_RANDOM_PORTRAITS_FOR_CHILDREN);
     }
 
     /**
@@ -7001,7 +7082,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setNoRandomPortraitsForChildren(final boolean noRandomPortraitsForChildren) {
-        options.set(CampaignOption.NO_RANDOM_PORTRAITS_FOR_CHILDREN, noRandomPortraitsForChildren);
+        set(CampaignOption.NO_RANDOM_PORTRAITS_FOR_CHILDREN, noRandomPortraitsForChildren);
     }
 
     /**
@@ -7011,7 +7092,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isChildPortraitsWhenComingOfAge() {
-        return options.get(CampaignOption.CHILD_PORTRAITS_WHEN_COMING_OF_AGE);
+        return get(CampaignOption.CHILD_PORTRAITS_WHEN_COMING_OF_AGE);
     }
 
     /**
@@ -7021,7 +7102,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setChildPortraitsWhenComingOfAge(final boolean childPortraitsWhenComingOfAge) {
-        options.set(CampaignOption.CHILD_PORTRAITS_WHEN_COMING_OF_AGE, childPortraitsWhenComingOfAge);
+        set(CampaignOption.CHILD_PORTRAITS_WHEN_COMING_OF_AGE, childPortraitsWhenComingOfAge);
     }
 
     /**
@@ -7029,7 +7110,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getVocationalXP() {
-        return options.get(CampaignOption.VOCATIONAL_XP);
+        return get(CampaignOption.VOCATIONAL_XP);
     }
 
     /**
@@ -7039,7 +7120,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setVocationalXP(final int vocationalXP) {
-        options.set(CampaignOption.VOCATIONAL_XP, vocationalXP);
+        set(CampaignOption.VOCATIONAL_XP, vocationalXP);
     }
 
     /**
@@ -7049,7 +7130,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getVocationalXPTargetNumber() {
-        return options.get(CampaignOption.VOCATIONAL_XP_TARGET_NUMBER);
+        return get(CampaignOption.VOCATIONAL_XP_TARGET_NUMBER);
     }
 
     /**
@@ -7059,7 +7140,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setVocationalXPTargetNumber(final int vocationalXPTargetNumber) {
-        options.set(CampaignOption.VOCATIONAL_XP_TARGET_NUMBER, vocationalXPTargetNumber);
+        set(CampaignOption.VOCATIONAL_XP_TARGET_NUMBER, vocationalXPTargetNumber);
     }
 
     /**
@@ -7069,7 +7150,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getVocationalXPCheckFrequency() {
-        return options.get(CampaignOption.VOCATIONAL_XP_CHECK_FREQUENCY);
+        return get(CampaignOption.VOCATIONAL_XP_CHECK_FREQUENCY);
     }
 
     /**
@@ -7079,7 +7160,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setVocationalXPCheckFrequency(final int vocationalXPCheckFrequency) {
-        options.set(CampaignOption.VOCATIONAL_XP_CHECK_FREQUENCY, vocationalXPCheckFrequency);
+        set(CampaignOption.VOCATIONAL_XP_CHECK_FREQUENCY, vocationalXPCheckFrequency);
     }
 
     /**
@@ -7088,7 +7169,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getContractNegotiationXP() {
-        return options.get(CampaignOption.CONTRACT_NEGOTIATION_XP);
+        return get(CampaignOption.CONTRACT_NEGOTIATION_XP);
     }
 
     /**
@@ -7098,7 +7179,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setContractNegotiationXP(final int contractNegotiationXP) {
-        options.set(CampaignOption.CONTRACT_NEGOTIATION_XP, contractNegotiationXP);
+        set(CampaignOption.CONTRACT_NEGOTIATION_XP, contractNegotiationXP);
     }
 
     /**
@@ -7106,7 +7187,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAdminXP() {
-        return options.get(CampaignOption.ADMIN_XP);
+        return get(CampaignOption.ADMIN_XP);
     }
 
     /**
@@ -7115,7 +7196,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAdminXP(final int adminXP) {
-        options.set(CampaignOption.ADMIN_XP, adminXP);
+        set(CampaignOption.ADMIN_XP, adminXP);
     }
 
     /**
@@ -7123,7 +7204,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAdminXPPeriod() {
-        return options.get(CampaignOption.ADMIN_XP_PERIOD);
+        return get(CampaignOption.ADMIN_XP_PERIOD);
     }
 
     /**
@@ -7133,7 +7214,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAdminXPPeriod(final int adminXPPeriod) {
-        options.set(CampaignOption.ADMIN_XP_PERIOD, adminXPPeriod);
+        set(CampaignOption.ADMIN_XP_PERIOD, adminXPPeriod);
     }
 
     /**
@@ -7141,7 +7222,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMissionXpFail() {
-        return options.get(CampaignOption.MISSION_XP_FAIL);
+        return get(CampaignOption.MISSION_XP_FAIL);
     }
 
     /**
@@ -7151,7 +7232,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMissionXpFail(final int missionXpFail) {
-        options.set(CampaignOption.MISSION_XP_FAIL, missionXpFail);
+        set(CampaignOption.MISSION_XP_FAIL, missionXpFail);
     }
 
     /**
@@ -7160,7 +7241,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMissionXpSuccess() {
-        return options.get(CampaignOption.MISSION_XP_SUCCESS);
+        return get(CampaignOption.MISSION_XP_SUCCESS);
     }
 
     /**
@@ -7170,7 +7251,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMissionXpSuccess(final int missionXpSuccess) {
-        options.set(CampaignOption.MISSION_XP_SUCCESS, missionXpSuccess);
+        set(CampaignOption.MISSION_XP_SUCCESS, missionXpSuccess);
     }
 
     /**
@@ -7180,7 +7261,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMissionXpOutstandingSuccess() {
-        return options.get(CampaignOption.MISSION_XP_OUTSTANDING_SUCCESS);
+        return get(CampaignOption.MISSION_XP_OUTSTANDING_SUCCESS);
     }
 
     /**
@@ -7190,7 +7271,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMissionXpOutstandingSuccess(final int missionXpOutstandingSuccess) {
-        options.set(CampaignOption.MISSION_XP_OUTSTANDING_SUCCESS, missionXpOutstandingSuccess);
+        set(CampaignOption.MISSION_XP_OUTSTANDING_SUCCESS, missionXpOutstandingSuccess);
     }
 
     /**
@@ -7198,7 +7279,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getEdgeCost() {
-        return options.get(CampaignOption.EDGE_COST);
+        return get(CampaignOption.EDGE_COST);
     }
 
     /**
@@ -7207,7 +7288,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEdgeCost(final int edgeCost) {
-        options.set(CampaignOption.EDGE_COST, edgeCost);
+        set(CampaignOption.EDGE_COST, edgeCost);
     }
 
     /**
@@ -7215,7 +7296,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getEdgeRefreshCost() {
-        return options.get(CampaignOption.EDGE_REFRESH_COST);
+        return get(CampaignOption.EDGE_REFRESH_COST);
     }
 
     /**
@@ -7225,7 +7306,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEdgeRefreshCost(final int edgeRefreshCost) {
-        options.set(CampaignOption.EDGE_REFRESH_COST, edgeRefreshCost);
+        set(CampaignOption.EDGE_REFRESH_COST, edgeRefreshCost);
     }
 
     /**
@@ -7233,7 +7314,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAttributeCost() {
-        return options.get(CampaignOption.ATTRIBUTE_COST);
+        return get(CampaignOption.ATTRIBUTE_COST);
     }
 
     /**
@@ -7243,7 +7324,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAttributeCost(final int attributeCost) {
-        options.set(CampaignOption.ATTRIBUTE_COST, attributeCost);
+        set(CampaignOption.ATTRIBUTE_COST, attributeCost);
     }
 
     /**
@@ -7251,7 +7332,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getWaitingPeriod() {
-        return options.get(CampaignOption.WAITING_PERIOD);
+        return get(CampaignOption.WAITING_PERIOD);
     }
 
     /**
@@ -7261,7 +7342,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setWaitingPeriod(final int acquisitionSkill) {
-        options.set(CampaignOption.WAITING_PERIOD, acquisitionSkill);
+        set(CampaignOption.WAITING_PERIOD, acquisitionSkill);
     }
 
     /**
@@ -7269,7 +7350,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public AcquisitionsType getAcquisitionType() {
-        return options.get(CampaignOption.ACQUISITIONS_TYPE);
+        return get(CampaignOption.ACQUISITIONS_TYPE);
     }
 
     /**
@@ -7279,7 +7360,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAcquisitionType(final AcquisitionsType acquisitionsType) {
-        options.set(CampaignOption.ACQUISITIONS_TYPE, acquisitionsType);
+        set(CampaignOption.ACQUISITIONS_TYPE, acquisitionsType);
     }
 
     /**
@@ -7288,7 +7369,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFunctionalAppraisal() {
-        return options.get(CampaignOption.USE_FUNCTIONAL_APPRAISAL);
+        return get(CampaignOption.USE_FUNCTIONAL_APPRAISAL);
     }
 
     /**
@@ -7298,7 +7379,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFunctionalAppraisal(final boolean useFunctionalAppraisal) {
-        options.set(CampaignOption.USE_FUNCTIONAL_APPRAISAL, useFunctionalAppraisal);
+        set(CampaignOption.USE_FUNCTIONAL_APPRAISAL, useFunctionalAppraisal);
     }
 
     /**
@@ -7331,7 +7412,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public ProcurementPersonnelPick getAcquisitionPersonnelCategory() {
-        return options.get(CampaignOption.ACQUISITION_PERSONNEL_CATEGORY);
+        return get(CampaignOption.ACQUISITION_PERSONNEL_CATEGORY);
     }
 
     /**
@@ -7348,7 +7429,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAcquisitionPersonnelCategory(final ProcurementPersonnelPick acquisitionPersonnelCategory) {
-        options.set(CampaignOption.ACQUISITION_PERSONNEL_CATEGORY, acquisitionPersonnelCategory);
+        set(CampaignOption.ACQUISITION_PERSONNEL_CATEGORY, acquisitionPersonnelCategory);
     }
 
     /**
@@ -7356,7 +7437,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getUnitTransitTime() {
-        return options.get(CampaignOption.UNIT_TRANSIT_TIME);
+        return get(CampaignOption.UNIT_TRANSIT_TIME);
     }
 
     /**
@@ -7366,7 +7447,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUnitTransitTime(final int unitTransitTime) {
-        options.set(CampaignOption.UNIT_TRANSIT_TIME, unitTransitTime);
+        set(CampaignOption.UNIT_TRANSIT_TIME, unitTransitTime);
     }
 
     /**
@@ -7375,7 +7456,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isNoDeliveriesInTransit() {
-        return options.get(CampaignOption.NO_DELIVERIES_IN_TRANSIT);
+        return get(CampaignOption.NO_DELIVERIES_IN_TRANSIT);
     }
 
     /**
@@ -7385,7 +7466,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setNoDeliveriesInTransit(final boolean noDeliveriesInTransit) {
-        options.set(CampaignOption.NO_DELIVERIES_IN_TRANSIT, noDeliveriesInTransit);
+        set(CampaignOption.NO_DELIVERIES_IN_TRANSIT, noDeliveriesInTransit);
     }
 
     /**
@@ -7394,7 +7475,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUsePlanetaryAcquisition() {
-        return options.get(CampaignOption.USE_PLANETARY_ACQUISITION);
+        return get(CampaignOption.USE_PLANETARY_ACQUISITION);
     }
 
     /**
@@ -7404,7 +7485,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPlanetaryAcquisition(final boolean usePlanetaryAcquisition) {
-        options.set(CampaignOption.USE_PLANETARY_ACQUISITION, usePlanetaryAcquisition);
+        set(CampaignOption.USE_PLANETARY_ACQUISITION, usePlanetaryAcquisition);
     }
 
     /**
@@ -7414,7 +7495,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public PlanetaryAcquisitionFactionLimit getPlanetAcquisitionFactionLimit() {
-        return options.get(CampaignOption.PLANET_ACQUISITION_FACTION_LIMIT);
+        return get(CampaignOption.PLANET_ACQUISITION_FACTION_LIMIT);
     }
 
     /**
@@ -7424,7 +7505,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPlanetAcquisitionFactionLimit(final PlanetaryAcquisitionFactionLimit planetAcquisitionFactionLimit) {
-        options.set(CampaignOption.PLANET_ACQUISITION_FACTION_LIMIT, planetAcquisitionFactionLimit);
+        set(CampaignOption.PLANET_ACQUISITION_FACTION_LIMIT, planetAcquisitionFactionLimit);
     }
 
     /**
@@ -7434,7 +7515,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPlanetAcquisitionNoClanCrossover() {
-        return options.get(CampaignOption.PLANET_ACQUISITION_NO_CLAN_CROSSOVER);
+        return get(CampaignOption.PLANET_ACQUISITION_NO_CLAN_CROSSOVER);
     }
 
     /**
@@ -7444,7 +7525,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisallowPlanetAcquisitionClanCrossover(final boolean planetAcquisitionNoClanCrossover) {
-        options.set(CampaignOption.PLANET_ACQUISITION_NO_CLAN_CROSSOVER, planetAcquisitionNoClanCrossover);
+        set(CampaignOption.PLANET_ACQUISITION_NO_CLAN_CROSSOVER, planetAcquisitionNoClanCrossover);
     }
 
     /**
@@ -7454,7 +7535,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMaxJumpsPlanetaryAcquisition() {
-        return options.get(CampaignOption.MAX_JUMPS_PLANETARY_ACQUISITION);
+        return get(CampaignOption.MAX_JUMPS_PLANETARY_ACQUISITION);
     }
 
     /**
@@ -7464,7 +7545,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMaxJumpsPlanetaryAcquisition(final int maxJumpsPlanetaryAcquisition) {
-        options.set(CampaignOption.MAX_JUMPS_PLANETARY_ACQUISITION, maxJumpsPlanetaryAcquisition);
+        set(CampaignOption.MAX_JUMPS_PLANETARY_ACQUISITION, maxJumpsPlanetaryAcquisition);
     }
 
     /**
@@ -7473,7 +7554,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getPenaltyClanPartsFromIS() {
-        return options.get(CampaignOption.PENALTY_CLAN_PARTS_FROM_IS);
+        return get(CampaignOption.PENALTY_CLAN_PARTS_FROM_IS);
     }
 
     /**
@@ -7483,7 +7564,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPenaltyClanPartsFromIS(final int penaltyClanPartsFromIS) {
-        options.set(CampaignOption.PENALTY_CLAN_PARTS_FROM_IS, penaltyClanPartsFromIS);
+        set(CampaignOption.PENALTY_CLAN_PARTS_FROM_IS, penaltyClanPartsFromIS);
     }
 
     /**
@@ -7492,7 +7573,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isNoClanPartsFromIS() {
-        return options.get(CampaignOption.NO_CLAN_PARTS_FROM_IS);
+        return get(CampaignOption.NO_CLAN_PARTS_FROM_IS);
     }
 
     /**
@@ -7502,7 +7583,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDisallowClanPartsFromIS(final boolean noClanPartsFromIS) {
-        options.set(CampaignOption.NO_CLAN_PARTS_FROM_IS, noClanPartsFromIS);
+        set(CampaignOption.NO_CLAN_PARTS_FROM_IS, noClanPartsFromIS);
     }
 
     /**
@@ -7511,7 +7592,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPlanetAcquisitionVerbose() {
-        return options.get(CampaignOption.PLANET_ACQUISITION_VERBOSE);
+        return get(CampaignOption.PLANET_ACQUISITION_VERBOSE);
     }
 
     /**
@@ -7521,15 +7602,21 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPlanetAcquisitionVerboseReporting(final boolean planetAcquisitionVerbose) {
-        options.set(CampaignOption.PLANET_ACQUISITION_VERBOSE, planetAcquisitionVerbose);
+        set(CampaignOption.PLANET_ACQUISITION_VERBOSE, planetAcquisitionVerbose);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.EQUIPMENT_CONTRACT_PERCENT)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public double getEquipmentContractPercent() {
-        return equipmentContractPercent;
+        return get(CampaignOption.EQUIPMENT_CONTRACT_PERCENT);
     }
 
     public void setEquipmentContractPercent(final double equipmentContractPercent) {
-        this.equipmentContractPercent = Math.min(equipmentContractPercent, MAXIMUM_COMBAT_EQUIPMENT_PERCENT);
+        set(CampaignOption.EQUIPMENT_CONTRACT_PERCENT,
+              Math.min(equipmentContractPercent, MAXIMUM_COMBAT_EQUIPMENT_PERCENT));
     }
 
     /**
@@ -7538,7 +7625,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseAlternatePaymentMode() {
-        return options.get(CampaignOption.USE_ALTERNATE_PAYMENT_MODE);
+        return get(CampaignOption.USE_ALTERNATE_PAYMENT_MODE);
     }
 
     /**
@@ -7548,7 +7635,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseAlternatePaymentMode(final boolean useAlternatePaymentMode) {
-        options.set(CampaignOption.USE_ALTERNATE_PAYMENT_MODE, useAlternatePaymentMode);
+        set(CampaignOption.USE_ALTERNATE_PAYMENT_MODE, useAlternatePaymentMode);
     }
 
     /**
@@ -7558,7 +7645,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseDiminishingContractPay() {
-        return options.get(CampaignOption.USE_DIMINISHING_CONTRACT_PAY);
+        return get(CampaignOption.USE_DIMINISHING_CONTRACT_PAY);
     }
 
     /**
@@ -7568,7 +7655,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseDiminishingContractPay(final boolean useDiminishingContractPay) {
-        options.set(CampaignOption.USE_DIMINISHING_CONTRACT_PAY, useDiminishingContractPay);
+        set(CampaignOption.USE_DIMINISHING_CONTRACT_PAY, useDiminishingContractPay);
     }
 
     /**
@@ -7577,7 +7664,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEquipmentContractBase() {
-        return options.get(CampaignOption.EQUIPMENT_CONTRACT_BASE);
+        return get(CampaignOption.EQUIPMENT_CONTRACT_BASE);
     }
 
     /**
@@ -7587,7 +7674,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEquipmentContractBase(final boolean equipmentContractBase) {
-        options.set(CampaignOption.EQUIPMENT_CONTRACT_BASE, equipmentContractBase);
+        set(CampaignOption.EQUIPMENT_CONTRACT_BASE, equipmentContractBase);
     }
 
     /**
@@ -7597,7 +7684,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isEquipmentContractSaleValue() {
-        return options.get(CampaignOption.EQUIPMENT_CONTRACT_SALE_VALUE);
+        return get(CampaignOption.EQUIPMENT_CONTRACT_SALE_VALUE);
     }
 
     /**
@@ -7607,31 +7694,49 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEquipmentContractSaleValue(final boolean equipmentContractSaleValue) {
-        options.set(CampaignOption.EQUIPMENT_CONTRACT_SALE_VALUE, equipmentContractSaleValue);
+        set(CampaignOption.EQUIPMENT_CONTRACT_SALE_VALUE, equipmentContractSaleValue);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.DROP_SHIP_CONTRACT_PERCENT)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public double getDropShipContractPercent() {
-        return dropShipContractPercent;
+        return get(CampaignOption.DROP_SHIP_CONTRACT_PERCENT);
     }
 
     public void setDropShipContractPercent(final double dropShipContractPercent) {
-        this.dropShipContractPercent = Math.min(dropShipContractPercent, MAXIMUM_DROPSHIP_EQUIPMENT_PERCENT);
+        set(CampaignOption.DROP_SHIP_CONTRACT_PERCENT,
+              Math.min(dropShipContractPercent, MAXIMUM_DROPSHIP_EQUIPMENT_PERCENT));
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.JUMP_SHIP_CONTRACT_PERCENT)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public double getJumpShipContractPercent() {
-        return jumpShipContractPercent;
+        return get(CampaignOption.JUMP_SHIP_CONTRACT_PERCENT);
     }
 
     public void setJumpShipContractPercent(final double jumpShipContractPercent) {
-        this.jumpShipContractPercent = Math.min(jumpShipContractPercent, MAXIMUM_JUMPSHIP_EQUIPMENT_PERCENT);
+        set(CampaignOption.JUMP_SHIP_CONTRACT_PERCENT,
+              Math.min(jumpShipContractPercent, MAXIMUM_JUMPSHIP_EQUIPMENT_PERCENT));
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.WAR_SHIP_CONTRACT_PERCENT)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public double getWarShipContractPercent() {
-        return warShipContractPercent;
+        return get(CampaignOption.WAR_SHIP_CONTRACT_PERCENT);
     }
 
     public void setWarShipContractPercent(final double warShipContractPercent) {
-        this.warShipContractPercent = Math.min(warShipContractPercent, MAXIMUM_WARSHIP_EQUIPMENT_PERCENT);
+        set(CampaignOption.WAR_SHIP_CONTRACT_PERCENT,
+              Math.min(warShipContractPercent, MAXIMUM_WARSHIP_EQUIPMENT_PERCENT));
     }
 
     /**
@@ -7639,7 +7744,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isBLCSaleValue() {
-        return options.get(CampaignOption.BLC_SALE_VALUE);
+        return get(CampaignOption.BLC_SALE_VALUE);
     }
 
     /**
@@ -7649,7 +7754,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setBLCSaleValue(final boolean blcSaleValue) {
-        options.set(CampaignOption.BLC_SALE_VALUE, blcSaleValue);
+        set(CampaignOption.BLC_SALE_VALUE, blcSaleValue);
     }
 
     /**
@@ -7659,7 +7764,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isOverageRepaymentInFinalPayment() {
-        return options.get(CampaignOption.OVERAGE_REPAYMENT_IN_FINAL_PAYMENT);
+        return get(CampaignOption.OVERAGE_REPAYMENT_IN_FINAL_PAYMENT);
     }
 
     /**
@@ -7669,7 +7774,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setOverageRepaymentInFinalPayment(final boolean overageRepaymentInFinalPayment) {
-        options.set(CampaignOption.OVERAGE_REPAYMENT_IN_FINAL_PAYMENT, overageRepaymentInFinalPayment);
+        set(CampaignOption.OVERAGE_REPAYMENT_IN_FINAL_PAYMENT, overageRepaymentInFinalPayment);
     }
 
     /**
@@ -7678,7 +7783,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getClanAcquisitionPenalty() {
-        return options.get(CampaignOption.CLAN_ACQUISITION_PENALTY);
+        return get(CampaignOption.CLAN_ACQUISITION_PENALTY);
     }
 
     /**
@@ -7688,7 +7793,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setClanAcquisitionPenalty(final int clanAcquisitionPenalty) {
-        options.set(CampaignOption.CLAN_ACQUISITION_PENALTY, clanAcquisitionPenalty);
+        set(CampaignOption.CLAN_ACQUISITION_PENALTY, clanAcquisitionPenalty);
     }
 
     /**
@@ -7697,7 +7802,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getIsAcquisitionPenalty() {
-        return options.get(CampaignOption.IS_ACQUISITION_PENALTY);
+        return get(CampaignOption.IS_ACQUISITION_PENALTY);
     }
 
     /**
@@ -7707,43 +7812,61 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setIsAcquisitionPenalty(final int isAcquisitionPenalty) {
-        options.set(CampaignOption.IS_ACQUISITION_PENALTY, isAcquisitionPenalty);
+        set(CampaignOption.IS_ACQUISITION_PENALTY, isAcquisitionPenalty);
     }
 
     public int getPlanetTechAcquisitionBonus(final PlanetarySophistication sophistication) {
-        return planetTechAcquisitionBonus.getOrDefault(sophistication, 0);
+        return getAllPlanetTechAcquisitionBonuses().getOrDefault(sophistication, 0);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption)
+     *       CampaignOptions.get(CampaignOption.PLANET_TECH_ACQUISITION_BONUS)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public EnumMap<PlanetarySophistication, Integer> getAllPlanetTechAcquisitionBonuses() {
-        return planetTechAcquisitionBonus;
+        return get(CampaignOption.PLANET_TECH_ACQUISITION_BONUS);
     }
 
     public void setPlanetTechAcquisitionBonus(final int base, final PlanetarySophistication sophistication) {
-        this.planetTechAcquisitionBonus.put(sophistication, base);
+        getAllPlanetTechAcquisitionBonuses().put(sophistication, base);
     }
 
     public int getPlanetIndustryAcquisitionBonus(final PlanetaryRating rating) {
-        return planetIndustryAcquisitionBonus.getOrDefault(rating, 0);
+        return getAllPlanetIndustryAcquisitionBonuses().getOrDefault(rating, 0);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption)
+     *       CampaignOptions.get(CampaignOption.PLANET_INDUSTRY_ACQUISITION_BONUS)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public EnumMap<PlanetaryRating, Integer> getAllPlanetIndustryAcquisitionBonuses() {
-        return planetIndustryAcquisitionBonus;
+        return get(CampaignOption.PLANET_INDUSTRY_ACQUISITION_BONUS);
     }
 
     public void setPlanetIndustryAcquisitionBonus(final int base, final PlanetaryRating rating) {
-        this.planetIndustryAcquisitionBonus.put(rating, base);
+        getAllPlanetIndustryAcquisitionBonuses().put(rating, base);
     }
 
     public int getPlanetOutputAcquisitionBonus(final PlanetaryRating rating) {
-        return planetOutputAcquisitionBonus.getOrDefault(rating, 0);
+        return getAllPlanetOutputAcquisitionBonuses().getOrDefault(rating, 0);
     }
 
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption)
+     *       CampaignOptions.get(CampaignOption.PLANET_OUTPUT_ACQUISITION_BONUS)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public EnumMap<PlanetaryRating, Integer> getAllPlanetOutputAcquisitionBonuses() {
-        return planetOutputAcquisitionBonus;
+        return get(CampaignOption.PLANET_OUTPUT_ACQUISITION_BONUS);
     }
 
     public void setPlanetOutputAcquisitionBonus(final int base, final PlanetaryRating rating) {
-        this.planetOutputAcquisitionBonus.put(rating, base);
+        getAllPlanetOutputAcquisitionBonuses().put(rating, base);
     }
 
     /**
@@ -7751,7 +7874,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isDestroyByMargin() {
-        return options.get(CampaignOption.DESTROY_BY_MARGIN);
+        return get(CampaignOption.DESTROY_BY_MARGIN);
     }
 
     /**
@@ -7761,7 +7884,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDestroyByMargin(final boolean destroyByMargin) {
-        options.set(CampaignOption.DESTROY_BY_MARGIN, destroyByMargin);
+        set(CampaignOption.DESTROY_BY_MARGIN, destroyByMargin);
     }
 
     /**
@@ -7769,7 +7892,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getDestroyMargin() {
-        return options.get(CampaignOption.DESTROY_MARGIN);
+        return get(CampaignOption.DESTROY_MARGIN);
     }
 
     /**
@@ -7779,7 +7902,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDestroyMargin(final int destroyMargin) {
-        options.set(CampaignOption.DESTROY_MARGIN, destroyMargin);
+        set(CampaignOption.DESTROY_MARGIN, destroyMargin);
     }
 
     /**
@@ -7788,7 +7911,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getDestroyPartTarget() {
-        return options.get(CampaignOption.DESTROY_PART_TARGET);
+        return get(CampaignOption.DESTROY_PART_TARGET);
     }
 
     /**
@@ -7798,7 +7921,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setDestroyPartTarget(final int destroyPartTarget) {
-        options.set(CampaignOption.DESTROY_PART_TARGET, destroyPartTarget);
+        set(CampaignOption.DESTROY_PART_TARGET, destroyPartTarget);
     }
 
     /**
@@ -7807,7 +7930,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseAeroSystemHits() {
-        return options.get(CampaignOption.USE_AERO_SYSTEM_HITS);
+        return get(CampaignOption.USE_AERO_SYSTEM_HITS);
     }
 
     /**
@@ -7817,7 +7940,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseAeroSystemHits(final boolean useAeroSystemHits) {
-        options.set(CampaignOption.USE_AERO_SYSTEM_HITS, useAeroSystemHits);
+        set(CampaignOption.USE_AERO_SYSTEM_HITS, useAeroSystemHits);
     }
 
     /**
@@ -7825,7 +7948,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMaxAcquisitions() {
-        return options.get(CampaignOption.MAX_ACQUISITIONS);
+        return get(CampaignOption.MAX_ACQUISITIONS);
     }
 
     /**
@@ -7835,7 +7958,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMaxAcquisitions(final int maxAcquisitions) {
-        options.set(CampaignOption.MAX_ACQUISITIONS, maxAcquisitions);
+        set(CampaignOption.MAX_ACQUISITIONS, maxAcquisitions);
     }
 
     /**
@@ -7844,7 +7967,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsHeatSink() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_HEAT_SINK);
+        return get(CampaignOption.AUTO_LOGISTICS_HEAT_SINK);
     }
 
     /**
@@ -7854,7 +7977,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsHeatSink(int autoLogisticsHeatSink) {
-        options.set(CampaignOption.AUTO_LOGISTICS_HEAT_SINK, autoLogisticsHeatSink);
+        set(CampaignOption.AUTO_LOGISTICS_HEAT_SINK, autoLogisticsHeatSink);
     }
 
     /**
@@ -7863,7 +7986,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsMekHead() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_MEK_HEAD);
+        return get(CampaignOption.AUTO_LOGISTICS_MEK_HEAD);
     }
 
     /**
@@ -7873,7 +7996,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsMekHead(int autoLogisticsMekHead) {
-        options.set(CampaignOption.AUTO_LOGISTICS_MEK_HEAD, autoLogisticsMekHead);
+        set(CampaignOption.AUTO_LOGISTICS_MEK_HEAD, autoLogisticsMekHead);
     }
 
     /**
@@ -7883,7 +8006,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsMekLocation() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_MEK_LOCATION);
+        return get(CampaignOption.AUTO_LOGISTICS_MEK_LOCATION);
     }
 
     /**
@@ -7893,7 +8016,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsMekLocation(int autoLogisticsMekLocation) {
-        options.set(CampaignOption.AUTO_LOGISTICS_MEK_LOCATION, autoLogisticsMekLocation);
+        set(CampaignOption.AUTO_LOGISTICS_MEK_LOCATION, autoLogisticsMekLocation);
     }
 
     /**
@@ -7903,7 +8026,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsNonRepairableLocation() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_NON_REPAIRABLE_LOCATION);
+        return get(CampaignOption.AUTO_LOGISTICS_NON_REPAIRABLE_LOCATION);
     }
 
     /**
@@ -7913,7 +8036,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsNonRepairableLocation(int autoLogisticsNonRepairableLocation) {
-        options.set(CampaignOption.AUTO_LOGISTICS_NON_REPAIRABLE_LOCATION, autoLogisticsNonRepairableLocation);
+        set(CampaignOption.AUTO_LOGISTICS_NON_REPAIRABLE_LOCATION, autoLogisticsNonRepairableLocation);
     }
 
     /**
@@ -7922,7 +8045,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsArmor() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_ARMOR);
+        return get(CampaignOption.AUTO_LOGISTICS_ARMOR);
     }
 
     /**
@@ -7932,7 +8055,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsArmor(int autoLogisticsArmor) {
-        options.set(CampaignOption.AUTO_LOGISTICS_ARMOR, autoLogisticsArmor);
+        set(CampaignOption.AUTO_LOGISTICS_ARMOR, autoLogisticsArmor);
     }
 
     /**
@@ -7941,7 +8064,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsAmmunition() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_AMMUNITION);
+        return get(CampaignOption.AUTO_LOGISTICS_AMMUNITION);
     }
 
     /**
@@ -7951,7 +8074,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsAmmunition(int autoLogisticsAmmunition) {
-        options.set(CampaignOption.AUTO_LOGISTICS_AMMUNITION, autoLogisticsAmmunition);
+        set(CampaignOption.AUTO_LOGISTICS_AMMUNITION, autoLogisticsAmmunition);
     }
 
     /**
@@ -7960,7 +8083,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsActuators() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_ACTUATORS);
+        return get(CampaignOption.AUTO_LOGISTICS_ACTUATORS);
     }
 
     /**
@@ -7970,7 +8093,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsActuators(int autoLogisticsActuators) {
-        options.set(CampaignOption.AUTO_LOGISTICS_ACTUATORS, autoLogisticsActuators);
+        set(CampaignOption.AUTO_LOGISTICS_ACTUATORS, autoLogisticsActuators);
     }
 
     /**
@@ -7979,7 +8102,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsJumpJets() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_JUMP_JETS);
+        return get(CampaignOption.AUTO_LOGISTICS_JUMP_JETS);
     }
 
     /**
@@ -7989,7 +8112,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsJumpJets(int autoLogisticsJumpJets) {
-        options.set(CampaignOption.AUTO_LOGISTICS_JUMP_JETS, autoLogisticsJumpJets);
+        set(CampaignOption.AUTO_LOGISTICS_JUMP_JETS, autoLogisticsJumpJets);
     }
 
     /**
@@ -7998,7 +8121,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsEngines() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_ENGINES);
+        return get(CampaignOption.AUTO_LOGISTICS_ENGINES);
     }
 
     /**
@@ -8008,7 +8131,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsEngines(int autoLogisticsEngines) {
-        options.set(CampaignOption.AUTO_LOGISTICS_ENGINES, autoLogisticsEngines);
+        set(CampaignOption.AUTO_LOGISTICS_ENGINES, autoLogisticsEngines);
     }
 
     /**
@@ -8017,7 +8140,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsWeapons() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_WEAPONS);
+        return get(CampaignOption.AUTO_LOGISTICS_WEAPONS);
     }
 
     /**
@@ -8027,7 +8150,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsWeapons(int autoLogisticsWeapons) {
-        options.set(CampaignOption.AUTO_LOGISTICS_WEAPONS, autoLogisticsWeapons);
+        set(CampaignOption.AUTO_LOGISTICS_WEAPONS, autoLogisticsWeapons);
     }
 
     /**
@@ -8036,7 +8159,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsGyros() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_GYROS);
+        return get(CampaignOption.AUTO_LOGISTICS_GYROS);
     }
 
     /**
@@ -8046,7 +8169,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsGyros(int autoLogisticsGyros) {
-        options.set(CampaignOption.AUTO_LOGISTICS_GYROS, autoLogisticsGyros);
+        set(CampaignOption.AUTO_LOGISTICS_GYROS, autoLogisticsGyros);
     }
 
     /**
@@ -8056,7 +8179,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsHeadComponents() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_HEAD_COMPONENTS);
+        return get(CampaignOption.AUTO_LOGISTICS_HEAD_COMPONENTS);
     }
 
     /**
@@ -8066,7 +8189,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsHeadComponents(int autoLogisticsHeadComponents) {
-        options.set(CampaignOption.AUTO_LOGISTICS_HEAD_COMPONENTS, autoLogisticsHeadComponents);
+        set(CampaignOption.AUTO_LOGISTICS_HEAD_COMPONENTS, autoLogisticsHeadComponents);
     }
 
     /**
@@ -8075,7 +8198,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoLogisticsOther() {
-        return options.get(CampaignOption.AUTO_LOGISTICS_OTHER);
+        return get(CampaignOption.AUTO_LOGISTICS_OTHER);
     }
 
     /**
@@ -8085,7 +8208,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoLogisticsOther(int autoLogisticsOther) {
-        options.set(CampaignOption.AUTO_LOGISTICS_OTHER, autoLogisticsOther);
+        set(CampaignOption.AUTO_LOGISTICS_OTHER, autoLogisticsOther);
     }
 
     public boolean isUseStratCon() {
@@ -8098,7 +8221,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public StratConPlayType getStratConPlayType() {
-        return options.get(CampaignOption.STRAT_CON_PLAY_TYPE);
+        return get(CampaignOption.STRAT_CON_PLAY_TYPE);
     }
 
     /**
@@ -8108,17 +8231,17 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setStratConPlayType(final StratConPlayType stratConPlayType) {
-        options.set(CampaignOption.STRAT_CON_PLAY_TYPE, stratConPlayType);
+        set(CampaignOption.STRAT_CON_PLAY_TYPE, stratConPlayType);
     }
 
     @Deprecated(since = "0.51.0", forRemoval = true)
     public boolean isHadAtBEnabledMarker() {
-        return options.get(CampaignOption.HAD_AT_B_ENABLED_MARKER);
+        return get(CampaignOption.HAD_AT_B_ENABLED_MARKER);
     }
 
     @Deprecated(since = "0.51.0", forRemoval = true)
     public void setHadAtBEnabledMarker(boolean hadAtBEnabledMarker) {
-        options.set(CampaignOption.HAD_AT_B_ENABLED_MARKER, hadAtBEnabledMarker);
+        set(CampaignOption.HAD_AT_B_ENABLED_MARKER, hadAtBEnabledMarker);
     }
 
     public boolean isUseStratConMaplessMode() {
@@ -8137,7 +8260,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseAdvancedScouting() {
-        return options.get(CampaignOption.USE_ADVANCED_SCOUTING);
+        return get(CampaignOption.USE_ADVANCED_SCOUTING);
     }
 
     /**
@@ -8147,7 +8270,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseAdvancedScouting(final boolean useAdvancedScouting) {
-        options.set(CampaignOption.USE_ADVANCED_SCOUTING, useAdvancedScouting);
+        set(CampaignOption.USE_ADVANCED_SCOUTING, useAdvancedScouting);
     }
 
     /**
@@ -8155,7 +8278,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isNoSeedForces() {
-        return options.get(CampaignOption.NO_SEED_FORCES);
+        return get(CampaignOption.NO_SEED_FORCES);
     }
 
     /**
@@ -8165,7 +8288,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setNoSeedForces(final boolean noSeedForces) {
-        options.set(CampaignOption.NO_SEED_FORCES, noSeedForces);
+        set(CampaignOption.NO_SEED_FORCES, noSeedForces);
     }
 
     /**
@@ -8178,7 +8301,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseGenericBattleValue() {
-        return options.get(CampaignOption.USE_GENERIC_BATTLE_VALUE);
+        return get(CampaignOption.USE_GENERIC_BATTLE_VALUE);
     }
 
     /**
@@ -8192,7 +8315,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseGenericBattleValue(final boolean useGenericBattleValue) {
-        options.set(CampaignOption.USE_GENERIC_BATTLE_VALUE, useGenericBattleValue);
+        set(CampaignOption.USE_GENERIC_BATTLE_VALUE, useGenericBattleValue);
     }
 
     /**
@@ -8205,7 +8328,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseVerboseBidding() {
-        return options.get(CampaignOption.USE_VERBOSE_BIDDING);
+        return get(CampaignOption.USE_VERBOSE_BIDDING);
     }
 
     /**
@@ -8219,7 +8342,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseVerboseBidding(final boolean useVerboseBidding) {
-        options.set(CampaignOption.USE_VERBOSE_BIDDING, useVerboseBidding);
+        set(CampaignOption.USE_VERBOSE_BIDDING, useVerboseBidding);
     }
 
     /**
@@ -8228,7 +8351,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getOpForLanceTypeMeks() {
-        return options.get(CampaignOption.OP_FOR_LANCE_TYPE_MEKS);
+        return get(CampaignOption.OP_FOR_LANCE_TYPE_MEKS);
     }
 
     /**
@@ -8238,7 +8361,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setOpForLanceTypeMeks(final int opForLanceTypeMeks) {
-        options.set(CampaignOption.OP_FOR_LANCE_TYPE_MEKS, opForLanceTypeMeks);
+        set(CampaignOption.OP_FOR_LANCE_TYPE_MEKS, opForLanceTypeMeks);
     }
 
     /**
@@ -8247,7 +8370,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getOpForLanceTypeMixed() {
-        return options.get(CampaignOption.OP_FOR_LANCE_TYPE_MIXED);
+        return get(CampaignOption.OP_FOR_LANCE_TYPE_MIXED);
     }
 
     /**
@@ -8257,7 +8380,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setOpForLanceTypeMixed(final int opForLanceTypeMixed) {
-        options.set(CampaignOption.OP_FOR_LANCE_TYPE_MIXED, opForLanceTypeMixed);
+        set(CampaignOption.OP_FOR_LANCE_TYPE_MIXED, opForLanceTypeMixed);
     }
 
     /**
@@ -8266,7 +8389,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getOpForLanceTypeVehicles() {
-        return options.get(CampaignOption.OP_FOR_LANCE_TYPE_VEHICLES);
+        return get(CampaignOption.OP_FOR_LANCE_TYPE_VEHICLES);
     }
 
     /**
@@ -8276,7 +8399,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setOpForLanceTypeVehicles(final int opForLanceTypeVehicles) {
-        options.set(CampaignOption.OP_FOR_LANCE_TYPE_VEHICLES, opForLanceTypeVehicles);
+        set(CampaignOption.OP_FOR_LANCE_TYPE_VEHICLES, opForLanceTypeVehicles);
     }
 
     /**
@@ -8284,7 +8407,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseDropShips() {
-        return options.get(CampaignOption.USE_DROP_SHIPS);
+        return get(CampaignOption.USE_DROP_SHIPS);
     }
 
     /**
@@ -8294,7 +8417,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseDropShips(final boolean useDropShips) {
-        options.set(CampaignOption.USE_DROP_SHIPS, useDropShips);
+        set(CampaignOption.USE_DROP_SHIPS, useDropShips);
     }
 
     /**
@@ -8302,7 +8425,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public SkillLevel getSkillLevel() {
-        return options.get(CampaignOption.SKILL_LEVEL);
+        return get(CampaignOption.SKILL_LEVEL);
     }
 
     /**
@@ -8311,7 +8434,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setSkillLevel(final SkillLevel skillLevel) {
-        options.set(CampaignOption.SKILL_LEVEL, skillLevel);
+        set(CampaignOption.SKILL_LEVEL, skillLevel);
     }
 
     /**
@@ -8320,7 +8443,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public BoardScalingType getBoardScalingType() {
-        return options.get(CampaignOption.BOARD_SCALING_TYPE);
+        return get(CampaignOption.BOARD_SCALING_TYPE);
     }
 
     /**
@@ -8330,7 +8453,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setBoardScalingType(final BoardScalingType boardScalingType) {
-        options.set(CampaignOption.BOARD_SCALING_TYPE, boardScalingType);
+        set(CampaignOption.BOARD_SCALING_TYPE, boardScalingType);
     }
 
     /**
@@ -8339,7 +8462,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAeroRecruitsHaveUnits() {
-        return options.get(CampaignOption.AERO_RECRUITS_HAVE_UNITS);
+        return get(CampaignOption.AERO_RECRUITS_HAVE_UNITS);
     }
 
     /**
@@ -8349,7 +8472,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAeroRecruitsHaveUnits(final boolean aeroRecruitsHaveUnits) {
-        options.set(CampaignOption.AERO_RECRUITS_HAVE_UNITS, aeroRecruitsHaveUnits);
+        set(CampaignOption.AERO_RECRUITS_HAVE_UNITS, aeroRecruitsHaveUnits);
     }
 
     /**
@@ -8357,7 +8480,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseShareSystem() {
-        return options.get(CampaignOption.USE_SHARE_SYSTEM);
+        return get(CampaignOption.USE_SHARE_SYSTEM);
     }
 
     /**
@@ -8367,7 +8490,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseShareSystem(final boolean useShareSystem) {
-        options.set(CampaignOption.USE_SHARE_SYSTEM, useShareSystem);
+        set(CampaignOption.USE_SHARE_SYSTEM, useShareSystem);
     }
 
     /**
@@ -8375,7 +8498,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isSharesForAll() {
-        return options.get(CampaignOption.SHARES_FOR_ALL);
+        return get(CampaignOption.SHARES_FOR_ALL);
     }
 
     /**
@@ -8385,7 +8508,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setSharesForAll(final boolean sharesForAll) {
-        options.set(CampaignOption.SHARES_FOR_ALL, sharesForAll);
+        set(CampaignOption.SHARES_FOR_ALL, sharesForAll);
     }
 
     /**
@@ -8394,7 +8517,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isTrackOriginalUnit() {
-        return options.get(CampaignOption.TRACK_ORIGINAL_UNIT);
+        return get(CampaignOption.TRACK_ORIGINAL_UNIT);
     }
 
     /**
@@ -8404,7 +8527,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTrackOriginalUnit(final boolean trackOriginalUnit) {
-        options.set(CampaignOption.TRACK_ORIGINAL_UNIT, trackOriginalUnit);
+        set(CampaignOption.TRACK_ORIGINAL_UNIT, trackOriginalUnit);
     }
 
     /**
@@ -8413,7 +8536,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMoraleVictoryEffect() {
-        return options.get(CampaignOption.MORALE_VICTORY_EFFECT);
+        return get(CampaignOption.MORALE_VICTORY_EFFECT);
     }
 
     /**
@@ -8423,7 +8546,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMoraleVictoryEffect(final int moraleVictoryEffect) {
-        options.set(CampaignOption.MORALE_VICTORY_EFFECT, moraleVictoryEffect);
+        set(CampaignOption.MORALE_VICTORY_EFFECT, moraleVictoryEffect);
     }
 
     /**
@@ -8433,7 +8556,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMoraleDecisiveVictoryEffect() {
-        return options.get(CampaignOption.MORALE_DECISIVE_VICTORY_EFFECT);
+        return get(CampaignOption.MORALE_DECISIVE_VICTORY_EFFECT);
     }
 
     /**
@@ -8443,7 +8566,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMoraleDecisiveVictoryEffect(final int moraleDecisiveVictoryEffect) {
-        options.set(CampaignOption.MORALE_DECISIVE_VICTORY_EFFECT, moraleDecisiveVictoryEffect);
+        set(CampaignOption.MORALE_DECISIVE_VICTORY_EFFECT, moraleDecisiveVictoryEffect);
     }
 
     /**
@@ -8452,7 +8575,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMoraleDefeatEffect() {
-        return options.get(CampaignOption.MORALE_DEFEAT_EFFECT);
+        return get(CampaignOption.MORALE_DEFEAT_EFFECT);
     }
 
     /**
@@ -8462,7 +8585,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMoraleDefeatEffect(final int moraleDefeatEffect) {
-        options.set(CampaignOption.MORALE_DEFEAT_EFFECT, moraleDefeatEffect);
+        set(CampaignOption.MORALE_DEFEAT_EFFECT, moraleDefeatEffect);
     }
 
     /**
@@ -8472,7 +8595,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getMoraleDecisiveDefeatEffect() {
-        return options.get(CampaignOption.MORALE_DECISIVE_DEFEAT_EFFECT);
+        return get(CampaignOption.MORALE_DECISIVE_DEFEAT_EFFECT);
     }
 
     /**
@@ -8482,7 +8605,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMoraleDecisiveDefeatEffect(final int moraleDecisiveDefeatEffect) {
-        options.set(CampaignOption.MORALE_DECISIVE_DEFEAT_EFFECT, moraleDecisiveDefeatEffect);
+        set(CampaignOption.MORALE_DECISIVE_DEFEAT_EFFECT, moraleDecisiveDefeatEffect);
     }
 
     /**
@@ -8491,7 +8614,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isRegionalMekVariations() {
-        return options.get(CampaignOption.REGIONAL_MEK_VARIATIONS);
+        return get(CampaignOption.REGIONAL_MEK_VARIATIONS);
     }
 
     /**
@@ -8501,7 +8624,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRegionalMekVariations(final boolean regionalMekVariations) {
-        options.set(CampaignOption.REGIONAL_MEK_VARIATIONS, regionalMekVariations);
+        set(CampaignOption.REGIONAL_MEK_VARIATIONS, regionalMekVariations);
     }
 
     /**
@@ -8510,7 +8633,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAttachedPlayerCamouflage() {
-        return options.get(CampaignOption.ATTACHED_PLAYER_CAMOUFLAGE);
+        return get(CampaignOption.ATTACHED_PLAYER_CAMOUFLAGE);
     }
 
     /**
@@ -8520,7 +8643,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAttachedPlayerCamouflage(final boolean attachedPlayerCamouflage) {
-        options.set(CampaignOption.ATTACHED_PLAYER_CAMOUFLAGE, attachedPlayerCamouflage);
+        set(CampaignOption.ATTACHED_PLAYER_CAMOUFLAGE, attachedPlayerCamouflage);
     }
 
     /**
@@ -8530,7 +8653,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isPlayerControlsAttachedUnits() {
-        return options.get(CampaignOption.PLAYER_CONTROLS_ATTACHED_UNITS);
+        return get(CampaignOption.PLAYER_CONTROLS_ATTACHED_UNITS);
     }
 
     /**
@@ -8540,7 +8663,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setPlayerControlsAttachedUnits(final boolean playerControlsAttachedUnits) {
-        options.set(CampaignOption.PLAYER_CONTROLS_ATTACHED_UNITS, playerControlsAttachedUnits);
+        set(CampaignOption.PLAYER_CONTROLS_ATTACHED_UNITS, playerControlsAttachedUnits);
     }
 
     /**
@@ -8585,11 +8708,15 @@ public class CampaignOptions {
             return 0;
         }
 
-        return atbBattleChance[role.ordinal()];
+        return getAllAtBBattleChances()[role.ordinal()];
     }
 
+    /**
+     * @deprecated Use {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.ATB_BATTLE_CHANCE)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public int[] getAllAtBBattleChances() {
-        return atbBattleChance;
+        return get(CampaignOption.ATB_BATTLE_CHANCE);
     }
 
     /**
@@ -8597,7 +8724,7 @@ public class CampaignOptions {
      * @param frequency the frequency to set the generation to (percent chance from 0 to 100)
      */
     public void setAtBBattleChance(final int role, final int frequency) {
-        this.atbBattleChance[role] = Math.clamp(frequency, 0, 100);
+        getAllAtBBattleChances()[role] = Math.clamp(frequency, 0, 100);
     }
 
     /**
@@ -8605,7 +8732,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isGenerateChases() {
-        return options.get(CampaignOption.GENERATE_CHASES);
+        return get(CampaignOption.GENERATE_CHASES);
     }
 
     /**
@@ -8615,7 +8742,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setGenerateChases(final boolean generateChases) {
-        options.set(CampaignOption.GENERATE_CHASES, generateChases);
+        set(CampaignOption.GENERATE_CHASES, generateChases);
     }
 
     /**
@@ -8624,7 +8751,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseWeatherConditions() {
-        return options.get(CampaignOption.USE_WEATHER_CONDITIONS);
+        return get(CampaignOption.USE_WEATHER_CONDITIONS);
     }
 
     /**
@@ -8634,7 +8761,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseWeatherConditions(final boolean useWeatherConditions) {
-        options.set(CampaignOption.USE_WEATHER_CONDITIONS, useWeatherConditions);
+        set(CampaignOption.USE_WEATHER_CONDITIONS, useWeatherConditions);
     }
 
     /**
@@ -8643,7 +8770,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseLightConditions() {
-        return options.get(CampaignOption.USE_LIGHT_CONDITIONS);
+        return get(CampaignOption.USE_LIGHT_CONDITIONS);
     }
 
     /**
@@ -8653,7 +8780,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseLightConditions(final boolean useLightConditions) {
-        options.set(CampaignOption.USE_LIGHT_CONDITIONS, useLightConditions);
+        set(CampaignOption.USE_LIGHT_CONDITIONS, useLightConditions);
     }
 
     /**
@@ -8662,7 +8789,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUsePlanetaryConditions() {
-        return options.get(CampaignOption.USE_PLANETARY_CONDITIONS);
+        return get(CampaignOption.USE_PLANETARY_CONDITIONS);
     }
 
     /**
@@ -8672,7 +8799,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUsePlanetaryConditions(final boolean usePlanetaryConditions) {
-        options.set(CampaignOption.USE_PLANETARY_CONDITIONS, usePlanetaryConditions);
+        set(CampaignOption.USE_PLANETARY_CONDITIONS, usePlanetaryConditions);
     }
 
     /**
@@ -8680,7 +8807,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseNoTornadoes() {
-        return options.get(CampaignOption.USE_NO_TORNADOES);
+        return get(CampaignOption.USE_NO_TORNADOES);
     }
 
     /**
@@ -8690,7 +8817,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseNoTornadoes(final boolean useNoTornadoes) {
-        options.set(CampaignOption.USE_NO_TORNADOES, useNoTornadoes);
+        set(CampaignOption.USE_NO_TORNADOES, useNoTornadoes);
     }
 
     /**
@@ -8699,7 +8826,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isRestrictPartsByMission() {
-        return options.get(CampaignOption.RESTRICT_PARTS_BY_MISSION);
+        return get(CampaignOption.RESTRICT_PARTS_BY_MISSION);
     }
 
     /**
@@ -8709,7 +8836,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRestrictPartsByMission(final boolean restrictPartsByMission) {
-        options.set(CampaignOption.RESTRICT_PARTS_BY_MISSION, restrictPartsByMission);
+        set(CampaignOption.RESTRICT_PARTS_BY_MISSION, restrictPartsByMission);
     }
 
     @Deprecated(since = "0.50.06", forRemoval = true)
@@ -8726,7 +8853,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getFixedMapChance() {
-        return options.get(CampaignOption.FIXED_MAP_CHANCE);
+        return get(CampaignOption.FIXED_MAP_CHANCE);
     }
 
     /**
@@ -8736,7 +8863,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setFixedMapChance(final int fixedMapChance) {
-        options.set(CampaignOption.FIXED_MAP_CHANCE, fixedMapChance);
+        set(CampaignOption.FIXED_MAP_CHANCE, fixedMapChance);
     }
 
     /**
@@ -8746,7 +8873,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseAdvancedBuildingGunEmplacements() {
-        return options.get(CampaignOption.USE_ADVANCED_BUILDING_GUN_EMPLACEMENTS);
+        return get(CampaignOption.USE_ADVANCED_BUILDING_GUN_EMPLACEMENTS);
     }
 
     /**
@@ -8756,7 +8883,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseAdvancedBuildingGunEmplacements(final boolean useAdvancedBuildingGunEmplacements) {
-        options.set(CampaignOption.USE_ADVANCED_BUILDING_GUN_EMPLACEMENTS, useAdvancedBuildingGunEmplacements);
+        set(CampaignOption.USE_ADVANCED_BUILDING_GUN_EMPLACEMENTS, useAdvancedBuildingGunEmplacements);
     }
 
     /**
@@ -8765,7 +8892,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getSpaUpgradeIntensity() {
-        return options.get(CampaignOption.SPA_UPGRADE_INTENSITY);
+        return get(CampaignOption.SPA_UPGRADE_INTENSITY);
     }
 
     /**
@@ -8775,7 +8902,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setSpaUpgradeIntensity(final int spaUpgradeIntensity) {
-        options.set(CampaignOption.SPA_UPGRADE_INTENSITY, spaUpgradeIntensity);
+        set(CampaignOption.SPA_UPGRADE_INTENSITY, spaUpgradeIntensity);
     }
 
     /**
@@ -8785,7 +8912,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getReinforcementBaseTargetNumber() {
-        return options.get(CampaignOption.REINFORCEMENT_BASE_TARGET_NUMBER);
+        return get(CampaignOption.REINFORCEMENT_BASE_TARGET_NUMBER);
     }
 
     /**
@@ -8795,7 +8922,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setReinforcementBaseTargetNumber(final int reinforcementBaseTargetNumber) {
-        options.set(CampaignOption.REINFORCEMENT_BASE_TARGET_NUMBER, reinforcementBaseTargetNumber);
+        set(CampaignOption.REINFORCEMENT_BASE_TARGET_NUMBER, reinforcementBaseTargetNumber);
     }
 
     /**
@@ -8804,7 +8931,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isClansObeyBiddingRules() {
-        return options.get(CampaignOption.CLANS_OBEY_BIDDING_RULES);
+        return get(CampaignOption.CLANS_OBEY_BIDDING_RULES);
     }
 
     /**
@@ -8814,7 +8941,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setClansObeyBiddingRules(final boolean clansObeyBiddingRules) {
-        options.set(CampaignOption.CLANS_OBEY_BIDDING_RULES, clansObeyBiddingRules);
+        set(CampaignOption.CLANS_OBEY_BIDDING_RULES, clansObeyBiddingRules);
     }
 
     /**
@@ -8824,7 +8951,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAlliedFacilityModifierDieSize() {
-        return options.get(CampaignOption.ALLIED_FACILITY_MODIFIER_DIE_SIZE);
+        return get(CampaignOption.ALLIED_FACILITY_MODIFIER_DIE_SIZE);
     }
 
     /**
@@ -8834,7 +8961,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAlliedFacilityModifierDieSize(final int alliedFacilityModifierDieSize) {
-        options.set(CampaignOption.ALLIED_FACILITY_MODIFIER_DIE_SIZE, alliedFacilityModifierDieSize);
+        set(CampaignOption.ALLIED_FACILITY_MODIFIER_DIE_SIZE, alliedFacilityModifierDieSize);
     }
 
     /**
@@ -8844,7 +8971,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getEnemyFacilityModifierDieSize() {
-        return options.get(CampaignOption.ENEMY_FACILITY_MODIFIER_DIE_SIZE);
+        return get(CampaignOption.ENEMY_FACILITY_MODIFIER_DIE_SIZE);
     }
 
     /**
@@ -8854,7 +8981,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setEnemyFacilityModifierDieSize(final int enemyFacilityModifierDieSize) {
-        options.set(CampaignOption.ENEMY_FACILITY_MODIFIER_DIE_SIZE, enemyFacilityModifierDieSize);
+        set(CampaignOption.ENEMY_FACILITY_MODIFIER_DIE_SIZE, enemyFacilityModifierDieSize);
     }
 
     /**
@@ -8862,7 +8989,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getScenarioModMax() {
-        return options.get(CampaignOption.SCENARIO_MOD_MAX);
+        return get(CampaignOption.SCENARIO_MOD_MAX);
     }
 
     /**
@@ -8872,7 +8999,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setScenarioModMax(final int scenarioModMax) {
-        options.set(CampaignOption.SCENARIO_MOD_MAX, scenarioModMax);
+        set(CampaignOption.SCENARIO_MOD_MAX, scenarioModMax);
     }
 
     /**
@@ -8881,7 +9008,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getScenarioModChance() {
-        return options.get(CampaignOption.SCENARIO_MOD_CHANCE);
+        return get(CampaignOption.SCENARIO_MOD_CHANCE);
     }
 
     /**
@@ -8891,7 +9018,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setScenarioModChance(final int scenarioModChance) {
-        options.set(CampaignOption.SCENARIO_MOD_CHANCE, scenarioModChance);
+        set(CampaignOption.SCENARIO_MOD_CHANCE, scenarioModChance);
     }
 
     /**
@@ -8899,7 +9026,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getScenarioModBV() {
-        return options.get(CampaignOption.SCENARIO_MOD_BV);
+        return get(CampaignOption.SCENARIO_MOD_BV);
     }
 
     /**
@@ -8909,7 +9036,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setScenarioModBV(final int scenarioModBV) {
-        options.set(CampaignOption.SCENARIO_MOD_BV, scenarioModBV);
+        set(CampaignOption.SCENARIO_MOD_BV, scenarioModBV);
     }
 
     /**
@@ -8918,7 +9045,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAutoConfigMunitions() {
-        return options.get(CampaignOption.AUTO_CONFIG_MUNITIONS);
+        return get(CampaignOption.AUTO_CONFIG_MUNITIONS);
     }
 
     /**
@@ -8928,7 +9055,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoConfigMunitions(final boolean autoConfigMunitions) {
-        options.set(CampaignOption.AUTO_CONFIG_MUNITIONS, autoConfigMunitions);
+        set(CampaignOption.AUTO_CONFIG_MUNITIONS, autoConfigMunitions);
     }
 
     // region File IO
@@ -9001,7 +9128,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public AutoResolveMethod getAutoResolveMethod() {
-        return options.get(CampaignOption.AUTO_RESOLVE_METHOD);
+        return get(CampaignOption.AUTO_RESOLVE_METHOD);
     }
 
     /**
@@ -9011,19 +9138,19 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoResolveMethod(final AutoResolveMethod autoResolveMethod) {
-        options.set(CampaignOption.AUTO_RESOLVE_METHOD, autoResolveMethod);
+        set(CampaignOption.AUTO_RESOLVE_METHOD, autoResolveMethod);
+    }
+
+    public File getStrategicViewTheme() {
+        CLIENT_PREFERENCES.setStrategicViewTheme(get(CampaignOption.STRATEGIC_VIEW_MINIMAP_THEME));
+        return CLIENT_PREFERENCES.getStrategicViewTheme();
     }
 
     public void setStrategicViewTheme(String minimapStyle) {
         // it is persisted here to have something in the campaign options persisted that
         // will change the GUI preference for the theme
-        this.strategicViewMinimapTheme = minimapStyle;
+        set(CampaignOption.STRATEGIC_VIEW_MINIMAP_THEME, minimapStyle);
         CLIENT_PREFERENCES.setStrategicViewTheme(minimapStyle);
-    }
-
-    public File getStrategicViewTheme() {
-        CLIENT_PREFERENCES.setStrategicViewTheme(strategicViewMinimapTheme);
-        return CLIENT_PREFERENCES.getStrategicViewTheme();
     }
 
     /**
@@ -9033,7 +9160,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAutoResolveVictoryChanceEnabled() {
-        return options.get(CampaignOption.AUTO_RESOLVE_VICTORY_CHANCE_ENABLED);
+        return get(CampaignOption.AUTO_RESOLVE_VICTORY_CHANCE_ENABLED);
     }
 
     /**
@@ -9043,7 +9170,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoResolveVictoryChanceEnabled(final boolean autoResolveVictoryChanceEnabled) {
-        options.set(CampaignOption.AUTO_RESOLVE_VICTORY_CHANCE_ENABLED, autoResolveVictoryChanceEnabled);
+        set(CampaignOption.AUTO_RESOLVE_VICTORY_CHANCE_ENABLED, autoResolveVictoryChanceEnabled);
     }
 
     /**
@@ -9053,7 +9180,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public int getAutoResolveNumberOfScenarios() {
-        return options.get(CampaignOption.AUTO_RESOLVE_NUMBER_OF_SCENARIOS);
+        return get(CampaignOption.AUTO_RESOLVE_NUMBER_OF_SCENARIOS);
     }
 
     /**
@@ -9063,7 +9190,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoResolveNumberOfScenarios(int autoResolveNumberOfScenarios) {
-        options.set(CampaignOption.AUTO_RESOLVE_NUMBER_OF_SCENARIOS, autoResolveNumberOfScenarios);
+        set(CampaignOption.AUTO_RESOLVE_NUMBER_OF_SCENARIOS, autoResolveNumberOfScenarios);
     }
 
     /**
@@ -9073,7 +9200,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAutoResolveExperimentalPacarGuiEnabled() {
-        return options.get(CampaignOption.AUTO_RESOLVE_EXPERIMENTAL_PACAR_GUI_ENABLED);
+        return get(CampaignOption.AUTO_RESOLVE_EXPERIMENTAL_PACAR_GUI_ENABLED);
     }
 
     /**
@@ -9083,7 +9210,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoResolveExperimentalPacarGuiEnabled(boolean autoResolveExperimentalPacarGuiEnabled) {
-        options.set(CampaignOption.AUTO_RESOLVE_EXPERIMENTAL_PACAR_GUI_ENABLED, autoResolveExperimentalPacarGuiEnabled);
+        set(CampaignOption.AUTO_RESOLVE_EXPERIMENTAL_PACAR_GUI_ENABLED, autoResolveExperimentalPacarGuiEnabled);
     }
 
     /**
@@ -9100,7 +9227,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFactionStandingNegotiation() {
-        return options.get(CampaignOption.USE_FACTION_STANDING_NEGOTIATION);
+        return get(CampaignOption.USE_FACTION_STANDING_NEGOTIATION);
     }
 
     /**
@@ -9115,7 +9242,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFactionStandingNegotiation(boolean useFactionStandingNegotiation) {
-        options.set(CampaignOption.USE_FACTION_STANDING_NEGOTIATION, useFactionStandingNegotiation);
+        set(CampaignOption.USE_FACTION_STANDING_NEGOTIATION, useFactionStandingNegotiation);
     }
 
     /**
@@ -9142,7 +9269,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFactionStandingResupply() {
-        return options.get(CampaignOption.USE_FACTION_STANDING_RESUPPLY);
+        return get(CampaignOption.USE_FACTION_STANDING_RESUPPLY);
     }
 
     /**
@@ -9152,7 +9279,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFactionStandingResupply(boolean useFactionStandingResupply) {
-        options.set(CampaignOption.USE_FACTION_STANDING_RESUPPLY, useFactionStandingResupply);
+        set(CampaignOption.USE_FACTION_STANDING_RESUPPLY, useFactionStandingResupply);
     }
 
     /**
@@ -9180,7 +9307,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFactionStandingCommandCircuit() {
-        return options.get(CampaignOption.USE_FACTION_STANDING_COMMAND_CIRCUIT);
+        return get(CampaignOption.USE_FACTION_STANDING_COMMAND_CIRCUIT);
     }
 
     /**
@@ -9190,7 +9317,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFactionStandingCommandCircuit(boolean useFactionStandingCommandCircuit) {
-        options.set(CampaignOption.USE_FACTION_STANDING_COMMAND_CIRCUIT, useFactionStandingCommandCircuit);
+        set(CampaignOption.USE_FACTION_STANDING_COMMAND_CIRCUIT, useFactionStandingCommandCircuit);
     }
 
     /**
@@ -9211,9 +9338,23 @@ public class CampaignOptions {
      * that also verifies that Faction Standing is enabled.</p>
      *
      * @return {@code true} if faction standing outlawing is enabled, {@code false} otherwise.
+     *
+     * @deprecated Use {@link CampaignOptions#get(CampaignOption)
+     *       CampaignOptions.get(CampaignOption.USE_FACTION_STANDING_OUTLAWED)}
      */
+    @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFactionStandingOutlawed() {
-        return useFactionStandingOutlawed;
+        return get(CampaignOption.USE_FACTION_STANDING_OUTLAWED);
+    }
+
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#set(CampaignOption, Object)
+     *       CampaignOptions.set(CampaignOption.USE_FACTION_STANDING_OUTLAWED, value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
+    public void setUseFactionStandingOutlawed(boolean useFactionStandingOutlawed) {
+        set(CampaignOption.USE_FACTION_STANDING_OUTLAWED, useFactionStandingOutlawed);
     }
 
     /**
@@ -9223,11 +9364,7 @@ public class CampaignOptions {
      *       {@code false} otherwise.
      */
     public boolean isUseFactionStandingOutlawedSafe() {
-        return get(CampaignOption.TRACK_FACTION_STANDING) && useFactionStandingOutlawed;
-    }
-
-    public void setUseFactionStandingOutlawed(boolean useFactionStandingOutlawed) {
-        this.useFactionStandingOutlawed = useFactionStandingOutlawed;
+        return get(CampaignOption.TRACK_FACTION_STANDING) && get(CampaignOption.USE_FACTION_STANDING_OUTLAWED);
     }
 
     /**
@@ -9244,7 +9381,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFactionStandingBatchallRestrictions() {
-        return options.get(CampaignOption.USE_FACTION_STANDING_BATCHALL_RESTRICTIONS);
+        return get(CampaignOption.USE_FACTION_STANDING_BATCHALL_RESTRICTIONS);
     }
 
     /**
@@ -9254,7 +9391,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFactionStandingBatchallRestrictions(boolean useFactionStandingBatchallRestrictions) {
-        options.set(CampaignOption.USE_FACTION_STANDING_BATCHALL_RESTRICTIONS, useFactionStandingBatchallRestrictions);
+        set(CampaignOption.USE_FACTION_STANDING_BATCHALL_RESTRICTIONS, useFactionStandingBatchallRestrictions);
     }
 
     /**
@@ -9283,7 +9420,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFactionStandingRecruitment() {
-        return options.get(CampaignOption.USE_FACTION_STANDING_RECRUITMENT);
+        return get(CampaignOption.USE_FACTION_STANDING_RECRUITMENT);
     }
 
     /**
@@ -9293,7 +9430,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFactionStandingRecruitment(boolean useFactionStandingRecruitment) {
-        options.set(CampaignOption.USE_FACTION_STANDING_RECRUITMENT, useFactionStandingRecruitment);
+        set(CampaignOption.USE_FACTION_STANDING_RECRUITMENT, useFactionStandingRecruitment);
     }
 
     /**
@@ -9321,7 +9458,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFactionStandingBarracksCosts() {
-        return options.get(CampaignOption.USE_FACTION_STANDING_BARRACKS_COSTS);
+        return get(CampaignOption.USE_FACTION_STANDING_BARRACKS_COSTS);
     }
 
     /**
@@ -9331,7 +9468,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFactionStandingBarracksCosts(boolean useFactionStandingBarracksCosts) {
-        options.set(CampaignOption.USE_FACTION_STANDING_BARRACKS_COSTS, useFactionStandingBarracksCosts);
+        set(CampaignOption.USE_FACTION_STANDING_BARRACKS_COSTS, useFactionStandingBarracksCosts);
     }
 
     /**
@@ -9359,7 +9496,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFactionStandingUnitMarket() {
-        return options.get(CampaignOption.USE_FACTION_STANDING_UNIT_MARKET);
+        return get(CampaignOption.USE_FACTION_STANDING_UNIT_MARKET);
     }
 
     /**
@@ -9369,7 +9506,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFactionStandingUnitMarket(boolean useFactionStandingUnitMarket) {
-        options.set(CampaignOption.USE_FACTION_STANDING_UNIT_MARKET, useFactionStandingUnitMarket);
+        set(CampaignOption.USE_FACTION_STANDING_UNIT_MARKET, useFactionStandingUnitMarket);
     }
 
     /**
@@ -9397,7 +9534,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFactionStandingContractPay() {
-        return options.get(CampaignOption.USE_FACTION_STANDING_CONTRACT_PAY);
+        return get(CampaignOption.USE_FACTION_STANDING_CONTRACT_PAY);
     }
 
     /**
@@ -9407,7 +9544,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFactionStandingContractPay(boolean useFactionStandingContractPay) {
-        options.set(CampaignOption.USE_FACTION_STANDING_CONTRACT_PAY, useFactionStandingContractPay);
+        set(CampaignOption.USE_FACTION_STANDING_CONTRACT_PAY, useFactionStandingContractPay);
     }
 
     /**
@@ -9435,7 +9572,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isUseFactionStandingSupportPoints() {
-        return options.get(CampaignOption.USE_FACTION_STANDING_SUPPORT_POINTS);
+        return get(CampaignOption.USE_FACTION_STANDING_SUPPORT_POINTS);
     }
 
     /**
@@ -9445,7 +9582,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setUseFactionStandingSupportPoints(boolean useFactionStandingSupportPoints) {
-        options.set(CampaignOption.USE_FACTION_STANDING_SUPPORT_POINTS, useFactionStandingSupportPoints);
+        set(CampaignOption.USE_FACTION_STANDING_SUPPORT_POINTS, useFactionStandingSupportPoints);
     }
 
     /**
@@ -9465,7 +9602,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isTrackFactionStanding() {
-        return options.get(CampaignOption.TRACK_FACTION_STANDING);
+        return get(CampaignOption.TRACK_FACTION_STANDING);
     }
 
     /**
@@ -9475,7 +9612,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTrackFactionStanding(boolean trackFactionStanding) {
-        options.set(CampaignOption.TRACK_FACTION_STANDING, trackFactionStanding);
+        set(CampaignOption.TRACK_FACTION_STANDING, trackFactionStanding);
     }
 
     /**
@@ -9485,7 +9622,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isTrackClimateRegardChanges() {
-        return options.get(CampaignOption.TRACK_CLIMATE_REGARD_CHANGES);
+        return get(CampaignOption.TRACK_CLIMATE_REGARD_CHANGES);
     }
 
     /**
@@ -9495,7 +9632,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setTrackClimateRegardChanges(boolean trackClimateRegardChanges) {
-        options.set(CampaignOption.TRACK_CLIMATE_REGARD_CHANGES, trackClimateRegardChanges);
+        set(CampaignOption.TRACK_CLIMATE_REGARD_CHANGES, trackClimateRegardChanges);
     }
 
     /**
@@ -9503,7 +9640,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public double getRegardMultiplier() {
-        return options.get(CampaignOption.REGARD_MULTIPLIER);
+        return get(CampaignOption.REGARD_MULTIPLIER);
     }
 
     /**
@@ -9513,7 +9650,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setRegardMultiplier(double regardMultiplier) {
-        options.set(CampaignOption.REGARD_MULTIPLIER, regardMultiplier);
+        set(CampaignOption.REGARD_MULTIPLIER, regardMultiplier);
     }
 
     /**
@@ -9523,7 +9660,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public boolean isAutoGenerateOpForCallSigns() {
-        return options.get(CampaignOption.AUTO_GENERATE_OP_FOR_CALL_SIGNS);
+        return get(CampaignOption.AUTO_GENERATE_OP_FOR_CALL_SIGNS);
     }
 
     /**
@@ -9533,7 +9670,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setAutoGenerateOpForCallSigns(boolean autoGenerateOpForCallSigns) {
-        options.set(CampaignOption.AUTO_GENERATE_OP_FOR_CALL_SIGNS, autoGenerateOpForCallSigns);
+        set(CampaignOption.AUTO_GENERATE_OP_FOR_CALL_SIGNS, autoGenerateOpForCallSigns);
     }
 
     /**
@@ -9543,7 +9680,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public SkillLevel getMinimumCallsignSkillLevel() {
-        return options.get(CampaignOption.MINIMUM_CALLSIGN_SKILL_LEVEL);
+        return get(CampaignOption.MINIMUM_CALLSIGN_SKILL_LEVEL);
     }
 
     /**
@@ -9553,7 +9690,7 @@ public class CampaignOptions {
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
     public void setMinimumCallsignSkillLevel(SkillLevel skillLevel) {
-        options.set(CampaignOption.MINIMUM_CALLSIGN_SKILL_LEVEL, skillLevel);
+        set(CampaignOption.MINIMUM_CALLSIGN_SKILL_LEVEL, skillLevel);
     }
 
     /**

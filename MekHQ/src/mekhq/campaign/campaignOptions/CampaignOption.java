@@ -34,6 +34,7 @@ package mekhq.campaign.campaignOptions;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,7 @@ import megamek.common.enums.SkillLevel;
 import mekhq.campaign.RandomOriginOptions;
 import mekhq.campaign.autoResolve.AutoResolveMethod;
 import mekhq.campaign.enums.PlanetaryAcquisitionFactionLimit;
+import mekhq.campaign.finances.Money;
 import mekhq.campaign.finances.enums.FinancialYearDuration;
 import mekhq.campaign.market.enums.ContractMarketMethod;
 import mekhq.campaign.market.enums.UnitMarketMethod;
@@ -50,6 +52,8 @@ import mekhq.campaign.market.personnelMarket.enums.PersonnelMarketStyle;
 import mekhq.campaign.personnel.enums.*;
 import mekhq.campaign.randomEvents.prisoners.PrisonerCaptureStyle;
 import mekhq.campaign.stratCon.StratConPlayType;
+import mekhq.campaign.universe.PlanetarySystem.PlanetaryRating;
+import mekhq.campaign.universe.PlanetarySystem.PlanetarySophistication;
 import mekhq.gui.campaignOptions.enums.ProcurementPersonnelPick;
 import mekhq.service.mrms.MRMSOption;
 
@@ -524,11 +528,11 @@ public final class CampaignOption<T> {
     public static final CampaignOption<Integer> RANDOM_PROCREATION_RELATIONSHIPLESS_DICE_SIZE =
           of(Integer.class, 2000, "randomProcreationRelationshiplessDiceSize");
     public static final CampaignOption<Integer> NO_INTEREST_IN_RELATIONSHIPS_DICE_SIZE =
-          of(Integer.class, 100, "noInterestInRelationshipsDiceSize");
+          of(Integer.class, 100, "noInterestInMarriageDiceSize");
     public static final CampaignOption<Integer> INTERESTED_IN_BOTH_SEXES_DICE_SIZE =
           of(Integer.class, 33, "interestedInBothSexesDiceSize");
     public static final CampaignOption<Integer> INTERESTED_IN_SAME_SEX_DICE_SIZE =
-          of(Integer.class, 14, "interestedInSameSexDiceSize");
+          of(Integer.class, 14, "randomSameSexMarriageDiceSize");
     public static final CampaignOption<Boolean> USE_EDUCATION_MODULE =
           of(Boolean.class, false, "useEducationModule");
     public static final CampaignOption<Integer> CURRICULUM_XP_RATE =
@@ -570,7 +574,7 @@ public final class CampaignOption<T> {
     public static final CampaignOption<Boolean> USE_RANDOM_RETIREMENT =
           of(Boolean.class, false, "useRandomRetirement");
     public static final CampaignOption<Integer> TURNOVER_FIXED_TARGET_NUMBER =
-          of(Integer.class, 3, "turnoverFixedTargetNumber");
+          of(Integer.class, 3, "turnoverBaseTn");
     public static final CampaignOption<Boolean> AERO_RECRUITS_HAVE_UNITS =
           of(Boolean.class, false, "aeroRecruitsHaveUnits");
     public static final CampaignOption<Boolean> TRACK_ORIGINAL_UNIT =
@@ -630,7 +634,7 @@ public final class CampaignOption<T> {
     public static final CampaignOption<Boolean> USE_HR_STRAIN =
           of(Boolean.class, true, "UseHRStrain");
     public static final CampaignOption<Integer> HR_CAPACITY =
-          of(Integer.class, 10, "hrCapacity");
+          of(Integer.class, 10, "hrStrain");
     public static final CampaignOption<Boolean> USE_MANAGEMENT_SKILL =
           of(Boolean.class, true, "useManagementSkill");
     public static final CampaignOption<Boolean> USE_COMMANDER_LEADERSHIP_ONLY =
@@ -770,7 +774,7 @@ public final class CampaignOption<T> {
     public static final CampaignOption<Integer> CONTRACT_NEGOTIATION_XP =
           of(Integer.class, 0, "contractNegotiationXP");
     public static final CampaignOption<Integer> ADMIN_XP =
-          of(Integer.class, 0, "adminXP");
+          of(Integer.class, 0, "adminWeeklyXP");
     public static final CampaignOption<Integer> ADMIN_XP_PERIOD =
           of(Integer.class, 1, "adminXPPeriod");
     public static final CampaignOption<Integer> MISSION_XP_FAIL =
@@ -786,7 +790,7 @@ public final class CampaignOption<T> {
     public static final CampaignOption<Integer> EDGE_REFRESH_COST =
           of(Integer.class, 20, "edgeRefreshCost");
     public static final CampaignOption<Boolean> USE_ORIGIN_FACTION_FOR_NAMES =
-          of(Boolean.class, true, "useOriginFactionForNames");
+          of(Boolean.class, true, "useFactionForNames");
     public static final CampaignOption<Boolean> ASSIGN_PORTRAIT_ON_ROLE_CHANGE =
           of(Boolean.class, false, "assignPortraitOnRoleChange");
     public static final CampaignOption<Boolean> ALLOW_DUPLICATE_PORTRAITS =
@@ -846,7 +850,7 @@ public final class CampaignOption<T> {
     public static final CampaignOption<Boolean> IS_ENABLE_SALVAGE_FLAG_BY_DEFAULT =
           of(Boolean.class, true, "isEnableSalvageFlagByDefault");
     public static final CampaignOption<Boolean> HAD_AT_B_ENABLED_MARKER =
-          of(Boolean.class, false, "hadAtBEnabledMarker");
+          of(Boolean.class, false, "useAtB");
     public static final CampaignOption<StratConPlayType> STRAT_CON_PLAY_TYPE =
           of(StratConPlayType.class, StratConPlayType.DISABLED, "stratConPlayType");
     public static final CampaignOption<Boolean> USE_ADVANCED_SCOUTING =
@@ -924,7 +928,7 @@ public final class CampaignOption<T> {
     public static final CampaignOption<Integer> AUTO_RESOLVE_NUMBER_OF_SCENARIOS =
           of(Integer.class, 100, "autoResolveNumberOfScenarios");
     public static final CampaignOption<Boolean> AUTO_RESOLVE_EXPERIMENTAL_PACAR_GUI_ENABLED =
-          of(Boolean.class, false, "autoResolveExperimentalPacarGuiEnabled");
+          of(Boolean.class, false, "autoResolveUseExperimentalPacarGui");
     public static final CampaignOption<Boolean> AUTO_GENERATE_OP_FOR_CALL_SIGNS =
           of(Boolean.class, true, "autoGenerateOpForCallSigns");
     public static final CampaignOption<SkillLevel> MINIMUM_CALLSIGN_SKILL_LEVEL =
@@ -952,7 +956,49 @@ public final class CampaignOption<T> {
     public static final CampaignOption<Boolean> USE_FACTION_STANDING_SUPPORT_POINTS =
           of(Boolean.class, true, "useFactionStandingSupportPoints");
     public static final CampaignOption<Double> REGARD_MULTIPLIER =
-          of(Double.class, 1.0, "regardMultiplier");
+          of(Double.class, 1.0, "factionStandingGainMultiplier");
+    public static final CampaignOption<Money[]> ROLE_BASE_SALARIES = ofMutable(Money[].class, () -> new Money[0],
+          "salaryTypeBase");
+    public static final CampaignOption<Boolean> USE_AMMO_BY_TYPE =
+          of(Boolean.class, false, "useAmmoByType");
+    public static final CampaignOption<Boolean> USE_ADVANCED_MEDICAL =
+          of(Boolean.class, false, "useAdvancedMedical");
+    public static final CampaignOption<Boolean> USE_DYLANS_RANDOM_XP =
+          of(Boolean.class, false, "useDylansRandomXP");
+    public static final CampaignOption<Boolean> USE_PERCENTAGE_MAINTENANCE =
+          of(Boolean.class, false, "usePercentageMaint");
+    public static final CampaignOption<Boolean> INFANTRY_DONT_COUNT =
+          of(Boolean.class, false, "infantryDontCount");
+    public static final CampaignOption<Boolean> USE_FACTION_STANDING_OUTLAWED =
+          of(Boolean.class, true, "useFactionStandingOutlawed");
+    public static final CampaignOption<Double> EQUIPMENT_CONTRACT_PERCENT =
+          of(Double.class, 5.0, "equipmentContractPercent");
+    public static final CampaignOption<Double> DROP_SHIP_CONTRACT_PERCENT =
+          of(Double.class, 1.0, "dropShipContractPercent");
+    public static final CampaignOption<Double> JUMP_SHIP_CONTRACT_PERCENT =
+          of(Double.class, 0.0, "jumpShipContractPercent");
+    public static final CampaignOption<Double> WAR_SHIP_CONTRACT_PERCENT =
+          of(Double.class, 0.0, "warShipContractPercent");
+    public static final CampaignOption<String> STRATEGIC_VIEW_MINIMAP_THEME =
+          of(String.class, "gbc green.theme", "strategicViewTheme");
+    public static final CampaignOption<String> PERSONNEL_MARKET_NAME =
+          of(String.class, "", "personnelMarketName");
+    public static final CampaignOption<double[]> USED_PART_PRICE_MULTIPLIERS =
+          ofMutable(double[].class, () -> new double[0], "usedPartPriceMultipliers");
+    public static final CampaignOption<int[]> PHENOTYPE_PROBABILITIES =
+          ofMutable(int[].class, () -> new int[0], "phenotypeProbabilities");
+    public static final CampaignOption<boolean[]> USE_PORTRAIT_FOR_ROLE =
+          ofMutable(boolean[].class, () -> new boolean[0], "usePortraitForType");
+    public static final CampaignOption<int[]> ATB_BATTLE_CHANCE =
+          ofMutable(int[].class, () -> new int[0], "atbBattleChance");
+    public static final CampaignOption<EnumMap<PlanetarySophistication, Integer>> PLANET_TECH_ACQUISITION_BONUS =
+          ofRaw(EnumMap.class, () -> new EnumMap<>(PlanetarySophistication.class), "planetTechAcquisitionBonus");
+    public static final CampaignOption<EnumMap<PlanetaryRating, Integer>> PLANET_INDUSTRY_ACQUISITION_BONUS =
+          ofRaw(EnumMap.class, () -> new EnumMap<>(PlanetaryRating.class), "planetIndustryAcquisitionBonus");
+    public static final CampaignOption<EnumMap<PlanetaryRating, Integer>> PLANET_OUTPUT_ACQUISITION_BONUS =
+          ofRaw(EnumMap.class, () -> new EnumMap<>(PlanetaryRating.class), "planetOutputAcquisitionBonus");
+    public static final CampaignOption<Map<SkillLevel, Integer>> PERSONNEL_MARKET_RANDOM_REMOVAL_TARGETS =
+          ofRaw(Map.class, () -> new HashMap<>(), "personnelMarketRandomRemovalTargets");
     // endregion Migrated Options
 
     private final Class<T> type;

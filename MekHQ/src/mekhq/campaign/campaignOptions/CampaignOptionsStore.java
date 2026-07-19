@@ -36,6 +36,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * A heterogeneous, type-safe store for campaign option values keyed by {@link CampaignOption}.
  *
@@ -62,7 +64,7 @@ final class CampaignOptionsStore {
      *
      * @return the stored value for the given option
      */
-    <T> T get(final CampaignOption<T> option) {
+    <T> @Nonnull T get(final @Nonnull CampaignOption<T> option) {
         return option.type().cast(values.get(option));
     }
 
@@ -70,7 +72,7 @@ final class CampaignOptionsStore {
      * @param option the option to write
      * @param value  the value to store; its type is enforced by the compiler against the key
      */
-    <T> void set(final CampaignOption<T> option, final T value) {
+    <T> void set(final CampaignOption<T> option, @Nonnull T value) {
         values.put(option, value);
     }
 }
