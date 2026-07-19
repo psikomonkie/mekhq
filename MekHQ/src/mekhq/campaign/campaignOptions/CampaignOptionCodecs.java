@@ -51,6 +51,7 @@ import megamek.logging.MMLogger;
 import mekhq.Utilities;
 import mekhq.campaign.RandomOriginOptions;
 import mekhq.campaign.autoResolve.AutoResolveMethod;
+import mekhq.campaign.digitalGM.stratCon.StratConPlayType;
 import mekhq.campaign.enums.PlanetaryAcquisitionFactionLimit;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.finances.enums.FinancialYearDuration;
@@ -59,7 +60,6 @@ import mekhq.campaign.market.enums.UnitMarketMethod;
 import mekhq.campaign.market.personnelMarket.enums.PersonnelMarketStyle;
 import mekhq.campaign.personnel.enums.*;
 import mekhq.campaign.randomEvents.prisoners.PrisonerCaptureStyle;
-import mekhq.campaign.stratCon.StratConPlayType;
 import mekhq.campaign.universe.PlanetarySystem.PlanetaryRating;
 import mekhq.campaign.universe.PlanetarySystem.PlanetarySophistication;
 import mekhq.gui.campaignOptions.enums.ProcurementPersonnelPick;
@@ -485,6 +485,12 @@ final class CampaignOptionCodecs {
 
         // Regard multiplier falls back to 1.0 (rather than 0.0) when a save has a malformed value.
         register(CampaignOption.REGARD_MULTIPLIER, CampaignOptionCodec.of(
+              (pw, indent, option, options) -> MHQXMLUtility.writeSimpleXMLTag(pw, indent, option.xmlTag(),
+                    (double) options.get(option)),
+              (node, text, version, option, options) -> options.set(option, parseDouble(text, 1.0))));
+
+        // Alternative advanced medical healing-time multiplier falls back to 1.0 on a malformed value.
+        register(CampaignOption.ALTERNATIVE_ADVANCED_MEDICAL_HEALING_TIME_MULTIPLIER, CampaignOptionCodec.of(
               (pw, indent, option, options) -> MHQXMLUtility.writeSimpleXMLTag(pw, indent, option.xmlTag(),
                     (double) options.get(option)),
               (node, text, version, option, options) -> options.set(option, parseDouble(text, 1.0))));

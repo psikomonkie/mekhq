@@ -43,6 +43,7 @@ import java.util.function.Supplier;
 import megamek.common.enums.SkillLevel;
 import mekhq.campaign.RandomOriginOptions;
 import mekhq.campaign.autoResolve.AutoResolveMethod;
+import mekhq.campaign.digitalGM.stratCon.StratConPlayType;
 import mekhq.campaign.enums.PlanetaryAcquisitionFactionLimit;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.finances.enums.FinancialYearDuration;
@@ -51,7 +52,6 @@ import mekhq.campaign.market.enums.UnitMarketMethod;
 import mekhq.campaign.market.personnelMarket.enums.PersonnelMarketStyle;
 import mekhq.campaign.personnel.enums.*;
 import mekhq.campaign.randomEvents.prisoners.PrisonerCaptureStyle;
-import mekhq.campaign.stratCon.StratConPlayType;
 import mekhq.campaign.universe.PlanetarySystem.PlanetaryRating;
 import mekhq.campaign.universe.PlanetarySystem.PlanetarySophistication;
 import mekhq.gui.campaignOptions.enums.ProcurementPersonnelPick;
@@ -315,8 +315,10 @@ public final class CampaignOption<T> {
           of(Boolean.class, false, "tougherHealing");
     public static final CampaignOption<Boolean> USE_ALTERNATIVE_ADVANCED_MEDICAL =
           of(Boolean.class, false, "useAlternativeAdvancedMedical");
-    public static final CampaignOption<Boolean> USE_KINDER_ALTERNATIVE_ADVANCED_MEDICAL =
-          of(Boolean.class, false, "useKinderAlternativeAdvancedMedical");
+    public static final CampaignOption<Boolean> USE_ALTERNATIVE_ADVANCED_MEDICAL_FEWER_PERMANENT_INJURIES =
+          of(Boolean.class, false, "useAlternativeAdvancedMedicalFewerPermanentInjuries");
+    public static final CampaignOption<Double> ALTERNATIVE_ADVANCED_MEDICAL_HEALING_TIME_MULTIPLIER =
+          of(Double.class, 1.0, "alternativeAdvancedMedicalHealingTimeMultiplier");
     public static final CampaignOption<Boolean> USE_RANDOM_DISEASES =
           of(Boolean.class, false, "useRandomDiseases");
     public static final CampaignOption<Integer> MAXIMUM_PATIENTS =
@@ -999,6 +1001,12 @@ public final class CampaignOption<T> {
           ofRaw(EnumMap.class, () -> new EnumMap<>(PlanetaryRating.class), "planetOutputAcquisitionBonus");
     public static final CampaignOption<Map<SkillLevel, Integer>> PERSONNEL_MARKET_RANDOM_REMOVAL_TARGETS =
           ofRaw(Map.class, () -> new HashMap<>(), "personnelMarketRandomRemovalTargets");
+    public static final CampaignOption<Boolean> LIMIT_CLAN_TECH =
+          of(Boolean.class, true, "limitClanTech");
+    public static final CampaignOption<Boolean> USE_TWIST_OF_FATE_SURVIVAL =
+          of(Boolean.class, false, "useTwistOfFateSurvival");
+    public static final CampaignOption<Boolean> USE_REPLACE_EDGE_AWARDS =
+          of(Boolean.class, false, "useReplaceEdgeAwards");
     // endregion Migrated Options
 
     private final Class<T> type;

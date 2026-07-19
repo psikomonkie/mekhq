@@ -47,9 +47,9 @@ import java.util.Set;
 
 import megamek.Version;
 import megamek.common.enums.SkillLevel;
+import mekhq.campaign.digitalGM.stratCon.StratConPlayType;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.personnel.enums.PersonnelRole;
-import mekhq.campaign.stratCon.StratConPlayType;
 import mekhq.campaign.universe.PlanetarySystem.PlanetarySophistication;
 import mekhq.utilities.MHQXMLUtility;
 import org.junit.jupiter.api.Test;
