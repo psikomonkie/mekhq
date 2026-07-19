@@ -290,6 +290,10 @@ public class CampaignOptionsMarshaller {
               "edgeRefreshPeriod",
               campaignOptions.getEdgeRefreshPeriod().getLookupKey());
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "useEdge", campaignOptions.isUseEdge());
+        MHQXMLUtility.writeSimpleXMLTag(pw,
+              indent,
+              "useTwistOfFateSurvival",
+              campaignOptions.isUseTwistOfFateSurvival());
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "useImplants", campaignOptions.isUseImplants());
         MHQXMLUtility.writeSimpleXMLTag(pw,
               indent,
