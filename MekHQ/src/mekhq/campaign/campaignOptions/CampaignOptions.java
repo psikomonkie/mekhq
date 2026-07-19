@@ -73,7 +73,7 @@ import mekhq.campaign.mission.enums.CombatRole;
 import mekhq.campaign.parts.enums.PartRepairType;
 import mekhq.campaign.personnel.enums.*;
 import mekhq.campaign.randomEvents.prisoners.PrisonerCaptureStyle;
-import mekhq.campaign.stratCon.StratConPlayType;
+import mekhq.campaign.digitalGM.stratCon.StratConPlayType;
 import mekhq.campaign.universe.PlanetarySystem.PlanetaryRating;
 import mekhq.campaign.universe.PlanetarySystem.PlanetarySophistication;
 import mekhq.gui.campaignOptions.enums.ProcurementPersonnelPick;
@@ -105,6 +105,8 @@ public class CampaignOptions {
     public static final double MAXIMUM_WARSHIP_EQUIPMENT_PERCENT = 1.0;
 
     public static final int REPUTATION_PERFORMANCE_CUT_OFF_YEARS = 10;
+
+    public static final int EDGE_AWARD_REPLACEMENT_XP = 10;
 
     public static String getTechLevelName(final int techLevel) {
         return switch (techLevel) {
@@ -1886,23 +1888,96 @@ public class CampaignOptions {
     }
 
     /**
-     * @deprecated Use
-     *       {@link CampaignOptions#get(CampaignOption)
-     *       CampaignOptions.get(CampaignOption.USE_KINDER_ALTERNATIVE_ADVANCED_MEDICAL)}
+     * @deprecated Use {@link CampaignOptions#get(CampaignOption)
+     *       CampaignOptions.get(CampaignOption.USE_ALTERNATIVE_ADVANCED_MEDICAL_FEWER_PERMANENT_INJURIES)}
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public boolean isUseKinderAlternativeAdvancedMedical() {
-        return get(CampaignOption.USE_KINDER_ALTERNATIVE_ADVANCED_MEDICAL);
+    public boolean isUseAlternativeAdvancedMedicalFewerPermanentInjuries() {
+        return get(CampaignOption.USE_ALTERNATIVE_ADVANCED_MEDICAL_FEWER_PERMANENT_INJURIES);
+    }
+
+    /**
+     * @deprecated Use {@link CampaignOptions#set(CampaignOption, Object)
+     *       CampaignOptions.set(CampaignOption.USE_ALTERNATIVE_ADVANCED_MEDICAL_FEWER_PERMANENT_INJURIES, value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
+    public void setUseAlternativeAdvancedMedicalFewerPermanentInjuries(
+          final boolean useAlternativeAdvancedMedicalFewerPermanentInjuries) {
+        set(CampaignOption.USE_ALTERNATIVE_ADVANCED_MEDICAL_FEWER_PERMANENT_INJURIES,
+              useAlternativeAdvancedMedicalFewerPermanentInjuries);
+    }
+
+    /**
+     * @deprecated Use {@link CampaignOptions#get(CampaignOption)
+     *       CampaignOptions.get(CampaignOption.ALTERNATIVE_ADVANCED_MEDICAL_HEALING_TIME_MULTIPLIER)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
+    public double getAlternativeAdvancedMedicalHealingTimeMultiplier() {
+        return get(CampaignOption.ALTERNATIVE_ADVANCED_MEDICAL_HEALING_TIME_MULTIPLIER);
+    }
+
+    /**
+     * @deprecated Use {@link CampaignOptions#set(CampaignOption, Object)
+     *       CampaignOptions.set(CampaignOption.ALTERNATIVE_ADVANCED_MEDICAL_HEALING_TIME_MULTIPLIER, value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
+    public void setAlternativeAdvancedMedicalHealingTimeMultiplier(
+          final double alternativeAdvancedMedicalHealingTimeMultiplier) {
+        set(CampaignOption.ALTERNATIVE_ADVANCED_MEDICAL_HEALING_TIME_MULTIPLIER,
+              alternativeAdvancedMedicalHealingTimeMultiplier);
+    }
+
+    /**
+     * @deprecated Use {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.LIMIT_CLAN_TECH)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
+    public boolean isLimitClanTech() {
+        return get(CampaignOption.LIMIT_CLAN_TECH);
     }
 
     /**
      * @deprecated Use
-     *       {@link CampaignOptions#set(CampaignOption, Object)
-     *       CampaignOptions.set(CampaignOption.USE_KINDER_ALTERNATIVE_ADVANCED_MEDICAL, value)}
+     *       {@link CampaignOptions#set(CampaignOption, Object) CampaignOptions.set(CampaignOption.LIMIT_CLAN_TECH, value)}
      */
     @Deprecated(since = "0.51.01", forRemoval = true)
-    public void setUseKinderAlternativeAdvancedMedical(final boolean useKinderAlternativeAdvancedMedical) {
-        set(CampaignOption.USE_KINDER_ALTERNATIVE_ADVANCED_MEDICAL, useKinderAlternativeAdvancedMedical);
+    public void setLimitClanTech(final boolean limitClanTech) {
+        set(CampaignOption.LIMIT_CLAN_TECH, limitClanTech);
+    }
+
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.USE_TWIST_OF_FATE_SURVIVAL)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
+    public boolean isUseTwistOfFateSurvival() {
+        return get(CampaignOption.USE_TWIST_OF_FATE_SURVIVAL);
+    }
+
+    /**
+     * @deprecated Use {@link CampaignOptions#set(CampaignOption, Object)
+     *       CampaignOptions.set(CampaignOption.USE_TWIST_OF_FATE_SURVIVAL, value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
+    public void setUseTwistOfFateSurvival(final boolean useTwistOfFateSurvival) {
+        set(CampaignOption.USE_TWIST_OF_FATE_SURVIVAL, useTwistOfFateSurvival);
+    }
+
+    /**
+     * @deprecated Use
+     *       {@link CampaignOptions#get(CampaignOption) CampaignOptions.get(CampaignOption.USE_REPLACE_EDGE_AWARDS)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
+    public boolean isUseReplaceEdgeAwards() {
+        return get(CampaignOption.USE_REPLACE_EDGE_AWARDS);
+    }
+
+    /**
+     * @deprecated Use {@link CampaignOptions#set(CampaignOption, Object)
+     *       CampaignOptions.set(CampaignOption.USE_REPLACE_EDGE_AWARDS, value)}
+     */
+    @Deprecated(since = "0.51.01", forRemoval = true)
+    public void setUseReplaceEdgeAwards(final boolean useReplaceEdgeAwards) {
+        set(CampaignOption.USE_REPLACE_EDGE_AWARDS, useReplaceEdgeAwards);
     }
 
     /**

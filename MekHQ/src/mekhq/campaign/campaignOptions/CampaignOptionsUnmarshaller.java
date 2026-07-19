@@ -39,7 +39,7 @@ import static mekhq.gui.campaignOptions.enums.ProcurementPersonnelPick.SUPPORT;
 
 import megamek.Version;
 import megamek.logging.MMLogger;
-import mekhq.campaign.stratCon.StratConPlayType;
+import mekhq.campaign.digitalGM.stratCon.StratConPlayType;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -116,6 +116,12 @@ public class CampaignOptionsUnmarshaller {
             case "useMaplessStratCon" -> {
                 if (parseBoolean(nodeContents)) {
                     campaignOptions.setStratConPlayType(StratConPlayType.MAPLESS);
+                }
+            }
+            // Legacy boolean replaced by the alternative advanced medical healing-time multiplier.
+            case "useKinderAlternativeAdvancedMedical" -> {
+                if (parseBoolean(nodeContents)) {
+                    campaignOptions.setAlternativeAdvancedMedicalHealingTimeMultiplier(0.5);
                 }
             }
             default -> LOGGER.warn("Potentially unexpected entry in campaign options: {}", nodeName);

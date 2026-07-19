@@ -43,6 +43,8 @@ import static megamek.common.units.UnitType.AEROSPACE_FIGHTER;
 import static megamek.common.units.UnitType.MEK;
 import static megamek.common.units.UnitType.TANK;
 import static mekhq.MHQConstants.BATTLE_OF_TUKAYYID;
+import static mekhq.campaign.digitalGM.stratCon.StratConContractDefinition.getContractDefinition;
+import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.INDEPENDENT_COMMAND_RIGHTS_REQUIRED_VICTORY_POINTS;
 import static mekhq.campaign.enums.DailyReportType.GENERAL;
 import static mekhq.campaign.enums.DailyReportType.POLITICS;
 import static mekhq.campaign.force.CombatTeam.getStandardFormationSize;
@@ -55,8 +57,6 @@ import static mekhq.campaign.mission.enums.AtBMoraleLevel.DOMINATING;
 import static mekhq.campaign.mission.enums.AtBMoraleLevel.OVERWHELMING;
 import static mekhq.campaign.mission.enums.AtBMoraleLevel.STALEMATE;
 import static mekhq.campaign.randomEvents.prisoners.PrisonerStatus.FREE;
-import static mekhq.campaign.stratCon.StratConContractDefinition.getContractDefinition;
-import static mekhq.campaign.stratCon.StratConRulesManager.INDEPENDENT_COMMAND_RIGHTS_REQUIRED_VICTORY_POINTS;
 import static mekhq.campaign.universe.Faction.PIRATE_FACTION_CODE;
 import static mekhq.utilities.MHQInternationalization.getFormattedTextAt;
 import static mekhq.utilities.MHQInternationalization.getTextAt;
@@ -73,6 +73,10 @@ import megamek.logging.MMLogger;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.campaignOptions.CampaignOptions;
+import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
+import mekhq.campaign.digitalGM.stratCon.StratConContractDefinition;
+import mekhq.campaign.digitalGM.stratCon.StratConContractInitializer;
+import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 import mekhq.campaign.enums.DragoonRating;
 import mekhq.campaign.events.missions.MissionChangedEvent;
 import mekhq.campaign.finances.Money;
@@ -86,10 +90,6 @@ import mekhq.campaign.personnel.Person;
 import mekhq.campaign.personnel.backgrounds.BackgroundsController;
 import mekhq.campaign.randomEvents.other.MercenaryAuction;
 import mekhq.campaign.randomEvents.other.RoninOffer;
-import mekhq.campaign.stratCon.StratConCampaignState;
-import mekhq.campaign.stratCon.StratConContractDefinition;
-import mekhq.campaign.stratCon.StratConContractInitializer;
-import mekhq.campaign.stratCon.StratConTrackState;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.Factions;
@@ -283,7 +283,12 @@ public class AtBContract extends Contract {
     public void updateEnemy(Campaign campaign, LocalDate today, @Nullable String enemyCode) {
         if (enemyCode == null) {
             Faction employer = getEmployerFaction();
-            enemyCode = RandomFactionGenerator.getInstance().getEnemy(employer, false, true);
+            // Re-rolled with the same contract-type enemy preference the market uses, so e.g. a riot duty that
+            // "mixes it up" still ends up against rebels rather than a random neighboring power.
+            enemyCode = RandomFactionGenerator.getInstance()
+                              .getRandomEnemy(campaign.getCurrentLocation(), today, employer,
+                                    getContractType().getEnemySelectionProfile())
+                              .getShortName();
         }
         setEnemyCode(enemyCode);
 
@@ -968,6 +973,11 @@ public class AtBContract extends Contract {
                 StratConContractInitializer.initializeCampaignState(this, campaign, stratconContractDefinition);
             }
         }
+
+        // Announce that the contract is now fully initialized (its StratCon state, if any, now exists). addMission
+        // already fired MissionNewEvent earlier, but that happens before this initialization, so listeners such as the
+        // StratCon tab need this second signal to pick the contract up immediately rather than only after the next day.
+        MekHQ.triggerEvent(new MissionChangedEvent(this));
     }
 
     public AtBContract(Contract contract, Campaign campaign) {
@@ -1044,7 +1054,9 @@ public class AtBContract extends Contract {
         setContractDifficulty(calculateContractDifficulty(contract, contract.getStartDate().getYear(),
               true, campaign.getAllCombatEntities()));
 
-        clanTechSalvageOverride();
+        if (campaign.getCampaignOptions().isLimitClanTech()) {
+            clanTechSalvageOverride();
+        }
     }
 
     private static AtBContractType getAtBContractType(Contract contract) {

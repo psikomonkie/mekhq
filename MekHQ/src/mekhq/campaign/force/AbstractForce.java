@@ -63,6 +63,7 @@ import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.ForceHumanResources;
 import mekhq.campaign.camOpsReputation.ForceReputationController;
+import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 import mekhq.campaign.events.NetworkChangedEvent;
 import mekhq.campaign.events.OrganizationChangedEvent;
 import mekhq.campaign.finances.Finances;
@@ -80,7 +81,6 @@ import mekhq.campaign.personnel.Person;
 import mekhq.campaign.personnel.medical.MASHCapacity;
 import mekhq.campaign.personnel.ranks.RankSystem;
 import mekhq.campaign.personnel.ranks.RankValidator;
-import mekhq.campaign.stratCon.StratConTrackState;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.unit.UnitTechProgression;
 import mekhq.campaign.universe.Faction;
@@ -92,9 +92,9 @@ import mekhq.campaign.universe.factionStanding.FactionStandings;
  *
  * <p>The located resources (hangar, warehouse, personnel, location) are <em>not</em> owned by the force — they belong
  * to its {@link Detachment}(s). A force is not itself a location node; {@link #getDetachments()} is the
- * detachment-count-agnostic way to reach them, and the aggregate helpers ({@link #allUnits()},
- * {@link #allPersonnel()}) project across every detachment. Convenience accessors that assume a single detachment live
- * on {@link SingleDetachmentForce}; force-internal operations that still assume one go through
+ * detachment-count-agnostic way to reach them, and the aggregate helpers ({@link #allUnits()}, {@link #allPersonnel()})
+ * project across every detachment. Convenience accessors that assume a single detachment live on
+ * {@link SingleDetachmentForce}; force-internal operations that still assume one go through
  * {@link #requireSingleDetachment()}.</p>
  *
  * <p>A force holds <em>no</em> reference back to its {@link mekhq.campaign.Campaign}. Campaign-level concerns — the
@@ -689,8 +689,8 @@ public abstract class AbstractForce {
      * Moves {@code formation} to sit directly under {@code superFormation} in the TOE, detaching it from its current
      * parent and inheriting the target's scenario assignment. Formation-type standardization is then applied per the
      * moved formation's {@link FormationType} (parents may be standardized, children may inherit), and formation levels
-     * are repopulated across the TOE. No-ops if {@code formation} is {@code null} or equals {@code superFormation}.
-     * The {@link Campaign} is supplied as a parameter for the scenario and TOE updates this drives.
+     * are repopulated across the TOE. No-ops if {@code formation} is {@code null} or equals {@code superFormation}. The
+     * {@link Campaign} is supplied as a parameter for the scenario and TOE updates this drives.
      */
     public void moveFormation(Formation formation, Formation superFormation, Campaign campaign) {
         // Can't move a null formation under a subformation and can't move a formation under itself.
@@ -809,10 +809,9 @@ public abstract class AbstractForce {
     }
 
     /**
-     * Removes {@code formation} from the TOE: unassigns its units (clearing their scenario if it was deployed),
-     * removes it from any scenario it was deployed to and from its parent formation, and clears any StratCon track
-     * assignments. The {@link Campaign} is supplied as a parameter for the scenario, contract, and combat-team updates
-     * this drives.
+     * Removes {@code formation} from the TOE: unassigns its units (clearing their scenario if it was deployed), removes
+     * it from any scenario it was deployed to and from its parent formation, and clears any StratCon track assignments.
+     * The {@link Campaign} is supplied as a parameter for the scenario, contract, and combat-team updates this drives.
      */
     public void removeFormation(Formation formation, Campaign campaign) {
         int formationId = formation.getId();

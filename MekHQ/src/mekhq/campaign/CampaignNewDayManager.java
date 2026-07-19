@@ -38,6 +38,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.round;
 import static megamek.common.compute.Compute.d6;
 import static megamek.common.compute.Compute.randomInt;
+import static mekhq.campaign.digitalGM.stratCon.StratConRulesManager.processIgnoredDynamicScenario;
+import static mekhq.campaign.digitalGM.stratCon.SupportPointNegotiation.negotiateAdditionalSupportPoints;
 import static mekhq.campaign.enums.DailyReportType.ACQUISITIONS;
 import static mekhq.campaign.enums.DailyReportType.BATTLE;
 import static mekhq.campaign.enums.DailyReportType.FINANCES;
@@ -79,8 +81,6 @@ import static mekhq.campaign.personnel.turnoverAndRetention.RetirementDefectionT
 import static mekhq.campaign.randomEvents.other.GrayMonday.GRAY_MONDAY_EVENTS_BEGIN;
 import static mekhq.campaign.randomEvents.other.GrayMonday.GRAY_MONDAY_EVENTS_END;
 import static mekhq.campaign.randomEvents.prisoners.PrisonerStatus.BONDSMAN;
-import static mekhq.campaign.stratCon.StratConRulesManager.processIgnoredDynamicScenario;
-import static mekhq.campaign.stratCon.SupportPointNegotiation.negotiateAdditionalSupportPoints;
 import static mekhq.campaign.universe.Faction.MERCENARY_FACTION_CODE;
 import static mekhq.campaign.universe.Faction.PIRATE_FACTION_CODE;
 import static mekhq.campaign.universe.factionStanding.FactionStandingUtilities.PIRACY_SUCCESS_INDEX_FACTION_CODE;
@@ -110,6 +110,10 @@ import mekhq.MHQOptions;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign.AdministratorSpecialization;
 import mekhq.campaign.campaignOptions.CampaignOptions;
+import mekhq.campaign.digitalGM.stratCon.StratConCampaignState;
+import mekhq.campaign.digitalGM.stratCon.StratConCoords;
+import mekhq.campaign.digitalGM.stratCon.StratConFacility;
+import mekhq.campaign.digitalGM.stratCon.StratConTrackState;
 import mekhq.campaign.enums.DailyReportType;
 import mekhq.campaign.events.DayEndingEvent;
 import mekhq.campaign.events.DeploymentChangedEvent;
@@ -177,10 +181,6 @@ import mekhq.campaign.randomEvents.other.RiotScenario;
 import mekhq.campaign.randomEvents.other.VoiceOfKerensky;
 import mekhq.campaign.randomEvents.prisoners.PrisonerEventManager;
 import mekhq.campaign.randomEvents.prisoners.RecoverMIAPersonnel;
-import mekhq.campaign.stratCon.StratConCampaignState;
-import mekhq.campaign.stratCon.StratConCoords;
-import mekhq.campaign.stratCon.StratConFacility;
-import mekhq.campaign.stratCon.StratConTrackState;
 import mekhq.campaign.unit.Maintenance;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.Faction;
@@ -318,13 +318,6 @@ public class CampaignNewDayManager {
      */
     public boolean newDay() {
         reset(); // refresh cached values
-
-        // Clear previous daily report nags (we want this near the top so that we can make sure no messages have been
-        // posted prior to this point).
-        CommandCenterTab commandCenter = campaign.getGUI().getCommandCenterTab();
-        for (DailyReportType type : DailyReportType.values()) {
-            commandCenter.clearDailyReportNag(type.getTabIndex());
-        }
 
         // clear previous retirement information
         campaign.getTurnoverRetirementInformation().clear();
@@ -487,46 +480,17 @@ public class CampaignNewDayManager {
             campaign.setHasActiveContract();
         }
 
-        // Clear Reports
-        campaign.getCurrentReport().clear();
-        campaign.setCurrentReportHTML("");
-        campaign.getNewReports().clear();
+        // Clear Reports. We also clear the daily report nags here, atomically with the report content: any report
+        // posted earlier in this newDay() (e.g. by pool refills that hire or fire) had its content wiped by the clear()
+        // below, so any nag it raised is stale. Clearing nags at the same moment leaves only genuine, post-beginReport
+        // reports able to flash a tab. (Doing this at the top of newDay() instead let those stale nags survive, so a
+        // tab would flash while showing only the date line.)
+        campaign.getDailyReportLog().clear();
 
-        campaign.getSkillReport().clear();
-        campaign.setSkillReportHTML("");
-        campaign.getNewSkillReports().clear();
-
-        campaign.getBattleReport().clear();
-        campaign.setBattleReportHTML("");
-        campaign.getNewBattleReports().clear();
-
-        campaign.getPoliticsReport().clear();
-        campaign.setPoliticsReportHTML("");
-        campaign.getNewPoliticsReports().clear();
-
-        campaign.getPersonnelReport().clear();
-        campaign.setPersonnelReportHTML("");
-        campaign.getNewPersonnelReports().clear();
-
-        campaign.getMedicalReport().clear();
-        campaign.setMedicalReportHTML("");
-        campaign.getNewMedicalReports().clear();
-
-        campaign.getFinancesReport().clear();
-        campaign.setFinancesReportHTML("");
-        campaign.getNewFinancesReports().clear();
-
-        campaign.getAcquisitionsReport().clear();
-        campaign.setAcquisitionsReportHTML("");
-        campaign.getNewAcquisitionsReports().clear();
-
-        campaign.getTechnicalReport().clear();
-        campaign.setTechnicalReportHTML("");
-        campaign.getNewTechnicalReports().clear();
-
-        campaign.getAggregateReport().clear();
-        campaign.setAggregateReportHTML("");
-        campaign.getNewAggregateReports().clear();
+        CommandCenterTab commandCenter = campaign.getGUI().getCommandCenterTab();
+        for (DailyReportType type : DailyReportType.values()) {
+            commandCenter.clearDailyReportNag(type.getTabIndex());
+        }
 
         campaign.beginReport("<b>" + MekHQ.getMHQOptions().getLongDisplayFormattedDate(today) + "</b>");
 
