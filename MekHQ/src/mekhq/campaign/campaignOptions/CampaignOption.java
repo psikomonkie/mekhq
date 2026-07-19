@@ -499,8 +499,9 @@ public final class CampaignOption<T> {
           of(Boolean.class, false, "useClanPersonnelProcreation");
     public static final CampaignOption<Boolean> USE_PRISONER_PROCREATION =
           of(Boolean.class, true, "usePrisonerProcreation");
+    // Hellin's Law is 89, but we make it more common, so it shows up more
     public static final CampaignOption<Integer> MULTIPLE_PREGNANCY_OCCURRENCES =
-          of(Integer.class, 0, "multiplePregnancyOccurrences");
+          of(Integer.class, 50, "multiplePregnancyOccurrences");
     public static final CampaignOption<BabySurnameStyle> BABY_SURNAME_STYLE =
           of(BabySurnameStyle.class, BabySurnameStyle.MOTHERS, "babySurnameStyle");
     public static final CampaignOption<Boolean> ASSIGN_NON_PRISONER_BABIES_FOUNDER_TAG =

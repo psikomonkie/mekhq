@@ -62,6 +62,7 @@ import megamek.common.preference.PreferenceManager;
 import megamek.logging.MMLogger;
 import mekhq.campaign.RandomOriginOptions;
 import mekhq.campaign.autoResolve.AutoResolveMethod;
+import mekhq.campaign.digitalGM.stratCon.StratConPlayType;
 import mekhq.campaign.enums.PlanetaryAcquisitionFactionLimit;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.finances.enums.FinancialYearDuration;
@@ -73,7 +74,6 @@ import mekhq.campaign.mission.enums.CombatRole;
 import mekhq.campaign.parts.enums.PartRepairType;
 import mekhq.campaign.personnel.enums.*;
 import mekhq.campaign.randomEvents.prisoners.PrisonerCaptureStyle;
-import mekhq.campaign.digitalGM.stratCon.StratConPlayType;
 import mekhq.campaign.universe.PlanetarySystem.PlanetaryRating;
 import mekhq.campaign.universe.PlanetarySystem.PlanetarySophistication;
 import mekhq.gui.campaignOptions.enums.ProcurementPersonnelPick;
@@ -213,8 +213,6 @@ public class CampaignOptions {
         getDivorceSurnameWeights().put(SplittingSurnameStyle.SPOUSE_CHANGES_SURNAME, 10);
         getDivorceSurnameWeights().put(SplittingSurnameStyle.BOTH_CHANGE_SURNAME, 30);
         getDivorceSurnameWeights().put(SplittingSurnameStyle.BOTH_KEEP_SURNAME, 50);
-
-        setMultiplePregnancyOccurrences(50); // Hellin's Law is 89, but we make it more common, so it shows up more
 
         getEnabledRandomDeathAgeGroups().put(AgeGroup.ELDER, true);
         getEnabledRandomDeathAgeGroups().put(AgeGroup.ADULT, true);
