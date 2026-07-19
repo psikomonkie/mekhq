@@ -33,6 +33,7 @@
 package mekhq.gui.model;
 
 import static mekhq.campaign.campaignOptions.CampaignOptions.EDGE_AWARD_REPLACEMENT_XP;
+import static mekhq.utilities.MHQInternationalization.getFormattedTextAt;
 
 import java.awt.Component;
 import java.util.HashMap;
@@ -55,6 +56,7 @@ import mekhq.gui.utilities.MekHqTableCellRenderer;
 
 public class AutoAwardsTableModel extends AbstractTableModel {
     private static final MMLogger LOGGER = MMLogger.create(AutoAwardsTableModel.class);
+    private static final String RESOURCE_BUNDLE = "mekhq.resources.AutoAwardsTableModel";
 
     public static final int COL_PERSON = 0;
     public static final int COL_NAME = 1;
@@ -177,16 +179,39 @@ public class AutoAwardsTableModel extends AbstractTableModel {
         AwardBonus style = campaignOptions.getAwardBonusStyle();
         int xpAward = award.getXPReward();
         int edgeAward = award.getEdgeReward();
+        boolean awardXP = style.isBoth() || style.isXP();
+        boolean awardEdge = style.isBoth() || style.isEdge();
 
         String awards = "";
-        if (style.isBoth() || style.isXP()) {
-            awards += (xpAward > 0) ? " (" + xpAward + " XP)" : "";
-        }
-        if (style.isBoth() || style.isEdge()) {
-            if (isReplaceEdgeAwards) {
-                awards += (edgeAward > 0) ? " (" + edgeAward * EDGE_AWARD_REPLACEMENT_XP + " XP)" : "";
-            } else {
-                awards += (edgeAward > 0) ? " (" + edgeAward + " Edge)" : "";
+        if (awardXP && awardEdge && isReplaceEdgeAwards) {
+            int totalXpAward = 0;
+
+            if (xpAward > 0) {
+                totalXpAward += xpAward;
+            }
+            if (edgeAward > 0) {
+                totalXpAward += edgeAward * EDGE_AWARD_REPLACEMENT_XP;
+            }
+
+            if (totalXpAward > 0) {
+                awards = getFormattedTextAt(RESOURCE_BUNDLE, "AutoAwardsTableModel.award.xp",
+                      awards, totalXpAward);
+            }
+        } else {
+            if (awardXP && xpAward > 0) {
+                awards = getFormattedTextAt(RESOURCE_BUNDLE, "AutoAwardsTableModel.award.xp",
+                      awards, xpAward);
+            }
+
+            if (awardEdge && edgeAward > 0) {
+                if (isReplaceEdgeAwards) {
+                    int adjustedValue = edgeAward * EDGE_AWARD_REPLACEMENT_XP;
+                    awards = getFormattedTextAt(RESOURCE_BUNDLE, "AutoAwardsTableModel.award.xp",
+                          awards, adjustedValue);
+                } else {
+                    awards = getFormattedTextAt(RESOURCE_BUNDLE, "AutoAwardsTableModel.award.edge",
+                          awards, edgeAward);
+                }
             }
         }
         return awards;
