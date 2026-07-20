@@ -38,8 +38,10 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import megamek.common.enums.SkillLevel;
 import mekhq.campaign.RandomOriginOptions;
 import mekhq.campaign.autoResolve.AutoResolveMethod;
@@ -1014,17 +1016,20 @@ public final class CampaignOption<T> {
     private final Supplier<T> defaultSupplier;
     private final String xmlTag;
 
-    private CampaignOption(final Class<T> type, final Supplier<T> defaultSupplier, final String xmlTag) {
-        this.type = type;
-        this.defaultSupplier = defaultSupplier;
-        this.xmlTag = xmlTag;
+    private CampaignOption(final @Nonnull Class<T> type, final @Nonnull Supplier<T> defaultSupplier,
+          final @Nonnull String xmlTag) {
+        this.type = Objects.requireNonNull(type);
+        this.defaultSupplier = Objects.requireNonNull(defaultSupplier);
+        this.xmlTag = Objects.requireNonNull(xmlTag);
     }
 
     /**
      * Registers an option whose default is an immutable value safe to share across campaigns (primitives, enums,
      * strings).
      */
-    private static <T> CampaignOption<T> of(final Class<T> type, final T defaultValue, final String xmlTag) {
+    private static <T> CampaignOption<T> of(final @Nonnull Class<T> type, final @Nonnull T defaultValue,
+          final @Nonnull String xmlTag) {
+        Objects.requireNonNull(defaultValue);
         return register(new CampaignOption<>(type, () -> defaultValue, xmlTag));
     }
 
@@ -1033,8 +1038,8 @@ public final class CampaignOption<T> {
      * {@code RandomOriginOptions}). The supplier is invoked once per {@link CampaignOptionsStore} so each campaign gets
      * its own instance and no default is aliased between campaigns.
      */
-    private static <T> CampaignOption<T> ofMutable(final Class<T> type, final Supplier<T> defaultSupplier,
-          final String xmlTag) {
+    private static <T> CampaignOption<T> ofMutable(final @Nonnull Class<T> type,
+          final @Nonnull Supplier<T> defaultSupplier, final @Nonnull String xmlTag) {
         return register(new CampaignOption<>(type, defaultSupplier, xmlTag));
     }
 
@@ -1043,35 +1048,35 @@ public final class CampaignOption<T> {
      * needs (generics are erased); the unchecked cast is confined here.
      */
     @SuppressWarnings("unchecked")
-    private static <T> CampaignOption<T> ofRaw(final Class<?> rawType, final Supplier<T> defaultSupplier,
-          final String xmlTag) {
+    private static <T> CampaignOption<T> ofRaw(final @Nonnull Class<?> rawType,
+          final @Nonnull Supplier<T> defaultSupplier, final @Nonnull String xmlTag) {
         return register(new CampaignOption<>((Class<T>) rawType, defaultSupplier, xmlTag));
     }
 
-    private static <T> CampaignOption<T> register(final CampaignOption<T> option) {
+    private static <T> CampaignOption<T> register(final @Nonnull CampaignOption<T> option) {
         ALL.add(option);
         return option;
     }
 
     /** @return an unmodifiable view of every registered option, in declaration order */
-    public static List<CampaignOption<?>> values() {
+    public static @Nonnull List<CampaignOption<?>> values() {
         return Collections.unmodifiableList(ALL);
     }
 
     /** @return the type of this option's value */
-    public Class<T> type() {
+    public @Nonnull Class<T> type() {
         return type;
     }
 
     /**
      * @return a fresh default value for this option; for mutable-valued options each call yields a new instance
      */
-    public T defaultValue() {
+    public @Nonnull T defaultValue() {
         return defaultSupplier.get();
     }
 
     /** @return the XML tag under which this option is persisted */
-    public String xmlTag() {
+    public @Nonnull String xmlTag() {
         return xmlTag;
     }
 }

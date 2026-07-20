@@ -51,6 +51,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import jakarta.annotation.Nonnull;
 import megamek.Version;
@@ -275,6 +276,7 @@ public class CampaignOptions {
      * @return the option's current value
      */
     public @Nonnull <T> T get(final @Nonnull CampaignOption<T> option) {
+        Objects.requireNonNull(option);
         return options.get(option);
     }
 
@@ -285,7 +287,9 @@ public class CampaignOptions {
      * @param value  the new value
      * @param <T>    the option's value type
      */
-    public <T> void set(final @Nonnull CampaignOption<T> option, final T value) {
+    public <T> void set(final @Nonnull CampaignOption<T> option, final @Nonnull T value) {
+        Objects.requireNonNull(option);
+        Objects.requireNonNull(value);
         options.set(option, value);
     }
     // endregion Constructors
